@@ -2,6 +2,16 @@
 
 Todos los cambios relevantes del proyecto deben registrarse aquí. No se deben inventar funcionalidades implementadas.
 
+## 2026-05-09 - Fase 1 Etapa 4
+
+- Se implementan órdenes de trabajo dental.
+- Se agregan entidades `WorkOrder`, `WorkOrderStatus` y `WorkOrderStatusHistory`.
+- Se agregan endpoints `/api/work-orders`.
+- Se agregan pantallas Angular de órdenes.
+- Se agregan pruebas backend de integración para permisos, CSRF, creación, edición, cambio de estado e historial.
+- Se agrega migración `AddWorkOrders`.
+- No se implementan pagos, abonos ni saldos en esta etapa.
+
 ## 2026-05-09 - Fase 1 Etapa 3
 
 - Se implementa CRUD de clientes/doctores/clínicas.

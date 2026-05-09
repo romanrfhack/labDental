@@ -168,6 +168,7 @@ app.Use(async (context, next) =>
 app.MapHealthEndpoints();
 app.MapAuthEndpoints();
 app.MapCustomerEndpoints();
+app.MapWorkOrderEndpoints();
 app.MapSecurityDiagnosticEndpoints(app.Environment);
 
 app.Run();

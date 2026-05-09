@@ -8,7 +8,10 @@ import { ContactPageComponent } from './public/pages/contact/contact-page.compon
 import { LoginPageComponent } from './auth/pages/login/login-page.component';
 import { PrivateLayoutComponent } from './admin/layout/private-layout.component';
 import { DashboardPageComponent } from './features/dashboard/dashboard-page.component';
-import { OrdersPageComponent } from './features/orders/orders-page.component';
+import { WorkOrderCreatePageComponent } from './features/orders/pages/work-order-create-page.component';
+import { WorkOrderDetailPageComponent } from './features/orders/pages/work-order-detail-page.component';
+import { WorkOrderEditPageComponent } from './features/orders/pages/work-order-edit-page.component';
+import { WorkOrderListPageComponent } from './features/orders/pages/work-order-list-page.component';
 import { CustomerCreatePageComponent } from './features/customers/pages/customer-create-page.component';
 import { CustomerDetailPageComponent } from './features/customers/pages/customer-detail-page.component';
 import { CustomerEditPageComponent } from './features/customers/pages/customer-edit-page.component';
@@ -50,7 +53,25 @@ export const routes: Routes = [
       },
       {
         path: 'ordenes',
-        component: OrdersPageComponent,
+        component: WorkOrderListPageComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'orders.view' }
+      },
+      {
+        path: 'ordenes/nueva',
+        component: WorkOrderCreatePageComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'orders.create' }
+      },
+      {
+        path: 'ordenes/:id/editar',
+        component: WorkOrderEditPageComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'orders.edit' }
+      },
+      {
+        path: 'ordenes/:id',
+        component: WorkOrderDetailPageComponent,
         canActivate: [permissionGuard],
         data: { permission: 'orders.view' }
       },

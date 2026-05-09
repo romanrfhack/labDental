@@ -1,14 +1,16 @@
 # Ciclo De Vida De Orden De Trabajo
 
-## Estados Sugeridos
+## Estados Implementados
 
-- Recibida
-- En proceso
-- En primera prueba
-- En segunda prueba
-- Lista para entrega
-- Entregada
-- Cancelada
+| Valor interno | Etiqueta UI |
+| --- | --- |
+| `Received` | Recibida |
+| `InProcess` | En proceso |
+| `FirstTrial` | En primera prueba |
+| `SecondTrial` | En segunda prueba |
+| `ReadyForDelivery` | Lista para entrega |
+| `Delivered` | Entregada |
+| `Cancelled` | Cancelada |
 
 ## Transiciones Válidas Iniciales
 
@@ -25,10 +27,14 @@
 
 ## Reglas
 
+- El estado inicial al crear una orden es `Received`.
 - Cancelada es estado terminal operativo.
-- Una orden cancelada no debe editarse libremente sin permiso especial.
+- Una orden cancelada no se edita en datos generales durante el MVP.
+- Una orden cancelada no cambia a otro estado durante el MVP.
+- Cancelar requiere nota.
 - Entregada no implica saldo liquidado.
-- El cambio de estado debe registrar usuario, fecha y estado anterior.
+- Todo cambio real de estado debe registrar usuario, fecha, estado anterior y estado nuevo.
+- Cambiar al mismo estado devuelve `200 OK` sin duplicar historial.
 - Las transiciones pueden ampliarse cuando se valide el flujo real con el cliente.
 
 ## Criterios De Validación

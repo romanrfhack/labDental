@@ -1,10 +1,10 @@
 # Próximos Pasos
 
-1. Revisar CRUD de clientes.
-2. Implementar órdenes de trabajo.
-3. Implementar pagos y saldos.
-4. Implementar dashboard operativo básico.
-5. Preparar migración del Excel.
+1. Revisar órdenes de trabajo.
+2. Implementar pagos, abonos y saldos.
+3. Implementar dashboard operativo básico.
+4. Preparar migración del Excel.
+5. Revisar UX con cliente.
 
 ## Criterios De Validación
 

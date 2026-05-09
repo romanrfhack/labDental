@@ -63,7 +63,6 @@ Incluye:
 Todavía faltan:
 
 - Runner de pruebas frontend no interactivo.
-- Órdenes de trabajo.
 - Pagos y saldos.
 - Dashboard operativo básico.
 
@@ -89,13 +88,36 @@ Todavía faltan:
 - Pagos y saldos.
 - Dashboard operativo básico.
 
+## Etapa 4 - Órdenes De Trabajo Dental
+
+Estado: implementada.
+
+Incluye:
+
+- Entidades `WorkOrder`, `WorkOrderStatus` y `WorkOrderStatusHistory`.
+- Migración `AddWorkOrders`.
+- Endpoints `/api/work-orders` protegidos por permisos.
+- Protección XSRF en operaciones mutables.
+- Generación de `OrderNumber` único con formato MVP `OT-yyyyMMdd-XXXXXX`.
+- Listado, detalle, alta y edición Angular de órdenes.
+- Cambio de estado operativo con historial.
+- Cancelación con nota y bloqueo de edición de órdenes canceladas.
+- Pruebas backend de integración.
+
+Todavía faltan:
+
+- Runner de pruebas frontend no interactivo.
+- Pagos, abonos y saldos.
+- Dashboard operativo básico.
+- Migración del Excel.
+
 ## Backlog MVP
 
 - [x] Crear solución backend.
 - [x] Crear app frontend.
 - [x] Implementar login.
 - [x] Implementar clientes.
-- [ ] Implementar órdenes.
+- [x] Implementar órdenes.
 - [ ] Implementar pagos.
 - [ ] Implementar dashboard.
 - [x] Definir permisos base.
@@ -106,8 +128,9 @@ Todavía faltan:
 ## Criterios De Salida
 
 - Admin puede iniciar sesión.
-- Admin puede crear clientes, órdenes y pagos.
-- Los saldos se calculan automáticamente.
+- Admin puede crear clientes y órdenes.
+- Admin puede crear pagos cuando se implemente la etapa financiera.
+- Los saldos se calcularán automáticamente cuando se implemente pagos.
 - El dashboard muestra información básica operativa.
 - El sitio público básico está disponible.
 - Documentación y changelog quedan actualizados.

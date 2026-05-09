@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using LaboratorioTlahuac.Domain.WorkOrders.Entities;
 
 namespace LaboratorioTlahuac.Domain.Customers.Entities;
 
@@ -57,6 +58,8 @@ public sealed class InternalDoctor
     public Guid? UpdatedByUserId { get; private set; }
 
     public Customer? Customer { get; private set; }
+
+    public ICollection<WorkOrder> WorkOrders { get; private set; } = new List<WorkOrder>();
 
     public static InternalDoctor Create(
         Guid customerId,

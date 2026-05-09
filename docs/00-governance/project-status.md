@@ -5,18 +5,18 @@
 - Proyecto: Laboratorio Dental Tláhuac.
 - Dominio principal: laboratoriodentaltlahuac.com.
 - Fase actual: Fase 1 - MVP operativo.
-- Etapa actual: Etapa 3 - Clientes / doctores / clínicas.
-- Estado: Etapa 3 implementada; Fase 1 en ejecución.
+- Etapa actual: Etapa 4 - Órdenes de trabajo dental.
+- Estado: Etapa 4 implementada; Fase 1 en ejecución.
 
 ## Objetivo Inmediato
 
-Revisar el CRUD de clientes antes de iniciar órdenes de trabajo.
+Revisar el flujo de órdenes de trabajo antes de iniciar pagos, abonos y saldos.
 
 ## MVP Objetivo
 
 Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin depender del Excel para nuevos registros.
 
-## Entregado En Etapas 1, 2, 2.1 Y 3
+## Entregado En Etapas 1, 2, 2.1, 3 Y 4
 
 - Solución .NET 10 con proyectos `Api`, `Application`, `Domain` e `Infrastructure`.
 - App Angular 21 en `src/LaboratorioTlahuac.Web`.
@@ -44,6 +44,14 @@ Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin dep
 - CRUD Angular en `/app/clientes`, `/app/clientes/nuevo`, `/app/clientes/:id` y `/app/clientes/:id/editar`.
 - Gestión de doctores internos solo para clientes tipo clínica.
 - Pruebas backend de integración para clientes, permisos, CSRF, soft deactivate y reglas de clínicas.
+- Entidades `WorkOrder`, `WorkOrderStatus` y `WorkOrderStatusHistory`.
+- DbSets y configuración EF Core para `WorkOrders` y `WorkOrderStatusHistory`.
+- Migración `AddWorkOrders`.
+- Endpoints REST `/api/work-orders` protegidos por `orders.view`, `orders.create`, `orders.edit` y `orders.changeStatus`.
+- Generación de folio `OT-yyyyMMdd-XXXXXX` con índice único.
+- UI Angular en `/app/ordenes`, `/app/ordenes/nueva`, `/app/ordenes/:id` y `/app/ordenes/:id/editar`.
+- Cambio de estado operativo con historial y regla de cancelación con nota.
+- Pruebas backend de integración para órdenes, permisos, CSRF, reglas de cliente/doctor interno, estados e historial.
 
 ## Principios De Trabajo
 
@@ -60,5 +68,5 @@ Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin dep
 
 ## Próximos Pasos
 
-- Revisar CRUD de clientes.
-- Implementar órdenes de trabajo.
+- Revisar órdenes de trabajo.
+- Implementar pagos, abonos y saldos.

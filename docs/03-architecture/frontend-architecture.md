@@ -35,6 +35,9 @@ src/app/
 - `/login`
 - `/app/dashboard`
 - `/app/ordenes`
+- `/app/ordenes/nueva`
+- `/app/ordenes/:id`
+- `/app/ordenes/:id/editar`
 - `/app/clientes`
 - `/app/clientes/nuevo`
 - `/app/clientes/:id`
@@ -69,6 +72,9 @@ Se eligió SCSS como formato de estilos para Angular. El diseño actual es míni
 
 - `/app/dashboard`: `reports.view`
 - `/app/ordenes`: `orders.view`
+- `/app/ordenes/nueva`: `orders.create`
+- `/app/ordenes/:id`: `orders.view`
+- `/app/ordenes/:id/editar`: `orders.edit`
 - `/app/clientes`: `customers.view`
 - `/app/clientes/nuevo`: `customers.create`
 - `/app/clientes/:id`: `customers.view`
@@ -106,6 +112,22 @@ Archivos principales:
 
 `CustomerService` reutiliza `AuthService.getCsrfHeaders()` para `POST`, `PUT` y `PATCH`; no guarda tokens en almacenamiento local.
 
+## Órdenes
+
+Archivos principales:
+
+- `WorkOrderService`: encapsula llamadas a `/api/work-orders`.
+- `WorkOrderListPageComponent`: listado, búsqueda, filtro por cliente, estado, entrega e inclusión de canceladas.
+- `WorkOrderDetailPageComponent`: detalle completo, cambio de estado e historial.
+- `WorkOrderCreatePageComponent`: alta de orden.
+- `WorkOrderEditPageComponent`: edición de datos generales.
+- `WorkOrderFormComponent`: formulario reutilizable.
+- `WorkOrderStatusBadgeComponent`: etiqueta visual de estado.
+- `WorkOrderStatusHistorySectionComponent`: historial de cambios.
+- `WorkOrderStatusChangeComponent`: acción de cambio de estado.
+
+`WorkOrderService` reutiliza `AuthService.getCsrfHeaders()` para `POST`, `PUT` y `PATCH`; no guarda tokens en almacenamiento local. El formulario reutiliza `CustomerService` para cargar clientes activos y doctores internos cuando el cliente seleccionado es `Clinic`.
+
 ## Criterios De Validación
 
 - El sitio público puede navegarse sin sesión.
@@ -115,5 +137,5 @@ Archivos principales:
 ## Próximos Pasos
 
 - Agregar pruebas frontend cuando se incorpore runner no interactivo.
-- Implementar órdenes de trabajo.
-- Reutilizar el flujo XSRF para servicios mutables de órdenes y pagos.
+- Revisar órdenes de trabajo con usuarios.
+- Reutilizar el flujo XSRF para servicios mutables de pagos.

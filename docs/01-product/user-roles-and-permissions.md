@@ -44,6 +44,15 @@ Aunque al inicio solo exista Admin, el sistema debe diseñarse con permisos gran
 - `customers.edit`: permite editar, activar y desactivar clientes y doctores internos.
 - La autorización se valida por permiso, no por `Role == Admin`.
 
+## Uso En Órdenes
+
+- `orders.view`: permite listar, filtrar y consultar detalle de órdenes.
+- `orders.create`: permite crear órdenes nuevas.
+- `orders.edit`: permite editar datos generales de una orden no cancelada.
+- `orders.changeStatus`: permite cambiar estado operativo de una orden y crear historial.
+- `orders.delete`: reservado para futuro; no habilita delete físico en el MVP.
+- La autorización se valida por permiso, no por `Role == Admin`.
+
 ## Criterios De Validación
 
 - Admin puede ejecutar todas las acciones del MVP.

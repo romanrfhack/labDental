@@ -1,5 +1,6 @@
 using System.Net.Mail;
 using LaboratorioTlahuac.Domain.Customers;
+using LaboratorioTlahuac.Domain.WorkOrders.Entities;
 
 namespace LaboratorioTlahuac.Domain.Customers.Entities;
 
@@ -73,6 +74,8 @@ public sealed class Customer
     public Guid? UpdatedByUserId { get; private set; }
 
     public ICollection<InternalDoctor> InternalDoctors { get; private set; } = new List<InternalDoctor>();
+
+    public ICollection<WorkOrder> WorkOrders { get; private set; } = new List<WorkOrder>();
 
     public static Customer Create(
         CustomerType type,

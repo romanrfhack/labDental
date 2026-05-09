@@ -18,19 +18,19 @@
 
 ### Api
 
-Expone endpoints HTTP, autenticación, autorización, antiforgery y contratos de respuesta. Incluye `GET /health`, endpoints de auth, endpoints de clientes, configuración de cookie, XSRF y policies de permisos.
+Expone endpoints HTTP, autenticación, autorización, antiforgery y contratos de respuesta. Incluye `GET /health`, endpoints de auth, endpoints de clientes, endpoints de órdenes, configuración de cookie, XSRF y policies de permisos.
 
 ### Application
 
-Contiene casos de uso, orquestación y contratos con infraestructura. Incluye `IPermissionChecker`, `IAuthSessionService`, `ICurrentUser`, `IClock` e `ICustomerService`.
+Contiene casos de uso, orquestación y contratos con infraestructura. Incluye `IPermissionChecker`, `IAuthSessionService`, `ICurrentUser`, `IClock`, `ICustomerService` e `IWorkOrderService`.
 
 ### Domain
 
-Contiene entidades, reglas de negocio, invariantes y conceptos centrales. Centraliza `Permissions`, `PermissionClaimTypes`, entidades iniciales de seguridad y entidades de clientes.
+Contiene entidades, reglas de negocio, invariantes y conceptos centrales. Centraliza `Permissions`, `PermissionClaimTypes`, entidades iniciales de seguridad, entidades de clientes y entidades de órdenes.
 
 ### Infrastructure
 
-Contiene persistencia, integraciones externas y adaptadores. Incluye EF Core, `LaboratorioTlahuacDbContext`, `CustomerService`, `ClaimsPermissionChecker`, `AuthSessionService`, `SystemClock` y `SecuritySeeder`.
+Contiene persistencia, integraciones externas y adaptadores. Incluye EF Core, `LaboratorioTlahuacDbContext`, `CustomerService`, `WorkOrderService`, `GuidWorkOrderNumberGenerator`, `ClaimsPermissionChecker`, `AuthSessionService`, `SystemClock` y `SecuritySeeder`.
 
 ## Reglas De Dependencia
 
@@ -60,6 +60,8 @@ Entidades operativas persistidas:
 
 - `Customers`
 - `InternalDoctors`
+- `WorkOrders`
+- `WorkOrderStatusHistory`
 
 Índices únicos:
 
@@ -75,11 +77,16 @@ Relaciones many-to-many explícitas:
 Relaciones operativas:
 
 - `Customers` 1:N `InternalDoctors`.
+- `Customers` 1:N `WorkOrders`.
+- `InternalDoctors` 1:N `WorkOrders` opcional.
+- `WorkOrders` 1:N `WorkOrderStatusHistory`.
+- `WorkOrders` y `WorkOrderStatusHistory` referencian `Security.Users` para auditoría.
 
 Migraciones:
 
 - `InitialSecurityModel`
 - `AddCustomersAndInternalDoctors`
+- `AddWorkOrders`
 
 No hay auto-migración al iniciar la aplicación.
 
@@ -139,6 +146,28 @@ Implementación:
 - Los permisos usados son `customers.view`, `customers.create` y `customers.edit`.
 - Los métodos mutables quedan cubiertos por el middleware XSRF centralizado.
 
+## Órdenes De Trabajo
+
+Endpoints principales:
+
+- `GET /api/work-orders`
+- `GET /api/work-orders/{id}`
+- `GET /api/work-orders/statuses`
+- `POST /api/work-orders`
+- `PUT /api/work-orders/{id}`
+- `PATCH /api/work-orders/{id}/status`
+
+Implementación:
+
+- `WorkOrderEndpoints` mantiene endpoints HTTP delgados.
+- `IWorkOrderService` define casos de uso y contratos en Application.
+- `WorkOrderService` implementa validación, consultas EF, auditoría, reglas Customer/InternalDoctor, generación de folio e historial.
+- `GuidWorkOrderNumberGenerator` genera folio MVP `OT-yyyyMMdd-XXXXXX`.
+- `LaboratorioTlahuacDbContext` expone `WorkOrders` y `WorkOrderStatusHistory`.
+- Los permisos usados son `orders.view`, `orders.create`, `orders.edit` y `orders.changeStatus`.
+- `orders.delete` queda reservado; no hay delete físico.
+- Los métodos mutables quedan cubiertos por el middleware XSRF centralizado.
+
 ## Criterios De Validación
 
 - Las reglas de saldo y estados no viven en controladores.
@@ -147,5 +176,5 @@ Implementación:
 
 ## Próximos Pasos
 
-- Revisar CRUD de clientes.
-- Implementar órdenes de trabajo.
+- Revisar órdenes de trabajo.
+- Implementar pagos, abonos y saldos.

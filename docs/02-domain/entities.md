@@ -138,11 +138,71 @@ Reglas principales:
 
 ## WorkOrder
 
-Orden de trabajo dental. Campos principales: identificador, cliente, doctor interno opcional, paciente, trabajo, folio/nota, color, fecha de recepción, fechas de pruebas, fecha de entrega estimada o real, total, estado operativo, observaciones.
+Orden de trabajo dental. Es la entidad central del flujo operativo del MVP.
+
+Campos implementados:
+
+- `Id`
+- `OrderNumber`
+- `CustomerId`
+- `InternalDoctorId`
+- `PatientName`
+- `ReceivedDate`
+- `ReferenceNumber`
+- `WorkDescription`
+- `DentalColor`
+- `FirstTrialDate`
+- `SecondTrialDate`
+- `DeliveryDate`
+- `Status`
+- `TotalAmount`
+- `Notes`
+- `CreatedAtUtc`
+- `CreatedByUserId`
+- `UpdatedAtUtc`
+- `UpdatedByUserId`
+
+Reglas principales:
+
+- Pertenece a un `Customer` obligatorio.
+- `InternalDoctor` es opcional y solo válido cuando el cliente es `Clinic`.
+- `OrderNumber` es obligatorio, único y generado por el sistema.
+- `PatientName`, `ReceivedDate` y `WorkDescription` son obligatorios.
+- `TotalAmount` es opcional y no representa saldo.
+- No hay delete físico.
+- Una orden `Cancelled` no se edita en el MVP.
+
+## WorkOrderStatus
+
+Estado operativo de una orden. Valores internos estables:
+
+- `Received`
+- `InProcess`
+- `FirstTrial`
+- `SecondTrial`
+- `ReadyForDelivery`
+- `Delivered`
+- `Cancelled`
 
 ## WorkOrderStatusHistory
 
-Historial de cambios de estado de una orden. Campos principales: orden, estado anterior, estado nuevo, usuario, fecha y motivo opcional.
+Historial de cambios de estado de una orden.
+
+Campos implementados:
+
+- `Id`
+- `WorkOrderId`
+- `FromStatus`
+- `ToStatus`
+- `Notes`
+- `ChangedAtUtc`
+- `ChangedByUserId`
+
+Reglas principales:
+
+- Todo cambio real de estado crea un registro.
+- El registro inicial usa `FromStatus = null` y `ToStatus = Received`.
+- Cambiar al mismo estado no duplica historial.
 
 ## Payment
 

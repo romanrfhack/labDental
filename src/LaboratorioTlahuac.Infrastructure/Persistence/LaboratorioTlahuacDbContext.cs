@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using LaboratorioTlahuac.Domain.Customers.Entities;
 using LaboratorioTlahuac.Domain.Security.Entities;
+using LaboratorioTlahuac.Domain.WorkOrders.Entities;
 
 namespace LaboratorioTlahuac.Infrastructure.Persistence;
 
@@ -20,6 +21,10 @@ public sealed class LaboratorioTlahuacDbContext(DbContextOptions<LaboratorioTlah
     public DbSet<Customer> Customers => Set<Customer>();
 
     public DbSet<InternalDoctor> InternalDoctors => Set<InternalDoctor>();
+
+    public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
+
+    public DbSet<WorkOrderStatusHistory> WorkOrderStatusHistory => Set<WorkOrderStatusHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

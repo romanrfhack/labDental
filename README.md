@@ -55,6 +55,7 @@ La persistencia usa EF Core con SQL Server. Migraciones creadas:
 
 - `InitialSecurityModel`
 - `AddCustomersAndInternalDoctors`
+- `AddWorkOrders`
 
 Crear nuevas migraciones:
 
@@ -141,6 +142,31 @@ Modulo implementado bajo `/api/customers`, protegido por permisos:
 
 `GET /api/customers` acepta `search`, `type`, `isActive`, `page` y `pageSize`. Si `isActive` no se envia, devuelve solo clientes activos. `PATCH /status` devuelve `200 OK` con el cliente actualizado. Cambiar una clinica con doctores internos activos a `Doctor` u `Other` devuelve `409 Conflict`. Intentar administrar doctores internos en un cliente que no es `Clinic` devuelve `400 Bad Request`.
 
+### Endpoints Ordenes De Trabajo
+
+Modulo implementado bajo `/api/work-orders`, protegido por permisos:
+
+- `GET /api/work-orders` requiere `orders.view`.
+- `GET /api/work-orders/{id}` requiere `orders.view`.
+- `GET /api/work-orders/statuses` requiere `orders.view`.
+- `POST /api/work-orders` requiere `orders.create` y XSRF.
+- `PUT /api/work-orders/{id}` requiere `orders.edit` y XSRF.
+- `PATCH /api/work-orders/{id}/status` requiere `orders.changeStatus` y XSRF.
+
+`GET /api/work-orders` acepta `search`, `customerId`, `internalDoctorId`, `status`, rangos de `receivedDate` y `deliveryDate`, `includeCancelled`, `page` y `pageSize`. Si `includeCancelled` no se envia, excluye ordenes `Cancelled`.
+
+El backend genera `OrderNumber` con formato MVP `OT-yyyyMMdd-XXXXXX` y un indice unico en base de datos. El formato puede cambiar antes de produccion si el cliente requiere folio secuencial.
+
+Convenciones implementadas:
+
+- `Status` inicial es `Received`.
+- Todo cambio real de estado crea historial.
+- Cambiar al mismo estado devuelve `200 OK` sin duplicar historial.
+- Cambiar a `Cancelled` requiere nota.
+- Una orden `Cancelled` no se edita ni vuelve a otro estado en el MVP.
+- No existe delete fisico de ordenes.
+- `TotalAmount` es opcional; pagos, abonos y saldos no estan implementados todavia.
+
 ### Flujo XSRF
 
 El sistema usa cookie auth HttpOnly para la sesión y antiforgery para requests mutables.
@@ -197,22 +223,42 @@ Angular configura `withXsrfConfiguration` con `XSRF-TOKEN` y `X-XSRF-TOKEN`. `Au
 10. Validar que un cliente tipo `Doctor` no acepta doctores internos.
 11. Editar y desactivar clientes; por default el listado muestra solo activos.
 
+### Probar Ordenes Localmente
+
+1. Configurar SQL Server local en `ConnectionStrings:DefaultConnection`.
+2. Aplicar migraciones con `dotnet ef database update`.
+3. Ejecutar API y Angular.
+4. Iniciar sesion como Admin.
+5. Crear cliente tipo `Doctor`.
+6. Crear cliente tipo `Clinic`.
+7. Agregar doctor interno activo a la clinica.
+8. Entrar a `/app/ordenes`.
+9. Crear orden para cliente tipo `Doctor`.
+10. Crear orden para `Clinic` seleccionando doctor interno.
+11. Editar datos generales de una orden no cancelada.
+12. Cambiar estado de `Received` a `InProcess`.
+13. Cambiar estado a `Cancelled` con nota.
+14. Confirmar que una orden `Cancelled` no se edita.
+15. Confirmar que canceladas no aparecen por default y si aparecen con "Incluir canceladas".
+16. Confirmar que mutables sin XSRF devuelven `400`.
+17. Confirmar que un usuario sin `orders.view` no consulta ordenes.
+
 ## npm audit
 
-Se revisó `npm audit`. El reporte inicial encontró vulnerabilidades transitivas en `fast-uri`, `ip-address` y `express-rate-limit`. Se aplicó `npm audit fix` sin `--force`, actualizando dependencias transitivas compatibles, y el resultado final quedó en 0 vulnerabilidades.
+Se revisó `npm audit`. En la validación de Etapa 4 apareció una vulnerabilidad moderada transitiva en `hono`. Se aplicó `npm audit fix` sin `--force`, actualizando dependencias transitivas compatibles, y el resultado final quedó en 0 vulnerabilidades.
 
 ## Estado Actual
 
-Fase 1 - MVP operativo. Etapa 3 - Clientes / doctores / clinicas implementada.
+Fase 1 - MVP operativo. Etapa 4 - Ordenes de trabajo dental implementada.
 
-Incluye solucion .NET, proyectos base, app Angular, rutas publicas/privadas, cookie auth HttpOnly, XSRF para requests mutables, modelo inicial de usuarios/roles/permisos, seed Admin, endpoints auth, guards reales, migraciones de seguridad y clientes, CRUD de clientes/doctores/clinicas, health check y documentacion actualizada.
+Incluye solucion .NET, proyectos base, app Angular, rutas publicas/privadas, cookie auth HttpOnly, XSRF para requests mutables, modelo inicial de usuarios/roles/permisos, seed Admin, endpoints auth, guards reales, migraciones de seguridad, clientes y ordenes, CRUD de clientes/doctores/clinicas, ordenes de trabajo con estados e historial, health check y documentacion actualizada.
 
-No incluye ordenes de trabajo, pagos, inventario, proveedores ni dashboard operativo real.
+No incluye pagos, abonos, saldos calculados, inventario, proveedores, importacion del Excel ni dashboard operativo real.
 
 ## Proximos Pasos
 
-1. Revisar CRUD de clientes.
-2. Implementar ordenes de trabajo.
-3. Implementar pagos y saldos.
-4. Implementar dashboard operativo basico.
-5. Preparar migracion del Excel.
+1. Revisar ordenes de trabajo.
+2. Implementar pagos, abonos y saldos.
+3. Implementar dashboard operativo basico.
+4. Preparar migracion del Excel.
+5. Revisar UX con cliente.

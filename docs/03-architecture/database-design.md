@@ -1,6 +1,6 @@
 # Diseño De Base De Datos
 
-La Etapa 2 crea la primera migración real para seguridad. La Etapa 3 agrega las primeras tablas operativas para clientes y doctores internos.
+La Etapa 2 crea la primera migración real para seguridad. La Etapa 3 agrega clientes y doctores internos. La Etapa 4 agrega órdenes de trabajo como núcleo operativo.
 
 ## Tablas Implementadas En Seguridad
 
@@ -43,10 +43,36 @@ Relaciones:
 - `Customers` tiene muchos `InternalDoctors`.
 - `InternalDoctors.CustomerId` referencia `Customers.Id` con delete restrictivo.
 
+## Tablas Implementadas En Órdenes
+
+Esquema default:
+
+- `WorkOrders`
+- `WorkOrderStatusHistory`
+
+Índices:
+
+- `WorkOrders.OrderNumber` único
+- `WorkOrders.CustomerId`
+- `WorkOrders.InternalDoctorId`
+- `WorkOrders.Status`
+- `WorkOrders.ReceivedDate`
+- `WorkOrders.DeliveryDate`
+- `WorkOrders.PatientName`
+- `WorkOrderStatusHistory.WorkOrderId`
+- `WorkOrderStatusHistory.ChangedAtUtc`
+
+Relaciones:
+
+- `Customers` tiene muchas `WorkOrders`.
+- `InternalDoctors` tiene muchas `WorkOrders` de forma opcional.
+- `WorkOrders` tiene muchos `WorkOrderStatusHistory`.
+- `WorkOrders.CreatedByUserId` y `WorkOrders.UpdatedByUserId` referencian `Security.Users`.
+- `WorkOrderStatusHistory.ChangedByUserId` referencia `Security.Users`.
+- Todas las relaciones operativas usan delete restrictivo.
+
 ## Tablas Sugeridas
 
-- WorkOrders
-- WorkOrderStatusHistory
 - Payments
 - Suppliers
 - InventoryItems
@@ -56,6 +82,7 @@ Relaciones:
 
 - Customers tiene muchas WorkOrders.
 - Customers puede tener muchos InternalDoctors cuando representa una clínica.
+- InternalDoctors puede relacionarse opcionalmente con WorkOrders.
 - WorkOrders tiene muchos Payments.
 - WorkOrders tiene muchos WorkOrderStatusHistory.
 - InventoryItems tiene muchos InventoryMovements.
