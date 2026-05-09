@@ -1,6 +1,6 @@
 # Diseño De Base De Datos
 
-La Etapa 2 crea la primera migración real para seguridad. La Etapa 3 agrega clientes y doctores internos. La Etapa 4 agrega órdenes de trabajo como núcleo operativo.
+La Etapa 2 crea la primera migración real para seguridad. La Etapa 3 agrega clientes y doctores internos. La Etapa 4 agrega órdenes de trabajo como núcleo operativo. La Etapa 5 agrega pagos como movimientos financieros.
 
 ## Tablas Implementadas En Seguridad
 
@@ -71,9 +71,30 @@ Relaciones:
 - `WorkOrderStatusHistory.ChangedByUserId` referencia `Security.Users`.
 - Todas las relaciones operativas usan delete restrictivo.
 
+## Tablas Implementadas En Pagos
+
+Esquema default:
+
+- `Payments`
+
+Índices:
+
+- `Payments.WorkOrderId`
+- `Payments.PaymentDate`
+- `Payments.Method`
+- `Payments.IsCancelled`
+- `Payments.CreatedAtUtc`
+
+Relaciones:
+
+- `WorkOrders` tiene muchos `Payments`.
+- `Payments.WorkOrderId` referencia `WorkOrders.Id` con delete restrictivo.
+- `Payments.CreatedByUserId` referencia `Security.Users`.
+- `Payments.CancelledByUserId` referencia `Security.Users`.
+- Los pagos cancelados se conservan y no se eliminan físicamente.
+
 ## Tablas Sugeridas
 
-- Payments
 - Suppliers
 - InventoryItems
 - InventoryMovements

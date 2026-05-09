@@ -19,10 +19,17 @@
 - Una orden `Cancelled` representa cancelación operativa terminal en el MVP.
 - Una orden `Cancelled` no se edita ni cambia a otro estado en el MVP.
 - No hay delete físico de órdenes.
-- `TotalAmount` puede existir en la orden, pero pagos, abonos y saldos son etapa posterior.
-- El saldo no se captura manualmente; se calculará cuando exista el módulo financiero.
+- `TotalAmount` puede existir en la orden y es requerido para registrar pagos.
+- El saldo no se captura manualmente; se calcula desde `TotalAmount` y pagos vigentes.
 - El estado operativo de la orden no debe mezclarse con el estado financiero.
-- Los pagos se registrarán como movimientos en una etapa posterior.
+- Los pagos se registran como movimientos financieros asociados a órdenes.
+- Los pagos no se editan en el MVP.
+- Los pagos no se eliminan físicamente.
+- Los pagos se cancelan con motivo.
+- Los pagos cancelados no cuentan para saldo.
+- No se puede registrar pago si `TotalAmount` no está definido.
+- No se puede registrar pago en una orden `Cancelled`.
+- Se permite sobrepago y se marca como `Overpaid`.
 - Los cambios relevantes deben dejar trazabilidad.
 - Un usuario inactivo no puede iniciar sesión.
 - Un usuario bloqueado no puede iniciar sesión.
@@ -49,6 +56,15 @@ Debe existir historial para cambios relevantes, especialmente cambios de estado,
 - Cambiar al mismo estado devuelve éxito sin duplicar historial.
 - En edición, no se permite cambiar a un cliente inactivo distinto del cliente actual de la orden.
 - Si el cliente nuevo no es `Clinic`, `InternalDoctorId` debe quedar vacío.
+
+## Pagos Y Saldos
+
+- `PaidAmount` es la suma de pagos no cancelados.
+- `Balance` es `TotalAmount - PaidAmount`.
+- Si `TotalAmount` es `null`, `Balance` es `null` y `PaymentStatus` es `TotalNotSet`.
+- Si `TotalAmount = 0` y no hay pagos vigentes, `PaymentStatus` es `Paid`.
+- `PaymentStatus` se calcula; no se captura manualmente.
+- El sobrepago queda visible como "Saldo a favor / revisar".
 
 ## Criterios De Validación
 

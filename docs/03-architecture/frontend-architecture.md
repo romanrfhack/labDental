@@ -128,6 +128,20 @@ Archivos principales:
 
 `WorkOrderService` reutiliza `AuthService.getCsrfHeaders()` para `POST`, `PUT` y `PATCH`; no guarda tokens en almacenamiento local. El formulario reutiliza `CustomerService` para cargar clientes activos y doctores internos cuando el cliente seleccionado es `Clinic`.
 
+## Pagos
+
+Archivos principales:
+
+- `PaymentService`: encapsula llamadas a `/api/payments` y `/api/work-orders/{id}/payments`.
+- `PaymentListPageComponent`: listado global en `/app/pagos`, búsqueda, filtro por método, rango de fecha e inclusión de cancelados.
+- `WorkOrderPaymentsSectionComponent`: sección financiera dentro de `/app/ordenes/:id`.
+- `PaymentSummaryCardComponent`: total, pagado, saldo y estado financiero calculado.
+- `PaymentCreateFormComponent`: formulario para registrar pago con fecha, monto, método, referencia y observaciones.
+- `PaymentCancelActionComponent`: cancelación con motivo.
+- `PaymentStatusBadgeComponent`: etiqueta visual de estado financiero.
+
+`PaymentService` reutiliza `AuthService.getCsrfHeaders()` para `POST` y `PATCH`; no guarda tokens en almacenamiento local. La sección de pagos se muestra solo con `payments.view`; crear y cancelar dependen de `payments.create` y `payments.cancel`.
+
 ## Criterios De Validación
 
 - El sitio público puede navegarse sin sesión.
@@ -137,5 +151,5 @@ Archivos principales:
 ## Próximos Pasos
 
 - Agregar pruebas frontend cuando se incorpore runner no interactivo.
-- Revisar órdenes de trabajo con usuarios.
-- Reutilizar el flujo XSRF para servicios mutables de pagos.
+- Revisar pagos y saldos con usuarios.
+- Implementar dashboard operativo básico.

@@ -18,19 +18,19 @@
 
 ### Api
 
-Expone endpoints HTTP, autenticación, autorización, antiforgery y contratos de respuesta. Incluye `GET /health`, endpoints de auth, endpoints de clientes, endpoints de órdenes, configuración de cookie, XSRF y policies de permisos.
+Expone endpoints HTTP, autenticación, autorización, antiforgery y contratos de respuesta. Incluye `GET /health`, endpoints de auth, endpoints de clientes, endpoints de órdenes, endpoints de pagos, configuración de cookie, XSRF y policies de permisos.
 
 ### Application
 
-Contiene casos de uso, orquestación y contratos con infraestructura. Incluye `IPermissionChecker`, `IAuthSessionService`, `ICurrentUser`, `IClock`, `ICustomerService` e `IWorkOrderService`.
+Contiene casos de uso, orquestación y contratos con infraestructura. Incluye `IPermissionChecker`, `IAuthSessionService`, `ICurrentUser`, `IClock`, `ICustomerService`, `IWorkOrderService` e `IPaymentService`.
 
 ### Domain
 
-Contiene entidades, reglas de negocio, invariantes y conceptos centrales. Centraliza `Permissions`, `PermissionClaimTypes`, entidades iniciales de seguridad, entidades de clientes y entidades de órdenes.
+Contiene entidades, reglas de negocio, invariantes y conceptos centrales. Centraliza `Permissions`, `PermissionClaimTypes`, entidades iniciales de seguridad, entidades de clientes, entidades de órdenes y entidades de pagos.
 
 ### Infrastructure
 
-Contiene persistencia, integraciones externas y adaptadores. Incluye EF Core, `LaboratorioTlahuacDbContext`, `CustomerService`, `WorkOrderService`, `GuidWorkOrderNumberGenerator`, `ClaimsPermissionChecker`, `AuthSessionService`, `SystemClock` y `SecuritySeeder`.
+Contiene persistencia, integraciones externas y adaptadores. Incluye EF Core, `LaboratorioTlahuacDbContext`, `CustomerService`, `WorkOrderService`, `PaymentService`, `GuidWorkOrderNumberGenerator`, `ClaimsPermissionChecker`, `AuthSessionService`, `SystemClock` y `SecuritySeeder`.
 
 ## Reglas De Dependencia
 
@@ -62,6 +62,7 @@ Entidades operativas persistidas:
 - `InternalDoctors`
 - `WorkOrders`
 - `WorkOrderStatusHistory`
+- `Payments`
 
 Índices únicos:
 
@@ -80,13 +81,16 @@ Relaciones operativas:
 - `Customers` 1:N `WorkOrders`.
 - `InternalDoctors` 1:N `WorkOrders` opcional.
 - `WorkOrders` 1:N `WorkOrderStatusHistory`.
+- `WorkOrders` 1:N `Payments`.
 - `WorkOrders` y `WorkOrderStatusHistory` referencian `Security.Users` para auditoría.
+- `Payments` referencia `Security.Users` para creación y cancelación.
 
 Migraciones:
 
 - `InitialSecurityModel`
 - `AddCustomersAndInternalDoctors`
 - `AddWorkOrders`
+- `AddPayments`
 
 No hay auto-migración al iniciar la aplicación.
 
@@ -168,6 +172,29 @@ Implementación:
 - `orders.delete` queda reservado; no hay delete físico.
 - Los métodos mutables quedan cubiertos por el middleware XSRF centralizado.
 
+## Pagos
+
+Endpoints principales:
+
+- `GET /api/work-orders/{workOrderId}/payments`
+- `GET /api/work-orders/{workOrderId}/payments/summary`
+- `POST /api/work-orders/{workOrderId}/payments`
+- `PATCH /api/work-orders/{workOrderId}/payments/{paymentId}/cancel`
+- `GET /api/payments`
+- `GET /api/payments/methods`
+- `GET /api/payments/statuses`
+
+Implementación:
+
+- `PaymentEndpoints` mantiene endpoints HTTP delgados.
+- `IPaymentService` define contratos y casos de uso en Application.
+- `PaymentService` implementa validación, consultas EF, auditoría, cancelación y cálculo de saldos.
+- `LaboratorioTlahuacDbContext` expone `Payments`.
+- `PaymentConfiguration` configura tabla, precisión decimal, longitudes, índices y relaciones.
+- Los permisos usados son `payments.view`, `payments.create` y `payments.cancel`.
+- Los métodos mutables quedan cubiertos por el middleware XSRF centralizado.
+- Los endpoints de órdenes no exponen `PaidAmount`, `Balance` ni `PaymentStatus` bajo solo `orders.view`.
+
 ## Criterios De Validación
 
 - Las reglas de saldo y estados no viven en controladores.
@@ -176,5 +203,5 @@ Implementación:
 
 ## Próximos Pasos
 
-- Revisar órdenes de trabajo.
-- Implementar pagos, abonos y saldos.
+- Revisar pagos y saldos.
+- Implementar dashboard operativo básico.

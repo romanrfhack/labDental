@@ -107,9 +107,34 @@ Incluye:
 Todavía faltan:
 
 - Runner de pruebas frontend no interactivo.
-- Pagos, abonos y saldos.
 - Dashboard operativo básico.
 - Migración del Excel.
+
+## Etapa 5 - Pagos, Abonos Y Saldos
+
+Estado: implementada.
+
+Incluye:
+
+- Entidad `Payment`.
+- Enum `PaymentMethod`.
+- Estado financiero calculado `PaymentStatus`.
+- Migración `AddPayments`.
+- Endpoints `/api/work-orders/{workOrderId}/payments` y `/api/payments` protegidos por permisos.
+- Protección XSRF en registro y cancelación de pagos.
+- Registro de pagos por orden.
+- Cancelación de pagos con motivo.
+- Cálculo de `PaidAmount`, `Balance` y `PaymentStatus`.
+- Listado Angular en `/app/pagos`.
+- Sección de pagos dentro de `/app/ordenes/:id`.
+- Pruebas backend de integración.
+
+Todavía faltan:
+
+- Runner de pruebas frontend no interactivo.
+- Dashboard operativo básico.
+- Migración del Excel.
+- Inventario y proveedores para fase posterior.
 
 ## Backlog MVP
 
@@ -118,7 +143,7 @@ Todavía faltan:
 - [x] Implementar login.
 - [x] Implementar clientes.
 - [x] Implementar órdenes.
-- [ ] Implementar pagos.
+- [x] Implementar pagos.
 - [ ] Implementar dashboard.
 - [x] Definir permisos base.
 - [x] Implementar modelo de roles/permisos.
@@ -129,8 +154,8 @@ Todavía faltan:
 
 - Admin puede iniciar sesión.
 - Admin puede crear clientes y órdenes.
-- Admin puede crear pagos cuando se implemente la etapa financiera.
-- Los saldos se calcularán automáticamente cuando se implemente pagos.
+- Admin puede crear y cancelar pagos.
+- Los saldos se calculan automáticamente desde pagos no cancelados.
 - El dashboard muestra información básica operativa.
 - El sitio público básico está disponible.
 - Documentación y changelog quedan actualizados.
@@ -138,6 +163,7 @@ Todavía faltan:
 ## Fuera De Alcance
 
 - Inventario automático.
+- Proveedores.
 - Facturación.
 - Reportes avanzados.
 - Migración perfecta del histórico.

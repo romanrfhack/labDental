@@ -1,4 +1,5 @@
 using LaboratorioTlahuac.Domain.Customers.Entities;
+using LaboratorioTlahuac.Domain.Payments.Entities;
 
 namespace LaboratorioTlahuac.Domain.WorkOrders.Entities;
 
@@ -110,6 +111,8 @@ public sealed class WorkOrder
 
     public ICollection<WorkOrderStatusHistory> StatusHistory { get; private set; } =
         new List<WorkOrderStatusHistory>();
+
+    public ICollection<Payment> Payments { get; private set; } = new List<Payment>();
 
     public static WorkOrder Create(
         string orderNumber,

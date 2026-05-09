@@ -35,11 +35,37 @@ Cliente/Doctor -> Orden de trabajo -> Pruebas -> Entrega -> Pagos -> Saldo.
 - Las rutas administrativas requieren permisos específicos.
 - Las rutas de órdenes requieren `orders.view`, `orders.create` u `orders.edit` según la acción.
 - Las rutas de clientes requieren `customers.view`, `customers.create` o `customers.edit` según la acción.
+- `/app/pagos` requiere `payments.view`.
+- La sección de pagos dentro de `/app/ordenes/:id` solo se muestra con `payments.view`.
 - Inventario y proveedores pueden quedar visibles como módulos futuros o deshabilitados si están fuera del MVP.
+
+## Pagos
+
+`/app/pagos` permite consultar pagos registrados con:
+
+- Búsqueda.
+- Filtro por método.
+- Filtro por rango de fecha de pago.
+- Toggle para incluir pagos cancelados.
+- Columnas de orden, cliente, paciente, fecha, monto, método, referencia y estado cancelado.
+
+## Detalle De Orden
+
+`/app/ordenes/:id` concentra información operativa de la orden. Si el usuario tiene `payments.view`, también muestra:
+
+- Total de la orden.
+- Pagado.
+- Saldo.
+- Estado financiero calculado.
+- Lista de pagos.
+- Formulario de registro si tiene `payments.create`, la orden no está cancelada y `TotalAmount` está definido.
+- Acción de cancelación si tiene `payments.cancel`.
+
+Si `TotalAmount` es `null`, la UI muestra: "Define el total de la orden antes de registrar pagos." Si la orden está `Cancelled`, no se permite registrar pagos.
 
 ## Criterios De Validación Del MVP
 
-- El flujo principal se podrá completar sin cambiar de sistema cuando pagos quede implementado.
+- El flujo principal se puede completar sin cambiar de sistema para nuevos registros del MVP.
 - La vista de detalle de orden concentra datos operativos, estado e historial.
 - El usuario entiende qué órdenes requieren prueba, entrega o cobranza.
-- Pagos, abonos y saldos se agregarán en una etapa posterior.
+- Los pagos cancelados no cuentan para saldo y los sobrepagos se marcan como "Saldo a favor / revisar".

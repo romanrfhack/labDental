@@ -16,7 +16,7 @@ import { CustomerCreatePageComponent } from './features/customers/pages/customer
 import { CustomerDetailPageComponent } from './features/customers/pages/customer-detail-page.component';
 import { CustomerEditPageComponent } from './features/customers/pages/customer-edit-page.component';
 import { CustomerListPageComponent } from './features/customers/pages/customer-list-page.component';
-import { PaymentsPageComponent } from './features/payments/payments-page.component';
+import { PaymentListPageComponent } from './features/payments/pages/payment-list-page.component';
 import { InventoryPageComponent } from './features/inventory/inventory-page.component';
 import { SuppliersPageComponent } from './features/suppliers/suppliers-page.component';
 import { UsersPageComponent } from './admin/pages/users/users-page.component';
@@ -101,7 +101,7 @@ export const routes: Routes = [
       },
       {
         path: 'pagos',
-        component: PaymentsPageComponent,
+        component: PaymentListPageComponent,
         canActivate: [permissionGuard],
         data: { permission: 'payments.view' }
       },

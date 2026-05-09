@@ -53,6 +53,14 @@ Aunque al inicio solo exista Admin, el sistema debe diseñarse con permisos gran
 - `orders.delete`: reservado para futuro; no habilita delete físico en el MVP.
 - La autorización se valida por permiso, no por `Role == Admin`.
 
+## Uso En Pagos
+
+- `payments.view`: permite consultar pagos, listados globales y resúmenes financieros calculados.
+- `payments.create`: permite registrar pagos y abonos sobre órdenes con `TotalAmount` definido y no canceladas.
+- `payments.cancel`: permite cancelar pagos con motivo; no habilita delete físico ni edición libre.
+- `orders.view` permite consultar órdenes, pero no expone saldos detallados; la UI consume endpoints de pagos protegidos por `payments.view`.
+- La autorización se valida por permiso, no por `Role == Admin`.
+
 ## Criterios De Validación
 
 - Admin puede ejecutar todas las acciones del MVP.

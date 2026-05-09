@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using LaboratorioTlahuac.Domain.Customers.Entities;
+using LaboratorioTlahuac.Domain.Payments.Entities;
 using LaboratorioTlahuac.Domain.Security.Entities;
 using LaboratorioTlahuac.Domain.WorkOrders.Entities;
 
@@ -25,6 +26,8 @@ public sealed class LaboratorioTlahuacDbContext(DbContextOptions<LaboratorioTlah
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
 
     public DbSet<WorkOrderStatusHistory> WorkOrderStatusHistory => Set<WorkOrderStatusHistory>();
+
+    public DbSet<Payment> Payments => Set<Payment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

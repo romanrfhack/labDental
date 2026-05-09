@@ -2,6 +2,18 @@
 
 Todos los cambios relevantes del proyecto deben registrarse aquí. No se deben inventar funcionalidades implementadas.
 
+## 2026-05-09 - Fase 1 Etapa 5
+
+- Se implementan pagos y abonos asociados a órdenes de trabajo.
+- Se agrega entidad `Payment`.
+- Se agregan `PaymentMethod` y `PaymentStatus` calculado.
+- Se agregan endpoints de pagos bajo `/api/work-orders/{workOrderId}/payments` y `/api/payments`.
+- Se agregan resúmenes financieros calculados: `PaidAmount`, `Balance` y estado financiero.
+- Se agregan pantallas y secciones Angular de pagos en `/app/pagos` y `/app/ordenes/:id`.
+- Se agregan pruebas backend de integración para permisos, CSRF, creación, cancelación, reglas de negocio, sobrepago y listados.
+- Se agrega migración `AddPayments`.
+- No se implementan inventario, proveedores, dashboard operativo real, facturación, CFDI ni reportes avanzados.
+
 ## 2026-05-09 - Fase 1 Etapa 4
 
 - Se implementan órdenes de trabajo dental.

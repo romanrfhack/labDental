@@ -5,18 +5,18 @@
 - Proyecto: Laboratorio Dental Tláhuac.
 - Dominio principal: laboratoriodentaltlahuac.com.
 - Fase actual: Fase 1 - MVP operativo.
-- Etapa actual: Etapa 4 - Órdenes de trabajo dental.
-- Estado: Etapa 4 implementada; Fase 1 en ejecución.
+- Etapa actual: Etapa 5 - Pagos, abonos y saldos.
+- Estado: Etapa 5 implementada; Fase 1 en ejecución.
 
 ## Objetivo Inmediato
 
-Revisar el flujo de órdenes de trabajo antes de iniciar pagos, abonos y saldos.
+Revisar pagos y saldos calculados antes de implementar dashboard operativo básico.
 
 ## MVP Objetivo
 
 Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin depender del Excel para nuevos registros.
 
-## Entregado En Etapas 1, 2, 2.1, 3 Y 4
+## Entregado En Etapas 1, 2, 2.1, 3, 4 Y 5
 
 - Solución .NET 10 con proyectos `Api`, `Application`, `Domain` e `Infrastructure`.
 - App Angular 21 en `src/LaboratorioTlahuac.Web`.
@@ -52,6 +52,14 @@ Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin dep
 - UI Angular en `/app/ordenes`, `/app/ordenes/nueva`, `/app/ordenes/:id` y `/app/ordenes/:id/editar`.
 - Cambio de estado operativo con historial y regla de cancelación con nota.
 - Pruebas backend de integración para órdenes, permisos, CSRF, reglas de cliente/doctor interno, estados e historial.
+- Entidad `Payment`, enum `PaymentMethod` y estado financiero calculado `PaymentStatus`.
+- DbSet y configuración EF Core para `Payments`.
+- Migración `AddPayments`.
+- Endpoints REST de pagos protegidos por `payments.view`, `payments.create` y `payments.cancel`.
+- Resumen financiero calculado por orden: total, pagado, saldo y estado financiero.
+- UI Angular en `/app/pagos` y sección de pagos en `/app/ordenes/:id`.
+- Cancelación de pagos con motivo, sin delete físico ni edición libre en MVP.
+- Pruebas backend de integración para permisos, CSRF, creación, reglas de negocio, sobrepago, resumen, cancelación y listados.
 
 ## Principios De Trabajo
 
@@ -68,5 +76,8 @@ Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin dep
 
 ## Próximos Pasos
 
-- Revisar órdenes de trabajo.
-- Implementar pagos, abonos y saldos.
+- Revisar pagos y saldos.
+- Implementar dashboard operativo básico.
+- Preparar prueba con usuario.
+- Preparar migración del Excel.
+- Revisar UX y permisos.

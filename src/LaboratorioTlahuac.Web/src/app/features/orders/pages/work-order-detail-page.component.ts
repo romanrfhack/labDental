@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { WorkOrderPaymentsSectionComponent } from '../../payments/components/work-order-payments-section.component';
 import { WorkOrderStatusBadgeComponent } from '../components/work-order-status-badge.component';
 import { WorkOrderStatusChangeComponent } from '../components/work-order-status-change.component';
 import { WorkOrderStatusHistorySectionComponent } from '../components/work-order-status-history-section.component';
@@ -21,6 +22,7 @@ import { WorkOrderService } from '../work-order.service';
     CurrencyPipe,
     DatePipe,
     RouterLink,
+    WorkOrderPaymentsSectionComponent,
     WorkOrderStatusBadgeComponent,
     WorkOrderStatusChangeComponent,
     WorkOrderStatusHistorySectionComponent
@@ -118,6 +120,14 @@ import { WorkOrderService } from '../work-order.service';
           </section>
         }
 
+        @if (canViewPayments) {
+          <app-work-order-payments-section
+            [workOrderId]="order.id"
+            [totalAmount]="order.totalAmount"
+            [isWorkOrderCancelled]="order.isCancelled"
+          />
+        }
+
         <app-work-order-status-history-section [history]="order.statusHistory" />
       }
     </section>
@@ -144,6 +154,10 @@ export class WorkOrderDetailPageComponent implements OnInit {
 
   get canChangeStatus(): boolean {
     return this.authService.hasPermission('orders.changeStatus');
+  }
+
+  get canViewPayments(): boolean {
+    return this.authService.hasPermission('payments.view');
   }
 
   ngOnInit(): void {

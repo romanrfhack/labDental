@@ -74,6 +74,16 @@ button:disabled {
     auto;
 }
 
+.payments-toolbar {
+  grid-template-columns:
+    minmax(220px, 1fr)
+    minmax(150px, 190px)
+    150px
+    150px
+    minmax(150px, auto)
+    auto;
+}
+
 .field-grid {
   display: grid;
   gap: 14px;
@@ -99,6 +109,11 @@ button:disabled {
   align-items: center;
   grid-template-columns: auto 1fr;
   min-height: 40px;
+}
+
+.compact-check {
+  align-self: center;
+  min-width: 190px;
 }
 
 .form-field span,
@@ -254,6 +269,31 @@ button:disabled {
   color: #991b1b;
 }
 
+.status-pill.payment-status.TotalNotSet {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.status-pill.payment-status.Unpaid {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-pill.payment-status.Partial {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.payment-status.Paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.payment-status.Overpaid {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
 .muted-block {
   color: #6b7280;
   display: block;
@@ -287,11 +327,25 @@ button:disabled {
   margin-bottom: 4px;
 }
 
+.payment-summary-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.payment-form,
+.cancel-action {
+  display: grid;
+  gap: 12px;
+}
+
 @media (max-width: 920px) {
   .toolbar,
   .orders-toolbar,
+  .payments-toolbar,
   .field-grid,
-  .detail-grid {
+  .detail-grid,
+  .payment-summary-grid {
     grid-template-columns: 1fr;
   }
 }

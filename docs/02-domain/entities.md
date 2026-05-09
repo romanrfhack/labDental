@@ -206,7 +206,53 @@ Reglas principales:
 
 ## Payment
 
-Movimiento de pago o abono asociado a una orden. Campos principales: orden, monto, método de pago, fecha, referencia, observaciones, estado vigente o cancelado, usuario.
+Movimiento financiero asociado obligatoriamente a una orden de trabajo.
+
+Campos implementados:
+
+- `Id`
+- `WorkOrderId`
+- `PaymentDate`
+- `Amount`
+- `Method`
+- `Reference`
+- `Notes`
+- `IsCancelled`
+- `CancelledAtUtc`
+- `CancelledByUserId`
+- `CancellationReason`
+- `CreatedAtUtc`
+- `CreatedByUserId`
+
+Reglas principales:
+
+- Pertenece a una `WorkOrder`.
+- `Amount` debe ser mayor a 0.
+- `PaymentDate` y `Method` son obligatorios.
+- `Reference` y `Notes` son opcionales.
+- No hay delete físico.
+- No se editan pagos en el MVP.
+- Un pago se cancela con motivo obligatorio.
+- Un pago cancelado no cuenta para saldo.
+
+## PaymentMethod
+
+Método de pago con valores internos estables:
+
+- `Cash`: Efectivo.
+- `BankTransfer`: Transferencia.
+- `Card`: Tarjeta.
+- `Other`: Otro.
+
+## PaymentStatus
+
+Estado financiero calculado, no capturado manualmente:
+
+- `TotalNotSet`: Total no definido.
+- `Unpaid`: Sin pago.
+- `Partial`: Pago parcial.
+- `Paid`: Pagada.
+- `Overpaid`: Saldo a favor / revisar.
 
 ## Supplier
 

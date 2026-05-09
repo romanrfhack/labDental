@@ -2,33 +2,76 @@
 
 ## Conceptos
 
-- Total de la orden: importe acordado para el trabajo.
-- Pago parcial: abono registrado contra una orden.
-- Saldo calculado: total de la orden menos pagos vigentes.
-- Pago cancelado: pago que queda trazable, pero no suma al total pagado vigente.
+- `TotalAmount`: importe total acordado en la orden de trabajo.
+- `Payment`: movimiento financiero registrado contra una orden.
+- `PaidAmount`: suma de pagos no cancelados.
+- `Balance`: saldo calculado.
+- `PaymentStatus`: estado financiero calculado.
 
-## Reglas Iniciales
+## Métodos De Pago
 
-- No se permiten pagos negativos.
-- El saldo no se captura manualmente.
-- Los pagos se registran como movimientos.
-- La cancelación de pagos requiere trazabilidad de usuario, fecha y motivo.
-- Los métodos de pago deben registrarse de forma estructurada cuando sea posible.
-- Si los pagos vigentes superan el total, el caso se identifica como saldo a favor / revisar.
+Valores internos y etiquetas:
 
-## Métodos De Pago Iniciales
+- `Cash`: Efectivo.
+- `BankTransfer`: Transferencia.
+- `Card`: Tarjeta.
+- `Other`: Otro.
 
-- Efectivo.
-- Transferencia.
-- Tarjeta.
-- Otro.
+## Fórmulas
 
-## Fórmula Conceptual
+- `PaidAmount = suma(Payment.Amount donde IsCancelled = false)`.
+- `Balance = TotalAmount - PaidAmount`.
+- Si `TotalAmount` es `null`, `Balance = null`.
 
-Saldo = total de la orden - suma de pagos vigentes.
+## PaymentStatus
+
+- `TotalNotSet`: `TotalAmount` no está definido.
+- `Unpaid`: `TotalAmount` está definido, es mayor a 0 y `PaidAmount = 0`.
+- `Partial`: `PaidAmount > 0` y menor que `TotalAmount`.
+- `Paid`: `PaidAmount = TotalAmount`, o `TotalAmount = 0` y `PaidAmount = 0`.
+- `Overpaid`: `PaidAmount > TotalAmount`.
+
+Etiqueta de `Overpaid`: "Saldo a favor / revisar".
+
+## Registro
+
+- La orden debe existir.
+- `WorkOrder.TotalAmount` debe estar definido.
+- La orden no debe estar `Cancelled`.
+- `PaymentDate` es obligatorio.
+- `Amount` debe ser mayor a 0.
+- `Method` debe ser un método válido.
+- `Reference` es opcional y máximo 100 caracteres.
+- `Notes` es opcional y máximo 1000 caracteres.
+- El sobrepago se permite y se refleja como `Overpaid`.
+
+## Cancelación
+
+- No hay delete físico de pagos.
+- No se editan pagos libremente en el MVP.
+- Un pago se corrige cancelando con motivo y registrando otro pago si aplica.
+- `CancellationReason` es obligatorio y máximo 1000 caracteres.
+- No se puede cancelar dos veces el mismo pago.
+- Un pago cancelado no cuenta para `PaidAmount` ni `Balance`.
+- La cancelación conserva `CancelledAtUtc` y `CancelledByUserId`.
+
+## Permisos
+
+- `payments.view`: consultar pagos, métodos y resúmenes financieros.
+- `payments.create`: registrar pagos/abonos.
+- `payments.cancel`: cancelar pagos con motivo.
+- `orders.view` no debe exponer saldos detallados sin `payments.view`.
+
+## Restricciones De Alcance
+
+- No hay cortes de caja avanzados.
+- No hay facturación ni CFDI.
+- No hay reportes avanzados de cobranza.
+- No hay migración del Excel en esta etapa.
 
 ## Criterios De Validación
 
 - Un pago cancelado no afecta el saldo.
 - Un sobrepago no se oculta; queda marcado para revisión.
-- Los pagos del Excel migrado deben validarse antes de afectar saldos definitivos.
+- El saldo se calcula y no se captura manualmente.
+- Los endpoints mutables requieren XSRF y permisos.

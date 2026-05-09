@@ -56,6 +56,7 @@ La persistencia usa EF Core con SQL Server. Migraciones creadas:
 - `InitialSecurityModel`
 - `AddCustomersAndInternalDoctors`
 - `AddWorkOrders`
+- `AddPayments`
 
 Crear nuevas migraciones:
 
@@ -165,7 +166,37 @@ Convenciones implementadas:
 - Cambiar a `Cancelled` requiere nota.
 - Una orden `Cancelled` no se edita ni vuelve a otro estado en el MVP.
 - No existe delete fisico de ordenes.
-- `TotalAmount` es opcional; pagos, abonos y saldos no estan implementados todavia.
+- `TotalAmount` es opcional; saldos y pagos detallados se consultan en endpoints protegidos por `payments.view`.
+
+### Endpoints Pagos
+
+Modulo implementado para pagos, abonos y saldos calculados. Los datos financieros detallados usan permisos `payments.*`, no `orders.view`.
+
+- `GET /api/work-orders/{workOrderId}/payments` requiere `payments.view`.
+- `GET /api/work-orders/{workOrderId}/payments/summary` requiere `payments.view`.
+- `POST /api/work-orders/{workOrderId}/payments` requiere `payments.create` y XSRF.
+- `PATCH /api/work-orders/{workOrderId}/payments/{paymentId}/cancel` requiere `payments.cancel` y XSRF.
+- `GET /api/payments` requiere `payments.view`.
+- `GET /api/payments/methods` requiere `payments.view`.
+- `GET /api/payments/statuses` requiere `payments.view`.
+
+`GET /api/payments` acepta `search`, `customerId`, `workOrderId`, `method`, `paymentDateFrom`, `paymentDateTo`, `includeCancelled`, `page` y `pageSize`. Si `includeCancelled` no se envia, excluye pagos cancelados.
+
+Convencion de respuesta mutable:
+
+- `POST /api/work-orders/{workOrderId}/payments` devuelve `201 Created` con `{ payment, summary }`.
+- `PATCH /cancel` devuelve `200 OK` con `{ payment, summary }`.
+
+Reglas principales:
+
+- No hay delete fisico ni edicion libre de pagos en el MVP.
+- `Amount` debe ser mayor a 0.
+- `PaymentDate` y `Method` son obligatorios.
+- No se registran pagos si `WorkOrder.TotalAmount` es `null`.
+- No se registran pagos en ordenes `Cancelled`.
+- Los pagos cancelados no cuentan para `PaidAmount` ni `Balance`.
+- El sobrepago se permite y deja `PaymentStatus = Overpaid` con etiqueta "Saldo a favor / revisar".
+- `Balance` es `null` si `TotalAmount` no esta definido.
 
 ### Flujo XSRF
 
@@ -243,22 +274,45 @@ Angular configura `withXsrfConfiguration` con `XSRF-TOKEN` y `X-XSRF-TOKEN`. `Au
 16. Confirmar que mutables sin XSRF devuelven `400`.
 17. Confirmar que un usuario sin `orders.view` no consulta ordenes.
 
+### Probar Pagos Localmente
+
+1. Configurar SQL Server local en `ConnectionStrings:DefaultConnection`.
+2. Aplicar migraciones con `dotnet ef database update`.
+3. Ejecutar API y Angular.
+4. Iniciar sesion como Admin.
+5. Crear cliente.
+6. Crear orden con `TotalAmount`.
+7. Entrar al detalle de la orden.
+8. Registrar pago parcial.
+9. Verificar `PaidAmount`, `Balance` y `PaymentStatus = Partial`.
+10. Registrar segundo pago hasta cubrir total.
+11. Verificar `PaymentStatus = Paid`.
+12. Registrar sobrepago y verificar `Overpaid`.
+13. Cancelar un pago con motivo.
+14. Verificar que el saldo se recalcula.
+15. Crear orden sin `TotalAmount` e intentar pago; debe fallar.
+16. Cancelar orden e intentar pago; debe fallar.
+17. Entrar a `/app/pagos` y verificar listado.
+18. Confirmar que pagos cancelados no aparecen por default.
+19. Confirmar que mutables sin XSRF fallan.
+20. Confirmar que usuario sin `payments.view` no puede consultar.
+
 ## npm audit
 
-Se revisó `npm audit`. En la validación de Etapa 4 apareció una vulnerabilidad moderada transitiva en `hono`. Se aplicó `npm audit fix` sin `--force`, actualizando dependencias transitivas compatibles, y el resultado final quedó en 0 vulnerabilidades.
+Se revisó `npm audit` en la validación de Etapa 5 y el resultado fue 0 vulnerabilidades.
 
 ## Estado Actual
 
-Fase 1 - MVP operativo. Etapa 4 - Ordenes de trabajo dental implementada.
+Fase 1 - MVP operativo. Etapa 5 - Pagos, abonos y saldos implementada.
 
-Incluye solucion .NET, proyectos base, app Angular, rutas publicas/privadas, cookie auth HttpOnly, XSRF para requests mutables, modelo inicial de usuarios/roles/permisos, seed Admin, endpoints auth, guards reales, migraciones de seguridad, clientes y ordenes, CRUD de clientes/doctores/clinicas, ordenes de trabajo con estados e historial, health check y documentacion actualizada.
+Incluye solucion .NET, proyectos base, app Angular, rutas publicas/privadas, cookie auth HttpOnly, XSRF para requests mutables, modelo inicial de usuarios/roles/permisos, seed Admin, endpoints auth, guards reales, migraciones de seguridad, clientes, ordenes, pagos, CRUD de clientes/doctores/clinicas, ordenes de trabajo con estados e historial, pagos cancelables con motivo, saldos calculados, health check y documentacion actualizada.
 
-No incluye pagos, abonos, saldos calculados, inventario, proveedores, importacion del Excel ni dashboard operativo real.
+No incluye inventario, proveedores, facturacion, CFDI, cortes de caja avanzados, reportes avanzados, importacion del Excel ni dashboard operativo real.
 
 ## Proximos Pasos
 
-1. Revisar ordenes de trabajo.
-2. Implementar pagos, abonos y saldos.
-3. Implementar dashboard operativo basico.
+1. Revisar pagos y saldos.
+2. Implementar dashboard operativo basico.
+3. Preparar prueba con usuario.
 4. Preparar migracion del Excel.
-5. Revisar UX con cliente.
+5. Revisar UX y permisos.
