@@ -14,6 +14,9 @@
 - `/app/ordenes/nueva`
 - `/app/ordenes/:id`
 - `/app/clientes`
+- `/app/clientes/nuevo`
+- `/app/clientes/:id`
+- `/app/clientes/:id/editar`
 - `/app/pagos`
 - `/app/inventario`
 - `/app/proveedores`
@@ -29,6 +32,7 @@ Cliente/Doctor -> Orden de trabajo -> Pruebas -> Entrega -> Pagos -> Saldo.
 - Las rutas públicas no requieren autenticación.
 - `/app/*` requiere login.
 - Las rutas administrativas requieren permisos específicos.
+- Las rutas de clientes requieren `customers.view`, `customers.create` o `customers.edit` según la acción.
 - Inventario y proveedores pueden quedar visibles como módulos futuros o deshabilitados si están fuera del MVP.
 
 ## Criterios De Validación

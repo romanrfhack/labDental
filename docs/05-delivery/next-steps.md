@@ -1,10 +1,10 @@
 # Próximos Pasos
 
-1. Revisar hardening de seguridad.
-2. Implementar CRUD de clientes/doctores/clínicas.
-3. Implementar órdenes de trabajo.
-4. Implementar pagos y saldos.
-5. Implementar dashboard operativo básico.
+1. Revisar CRUD de clientes.
+2. Implementar órdenes de trabajo.
+3. Implementar pagos y saldos.
+4. Implementar dashboard operativo básico.
+5. Preparar migración del Excel.
 
 ## Criterios De Validación
 

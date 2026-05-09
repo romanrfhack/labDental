@@ -49,6 +49,7 @@ Usuario -> Angular público/privado -> API REST .NET -> Base de datos relacional
 - `POST /api/auth/logout` cierra sesión.
 - `GET /api/auth/me` devuelve usuario, roles y permisos.
 - `GET /api/auth/csrf` emite token XSRF.
+- `/api/customers` expone CRUD de clientes y doctores internos protegido por permisos.
 - Métodos mutables bajo `/api` requieren `X-XSRF-TOKEN`.
 
 ## Criterios De Validación
@@ -61,6 +62,5 @@ Usuario -> Angular público/privado -> API REST .NET -> Base de datos relacional
 ## Pendientes
 
 - Reutilizar XSRF en los próximos servicios mutables.
-- Implementar clientes/doctores/clínicas.
 - Implementar órdenes, pagos y dashboard operativo.
 - Definir hosting y estrategia de despliegue.

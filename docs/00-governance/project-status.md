@@ -5,18 +5,18 @@
 - Proyecto: Laboratorio Dental Tláhuac.
 - Dominio principal: laboratoriodentaltlahuac.com.
 - Fase actual: Fase 1 - MVP operativo.
-- Etapa actual: Etapa 2.1 - Hardening de seguridad.
-- Estado: Etapa 2.1 implementada; Fase 1 en ejecución.
+- Etapa actual: Etapa 3 - Clientes / doctores / clínicas.
+- Estado: Etapa 3 implementada; Fase 1 en ejecución.
 
 ## Objetivo Inmediato
 
-Revisar hardening de seguridad antes de iniciar los CRUD operativos del MVP.
+Revisar el CRUD de clientes antes de iniciar órdenes de trabajo.
 
 ## MVP Objetivo
 
 Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin depender del Excel para nuevos registros.
 
-## Entregado En Etapas 1, 2 Y 2.1
+## Entregado En Etapas 1, 2, 2.1 Y 3
 
 - Solución .NET 10 con proyectos `Api`, `Application`, `Domain` e `Infrastructure`.
 - App Angular 21 en `src/LaboratorioTlahuac.Web`.
@@ -37,6 +37,13 @@ Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin dep
 - Guards reales en Angular para sesión y permisos.
 - Pruebas backend de integración para auth, cookie, CSRF, `/health` y permisos.
 - `npm audit` revisado y corregido sin `--force`.
+- Entidades `Customer`, `InternalDoctor` y `CustomerType`.
+- DbSets y configuración EF Core para `Customers` e `InternalDoctors`.
+- Migración `AddCustomersAndInternalDoctors`.
+- Endpoints REST `/api/customers` protegidos por `customers.view`, `customers.create` y `customers.edit`.
+- CRUD Angular en `/app/clientes`, `/app/clientes/nuevo`, `/app/clientes/:id` y `/app/clientes/:id/editar`.
+- Gestión de doctores internos solo para clientes tipo clínica.
+- Pruebas backend de integración para clientes, permisos, CSRF, soft deactivate y reglas de clínicas.
 
 ## Principios De Trabajo
 
@@ -53,6 +60,5 @@ Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin dep
 
 ## Próximos Pasos
 
-- Revisar hardening de seguridad.
-- Implementar CRUD de clientes/doctores/clínicas.
+- Revisar CRUD de clientes.
 - Implementar órdenes de trabajo.

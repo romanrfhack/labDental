@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using LaboratorioTlahuac.Api.Endpoints;
 using LaboratorioTlahuac.Api.Security;
 using LaboratorioTlahuac.Application;
+using LaboratorioTlahuac.Application.Abstractions.Security;
 using LaboratorioTlahuac.Domain.Security;
 using LaboratorioTlahuac.Infrastructure;
 using LaboratorioTlahuac.Infrastructure.Persistence;
@@ -17,6 +18,8 @@ const string DevelopmentCorsPolicy = "DevelopmentAngular";
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 
 builder.Services.AddAntiforgery(options =>
 {
@@ -164,6 +167,7 @@ app.Use(async (context, next) =>
 
 app.MapHealthEndpoints();
 app.MapAuthEndpoints();
+app.MapCustomerEndpoints();
 app.MapSecurityDiagnosticEndpoints(app.Environment);
 
 app.Run();

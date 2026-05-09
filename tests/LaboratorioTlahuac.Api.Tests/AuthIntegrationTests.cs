@@ -200,6 +200,245 @@ public sealed class AuthIntegrationTests(TestApplicationFactory factory)
 
         Assert.Contains(response.StatusCode, new[] { HttpStatusCode.NoContent, HttpStatusCode.OK });
     }
+
+    [Fact]
+    public async Task CustomersWithoutSessionReturnsUnauthorized()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+
+        var response = await client.GetAsync("/api/customers");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CustomersWithSessionButWithoutViewPermissionReturnsForbidden()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        await client.LoginAsLimitedUserAsync();
+
+        var response = await client.GetAsync("/api/customers");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CustomersWithViewPermissionReturnsOk()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        await client.LoginAsAdminAsync();
+
+        var response = await client.GetAsync("/api/customers");
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(1, payload.GetProperty("page").GetInt32());
+    }
+
+    [Fact]
+    public async Task CreateCustomerWithoutXsrfReturnsBadRequest()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        await client.LoginAsAdminAsync();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/customers",
+            new { type = "Doctor", displayName = UniqueName("Dr Sin XSRF") });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateCustomerWithPermissionAndXsrfCreatesCustomer()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var displayName = UniqueName("Dr Creacion");
+
+        var created = await CreateCustomerAsync(client, xsrfToken, "Doctor", displayName);
+
+        Assert.Equal("Doctor", created.GetProperty("type").GetString());
+        Assert.Equal(displayName, created.GetProperty("displayName").GetString());
+        Assert.True(created.GetProperty("isActive").GetBoolean());
+    }
+
+    [Fact]
+    public async Task CreateCustomerWithInvalidRequestReturnsBadRequest()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+
+        var response = await client.PostAsJsonWithXsrfAsync(
+            "/api/customers",
+            xsrfToken,
+            new { type = "Doctor", displayName = " " });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateCustomerChangesEditableFields()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var created = await CreateCustomerAsync(client, xsrfToken, "Doctor", UniqueName("Dr Original"));
+        var customerId = created.GetProperty("id").GetGuid();
+        var updatedName = UniqueName("Dr Actualizado");
+
+        var response = await client.PutAsJsonWithXsrfAsync(
+            $"/api/customers/{customerId}",
+            xsrfToken,
+            new
+            {
+                type = "Doctor",
+                displayName = updatedName,
+                legalName = "Razon social actualizada",
+                contactName = "Contacto",
+                phone = "555-0000"
+            });
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(updatedName, payload.GetProperty("displayName").GetString());
+        Assert.Equal("Razon social actualizada", payload.GetProperty("legalName").GetString());
+    }
+
+    [Fact]
+    public async Task UpdateCustomerStatusDeactivatesWithoutDeleting()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var created = await CreateCustomerAsync(client, xsrfToken, "Doctor", UniqueName("Dr Desactivar"));
+        var customerId = created.GetProperty("id").GetGuid();
+
+        var response = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/customers/{customerId}/status",
+            xsrfToken,
+            new { isActive = false });
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.False(payload.GetProperty("isActive").GetBoolean());
+
+        var getResponse = await client.GetAsync($"/api/customers/{customerId}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task CustomerListDoesNotReturnInactiveCustomersByDefault()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var displayName = UniqueName("Dr Inactivo Default");
+        var created = await CreateCustomerAsync(client, xsrfToken, "Doctor", displayName);
+        var customerId = created.GetProperty("id").GetGuid();
+
+        var statusResponse = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/customers/{customerId}/status",
+            xsrfToken,
+            new { isActive = false });
+        statusResponse.EnsureSuccessStatusCode();
+
+        var response = await client.GetAsync($"/api/customers?search={Uri.EscapeDataString(displayName)}");
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(payload.GetProperty("items").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task CreateInternalDoctorForClinicWorks()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var clinic = await CreateCustomerAsync(client, xsrfToken, "Clinic", UniqueName("Clinica Internos"));
+        var clinicId = clinic.GetProperty("id").GetGuid();
+        var doctorName = UniqueName("Dra Interna");
+
+        var response = await client.PostAsJsonWithXsrfAsync(
+            $"/api/customers/{clinicId}/internal-doctors",
+            xsrfToken,
+            new { fullName = doctorName, email = "interna@tests.local" });
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(doctorName, payload.GetProperty("fullName").GetString());
+    }
+
+    [Fact]
+    public async Task CreateInternalDoctorForDoctorCustomerFails()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var doctor = await CreateCustomerAsync(client, xsrfToken, "Doctor", UniqueName("Dr Sin Internos"));
+        var doctorCustomerId = doctor.GetProperty("id").GetGuid();
+
+        var response = await client.PostAsJsonWithXsrfAsync(
+            $"/api/customers/{doctorCustomerId}/internal-doctors",
+            xsrfToken,
+            new { fullName = UniqueName("Interno Invalido") });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangingClinicWithActiveInternalDoctorsToDoctorFailsWithConflict()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var clinic = await CreateCustomerAsync(client, xsrfToken, "Clinic", UniqueName("Clinica Bloqueada"));
+        var clinicId = clinic.GetProperty("id").GetGuid();
+
+        var internalDoctorResponse = await client.PostAsJsonWithXsrfAsync(
+            $"/api/customers/{clinicId}/internal-doctors",
+            xsrfToken,
+            new { fullName = UniqueName("Dr Activo") });
+        internalDoctorResponse.EnsureSuccessStatusCode();
+
+        var response = await client.PutAsJsonWithXsrfAsync(
+            $"/api/customers/{clinicId}",
+            xsrfToken,
+            new { type = "Doctor", displayName = clinic.GetProperty("displayName").GetString() });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CustomerResponsesDoNotExposePasswordHash()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var created = await CreateCustomerAsync(client, xsrfToken, "Doctor", UniqueName("Dr Sin Seguridad"));
+        var customerId = created.GetProperty("id").GetGuid();
+
+        var response = await client.GetAsync($"/api/customers/{customerId}");
+        var json = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.DoesNotContain("passwordHash", json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task<JsonElement> CreateCustomerAsync(
+        HttpClient client,
+        string xsrfToken,
+        string type,
+        string displayName)
+    {
+        var response = await client.PostAsJsonWithXsrfAsync(
+            "/api/customers",
+            xsrfToken,
+            new { type, displayName });
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        return payload;
+    }
+
+    private static string UniqueName(string prefix)
+    {
+        return $"{prefix} {Guid.NewGuid():N}";
+    }
 }
 
 public sealed class TestApplicationFactory : WebApplicationFactory<Program>
@@ -317,7 +556,7 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
     }
 }
 
-file static class AuthTestClientExtensions
+internal static class AuthTestClientExtensions
 {
     public static async Task<string> LoginAsAdminAsync(this HttpClient client)
     {
@@ -371,6 +610,36 @@ file static class AuthTestClientExtensions
         TValue value)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
+        {
+            Content = JsonContent.Create(value)
+        };
+        request.Headers.Add("X-XSRF-TOKEN", xsrfToken);
+
+        return client.SendAsync(request);
+    }
+
+    public static Task<HttpResponseMessage> PutAsJsonWithXsrfAsync<TValue>(
+        this HttpClient client,
+        string requestUri,
+        string xsrfToken,
+        TValue value)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Put, requestUri)
+        {
+            Content = JsonContent.Create(value)
+        };
+        request.Headers.Add("X-XSRF-TOKEN", xsrfToken);
+
+        return client.SendAsync(request);
+    }
+
+    public static Task<HttpResponseMessage> PatchAsJsonWithXsrfAsync<TValue>(
+        this HttpClient client,
+        string requestUri,
+        string xsrfToken,
+        TValue value)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Patch, requestUri)
         {
             Content = JsonContent.Create(value)
         };

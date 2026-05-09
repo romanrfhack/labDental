@@ -51,7 +51,10 @@ curl http://localhost:5277/health
 
 ### Base De Datos Y Migraciones
 
-La persistencia usa EF Core con SQL Server. La migracion inicial de seguridad es `InitialSecurityModel`.
+La persistencia usa EF Core con SQL Server. Migraciones creadas:
+
+- `InitialSecurityModel`
+- `AddCustomersAndInternalDoctors`
 
 Crear nuevas migraciones:
 
@@ -71,6 +74,14 @@ dotnet ef database update \
 ```
 
 No hay auto-migracion en startup. No ejecutar `database update` contra produccion sin plan de despliegue y respaldo.
+
+Listar migraciones:
+
+```bash
+dotnet ef migrations list \
+  --project src/LaboratorioTlahuac.Infrastructure/LaboratorioTlahuac.Infrastructure.csproj \
+  --startup-project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+```
 
 ### Seed Admin
 
@@ -114,6 +125,22 @@ No hay contrasena por defecto en el repositorio.
 
 La cookie de autenticacion es HttpOnly, `SameSite=Lax`, con `Secure` obligatorio en Production. Los endpoints `/api` devuelven `401` o `403`; no redirigen con `302` a HTML.
 
+### Endpoints Clientes
+
+Modulo implementado bajo `/api/customers`, protegido por permisos:
+
+- `GET /api/customers` requiere `customers.view`.
+- `GET /api/customers/{id}` requiere `customers.view`.
+- `POST /api/customers` requiere `customers.create` y XSRF.
+- `PUT /api/customers/{id}` requiere `customers.edit` y XSRF.
+- `PATCH /api/customers/{id}/status` requiere `customers.edit` y XSRF.
+- `GET /api/customers/{customerId}/internal-doctors` requiere `customers.view`.
+- `POST /api/customers/{customerId}/internal-doctors` requiere `customers.create` y XSRF.
+- `PUT /api/customers/{customerId}/internal-doctors/{doctorId}` requiere `customers.edit` y XSRF.
+- `PATCH /api/customers/{customerId}/internal-doctors/{doctorId}/status` requiere `customers.edit` y XSRF.
+
+`GET /api/customers` acepta `search`, `type`, `isActive`, `page` y `pageSize`. Si `isActive` no se envia, devuelve solo clientes activos. `PATCH /status` devuelve `200 OK` con el cliente actualizado. Cambiar una clinica con doctores internos activos a `Doctor` u `Other` devuelve `409 Conflict`. Intentar administrar doctores internos en un cliente que no es `Clinic` devuelve `400 Bad Request`.
+
 ### Flujo XSRF
 
 El sistema usa cookie auth HttpOnly para la sesión y antiforgery para requests mutables.
@@ -156,22 +183,36 @@ La URL de API para `ng serve` esta en `src/environments/environment.development.
 
 Angular configura `withXsrfConfiguration` con `XSRF-TOKEN` y `X-XSRF-TOKEN`. `AuthService` pide `/api/auth/csrf` antes de login/logout y pone el header explícitamente para que funcione también en desarrollo cross-origin.
 
+### Probar Clientes Localmente
+
+1. Configurar una base SQL Server local en `ConnectionStrings:DefaultConnection`.
+2. Aplicar migraciones con `dotnet ef database update`.
+3. Configurar y ejecutar seed Admin.
+4. Ejecutar API con `dotnet run --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`.
+5. Ejecutar Angular con `cd src/LaboratorioTlahuac.Web && npm run start`.
+6. Iniciar sesion como Admin y entrar a `/app/clientes`.
+7. Crear un cliente tipo `Doctor`.
+8. Crear un cliente tipo `Clinic`.
+9. Entrar al detalle de la clinica y agregar un doctor interno.
+10. Validar que un cliente tipo `Doctor` no acepta doctores internos.
+11. Editar y desactivar clientes; por default el listado muestra solo activos.
+
 ## npm audit
 
 Se revisó `npm audit`. El reporte inicial encontró vulnerabilidades transitivas en `fast-uri`, `ip-address` y `express-rate-limit`. Se aplicó `npm audit fix` sin `--force`, actualizando dependencias transitivas compatibles, y el resultado final quedó en 0 vulnerabilidades.
 
 ## Estado Actual
 
-Fase 1 - MVP operativo. Etapa 2.1 - Hardening de seguridad implementada.
+Fase 1 - MVP operativo. Etapa 3 - Clientes / doctores / clinicas implementada.
 
-Incluye solucion .NET, proyectos base, app Angular, rutas publicas/privadas, cookie auth HttpOnly, XSRF para requests mutables, modelo inicial de usuarios/roles/permisos, seed Admin, endpoints auth, guards reales, migracion inicial de seguridad, health check y documentacion actualizada.
+Incluye solucion .NET, proyectos base, app Angular, rutas publicas/privadas, cookie auth HttpOnly, XSRF para requests mutables, modelo inicial de usuarios/roles/permisos, seed Admin, endpoints auth, guards reales, migraciones de seguridad y clientes, CRUD de clientes/doctores/clinicas, health check y documentacion actualizada.
 
-No incluye CRUD de clientes, ordenes de trabajo, pagos, inventario, proveedores ni dashboard operativo real.
+No incluye ordenes de trabajo, pagos, inventario, proveedores ni dashboard operativo real.
 
 ## Proximos Pasos
 
-1. Revisar hardening de seguridad.
-2. Implementar CRUD de clientes/doctores/clinicas.
-3. Implementar ordenes de trabajo.
-4. Implementar pagos y saldos.
-5. Implementar dashboard operativo basico.
+1. Revisar CRUD de clientes.
+2. Implementar ordenes de trabajo.
+3. Implementar pagos y saldos.
+4. Implementar dashboard operativo basico.
+5. Preparar migracion del Excel.

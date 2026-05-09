@@ -4,11 +4,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using LaboratorioTlahuac.Application.Abstractions.Authentication;
 using LaboratorioTlahuac.Application.Abstractions.Security;
+using LaboratorioTlahuac.Application.Abstractions.Time;
+using LaboratorioTlahuac.Application.Customers;
 using LaboratorioTlahuac.Domain.Security.Entities;
+using LaboratorioTlahuac.Infrastructure.Customers;
 using LaboratorioTlahuac.Infrastructure.Persistence;
 using LaboratorioTlahuac.Infrastructure.Security;
 using LaboratorioTlahuac.Infrastructure.Security.Authentication;
 using LaboratorioTlahuac.Infrastructure.Security.Seed;
+using LaboratorioTlahuac.Infrastructure.Time;
 
 namespace LaboratorioTlahuac.Infrastructure;
 
@@ -41,8 +45,10 @@ public static class DependencyInjection
         });
 
         services.AddSingleton<IPermissionChecker, ClaimsPermissionChecker>();
+        services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IAuthSessionService, AuthSessionService>();
+        services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<ISecuritySeeder, SecuritySeeder>();
 
         return services;

@@ -76,11 +76,65 @@ Campos:
 
 ## Customer
 
-Cliente del laboratorio. Puede representar doctor, doctora, clínica u otro. Campos principales: identificador, tipo, nombre comercial o profesional, teléfono, email, dirección, observaciones, estado activo.
+Cliente del laboratorio. Puede representar doctor, doctora, clínica u otro.
+
+Campos implementados:
+
+- `Id`
+- `Type`
+- `DisplayName`
+- `LegalName`
+- `ContactName`
+- `Phone`
+- `WhatsApp`
+- `Email`
+- `Address`
+- `Notes`
+- `IsActive`
+- `CreatedAtUtc`
+- `CreatedByUserId`
+- `UpdatedAtUtc`
+- `UpdatedByUserId`
+
+Reglas principales:
+
+- `DisplayName` y `Type` son obligatorios.
+- Email es opcional, pero debe tener formato válido si se captura.
+- No hay unicidad global estricta en `DisplayName`.
+- Se desactiva con `IsActive`; no hay borrado físico.
+
+## CustomerType
+
+Tipo de cliente:
+
+- `Doctor`
+- `Clinic`
+- `Other`
 
 ## InternalDoctor
 
-Doctor asociado internamente a una clínica. Campos principales: identificador, customer de clínica, nombre, contacto y observaciones.
+Doctor asociado internamente a una clínica.
+
+Campos implementados:
+
+- `Id`
+- `CustomerId`
+- `FullName`
+- `Phone`
+- `WhatsApp`
+- `Email`
+- `Notes`
+- `IsActive`
+- `CreatedAtUtc`
+- `CreatedByUserId`
+- `UpdatedAtUtc`
+- `UpdatedByUserId`
+
+Reglas principales:
+
+- Solo puede pertenecer a `Customer.Type = Clinic`.
+- `FullName` es obligatorio.
+- Se desactiva con `IsActive`; no hay borrado físico.
 
 ## WorkOrder
 

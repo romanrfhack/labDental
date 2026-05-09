@@ -18,19 +18,19 @@
 
 ### Api
 
-Expone endpoints HTTP, autenticación, autorización, antiforgery y contratos de respuesta. Incluye `GET /health`, endpoints de auth, configuración de cookie, XSRF y policies de permisos.
+Expone endpoints HTTP, autenticación, autorización, antiforgery y contratos de respuesta. Incluye `GET /health`, endpoints de auth, endpoints de clientes, configuración de cookie, XSRF y policies de permisos.
 
 ### Application
 
-Contiene casos de uso futuros, orquestación y contratos con infraestructura. Incluye `IPermissionChecker` e `IAuthSessionService` como contratos de seguridad.
+Contiene casos de uso, orquestación y contratos con infraestructura. Incluye `IPermissionChecker`, `IAuthSessionService`, `ICurrentUser`, `IClock` e `ICustomerService`.
 
 ### Domain
 
-Contiene entidades, reglas de negocio, invariantes y conceptos centrales. Centraliza `Permissions`, `PermissionClaimTypes` y las entidades iniciales de seguridad.
+Contiene entidades, reglas de negocio, invariantes y conceptos centrales. Centraliza `Permissions`, `PermissionClaimTypes`, entidades iniciales de seguridad y entidades de clientes.
 
 ### Infrastructure
 
-Contiene persistencia, integraciones externas y adaptadores. Incluye EF Core, `LaboratorioTlahuacDbContext`, `ClaimsPermissionChecker`, `AuthSessionService` y `SecuritySeeder`.
+Contiene persistencia, integraciones externas y adaptadores. Incluye EF Core, `LaboratorioTlahuacDbContext`, `CustomerService`, `ClaimsPermissionChecker`, `AuthSessionService`, `SystemClock` y `SecuritySeeder`.
 
 ## Reglas De Dependencia
 
@@ -56,6 +56,11 @@ Entidades persistidas en esquema `Security`:
 - `UserRoles`
 - `RolePermissions`
 
+Entidades operativas persistidas:
+
+- `Customers`
+- `InternalDoctors`
+
 Índices únicos:
 
 - `Users.NormalizedEmail`
@@ -67,9 +72,14 @@ Relaciones many-to-many explícitas:
 - `Users` a `Roles` mediante `UserRoles`.
 - `Roles` a `Permissions` mediante `RolePermissions`.
 
-Migración inicial:
+Relaciones operativas:
+
+- `Customers` 1:N `InternalDoctors`.
+
+Migraciones:
 
 - `InitialSecurityModel`
+- `AddCustomersAndInternalDoctors`
 
 No hay auto-migración al iniciar la aplicación.
 
@@ -106,6 +116,29 @@ Endpoints técnicos de seguridad solo en Development:
 - `GET /api/security/permissions-check`.
 - `POST /api/security/csrf-check`.
 
+## Clientes
+
+Endpoints principales:
+
+- `GET /api/customers`
+- `GET /api/customers/{id}`
+- `POST /api/customers`
+- `PUT /api/customers/{id}`
+- `PATCH /api/customers/{id}/status`
+- `GET /api/customers/{customerId}/internal-doctors`
+- `POST /api/customers/{customerId}/internal-doctors`
+- `PUT /api/customers/{customerId}/internal-doctors/{doctorId}`
+- `PATCH /api/customers/{customerId}/internal-doctors/{doctorId}/status`
+
+Implementación:
+
+- `CustomerEndpoints` mantiene endpoints HTTP delgados.
+- `ICustomerService` define casos de uso y contratos en Application.
+- `CustomerService` implementa validación, consultas EF, auditoría y reglas de negocio en Infrastructure.
+- `LaboratorioTlahuacDbContext` expone `Customers` e `InternalDoctors`.
+- Los permisos usados son `customers.view`, `customers.create` y `customers.edit`.
+- Los métodos mutables quedan cubiertos por el middleware XSRF centralizado.
+
 ## Criterios De Validación
 
 - Las reglas de saldo y estados no viven en controladores.
@@ -114,5 +147,5 @@ Endpoints técnicos de seguridad solo en Development:
 
 ## Próximos Pasos
 
-- Revisar hardening de seguridad.
-- Implementar CRUD de clientes/doctores/clínicas.
+- Revisar CRUD de clientes.
+- Implementar órdenes de trabajo.

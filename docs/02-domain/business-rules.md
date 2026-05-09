@@ -5,6 +5,11 @@
 - La orden de trabajo es la entidad central.
 - El cliente puede ser doctor, doctora, clínica u otro.
 - Una clínica puede tener doctores internos.
+- Doctor y Other no pueden tener doctores internos.
+- Los clientes se desactivan; no se eliminan físicamente.
+- Los doctores internos se desactivan; no se eliminan físicamente.
+- Los clientes inactivos no aparecen por default en búsquedas.
+- Cambiar una clínica con doctores internos activos a Doctor u Other se rechaza con conflicto.
 - El saldo no se captura manualmente; se calcula.
 - El estado operativo de la orden no debe mezclarse con el estado financiero.
 - Los pagos se registran como movimientos.

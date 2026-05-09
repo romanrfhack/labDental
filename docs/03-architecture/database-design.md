@@ -1,6 +1,6 @@
 # Diseño De Base De Datos
 
-La Etapa 2 crea la primera migración real para seguridad. Las entidades operativas siguen en diseño conceptual hasta sus etapas correspondientes.
+La Etapa 2 crea la primera migración real para seguridad. La Etapa 3 agrega las primeras tablas operativas para clientes y doctores internos.
 
 ## Tablas Implementadas En Seguridad
 
@@ -23,10 +23,28 @@ Relaciones:
 - `Users` tiene muchos `Roles` mediante `UserRoles`.
 - `Roles` tiene muchos `Permissions` mediante `RolePermissions`.
 
+## Tablas Implementadas En Clientes
+
+Esquema default:
+
+- `Customers`
+- `InternalDoctors`
+
+Índices:
+
+- `Customers.Type`
+- `Customers.IsActive`
+- `Customers.DisplayName`
+- `InternalDoctors.CustomerId`
+- `InternalDoctors.IsActive`
+
+Relaciones:
+
+- `Customers` tiene muchos `InternalDoctors`.
+- `InternalDoctors.CustomerId` referencia `Customers.Id` con delete restrictivo.
+
 ## Tablas Sugeridas
 
-- Customers
-- InternalDoctors
 - WorkOrders
 - WorkOrderStatusHistory
 - Payments

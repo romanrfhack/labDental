@@ -2,6 +2,15 @@
 
 Todos los cambios relevantes del proyecto deben registrarse aquí. No se deben inventar funcionalidades implementadas.
 
+## 2026-05-09 - Fase 1 Etapa 3
+
+- Se implementa CRUD de clientes/doctores/clínicas.
+- Se agregan entidades `Customer`, `InternalDoctor` y enum `CustomerType`.
+- Se agregan endpoints `/api/customers`.
+- Se agregan pantallas Angular de clientes.
+- Se agregan pruebas backend de integración para clientes, permisos, CSRF y reglas de clínicas.
+- Se agrega migración `AddCustomersAndInternalDoctors`.
+
 ## 2026-05-08 - Fase 1 Etapa 2.1
 
 - Se agrega protección CSRF/XSRF para métodos mutables bajo `/api`.

@@ -36,6 +36,9 @@ src/app/
 - `/app/dashboard`
 - `/app/ordenes`
 - `/app/clientes`
+- `/app/clientes/nuevo`
+- `/app/clientes/:id`
+- `/app/clientes/:id/editar`
 - `/app/pagos`
 - `/app/inventario`
 - `/app/proveedores`
@@ -67,6 +70,9 @@ Se eligió SCSS como formato de estilos para Angular. El diseño actual es míni
 - `/app/dashboard`: `reports.view`
 - `/app/ordenes`: `orders.view`
 - `/app/clientes`: `customers.view`
+- `/app/clientes/nuevo`: `customers.create`
+- `/app/clientes/:id`: `customers.view`
+- `/app/clientes/:id/editar`: `customers.edit`
 - `/app/pagos`: `payments.view`
 - `/app/inventario`: `inventory.view`
 - `/app/proveedores`: `suppliers.view`
@@ -86,6 +92,20 @@ Se eligió SCSS como formato de estilos para Angular. El diseño actual es míni
 - `me`: no requiere CSRF porque es `GET`.
 - La cookie `XSRF-TOKEN` se lee desde `document.cookie`; no se persiste en almacenamiento local.
 
+## Clientes
+
+Archivos principales:
+
+- `CustomerService`: encapsula llamadas a `/api/customers`.
+- `CustomerListPageComponent`: listado, búsqueda, filtros y activación/desactivación.
+- `CustomerDetailPageComponent`: detalle completo y sección de doctores internos.
+- `CustomerCreatePageComponent`: alta de cliente.
+- `CustomerEditPageComponent`: edición de cliente.
+- `CustomerFormComponent`: formulario reutilizable.
+- `InternalDoctorsSectionComponent`: alta, edición y activación/desactivación de doctores internos para clínicas.
+
+`CustomerService` reutiliza `AuthService.getCsrfHeaders()` para `POST`, `PUT` y `PATCH`; no guarda tokens en almacenamiento local.
+
 ## Criterios De Validación
 
 - El sitio público puede navegarse sin sesión.
@@ -95,5 +115,5 @@ Se eligió SCSS como formato de estilos para Angular. El diseño actual es míni
 ## Próximos Pasos
 
 - Agregar pruebas frontend cuando se incorpore runner no interactivo.
-- Implementar pantallas funcionales por módulo cuando inicie cada CRUD.
-- Reutilizar el flujo XSRF para servicios mutables de clientes, órdenes y pagos.
+- Implementar órdenes de trabajo.
+- Reutilizar el flujo XSRF para servicios mutables de órdenes y pagos.

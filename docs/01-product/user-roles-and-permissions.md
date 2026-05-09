@@ -37,6 +37,13 @@ Aunque al inicio solo exista Admin, el sistema debe diseñarse con permisos gran
 - El seed inicial asigna todos los permisos al rol Admin sin duplicarlos.
 - Roles futuros podrán recibir subconjuntos de permisos.
 
+## Uso En Clientes
+
+- `customers.view`: permite listar y consultar clientes y doctores internos.
+- `customers.create`: permite crear clientes y doctores internos para clínicas.
+- `customers.edit`: permite editar, activar y desactivar clientes y doctores internos.
+- La autorización se valida por permiso, no por `Role == Admin`.
+
 ## Criterios De Validación
 
 - Admin puede ejecutar todas las acciones del MVP.

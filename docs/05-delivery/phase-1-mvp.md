@@ -42,7 +42,6 @@ Incluye:
 
 Todavía faltan:
 
-- CRUD de clientes/doctores/clínicas.
 - Órdenes de trabajo.
 - Pagos y saldos.
 - Dashboard operativo básico.
@@ -64,7 +63,28 @@ Incluye:
 Todavía faltan:
 
 - Runner de pruebas frontend no interactivo.
-- CRUD de clientes/doctores/clínicas.
+- Órdenes de trabajo.
+- Pagos y saldos.
+- Dashboard operativo básico.
+
+## Etapa 3 - Clientes / Doctores / Clínicas
+
+Estado: implementada.
+
+Incluye:
+
+- Entidades `Customer`, `InternalDoctor` y `CustomerType`.
+- Migración `AddCustomersAndInternalDoctors`.
+- Endpoints `/api/customers` protegidos por permisos.
+- Protección XSRF en operaciones mutables.
+- Listado, detalle, alta y edición Angular de clientes.
+- Gestión de doctores internos para clientes tipo clínica.
+- Desactivación lógica sin delete físico.
+- Pruebas backend de integración.
+
+Todavía faltan:
+
+- Runner de pruebas frontend no interactivo.
 - Órdenes de trabajo.
 - Pagos y saldos.
 - Dashboard operativo básico.
@@ -74,7 +94,7 @@ Todavía faltan:
 - [x] Crear solución backend.
 - [x] Crear app frontend.
 - [x] Implementar login.
-- [ ] Implementar clientes.
+- [x] Implementar clientes.
 - [ ] Implementar órdenes.
 - [ ] Implementar pagos.
 - [ ] Implementar dashboard.

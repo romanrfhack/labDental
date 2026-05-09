@@ -9,7 +9,10 @@ import { LoginPageComponent } from './auth/pages/login/login-page.component';
 import { PrivateLayoutComponent } from './admin/layout/private-layout.component';
 import { DashboardPageComponent } from './features/dashboard/dashboard-page.component';
 import { OrdersPageComponent } from './features/orders/orders-page.component';
-import { CustomersPageComponent } from './features/customers/customers-page.component';
+import { CustomerCreatePageComponent } from './features/customers/pages/customer-create-page.component';
+import { CustomerDetailPageComponent } from './features/customers/pages/customer-detail-page.component';
+import { CustomerEditPageComponent } from './features/customers/pages/customer-edit-page.component';
+import { CustomerListPageComponent } from './features/customers/pages/customer-list-page.component';
 import { PaymentsPageComponent } from './features/payments/payments-page.component';
 import { InventoryPageComponent } from './features/inventory/inventory-page.component';
 import { SuppliersPageComponent } from './features/suppliers/suppliers-page.component';
@@ -53,7 +56,25 @@ export const routes: Routes = [
       },
       {
         path: 'clientes',
-        component: CustomersPageComponent,
+        component: CustomerListPageComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'customers.view' }
+      },
+      {
+        path: 'clientes/nuevo',
+        component: CustomerCreatePageComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'customers.create' }
+      },
+      {
+        path: 'clientes/:id/editar',
+        component: CustomerEditPageComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'customers.edit' }
+      },
+      {
+        path: 'clientes/:id',
+        component: CustomerDetailPageComponent,
         canActivate: [permissionGuard],
         data: { permission: 'customers.view' }
       },

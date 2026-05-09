@@ -65,6 +65,10 @@ export class AuthService {
       .pipe(map(() => undefined));
   }
 
+  getCsrfHeaders(): Observable<HttpHeaders> {
+    return this.getCsrfToken().pipe(map((xsrfToken) => this.createXsrfHeaders(xsrfToken)));
+  }
+
   me(): Observable<AuthUser | null> {
     return this.http
       .get<AuthUser>(this.apiClient.getUrl('/api/auth/me'), {
