@@ -1,0 +1,6 @@
+@LaboratorioTlahuac.Api_HostAddress = http://localhost:5277
+
+GET {{LaboratorioTlahuac.Api_HostAddress}}/health
+Accept: application/json
+
+###

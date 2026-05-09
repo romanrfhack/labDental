@@ -1,0 +1,86 @@
+import { Component } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { finalize } from 'rxjs';
+
+import { AuthService } from '../../../core/auth/auth.service';
+
+@Component({
+  selector: 'app-login-page',
+  imports: [ReactiveFormsModule, RouterLink],
+  template: `
+    <main class="login-page">
+      <section class="login-panel">
+        <h1>Acceso privado</h1>
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <label>
+            Email
+            <input type="email" formControlName="email" autocomplete="username" />
+          </label>
+          <label>
+            Contrasena
+            <input type="password" formControlName="password" autocomplete="current-password" />
+          </label>
+          @if (errorMessage) {
+            <p class="error" role="alert">{{ errorMessage }}</p>
+          }
+          <button type="submit" [disabled]="form.invalid || isSubmitting">
+            {{ isSubmitting ? 'Entrando...' : 'Entrar' }}
+          </button>
+        </form>
+        <a routerLink="/">Volver al sitio publico</a>
+      </section>
+    </main>
+  `,
+  styleUrl: './login-page.component.scss'
+})
+export class LoginPageComponent {
+  readonly form = new FormGroup({
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email]
+    }),
+    password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required]
+    })
+  });
+
+  errorMessage = '';
+  isSubmitting = false;
+
+  constructor(
+    private readonly authService: AuthService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router
+  ) {}
+
+  submit() {
+    if (this.form.invalid || this.isSubmitting) {
+      return;
+    }
+
+    this.errorMessage = '';
+    this.isSubmitting = true;
+
+    this.authService
+      .login(this.form.controls.email.value, this.form.controls.password.value)
+      .pipe(finalize(() => (this.isSubmitting = false)))
+      .subscribe({
+        next: () => this.router.navigateByUrl(this.getReturnUrl()),
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage =
+            error.status === 423
+              ? 'Usuario inactivo o bloqueado.'
+              : 'Email o contrasena invalidos.';
+        }
+      });
+  }
+
+  private getReturnUrl() {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+
+    return returnUrl?.startsWith('/app') ? returnUrl : '/app/dashboard';
+  }
+}

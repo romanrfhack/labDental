@@ -9,6 +9,12 @@
 - El estado operativo de la orden no debe mezclarse con el estado financiero.
 - Los pagos se registran como movimientos.
 - Los cambios relevantes deben dejar trazabilidad.
+- Un usuario inactivo no puede iniciar sesión.
+- Un usuario bloqueado no puede iniciar sesión.
+- Los permisos controlan acciones y rutas privadas; no se debe depender solo del nombre de rol.
+- El Admin inicial recibe todos los permisos definidos en el catálogo.
+- `PasswordHash` nunca se expone en respuestas ni documentación operativa.
+- No se permiten passwords vacíos para crear o validar usuarios.
 
 ## Separación Operativa Y Financiera
 

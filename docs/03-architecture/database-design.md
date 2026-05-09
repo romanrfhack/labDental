@@ -1,14 +1,30 @@
-# Diseño Conceptual De Base De Datos
+# Diseño De Base De Datos
 
-No se crea base de datos en esta fase. Este documento define una propuesta conceptual inicial.
+La Etapa 2 crea la primera migración real para seguridad. Las entidades operativas siguen en diseño conceptual hasta sus etapas correspondientes.
+
+## Tablas Implementadas En Seguridad
+
+Esquema `Security`:
+
+- `Users`
+- `Roles`
+- `Permissions`
+- `UserRoles`
+- `RolePermissions`
+
+Índices únicos:
+
+- `Users.NormalizedEmail`
+- `Roles.NormalizedName`
+- `Permissions.Key`
+
+Relaciones:
+
+- `Users` tiene muchos `Roles` mediante `UserRoles`.
+- `Roles` tiene muchos `Permissions` mediante `RolePermissions`.
 
 ## Tablas Sugeridas
 
-- Users
-- Roles
-- Permissions
-- RolePermissions
-- UserRoles
 - Customers
 - InternalDoctors
 - WorkOrders
@@ -20,8 +36,6 @@ No se crea base de datos en esta fase. Este documento define una propuesta conce
 
 ## Relaciones Conceptuales
 
-- Users tiene muchos Roles mediante UserRoles.
-- Roles tiene muchos Permissions mediante RolePermissions.
 - Customers tiene muchas WorkOrders.
 - Customers puede tener muchos InternalDoctors cuando representa una clínica.
 - WorkOrders tiene muchos Payments.

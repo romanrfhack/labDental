@@ -1,0 +1,400 @@
+using System.Data.Common;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using LaboratorioTlahuac.Domain.Security;
+using LaboratorioTlahuac.Domain.Security.Entities;
+using LaboratorioTlahuac.Infrastructure.Persistence;
+
+namespace LaboratorioTlahuac.Api.Tests;
+
+public sealed class AuthIntegrationTests(TestApplicationFactory factory)
+    : IClassFixture<TestApplicationFactory>
+{
+    [Fact]
+    public async Task HealthStillRespondsOk()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+
+        var response = await client.GetAsync("/health");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task MeWithoutCookieReturnsUnauthorized()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+
+        var response = await client.GetAsync("/api/auth/me");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Null(response.Headers.Location);
+    }
+
+    [Fact]
+    public async Task CsrfEndpointEmitsReadableXsrfCookie()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+
+        var response = await client.GetAsync("/api/auth/csrf");
+        var xsrfCookie = Assert.Single(
+            response.Headers.GetValues("Set-Cookie"),
+            header => header.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal));
+
+        Assert.Contains(response.StatusCode, new[] { HttpStatusCode.NoContent, HttpStatusCode.OK });
+        Assert.StartsWith("XSRF-TOKEN=", xsrfCookie, StringComparison.Ordinal);
+        Assert.DoesNotContain("httponly", xsrfCookie, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task LoginWithInvalidCredentialsReturnsUnauthorized()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.GetXsrfTokenAsync();
+
+        var response = await client.PostAsJsonWithXsrfAsync(
+            "/api/auth/login",
+            xsrfToken,
+            new { email = "admin@tests.local", password = "wrong-password" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Null(response.Headers.Location);
+    }
+
+    [Theory]
+    [InlineData("inactive@tests.local", "InactivePass123!")]
+    [InlineData("locked@tests.local", "LockedPass123!")]
+    public async Task LoginWithInactiveOrLockedUserReturnsLocked(string email, string password)
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.GetXsrfTokenAsync();
+
+        var response = await client.PostAsJsonWithXsrfAsync(
+            "/api/auth/login",
+            xsrfToken,
+            new { email, password });
+
+        Assert.Equal((HttpStatusCode)423, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task MutableApiRequestWithoutXsrfTokenReturnsBadRequest()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new { email = "admin@tests.local", password = "AdminPass123!" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Null(response.Headers.Location);
+    }
+
+    [Fact]
+    public async Task LoginWithValidCredentialsEmitsCookie()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.GetXsrfTokenAsync();
+
+        var response = await client.PostAsJsonWithXsrfAsync(
+            "/api/auth/login",
+            xsrfToken,
+            new { email = "admin@tests.local", password = "AdminPass123!" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains(
+            response.Headers.GetValues("Set-Cookie"),
+            header => header.StartsWith("Ldt.Dev.Auth=", StringComparison.Ordinal));
+        Assert.Contains(
+            response.Headers.GetValues("Set-Cookie"),
+            header => header.Contains("httponly", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task MeWithValidCookieReturnsUserWithoutPasswordHash()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        await client.LoginAsAdminAsync();
+
+        var response = await client.GetAsync("/api/auth/me");
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("admin@tests.local", payload.GetProperty("email").GetString());
+        Assert.False(payload.TryGetProperty("passwordHash", out _));
+    }
+
+    [Fact]
+    public async Task PermissionProtectedEndpointReturnsForbiddenWhenPermissionIsMissing()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        await client.LoginAsLimitedUserAsync();
+
+        var response = await client.GetAsync("/api/security/permissions-check");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Null(response.Headers.Location);
+    }
+
+    [Fact]
+    public async Task PermissionProtectedEndpointReturnsOkWhenPermissionExists()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        await client.LoginAsAdminAsync();
+
+        var response = await client.GetAsync("/api/security/permissions-check");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ProtectedMutableEndpointWithoutXsrfTokenReturnsBadRequest()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        await client.LoginAsAdminAsync();
+
+        var response = await client.PostAsync("/api/security/csrf-check", content: null);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ProtectedMutableEndpointWithXsrfTokenReturnsOk()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+
+        var response = await client.PostWithXsrfAsync("/api/security/csrf-check", xsrfToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task LogoutWithoutXsrfTokenReturnsBadRequest()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        await client.LoginAsAdminAsync();
+
+        var response = await client.PostAsync("/api/auth/logout", content: null);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task LogoutWithXsrfTokenWorks()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+
+        var response = await client.PostWithXsrfAsync("/api/auth/logout", xsrfToken);
+
+        Assert.Contains(response.StatusCode, new[] { HttpStatusCode.NoContent, HttpStatusCode.OK });
+    }
+}
+
+public sealed class TestApplicationFactory : WebApplicationFactory<Program>
+{
+    private SqliteConnection? connection;
+
+    public HttpClient CreateClientWithoutRedirects()
+    {
+        return CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = true
+        });
+    }
+
+    protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Development");
+        builder.ConfigureAppConfiguration((_context, configuration) =>
+        {
+            configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:DefaultConnection"] = "Data Source=:memory:",
+                ["SecuritySeed:RunOnStartup"] = "false"
+            });
+        });
+
+        builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<DbConnection>();
+            services.RemoveAll<DbContextOptions<LaboratorioTlahuacDbContext>>();
+            services.RemoveAll<IDbContextOptionsConfiguration<LaboratorioTlahuacDbContext>>();
+            services.RemoveAll<LaboratorioTlahuacDbContext>();
+
+            connection = new SqliteConnection("Data Source=:memory:");
+            connection.Open();
+
+            services.AddSingleton<DbConnection>(connection);
+            services.AddDbContext<LaboratorioTlahuacDbContext>((serviceProvider, options) =>
+            {
+                options.UseSqlite(serviceProvider.GetRequiredService<DbConnection>());
+            });
+
+            using var serviceProvider = services.BuildServiceProvider();
+            using var scope = serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<LaboratorioTlahuacDbContext>();
+
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.EnsureCreated();
+            SeedDatabase(dbContext);
+        });
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        if (disposing)
+        {
+            connection?.Dispose();
+        }
+    }
+
+    private static void SeedDatabase(LaboratorioTlahuacDbContext dbContext)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var permissions = Permissions.All
+            .Select(permissionKey => Permission.Create(
+                permissionKey,
+                Permissions.Descriptions.TryGetValue(permissionKey, out var description)
+                    ? description
+                    : permissionKey,
+                now))
+            .ToDictionary(permission => permission.Key, StringComparer.Ordinal);
+
+        var adminRole = Role.Create("Admin", "Administrador del sistema.", isSystem: true, now);
+        var limitedRole = Role.Create("Limited", "Usuario con permisos limitados.", isSystem: false, now);
+
+        dbContext.Permissions.AddRange(permissions.Values);
+        dbContext.Roles.AddRange(adminRole, limitedRole);
+        dbContext.RolePermissions.AddRange(
+            permissions.Values.Select(permission => new RolePermission(adminRole.Id, permission.Id)));
+        dbContext.RolePermissions.Add(new RolePermission(limitedRole.Id, permissions[Permissions.ReportsView].Id));
+
+        var passwordHasher = new PasswordHasher<User>();
+        var admin = CreateUser("admin@tests.local", "Admin Test", "AdminPass123!", passwordHasher, now);
+        var limited = CreateUser("limited@tests.local", "Limited Test", "LimitedPass123!", passwordHasher, now);
+        var inactive = CreateUser("inactive@tests.local", "Inactive Test", "InactivePass123!", passwordHasher, now);
+        var locked = CreateUser("locked@tests.local", "Locked Test", "LockedPass123!", passwordHasher, now);
+
+        inactive.Deactivate(now);
+        locked.LockUntil(now.AddHours(1), now);
+
+        dbContext.Users.AddRange(admin, limited, inactive, locked);
+        dbContext.UserRoles.AddRange(
+            new UserRole(admin.Id, adminRole.Id),
+            new UserRole(limited.Id, limitedRole.Id),
+            new UserRole(inactive.Id, adminRole.Id),
+            new UserRole(locked.Id, adminRole.Id));
+
+        dbContext.SaveChanges();
+    }
+
+    private static User CreateUser(
+        string email,
+        string fullName,
+        string password,
+        PasswordHasher<User> passwordHasher,
+        DateTimeOffset now)
+    {
+        var user = User.Create(email, fullName, "pending-password-hash", now);
+        user.SetPasswordHash(passwordHasher.HashPassword(user, password));
+
+        return user;
+    }
+}
+
+file static class AuthTestClientExtensions
+{
+    public static async Task<string> LoginAsAdminAsync(this HttpClient client)
+    {
+        var xsrfToken = await client.GetXsrfTokenAsync();
+        var response = await client.PostAsJsonWithXsrfAsync(
+            "/api/auth/login",
+            xsrfToken,
+            new { email = "admin@tests.local", password = "AdminPass123!" });
+
+        response.EnsureSuccessStatusCode();
+
+        return await client.GetXsrfTokenAsync();
+    }
+
+    public static async Task<string> LoginAsLimitedUserAsync(this HttpClient client)
+    {
+        var xsrfToken = await client.GetXsrfTokenAsync();
+        var response = await client.PostAsJsonWithXsrfAsync(
+            "/api/auth/login",
+            xsrfToken,
+            new { email = "limited@tests.local", password = "LimitedPass123!" });
+
+        response.EnsureSuccessStatusCode();
+
+        return await client.GetXsrfTokenAsync();
+    }
+
+    public static async Task<string> GetXsrfTokenAsync(this HttpClient client)
+    {
+        var response = await client.GetAsync("/api/auth/csrf");
+        response.EnsureSuccessStatusCode();
+
+        return GetCookieValue(response, "XSRF-TOKEN");
+    }
+
+    public static Task<HttpResponseMessage> PostWithXsrfAsync(
+        this HttpClient client,
+        string requestUri,
+        string xsrfToken)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
+        request.Headers.Add("X-XSRF-TOKEN", xsrfToken);
+
+        return client.SendAsync(request);
+    }
+
+    public static Task<HttpResponseMessage> PostAsJsonWithXsrfAsync<TValue>(
+        this HttpClient client,
+        string requestUri,
+        string xsrfToken,
+        TValue value)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
+        {
+            Content = JsonContent.Create(value)
+        };
+        request.Headers.Add("X-XSRF-TOKEN", xsrfToken);
+
+        return client.SendAsync(request);
+    }
+
+    private static string GetCookieValue(HttpResponseMessage response, string cookieName)
+    {
+        var setCookieHeader = GetSetCookieHeader(response, cookieName);
+        var cookieValue = setCookieHeader
+            .Split(';', StringSplitOptions.TrimEntries)[0]
+            .Split('=', count: 2)[1];
+
+        return Uri.UnescapeDataString(cookieValue);
+    }
+
+    private static string GetSetCookieHeader(HttpResponseMessage response, string cookieName)
+    {
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders));
+
+        return Assert.Single(
+            setCookieHeaders,
+            header => header.StartsWith($"{cookieName}=", StringComparison.Ordinal));
+    }
+}

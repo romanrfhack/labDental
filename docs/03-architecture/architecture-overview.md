@@ -1,14 +1,32 @@
 # Visión General De Arquitectura
 
-## Propuesta Inicial
+## Arquitectura Implementada En Fase 1
 
-- Frontend: Angular.
-- Backend: .NET.
+- Frontend: Angular 21 en `src/LaboratorioTlahuac.Web`.
+- Backend: .NET 10 ASP.NET Core Web API en `src/LaboratorioTlahuac.Api`.
 - Comunicación: API REST.
-- Base de datos: relacional.
-- Autenticación: JWT o cookies seguras. La decisión final queda pendiente de validación técnica.
+- Base de datos objetivo: SQL Server.
+- ORM objetivo: Entity Framework Core.
+- Autenticación MVP: cookie segura HttpOnly.
+- Autorización: permisos granulares.
+- Protección CSRF/XSRF para endpoints mutables bajo `/api`.
 - Dominio: laboratoriodentaltlahuac.com.
 - Sitio público y app privada: mismo dominio inicialmente.
+
+## Estructura Real
+
+```text
+src/
+  LaboratorioTlahuac.Api/
+  LaboratorioTlahuac.Application/
+  LaboratorioTlahuac.Domain/
+  LaboratorioTlahuac.Infrastructure/
+  LaboratorioTlahuac.Web/
+tests/
+  LaboratorioTlahuac.Api.Tests/
+  LaboratorioTlahuac.Application.Tests/
+  LaboratorioTlahuac.Domain.Tests/
+```
 
 ## Principios
 
@@ -22,6 +40,17 @@
 
 Usuario -> Angular público/privado -> API REST .NET -> Base de datos relacional.
 
+## Contratos Iniciales
+
+- `GET /health` responde el estado de la API.
+- `/` sirve sitio público.
+- `/login` permite autenticación real contra `/api/auth/login`.
+- `/app/*` existe con rutas protegidas por sesión y permisos.
+- `POST /api/auth/logout` cierra sesión.
+- `GET /api/auth/me` devuelve usuario, roles y permisos.
+- `GET /api/auth/csrf` emite token XSRF.
+- Métodos mutables bajo `/api` requieren `X-XSRF-TOKEN`.
+
 ## Criterios De Validación
 
 - `/` sirve sitio público.
@@ -31,6 +60,7 @@ Usuario -> Angular público/privado -> API REST .NET -> Base de datos relacional
 
 ## Pendientes
 
-- Definir autenticación final: JWT o cookies seguras.
-- Definir motor de base de datos.
+- Reutilizar XSRF en los próximos servicios mutables.
+- Implementar clientes/doctores/clínicas.
+- Implementar órdenes, pagos y dashboard operativo.
 - Definir hosting y estrategia de despliegue.

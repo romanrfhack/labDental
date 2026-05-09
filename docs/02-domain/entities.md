@@ -4,15 +4,75 @@ Este documento describe entidades de dominio sin definir código, ORM ni esquema
 
 ## User
 
-Usuario con acceso al sistema privado. Campos principales: identificador, nombre, email, contraseña protegida, estado activo, fechas de creación y actualización.
+Usuario con acceso al sistema privado.
+
+Campos iniciales:
+
+- `Id`
+- `Email`
+- `NormalizedEmail`
+- `FullName`
+- `PasswordHash`
+- `IsActive`
+- `AccessFailedCount`
+- `LockoutEndUtc`
+- `LastLoginAtUtc`
+- `CreatedAtUtc`
+- `UpdatedAtUtc`
+
+Reglas principales:
+
+- `NormalizedEmail` se usa para búsquedas.
+- Email es único.
+- Usuario inactivo o bloqueado no puede iniciar sesión.
+- `PasswordHash` nunca se devuelve en respuestas.
 
 ## Role
 
-Agrupación de permisos asignable a usuarios. Campos principales: identificador, nombre, descripción, estado activo.
+Agrupación de permisos asignable a usuarios.
+
+Campos iniciales:
+
+- `Id`
+- `Name`
+- `NormalizedName`
+- `Description`
+- `IsSystem`
+- `CreatedAtUtc`
+- `UpdatedAtUtc`
+
+`NormalizedName` es único.
 
 ## Permission
 
-Acción granular autorizable. Campos principales: clave, descripción y módulo.
+Acción granular autorizable.
+
+Campos iniciales:
+
+- `Id`
+- `Key`
+- `Description`
+- `CreatedAtUtc`
+
+`Key` es único y corresponde a las constantes de `Permissions`.
+
+## UserRole
+
+Relación explícita many-to-many entre usuarios y roles.
+
+Campos:
+
+- `UserId`
+- `RoleId`
+
+## RolePermission
+
+Relación explícita many-to-many entre roles y permisos.
+
+Campos:
+
+- `RoleId`
+- `PermissionId`
 
 ## Customer
 

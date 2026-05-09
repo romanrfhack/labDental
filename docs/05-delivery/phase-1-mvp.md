@@ -4,17 +4,84 @@
 
 Permitir que el laboratorio registre operación nueva en la plataforma sin depender del Excel.
 
+## Etapa 1 - Arquitectura Base
+
+Estado: implementada.
+
+Incluye:
+
+- Solución .NET 10.
+- Proyectos Api, Application, Domain e Infrastructure.
+- App Angular 21.
+- Rutas públicas y privadas placeholder.
+- Layout público y layout privado.
+- Health check.
+- Permisos base.
+
+Todavía faltan:
+
+- Clientes.
+- Órdenes.
+- Pagos.
+- Dashboard operativo.
+
+## Etapa 2 - Autenticación Y Autorización
+
+Estado: implementada.
+
+Incluye:
+
+- Modelo inicial de usuarios, roles y permisos.
+- DbContext EF Core SQL Server.
+- Migración inicial `InitialSecurityModel`.
+- Seed Admin idempotente mediante configuración segura.
+- Login/logout/me con cookie HttpOnly.
+- Autorización por claims de permisos.
+- Guards reales en Angular.
+- Pruebas backend de integración.
+
+Todavía faltan:
+
+- CRUD de clientes/doctores/clínicas.
+- Órdenes de trabajo.
+- Pagos y saldos.
+- Dashboard operativo básico.
+
+## Etapa 2.1 - Hardening De Seguridad
+
+Estado: implementada.
+
+Incluye:
+
+- Protección CSRF/XSRF para métodos mutables bajo `/api`.
+- Endpoint `GET /api/auth/csrf`.
+- Protección de login y logout con `X-XSRF-TOKEN`.
+- Configuración Angular XSRF.
+- Renovación de token XSRF después de login.
+- Pruebas backend para cookies, CSRF, auth y no redirecciones 302.
+- Revisión y corrección de `npm audit` sin `--force`.
+
+Todavía faltan:
+
+- Runner de pruebas frontend no interactivo.
+- CRUD de clientes/doctores/clínicas.
+- Órdenes de trabajo.
+- Pagos y saldos.
+- Dashboard operativo básico.
+
 ## Backlog MVP
 
-- Crear solución backend.
-- Crear app frontend.
-- Implementar login.
-- Implementar clientes.
-- Implementar órdenes.
-- Implementar pagos.
-- Implementar dashboard.
-- Implementar roles/permisos base.
-- Realizar deploy inicial.
+- [x] Crear solución backend.
+- [x] Crear app frontend.
+- [x] Implementar login.
+- [ ] Implementar clientes.
+- [ ] Implementar órdenes.
+- [ ] Implementar pagos.
+- [ ] Implementar dashboard.
+- [x] Definir permisos base.
+- [x] Implementar modelo de roles/permisos.
+- [x] Implementar hardening CSRF/XSRF.
+- [ ] Realizar deploy inicial.
 
 ## Criterios De Salida
 

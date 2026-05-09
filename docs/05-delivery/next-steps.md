@@ -1,14 +1,10 @@
 # Próximos Pasos
 
-1. Revisar documentación inicial.
-2. Confirmar stack.
-3. Crear solución backend.
-4. Crear app Angular.
-5. Definir entidades iniciales.
-6. Implementar autenticación.
-7. Implementar CRUD de clientes.
-8. Implementar órdenes.
-9. Implementar pagos.
+1. Revisar hardening de seguridad.
+2. Implementar CRUD de clientes/doctores/clínicas.
+3. Implementar órdenes de trabajo.
+4. Implementar pagos y saldos.
+5. Implementar dashboard operativo básico.
 
 ## Criterios De Validación
 
