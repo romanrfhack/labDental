@@ -12,6 +12,9 @@ import { AuthService } from '../../core/auth/auth.service';
       <aside>
         <a routerLink="/app/dashboard" class="brand">LDT Admin</a>
         <nav>
+          @if (authService.hasPermission('reports.view')) {
+            <a routerLink="/app/dashboard">Dashboard</a>
+          }
           @if (authService.hasPermission('orders.view')) {
             <a routerLink="/app/ordenes">Ordenes</a>
           }
