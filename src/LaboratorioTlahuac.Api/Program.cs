@@ -170,6 +170,7 @@ app.MapAuthEndpoints();
 app.MapCustomerEndpoints();
 app.MapWorkOrderEndpoints();
 app.MapPaymentEndpoints();
+app.MapDashboardEndpoints();
 app.MapSecurityDiagnosticEndpoints(app.Environment);
 
 app.Run();

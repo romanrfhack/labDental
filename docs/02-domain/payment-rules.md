@@ -22,6 +22,11 @@ Valores internos y etiquetas:
 - `PaidAmount = suma(Payment.Amount donde IsCancelled = false)`.
 - `Balance = TotalAmount - PaidAmount`.
 - Si `TotalAmount` es `null`, `Balance = null`.
+- `totalReceivable` del dashboard suma solo balances positivos.
+- `totalReceivable` excluye órdenes `Cancelled`.
+- Órdenes con `TotalAmount = null` no participan en métricas financieras del dashboard.
+- Los sobrepagos no reducen `totalReceivable`.
+- Los pagos cancelados no cuentan para `PaidAmount`, `Balance` ni `totalReceivable`.
 
 ## PaymentStatus
 

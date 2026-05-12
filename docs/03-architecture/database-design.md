@@ -1,6 +1,6 @@
 # Diseño De Base De Datos
 
-La Etapa 2 crea la primera migración real para seguridad. La Etapa 3 agrega clientes y doctores internos. La Etapa 4 agrega órdenes de trabajo como núcleo operativo. La Etapa 5 agrega pagos como movimientos financieros.
+La Etapa 2 crea la primera migración real para seguridad. La Etapa 3 agrega clientes y doctores internos. La Etapa 4 agrega órdenes de trabajo como núcleo operativo. La Etapa 5 agrega pagos como movimientos financieros. La Etapa 6 agrega dashboard operativo básico sin cambios de esquema.
 
 ## Tablas Implementadas En Seguridad
 

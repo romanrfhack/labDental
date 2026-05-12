@@ -18,11 +18,11 @@
 
 ### Api
 
-Expone endpoints HTTP, autenticación, autorización, antiforgery y contratos de respuesta. Incluye `GET /health`, endpoints de auth, endpoints de clientes, endpoints de órdenes, endpoints de pagos, configuración de cookie, XSRF y policies de permisos.
+Expone endpoints HTTP, autenticación, autorización, antiforgery y contratos de respuesta. Incluye `GET /health`, endpoints de auth, endpoints de clientes, endpoints de órdenes, endpoints de pagos, endpoint de dashboard, configuración de cookie, XSRF y policies de permisos.
 
 ### Application
 
-Contiene casos de uso, orquestación y contratos con infraestructura. Incluye `IPermissionChecker`, `IAuthSessionService`, `ICurrentUser`, `IClock`, `ICustomerService`, `IWorkOrderService` e `IPaymentService`.
+Contiene casos de uso, orquestación y contratos con infraestructura. Incluye `IPermissionChecker`, `IAuthSessionService`, `ICurrentUser`, `IClock`, `ICustomerService`, `IWorkOrderService`, `IPaymentService` e `IDashboardService`.
 
 ### Domain
 
@@ -30,7 +30,7 @@ Contiene entidades, reglas de negocio, invariantes y conceptos centrales. Centra
 
 ### Infrastructure
 
-Contiene persistencia, integraciones externas y adaptadores. Incluye EF Core, `LaboratorioTlahuacDbContext`, `CustomerService`, `WorkOrderService`, `PaymentService`, `GuidWorkOrderNumberGenerator`, `ClaimsPermissionChecker`, `AuthSessionService`, `SystemClock` y `SecuritySeeder`.
+Contiene persistencia, integraciones externas y adaptadores. Incluye EF Core, `LaboratorioTlahuacDbContext`, `CustomerService`, `WorkOrderService`, `PaymentService`, `DashboardService`, `GuidWorkOrderNumberGenerator`, `ClaimsPermissionChecker`, `AuthSessionService`, `SystemClock` y `SecuritySeeder`.
 
 ## Reglas De Dependencia
 
@@ -195,6 +195,38 @@ Implementación:
 - Los métodos mutables quedan cubiertos por el middleware XSRF centralizado.
 - Los endpoints de órdenes no exponen `PaidAmount`, `Balance` ni `PaymentStatus` bajo solo `orders.view`.
 
+## Dashboard
+
+Endpoint principal:
+
+- `GET /api/dashboard/summary`
+
+Implementación:
+
+- `DashboardEndpoints` mantiene el endpoint HTTP delgado y exige `reports.view`.
+- `IDashboardService` define el contrato en Application.
+- `DashboardService` implementa consultas EF y cálculo de métricas en Infrastructure.
+- El servicio usa `ICurrentUser.Permissions` para decidir secciones internas.
+- `customerSummary` requiere `customers.view`.
+- `operationalSummary` requiere `orders.view`.
+- `financialSummary` requiere `payments.view`.
+- Si falta permiso, la sección se devuelve como `null`.
+- El endpoint es solo `GET`; no requiere XSRF porque no modifica estado.
+
+Métricas:
+
+- Clientes: activos, doctores activos, clínicas activas e inactivos.
+- Operación: activas, entregadas, canceladas, para hoy, vencidas, próximos 7 días, conteo por estado, últimas órdenes y próximas entregas.
+- Cobranza: total por cobrar, conteos financieros, pagos cancelados y últimos pagos vigentes.
+
+Convenciones:
+
+- "Hoy" usa `DateOnly.FromDateTime(IClock.UtcNow.UtcDateTime)` en el MVP.
+- La zona horaria formal de negocio queda pendiente.
+- Las listas cortas se limitan a 5 elementos.
+- Las métricas financieras usan pagos no cancelados y órdenes con `TotalAmount != null`.
+- `totalReceivable` suma balances positivos, excluye órdenes `Cancelled` y no se reduce por sobrepagos.
+
 ## Criterios De Validación
 
 - Las reglas de saldo y estados no viven en controladores.
@@ -203,5 +235,5 @@ Implementación:
 
 ## Próximos Pasos
 
-- Revisar pagos y saldos.
-- Implementar dashboard operativo básico.
+- Revisar dashboard con usuario.
+- Ejecutar QA manual con SQL Server local.

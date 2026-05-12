@@ -33,6 +33,8 @@
 - Una orden cancelada no cambia a otro estado durante el MVP.
 - Cancelar requiere nota.
 - Entregada no implica saldo liquidado.
+- `Delivered` y `Cancelled` no cuentan como órdenes vencidas en el dashboard.
+- `Cancelled` se excluye de operación activa en el dashboard.
 - Todo cambio real de estado debe registrar usuario, fecha, estado anterior y estado nuevo.
 - Cambiar al mismo estado devuelve `200 OK` sin duplicar historial.
 - Las transiciones pueden ampliarse cuando se valide el flujo real con el cliente.

@@ -1,10 +1,10 @@
 # Próximos Pasos
 
-1. Revisar pagos y saldos.
-2. Implementar dashboard operativo básico.
-3. Preparar prueba con usuario.
-4. Preparar migración del Excel.
-5. Revisar UX y permisos.
+1. Ejecutar demo con cliente.
+2. Capturar feedback.
+3. Cerrar alcance comercial.
+4. Definir prioridad entre sitio web y repartidores/etiquetas.
+5. Planear siguiente fase contratada.
 
 ## Criterios De Validación
 

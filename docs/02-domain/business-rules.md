@@ -30,6 +30,8 @@
 - No se puede registrar pago si `TotalAmount` no está definido.
 - No se puede registrar pago en una orden `Cancelled`.
 - Se permite sobrepago y se marca como `Overpaid`.
+- El dashboard no crea datos ni modifica estado.
+- El dashboard respeta permisos por sección: operación, cobranza y clientes.
 - Los cambios relevantes deben dejar trazabilidad.
 - Un usuario inactivo no puede iniciar sesión.
 - Un usuario bloqueado no puede iniciar sesión.
@@ -65,6 +67,19 @@ Debe existir historial para cambios relevantes, especialmente cambios de estado,
 - Si `TotalAmount = 0` y no hay pagos vigentes, `PaymentStatus` es `Paid`.
 - `PaymentStatus` se calcula; no se captura manualmente.
 - El sobrepago queda visible como "Saldo a favor / revisar".
+
+## Dashboard
+
+- El dashboard usa datos existentes de clientes, órdenes y pagos.
+- El dashboard no crea clientes, órdenes, pagos ni datos demo.
+- Las métricas financieras usan pagos no cancelados.
+- El saldo pendiente se calcula desde `TotalAmount` y pagos vigentes.
+- La sección operativa requiere `orders.view`.
+- La sección financiera requiere `payments.view`.
+- La sección de clientes requiere `customers.view`.
+- Acceder al dashboard requiere `reports.view`.
+- La respuesta puede contener secciones `null` cuando faltan permisos.
+- La fecha "hoy" del MVP se calcula con `DateOnly.FromDateTime(IClock.UtcNow.UtcDateTime)`; la zona horaria formal de negocio queda pendiente.
 
 ## Criterios De Validación
 

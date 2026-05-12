@@ -2,6 +2,28 @@
 
 Todos los cambios relevantes del proyecto deben registrarse aquí. No se deben inventar funcionalidades implementadas.
 
+## 2026-05-11 - Fase 1 Etapa 7
+
+- Se ejecuta QA funcional del MVP administrativo con SQL Server local aislado.
+- Se valida login, clientes, doctores internos, órdenes, pagos, saldos, dashboard, CSRF, `401`, `403` y `/health`.
+- Se corrige conteo financiero del dashboard para excluir órdenes canceladas de métricas de saldo pendiente y sin pago.
+- Se agrega documentación de QA funcional en `docs/08-qa`.
+- Se agrega guion de demo.
+- Se agrega guía de datos de prueba.
+- Se documentan hallazgos conocidos.
+- Se actualizan estado del proyecto, próximos pasos, checklist de aceptación y README.
+- No se implementan módulos nuevos.
+
+## 2026-05-11 - Fase 1 Etapa 6
+
+- Se implementa dashboard operativo básico.
+- Se agregan métricas de clientes, órdenes y pagos usando datos existentes.
+- Se agrega endpoint `GET /api/dashboard/summary`.
+- Se agrega pantalla Angular de dashboard en `/app/dashboard`.
+- Se agregan pruebas backend de integración para autorización, secciones por permiso, métricas financieras, métricas operativas y límites de listas.
+- Se crea ADR-0011 para secciones de dashboard condicionadas por permisos.
+- No se implementan inventario, proveedores, CFDI, facturación, cortes de caja avanzados, reportes avanzados, exportación Excel/PDF ni migración del Excel.
+
 ## 2026-05-09 - Fase 1 Etapa 5
 
 - Se implementan pagos y abonos asociados a órdenes de trabajo.

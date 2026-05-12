@@ -50,6 +50,9 @@ Usuario -> Angular público/privado -> API REST .NET -> Base de datos relacional
 - `GET /api/auth/me` devuelve usuario, roles y permisos.
 - `GET /api/auth/csrf` emite token XSRF.
 - `/api/customers` expone CRUD de clientes y doctores internos protegido por permisos.
+- `/api/work-orders` expone órdenes de trabajo protegido por permisos.
+- `/api/payments` y `/api/work-orders/{id}/payments` exponen pagos y saldos protegidos por permisos financieros.
+- `/api/dashboard/summary` expone dashboard básico protegido por `reports.view` y secciones condicionadas por permisos.
 - Métodos mutables bajo `/api` requieren `X-XSRF-TOKEN`.
 
 ## Criterios De Validación
@@ -61,6 +64,6 @@ Usuario -> Angular público/privado -> API REST .NET -> Base de datos relacional
 
 ## Pendientes
 
-- Reutilizar XSRF en los próximos servicios mutables.
-- Implementar órdenes, pagos y dashboard operativo.
 - Definir hosting y estrategia de despliegue.
+- Preparar QA manual del MVP con SQL Server local.
+- Preparar estrategia de migración del Excel.

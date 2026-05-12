@@ -58,6 +58,8 @@ La persistencia usa EF Core con SQL Server. Migraciones creadas:
 - `AddWorkOrders`
 - `AddPayments`
 
+El dashboard operativo básico no cambia el esquema; no requiere migración nueva.
+
 Crear nuevas migraciones:
 
 ```bash
@@ -198,6 +200,31 @@ Reglas principales:
 - El sobrepago se permite y deja `PaymentStatus = Overpaid` con etiqueta "Saldo a favor / revisar".
 - `Balance` es `null` si `TotalAmount` no esta definido.
 
+### Endpoint Dashboard
+
+Dashboard operativo básico implementado bajo:
+
+- `GET /api/dashboard/summary` requiere `reports.view`.
+
+La respuesta incluye `generatedAtUtc` y secciones condicionadas por permisos:
+
+- `customerSummary` solo con `customers.view`: clientes activos, doctores activos, clínicas activas y clientes inactivos.
+- `operationalSummary` solo con `orders.view`: órdenes activas, entregadas, canceladas, vencidas, para hoy, próximos 7 días, conteo por estado, últimas 5 órdenes y próximas 5 entregas.
+- `financialSummary` solo con `payments.view`: total por cobrar, órdenes con saldo, conteos por estado financiero, pagos cancelados y últimos 5 pagos vigentes.
+
+Si falta permiso para una sección, esa sección se devuelve como `null`. El endpoint es `GET`, no modifica estado y no requiere XSRF. La convención MVP para "hoy" usa `DateOnly.FromDateTime(IClock.UtcNow.UtcDateTime)`; la zona horaria formal de negocio queda pendiente.
+
+Reglas financieras del dashboard:
+
+- `PaidAmount` usa pagos no cancelados.
+- `Balance = TotalAmount - PaidAmount`.
+- Solo se consideran órdenes con `TotalAmount != null`.
+- `totalReceivable` suma solo balances positivos y excluye órdenes `Cancelled`.
+- Los conteos financieros de órdenes con saldo y estados de pago excluyen órdenes `Cancelled`.
+- Los sobrepagos no reducen `totalReceivable`.
+
+No hay reportes avanzados, cortes de caja, exportación Excel/PDF, facturación, CFDI, inventario, proveedores ni migración del Excel en esta etapa.
+
 ### Flujo XSRF
 
 El sistema usa cookie auth HttpOnly para la sesión y antiforgery para requests mutables.
@@ -297,22 +324,57 @@ Angular configura `withXsrfConfiguration` con `XSRF-TOKEN` y `X-XSRF-TOKEN`. `Au
 19. Confirmar que mutables sin XSRF fallan.
 20. Confirmar que usuario sin `payments.view` no puede consultar.
 
+### Probar Dashboard Localmente
+
+1. Configurar SQL Server local en `ConnectionStrings:DefaultConnection`.
+2. Aplicar migraciones existentes con `dotnet ef database update`.
+3. Ejecutar API y Angular.
+4. Iniciar sesión como Admin.
+5. Crear clientes, órdenes y pagos.
+6. Entrar a `/app/dashboard`.
+7. Verificar métricas de clientes, operación y cobranza.
+8. Verificar últimas órdenes, próximas entregas y últimos pagos.
+9. Cancelar un pago y confirmar que no cuenta para saldo.
+10. Cancelar una orden y confirmar que no cuenta como activa ni vencida.
+11. Probar usuarios sin `payments.view`, `orders.view` o `customers.view` y confirmar que la sección correspondiente no aparece.
+12. Confirmar que `/health` sigue público.
+
+### QA Manual Del MVP
+
+La documentación de QA de la Etapa 7 está en `docs/08-qa/`:
+
+- `mvp-qa-checklist.md`: checklist funcional ejecutado.
+- `demo-script.md`: guion de demo para cliente.
+- `demo-data-guide.md`: datos manuales sugeridos para demo.
+- `known-issues.md`: hallazgos priorizados.
+- `mvp-acceptance-checklist.md`: criterios de aceptación del MVP administrativo.
+
+Para repetir la QA manual:
+
+1. Configurar SQL Server local de QA, no producción.
+2. Aplicar migraciones con `dotnet ef database update`.
+3. Configurar Admin seed solo para ambiente local.
+4. Ejecutar API y Angular.
+5. Seguir `docs/08-qa/mvp-qa-checklist.md`.
+6. Usar `docs/08-qa/demo-data-guide.md` para capturar datos de prueba.
+7. Presentar con `docs/08-qa/demo-script.md`.
+
 ## npm audit
 
-Se revisó `npm audit` en la validación de Etapa 5 y el resultado fue 0 vulnerabilidades.
+Se revisó `npm audit` en la validación de Etapa 7 y el resultado fue 0 vulnerabilidades.
 
 ## Estado Actual
 
-Fase 1 - MVP operativo. Etapa 5 - Pagos, abonos y saldos implementada.
+Fase 1 - MVP operativo. Etapa 7 - QA funcional y demo preparada.
 
-Incluye solucion .NET, proyectos base, app Angular, rutas publicas/privadas, cookie auth HttpOnly, XSRF para requests mutables, modelo inicial de usuarios/roles/permisos, seed Admin, endpoints auth, guards reales, migraciones de seguridad, clientes, ordenes, pagos, CRUD de clientes/doctores/clinicas, ordenes de trabajo con estados e historial, pagos cancelables con motivo, saldos calculados, health check y documentacion actualizada.
+Incluye solucion .NET, proyectos base, app Angular, rutas publicas/privadas, cookie auth HttpOnly, XSRF para requests mutables, modelo inicial de usuarios/roles/permisos, seed Admin, endpoints auth, guards reales, migraciones de seguridad, clientes, ordenes, pagos, dashboard operativo basico, CRUD de clientes/doctores/clinicas, ordenes de trabajo con estados e historial, pagos cancelables con motivo, saldos calculados, health check, QA funcional documentada y guion de demo.
 
-No incluye inventario, proveedores, facturacion, CFDI, cortes de caja avanzados, reportes avanzados, importacion del Excel ni dashboard operativo real.
+No incluye inventario, proveedores, facturacion, CFDI, cortes de caja avanzados, reportes avanzados, exportacion Excel/PDF ni importacion del Excel.
 
 ## Proximos Pasos
 
-1. Revisar pagos y saldos.
-2. Implementar dashboard operativo basico.
-3. Preparar prueba con usuario.
-4. Preparar migracion del Excel.
-5. Revisar UX y permisos.
+1. Ejecutar demo con cliente.
+2. Capturar feedback.
+3. Cerrar alcance comercial.
+4. Definir prioridad entre sitio web y repartidores/etiquetas.
+5. Planear siguiente fase contratada.

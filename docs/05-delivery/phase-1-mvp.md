@@ -132,9 +132,55 @@ Incluye:
 Todavía faltan:
 
 - Runner de pruebas frontend no interactivo.
-- Dashboard operativo básico.
 - Migración del Excel.
 - Inventario y proveedores para fase posterior.
+
+## Etapa 6 - Dashboard Operativo Básico
+
+Estado: implementada.
+
+Incluye:
+
+- Endpoint `GET /api/dashboard/summary` protegido por `reports.view`.
+- Secciones de dashboard condicionadas por permisos: operación con `orders.view`, cobranza con `payments.view` y clientes con `customers.view`.
+- Métricas básicas de clientes, órdenes y pagos usando datos existentes.
+- Cálculo de `totalReceivable` con balances positivos, pagos no cancelados y exclusión de órdenes `Cancelled`.
+- Listas cortas de últimas órdenes, próximas entregas y últimos pagos.
+- Pantalla Angular real en `/app/dashboard`.
+- Pruebas backend de integración para autorización, permisos por sección, métricas financieras, métricas operativas, límites de listas y `/health`.
+- ADR-0011 de dashboard con secciones condicionadas por permisos.
+
+Todavía faltan:
+
+- Runner de pruebas frontend no interactivo.
+- Demo con cliente.
+- Ajustes UX según feedback.
+- Migración del Excel.
+- Inventario y proveedores para fase posterior.
+
+## Etapa 7 - QA Funcional Y Demo
+
+Estado: implementada; pendiente revisión con usuario.
+
+Incluye:
+
+- QA funcional del MVP administrativo contra SQL Server local aislado.
+- Validación de migraciones EF existentes.
+- Validación de login, clientes, doctores internos, órdenes, estados, pagos, saldos y dashboard.
+- Validación de `/health`, CSRF/XSRF, `401` sin sesión y `403` sin permiso.
+- Corrección de conteos financieros del dashboard para excluir órdenes canceladas.
+- Documentación en `docs/08-qa`.
+- Guion de demo para cliente.
+- Guía manual de datos de demo.
+- Lista priorizada de hallazgos conocidos.
+- Checklist de aceptación del MVP administrativo.
+
+Todavía faltan:
+
+- Ejecutar demo con cliente.
+- Capturar feedback.
+- Cerrar alcance comercial siguiente.
+- Definir prioridad entre sitio web y repartidores/etiquetas.
 
 ## Backlog MVP
 
@@ -144,7 +190,9 @@ Todavía faltan:
 - [x] Implementar clientes.
 - [x] Implementar órdenes.
 - [x] Implementar pagos.
-- [ ] Implementar dashboard.
+- [x] Implementar dashboard.
+- [x] Ejecutar QA funcional MVP.
+- [x] Preparar guion de demo.
 - [x] Definir permisos base.
 - [x] Implementar modelo de roles/permisos.
 - [x] Implementar hardening CSRF/XSRF.
@@ -157,6 +205,7 @@ Todavía faltan:
 - Admin puede crear y cancelar pagos.
 - Los saldos se calculan automáticamente desde pagos no cancelados.
 - El dashboard muestra información básica operativa.
+- El guion de demo y la guía de datos están listos.
 - El sitio público básico está disponible.
 - Documentación y changelog quedan actualizados.
 

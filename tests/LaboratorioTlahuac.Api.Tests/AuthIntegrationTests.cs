@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using LaboratorioTlahuac.Application.Abstractions.Time;
 using LaboratorioTlahuac.Domain.Security;
 using LaboratorioTlahuac.Domain.Security.Entities;
 using LaboratorioTlahuac.Infrastructure.Persistence;
@@ -472,6 +473,7 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<LaboratorioTlahuacDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<LaboratorioTlahuacDbContext>>();
             services.RemoveAll<LaboratorioTlahuacDbContext>();
+            services.RemoveAll<IClock>();
 
             connection = new SqliteConnection("Data Source=:memory:");
             connection.Open();
@@ -481,6 +483,8 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
             {
                 options.UseSqlite(serviceProvider.GetRequiredService<DbConnection>());
             });
+            services.AddSingleton<IClock>(
+                new TestClock(new DateTimeOffset(2026, 5, 9, 12, 0, 0, TimeSpan.Zero)));
 
             using var serviceProvider = services.BuildServiceProvider();
             using var scope = serviceProvider.CreateScope();
@@ -516,26 +520,88 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
 
         var adminRole = Role.Create("Admin", "Administrador del sistema.", isSystem: true, now);
         var limitedRole = Role.Create("Limited", "Usuario con permisos limitados.", isSystem: false, now);
+        var dashboardOrdersRole = Role.Create(
+            "DashboardOrders",
+            "Usuario con dashboard y operacion.",
+            isSystem: false,
+            now);
+        var dashboardPaymentsRole = Role.Create(
+            "DashboardPayments",
+            "Usuario con dashboard y cobranza.",
+            isSystem: false,
+            now);
+        var dashboardCustomersRole = Role.Create(
+            "DashboardCustomers",
+            "Usuario con dashboard y clientes.",
+            isSystem: false,
+            now);
 
         dbContext.Permissions.AddRange(permissions.Values);
-        dbContext.Roles.AddRange(adminRole, limitedRole);
+        dbContext.Roles.AddRange(
+            adminRole,
+            limitedRole,
+            dashboardOrdersRole,
+            dashboardPaymentsRole,
+            dashboardCustomersRole);
         dbContext.RolePermissions.AddRange(
             permissions.Values.Select(permission => new RolePermission(adminRole.Id, permission.Id)));
         dbContext.RolePermissions.Add(new RolePermission(limitedRole.Id, permissions[Permissions.ReportsView].Id));
+        dbContext.RolePermissions.AddRange(
+            new RolePermission(dashboardOrdersRole.Id, permissions[Permissions.ReportsView].Id),
+            new RolePermission(dashboardOrdersRole.Id, permissions[Permissions.OrdersView].Id),
+            new RolePermission(dashboardPaymentsRole.Id, permissions[Permissions.ReportsView].Id),
+            new RolePermission(dashboardPaymentsRole.Id, permissions[Permissions.PaymentsView].Id),
+            new RolePermission(dashboardCustomersRole.Id, permissions[Permissions.ReportsView].Id),
+            new RolePermission(dashboardCustomersRole.Id, permissions[Permissions.CustomersView].Id));
 
         var passwordHasher = new PasswordHasher<User>();
         var admin = CreateUser("admin@tests.local", "Admin Test", "AdminPass123!", passwordHasher, now);
         var limited = CreateUser("limited@tests.local", "Limited Test", "LimitedPass123!", passwordHasher, now);
+        var noPermissions = CreateUser(
+            "no-permissions@tests.local",
+            "No Permissions Test",
+            "NoPermissionsPass123!",
+            passwordHasher,
+            now);
+        var dashboardOrders = CreateUser(
+            "dashboard-orders@tests.local",
+            "Dashboard Orders Test",
+            "DashboardOrdersPass123!",
+            passwordHasher,
+            now);
+        var dashboardPayments = CreateUser(
+            "dashboard-payments@tests.local",
+            "Dashboard Payments Test",
+            "DashboardPaymentsPass123!",
+            passwordHasher,
+            now);
+        var dashboardCustomers = CreateUser(
+            "dashboard-customers@tests.local",
+            "Dashboard Customers Test",
+            "DashboardCustomersPass123!",
+            passwordHasher,
+            now);
         var inactive = CreateUser("inactive@tests.local", "Inactive Test", "InactivePass123!", passwordHasher, now);
         var locked = CreateUser("locked@tests.local", "Locked Test", "LockedPass123!", passwordHasher, now);
 
         inactive.Deactivate(now);
         locked.LockUntil(now.AddHours(1), now);
 
-        dbContext.Users.AddRange(admin, limited, inactive, locked);
+        dbContext.Users.AddRange(
+            admin,
+            limited,
+            noPermissions,
+            dashboardOrders,
+            dashboardPayments,
+            dashboardCustomers,
+            inactive,
+            locked);
         dbContext.UserRoles.AddRange(
             new UserRole(admin.Id, adminRole.Id),
             new UserRole(limited.Id, limitedRole.Id),
+            new UserRole(dashboardOrders.Id, dashboardOrdersRole.Id),
+            new UserRole(dashboardPayments.Id, dashboardPaymentsRole.Id),
+            new UserRole(dashboardCustomers.Id, dashboardCustomersRole.Id),
             new UserRole(inactive.Id, adminRole.Id),
             new UserRole(locked.Id, adminRole.Id));
 
@@ -556,28 +622,52 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
     }
 }
 
+internal sealed class TestClock(DateTimeOffset utcNow) : IClock
+{
+    private long ticksOffset = -1;
+
+    public DateTimeOffset UtcNow => utcNow.AddTicks(Interlocked.Increment(ref ticksOffset));
+}
+
 internal static class AuthTestClientExtensions
 {
     public static async Task<string> LoginAsAdminAsync(this HttpClient client)
     {
-        var xsrfToken = await client.GetXsrfTokenAsync();
-        var response = await client.PostAsJsonWithXsrfAsync(
-            "/api/auth/login",
-            xsrfToken,
-            new { email = "admin@tests.local", password = "AdminPass123!" });
-
-        response.EnsureSuccessStatusCode();
-
-        return await client.GetXsrfTokenAsync();
+        return await client.LoginAsAsync("admin@tests.local", "AdminPass123!");
     }
 
     public static async Task<string> LoginAsLimitedUserAsync(this HttpClient client)
+    {
+        return await client.LoginAsAsync("limited@tests.local", "LimitedPass123!");
+    }
+
+    public static async Task<string> LoginAsNoPermissionsUserAsync(this HttpClient client)
+    {
+        return await client.LoginAsAsync("no-permissions@tests.local", "NoPermissionsPass123!");
+    }
+
+    public static async Task<string> LoginAsDashboardOrdersUserAsync(this HttpClient client)
+    {
+        return await client.LoginAsAsync("dashboard-orders@tests.local", "DashboardOrdersPass123!");
+    }
+
+    public static async Task<string> LoginAsDashboardPaymentsUserAsync(this HttpClient client)
+    {
+        return await client.LoginAsAsync("dashboard-payments@tests.local", "DashboardPaymentsPass123!");
+    }
+
+    public static async Task<string> LoginAsDashboardCustomersUserAsync(this HttpClient client)
+    {
+        return await client.LoginAsAsync("dashboard-customers@tests.local", "DashboardCustomersPass123!");
+    }
+
+    private static async Task<string> LoginAsAsync(this HttpClient client, string email, string password)
     {
         var xsrfToken = await client.GetXsrfTokenAsync();
         var response = await client.PostAsJsonWithXsrfAsync(
             "/api/auth/login",
             xsrfToken,
-            new { email = "limited@tests.local", password = "LimitedPass123!" });
+            new { email, password });
 
         response.EnsureSuccessStatusCode();
 

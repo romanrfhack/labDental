@@ -61,6 +61,16 @@ Aunque al inicio solo exista Admin, el sistema debe diseñarse con permisos gran
 - `orders.view` permite consultar órdenes, pero no expone saldos detallados; la UI consume endpoints de pagos protegidos por `payments.view`.
 - La autorización se valida por permiso, no por `Role == Admin`.
 
+## Uso En Dashboard
+
+- `reports.view`: permite acceder a `/app/dashboard` y `GET /api/dashboard/summary`.
+- `orders.view`: permite recibir y visualizar la sección operativa del dashboard.
+- `payments.view`: permite recibir y visualizar la sección financiera del dashboard.
+- `customers.view`: permite recibir y visualizar la sección básica de clientes del dashboard.
+- `reports.view` no implica acceso automático a operación, cobranza ni clientes.
+- El backend devuelve como `null` las secciones para las que el usuario no tiene permiso.
+- La autorización se valida por permiso, no por `Role == Admin`.
+
 ## Criterios De Validación
 
 - Admin puede ejecutar todas las acciones del MVP.

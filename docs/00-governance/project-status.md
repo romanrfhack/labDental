@@ -5,18 +5,18 @@
 - Proyecto: Laboratorio Dental Tláhuac.
 - Dominio principal: laboratoriodentaltlahuac.com.
 - Fase actual: Fase 1 - MVP operativo.
-- Etapa actual: Etapa 5 - Pagos, abonos y saldos.
-- Estado: Etapa 5 implementada; Fase 1 en ejecución.
+- Etapa actual: Etapa 7 - QA funcional y demo.
+- Estado: QA funcional ejecutada, documentación de demo preparada y pendiente demo con cliente.
 
 ## Objetivo Inmediato
 
-Revisar pagos y saldos calculados antes de implementar dashboard operativo básico.
+Ejecutar demo con cliente, capturar feedback y cerrar alcance comercial de la siguiente fase.
 
 ## MVP Objetivo
 
 Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin depender del Excel para nuevos registros.
 
-## Entregado En Etapas 1, 2, 2.1, 3, 4 Y 5
+## Entregado En Etapas 1, 2, 2.1, 3, 4, 5, 6 Y 7
 
 - Solución .NET 10 con proyectos `Api`, `Application`, `Domain` e `Infrastructure`.
 - App Angular 21 en `src/LaboratorioTlahuac.Web`.
@@ -60,6 +60,15 @@ Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin dep
 - UI Angular en `/app/pagos` y sección de pagos en `/app/ordenes/:id`.
 - Cancelación de pagos con motivo, sin delete físico ni edición libre en MVP.
 - Pruebas backend de integración para permisos, CSRF, creación, reglas de negocio, sobrepago, resumen, cancelación y listados.
+- Endpoint `GET /api/dashboard/summary` protegido por `reports.view`.
+- Dashboard con secciones condicionadas por `orders.view`, `payments.view` y `customers.view`.
+- Métricas básicas de clientes, órdenes, pagos y saldos calculados usando datos existentes.
+- UI Angular real en `/app/dashboard` con métricas, conteo por estado, últimas órdenes, próximas entregas y últimos pagos.
+- Pruebas backend de integración para autorización, secciones por permiso, total por cobrar, vencidos, fecha fija, límites de listas y `/health`.
+- QA funcional del MVP administrativo ejecutada contra SQL Server local aislado.
+- Corrección de conteos financieros del dashboard para excluir órdenes canceladas.
+- Documentación de QA en `docs/08-qa`.
+- Guion de demo, guía de datos de demo, checklist de aceptación y hallazgos conocidos.
 
 ## Principios De Trabajo
 
@@ -76,8 +85,8 @@ Permitir operar órdenes de trabajo, clientes/doctores/clínicas y pagos sin dep
 
 ## Próximos Pasos
 
-- Revisar pagos y saldos.
-- Implementar dashboard operativo básico.
-- Preparar prueba con usuario.
-- Preparar migración del Excel.
-- Revisar UX y permisos.
+1. Ejecutar demo con cliente.
+2. Capturar feedback.
+3. Cerrar alcance comercial.
+4. Definir prioridad entre sitio web y repartidores/etiquetas.
+5. Planear siguiente fase contratada.

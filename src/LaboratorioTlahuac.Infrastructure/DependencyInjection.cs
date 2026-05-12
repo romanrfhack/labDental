@@ -6,8 +6,10 @@ using LaboratorioTlahuac.Application.Abstractions.Authentication;
 using LaboratorioTlahuac.Application.Abstractions.Security;
 using LaboratorioTlahuac.Application.Abstractions.Time;
 using LaboratorioTlahuac.Application.Customers;
+using LaboratorioTlahuac.Application.Dashboard;
 using LaboratorioTlahuac.Domain.Security.Entities;
 using LaboratorioTlahuac.Infrastructure.Customers;
+using LaboratorioTlahuac.Infrastructure.Dashboard;
 using LaboratorioTlahuac.Infrastructure.Persistence;
 using LaboratorioTlahuac.Infrastructure.Security;
 using LaboratorioTlahuac.Infrastructure.Security.Authentication;
@@ -55,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IWorkOrderService, WorkOrderService>();
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IDashboardService, DashboardService>();
         services.AddSingleton<IWorkOrderNumberGenerator, GuidWorkOrderNumberGenerator>();
         services.AddScoped<ISecuritySeeder, SecuritySeeder>();
 

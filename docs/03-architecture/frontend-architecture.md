@@ -10,7 +10,7 @@ App Angular 21 con routing, SCSS, sesión real por cookie HttpOnly y guards func
 - Rutas privadas: módulos bajo `/app`.
 - Layout público: navegación y contenido institucional.
 - Layout privado: navegación operativa, sesión y módulos internos.
-- Features: clientes, órdenes, pagos, inventario, proveedores, administración.
+- Features: dashboard, clientes, órdenes, pagos, inventario, proveedores, administración.
 - Servicios API: encapsulan llamadas HTTP por dominio funcional.
 
 ## Estructura Real
@@ -142,6 +142,23 @@ Archivos principales:
 
 `PaymentService` reutiliza `AuthService.getCsrfHeaders()` para `POST` y `PATCH`; no guarda tokens en almacenamiento local. La sección de pagos se muestra solo con `payments.view`; crear y cancelar dependen de `payments.create` y `payments.cancel`.
 
+## Dashboard
+
+Archivos principales:
+
+- `DashboardService`: encapsula `GET /api/dashboard/summary`.
+- `DashboardPageComponent`: página real en `/app/dashboard`.
+- `DashboardMetricCardComponent`: tarjetas de métricas.
+- `DashboardStatusBreakdownComponent`: conteo por estado de orden.
+- `DashboardLatestWorkOrdersComponent`: últimas órdenes.
+- `DashboardDueSoonWorkOrdersComponent`: próximas entregas.
+- `DashboardFinancialSummaryComponent`: métricas financieras.
+- `DashboardLatestPaymentsComponent`: últimos pagos.
+
+`DashboardService` usa `HttpClient` con `withCredentials`; no guarda tokens, no lee cookies y no requiere llamada XSRF porque el endpoint es `GET`.
+
+La ruta `/app/dashboard` requiere `reports.view`. La UI maneja secciones ausentes cuando el backend devuelve `null` por falta de `orders.view`, `payments.view` o `customers.view`.
+
 ## Criterios De Validación
 
 - El sitio público puede navegarse sin sesión.
@@ -151,5 +168,5 @@ Archivos principales:
 ## Próximos Pasos
 
 - Agregar pruebas frontend cuando se incorpore runner no interactivo.
-- Revisar pagos y saldos con usuarios.
-- Implementar dashboard operativo básico.
+- Revisar dashboard con usuario.
+- Ejecutar QA manual con SQL Server local.

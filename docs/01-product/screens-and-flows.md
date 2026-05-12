@@ -35,9 +35,25 @@ Cliente/Doctor -> Orden de trabajo -> Pruebas -> Entrega -> Pagos -> Saldo.
 - Las rutas administrativas requieren permisos específicos.
 - Las rutas de órdenes requieren `orders.view`, `orders.create` u `orders.edit` según la acción.
 - Las rutas de clientes requieren `customers.view`, `customers.create` o `customers.edit` según la acción.
+- `/app/dashboard` requiere `reports.view`.
+- Las secciones del dashboard se muestran según permisos adicionales: operación con `orders.view`, cobranza con `payments.view` y clientes con `customers.view`.
 - `/app/pagos` requiere `payments.view`.
 - La sección de pagos dentro de `/app/ordenes/:id` solo se muestra con `payments.view`.
 - Inventario y proveedores pueden quedar visibles como módulos futuros o deshabilitados si están fuera del MVP.
+
+## Dashboard
+
+`/app/dashboard` es el dashboard real básico del MVP. Consume `GET /api/dashboard/summary` y muestra:
+
+- Métricas operativas si el usuario tiene `orders.view`.
+- Métricas financieras si el usuario tiene `payments.view`.
+- Métricas básicas de clientes si el usuario tiene `customers.view`.
+- Conteo de órdenes por estado.
+- Últimas órdenes.
+- Próximas entregas.
+- Últimos pagos.
+
+Si una sección no llega en la respuesta por falta de permiso, la UI muestra un mensaje de acceso limitado para esa sección. No incluye gráficas complejas, exportaciones, reportes avanzados ni cortes de caja.
 
 ## Pagos
 
