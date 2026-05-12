@@ -2,6 +2,16 @@
 
 Todos los cambios relevantes del proyecto deben registrarse aquí. No se deben inventar funcionalidades implementadas.
 
+## 2026-05-12 - Paquete Comercial Primera Ronda
+
+- Se crea documentación ejecutiva/comercial en `docs/09-commercial`.
+- Se documenta alcance incluido, opcional y fuera de alcance para la primera ronda de implementación.
+- Se agrega propuesta ejecutiva, matriz de alcance, fases comerciales, plan de entrega y aceptación, supuestos, exclusiones y plantilla económica sin importes.
+- Se documenta el módulo propuesto de repartidores, entregas y etiquetas como web responsive/PWA.
+- Se aclara que el servicio local de impresión queda condicionado a validación de hardware.
+- Se actualizan README y próximos pasos.
+- No se implementan módulos nuevos ni cambios de arquitectura.
+
 ## 2026-05-11 - Fase 1 Etapa 7
 
 - Se ejecuta QA funcional del MVP administrativo con SQL Server local aislado.

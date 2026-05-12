@@ -15,6 +15,7 @@ Plataforma web para Laboratorio Dental Tlahuac. El sistema reemplazara progresiv
 
 ```text
 docs/
+  09-commercial/
 src/
   LaboratorioTlahuac.Api/
   LaboratorioTlahuac.Application/
@@ -359,6 +360,12 @@ Para repetir la QA manual:
 6. Usar `docs/08-qa/demo-data-guide.md` para capturar datos de prueba.
 7. Presentar con `docs/08-qa/demo-script.md`.
 
+### Paquete Comercial
+
+La documentación ejecutiva y comercial para presentar la primera ronda al cliente está en `docs/09-commercial/`.
+
+Incluye resumen ejecutivo, alcance de primera ronda, fases comerciales, matriz de alcance, plan de entrega y aceptación, supuestos, exclusiones, plantilla económica sin importes, guion ejecutivo de demo, módulo de repartidores/etiquetas y one-pager de propuesta.
+
 ## npm audit
 
 Se revisó `npm audit` en la validación de Etapa 7 y el resultado fue 0 vulnerabilidades.
@@ -373,8 +380,9 @@ No incluye inventario, proveedores, facturacion, CFDI, cortes de caja avanzados,
 
 ## Proximos Pasos
 
-1. Ejecutar demo con cliente.
-2. Capturar feedback.
-3. Cerrar alcance comercial.
-4. Definir prioridad entre sitio web y repartidores/etiquetas.
-5. Planear siguiente fase contratada.
+1. Revisar paquete comercial.
+2. Ejecutar demo con cliente.
+3. Presentar alcance y propuesta.
+4. Cerrar precio.
+5. Priorizar sitio web vs repartidores/etiquetas.
+6. Planear siguiente fase contratada.
