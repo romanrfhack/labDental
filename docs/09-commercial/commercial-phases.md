@@ -1,5 +1,7 @@
 # Fases Comerciales
 
+Este documento describe fases comerciales y de aceptación con cliente. No sustituye el roadmap técnico de `docs/ROADMAP.md` ni el roadmap técnico histórico de `docs/00-governance/roadmap.md`.
+
 ## Fase 0 — Planeación Y Documentación
 
 Estado actual: completada.

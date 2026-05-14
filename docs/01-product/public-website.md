@@ -1,0 +1,194 @@
+# Sitio Público Institucional
+
+Fuente canónica funcional del sitio público de Laboratorio Dental Tláhuac.
+
+## Propósito
+
+Publicar una presencia digital clara, confiable y mobile-first para Laboratorio Dental Tláhuac en `laboratoriodentaltlahuac.com`, sin exponer el sistema administrativo privado.
+
+## Estado Fase 1
+
+Primera versión pública implementada dentro de `src/LaboratorioTlahuac.Web/src/app/public`.
+
+Secciones listas en `/`:
+
+- Hero principal con mensaje institucional.
+- Capacidades del laboratorio con contenido provisional.
+- Proceso de trabajo de alto nivel.
+- Beneficios para doctores, consultorios y clínicas.
+- Contacto con CTA neutral hacia `/contacto`.
+- Entrada visible al sistema mediante `/login`.
+
+Páginas públicas listas:
+
+- `/`: landing institucional mobile-first.
+- `/servicios`: página de capacidades provisionales.
+- `/contacto`: página de contacto con datos pendientes.
+
+Decisión de navegación: se mantienen páginas públicas existentes y la home también usa secciones internas para que la primera experiencia móvil sea recorrible sin cambiar de ruta.
+
+## Estado Fase 1.1
+
+QA responsive técnico parcialmente completado.
+
+- Se revisó la estructura de header, CTAs, cards, footer y páginas públicas por código/SCSS.
+- Se ajustó el footer para evitar columnas rígidas en tablet/desktop.
+- Se reforzó el wrapping de marca, links, botones y textos largos.
+- Se mantuvo `/login` como entrada pública al sistema y `/app` como zona privada.
+- Hallazgo manual corregido: `/app/dashboard` sin sesión debe redirigir a `/login?returnUrl=/app/dashboard` aunque falle la verificación inicial de sesión.
+- No se modificaron `AuthService`, backend, endpoints, cookies, XSRF, base de datos ni deploy.
+- Revisión visual por breakpoint queda pendiente porque el entorno local no tiene navegador/headless disponible sin instalar dependencias.
+
+## Estado Fase 1.2
+
+Fase ejecutada parcialmente por falta de contenido real confirmado.
+
+Contenido real incorporado:
+
+- Ninguno. La solicitud dejó WhatsApp, dirección, horarios, logo, servicios exactos, texto principal aprobado y materiales visuales como pendientes.
+
+Cambios aplicados para revisión:
+
+- Se retiró el CTA principal `WhatsApp pendiente por confirmar`.
+- Se reemplazó por CTA neutral hacia `/contacto`.
+- Se ajustaron textos de home, servicios, contacto y footer para no presentar datos pendientes como definitivos.
+- `/servicios` queda como página preparada para el catálogo final, sin publicar servicios exactos.
+- `/contacto` queda como página preparada para datos finales, sin teléfono, dirección ni horarios inventados.
+
+Secciones listas para revisión del cliente:
+
+- Hero principal.
+- Capacidades/catálogo en preparación.
+- Proceso de trabajo de alto nivel.
+- Beneficios para doctores, consultorios y clínicas.
+- Contacto sin datos no confirmados.
+- Entrada a `/login`.
+
+## Estado Fase 1.3
+
+Catálogo público implementado en ruta dedicada `/catalogo`.
+
+Decisión de ruta:
+
+- Se agregó `/catalogo` porque el catálogo contiene muchas secciones, productos, precios e imágenes.
+- `/servicios` se mantiene como página introductoria y enlaza al catálogo.
+- `/login` sigue como entrada pública al sistema.
+- `/app` y `/app/dashboard` siguen como zona privada.
+
+Data del catálogo:
+
+- Archivo: `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
+- Interfaces: `CatalogSection` y `CatalogProduct`.
+- La UI renderiza secciones y productos dinámicamente desde esa estructura.
+- Los precios se formatean en MXN desde valores numéricos.
+
+Imágenes:
+
+- Carpeta fuente: `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
+- Ruta pública esperada en Angular: `/assets/catalog/products/`.
+- Formato usado en catálogo: `.webp`.
+- Angular copia `src/assets/**/*.webp` como assets públicos.
+- Las imágenes se muestran en un frame uniforme con `aspect-ratio: 4 / 3`, `object-fit: contain`, fondo claro y centrado.
+
+Manejo de placeholders:
+
+- Si existe imagen específica del producto, se usa esa imagen.
+- Si falta imagen específica, se usa imagen representativa de la sección.
+- Si no existe imagen de producto ni de sección, se muestra placeholder visual con iniciales.
+
+Imágenes pendientes:
+
+- Faltan imágenes específicas para varios productos que hoy usan imagen de sección.
+- Faltan imágenes para `Servicios prostodónticos`; esos productos usan placeholder.
+- Existe `protesis-removible-unidad-acrilica.jpg`, pero no se usa en esta fase porque el criterio definido fue `.webp`.
+
+Contenido incorporado:
+
+- Catálogo inicial completo con secciones, productos y precios provistos para Fase 1.3.
+- No se agregaron WhatsApp, dirección, horarios ni logo porque siguen sin confirmarse.
+
+## Audiencia
+
+- Doctores y doctoras que buscan un laboratorio dental.
+- Clínicas dentales que requieren trabajos de laboratorio.
+- Clientes potenciales que necesitan ubicación, servicios y contacto.
+- Personal interno que usará `/login` como entrada al sistema.
+
+## Páginas Públicas Planeadas
+
+Rutas existentes para Fase 1:
+
+- `/`: página principal.
+- `/catalogo`: catálogo público de productos y precios.
+- `/servicios`: servicios del laboratorio.
+- `/contacto`: datos de contacto, ubicación y forma de comunicación.
+- `/login`: entrada pública al sistema privado.
+
+Rutas futuras opcionales:
+
+- `/trabajos`
+- `/ubicacion`
+- `/privacidad`
+
+## Enfoque Mobile-First
+
+- El cliente revisará primero desde celular.
+- La navegación debe funcionar cómodamente con dedo.
+- Los botones y enlaces deben tener área táctil suficiente.
+- El texto debe ser legible sin zoom.
+- No debe existir scroll horizontal.
+- Las imágenes deben estar optimizadas.
+- Validación obligatoria: `docs/08-qa/RESPONSIVE_CHECKLIST.md`.
+
+## Entrada A Login
+
+- `/login` debe mantenerse visible como acceso al sistema.
+- `/login` no debe mezclarse visualmente con rutas privadas.
+- El rediseño visual del sitio público no debe cambiar auth, cookies, guards, permisos ni CSRF/XSRF.
+
+## Contenido Pendiente Del Cliente
+
+- Logo.
+- Servicios finales a publicar.
+- Textos institucionales.
+- Datos de contacto.
+- WhatsApp o teléfono público.
+- Ubicación.
+- Horarios.
+- Fotografías o materiales visuales aprobados.
+
+Estos datos siguen pendientes después de Fase 1.2; no se deben presentar placeholders como información definitiva.
+
+## Contenido Provisional
+
+No se inventaron datos reales de teléfono, dirección ni horarios. Mientras el cliente confirma información, el sitio evita enlazar canales no confirmados y muestra avisos seguros:
+
+- WhatsApp no confirmado.
+- Dirección no confirmada.
+- Horarios no confirmados.
+
+Las capacidades publicadas en Fase 1 son descripciones generales provisionales, no catálogo final de servicios. Deben validarse con el cliente antes de presentarse como oferta cerrada.
+
+## Relación Con Dominio
+
+- Dominio principal: `laboratoriodentaltlahuac.com`.
+- El sitio público debe cargar por HTTPS cuando haya producción.
+- La app privada seguirá bajo `/app` en el mismo dominio salvo decisión futura.
+
+## Fuera De Alcance De Fase 1 Del Sitio
+
+- Cambiar auth.
+- Cambiar rutas privadas.
+- Cambiar endpoints.
+- Cambiar deploy productivo.
+- Crear una app o repo nuevo.
+- Implementar módulos privados nuevos.
+
+## Secciones Faltantes O Pendientes
+
+- Contenido final aprobado por el cliente.
+- Logo o identidad visual final.
+- Fotografías o materiales visuales propios del laboratorio.
+- Aviso de privacidad si se solicitarán datos personales desde el sitio público.
+- Formulario real de contacto, solo cuando exista backend o herramienta confirmada para recibir mensajes.
+- QA visual completa en los viewports del checklist responsive.

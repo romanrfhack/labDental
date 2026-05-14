@@ -5,6 +5,7 @@ import { PublicLayoutComponent } from './public/layout/public-layout.component';
 import { HomePageComponent } from './public/pages/home/home-page.component';
 import { ServicesPageComponent } from './public/pages/services/services-page.component';
 import { ContactPageComponent } from './public/pages/contact/contact-page.component';
+import { CatalogPageComponent } from './public/pages/catalog/catalog-page.component';
 import { LoginPageComponent } from './auth/pages/login/login-page.component';
 import { PrivateLayoutComponent } from './admin/layout/private-layout.component';
 import { DashboardPageComponent } from './features/dashboard/dashboard-page.component';
@@ -28,9 +29,10 @@ export const routes: Routes = [
     path: '',
     component: PublicLayoutComponent,
     children: [
-      { path: '', component: HomePageComponent, title: 'Laboratorio Dental Tlahuac' },
-      { path: 'servicios', component: ServicesPageComponent, title: 'Servicios' },
-      { path: 'contacto', component: ContactPageComponent, title: 'Contacto' }
+      { path: '', component: HomePageComponent, title: 'Laboratorio Dental Tláhuac' },
+      { path: 'catalogo', component: CatalogPageComponent, title: 'Catálogo | Laboratorio Dental Tláhuac' },
+      { path: 'servicios', component: ServicesPageComponent, title: 'Servicios | Laboratorio Dental Tláhuac' },
+      { path: 'contacto', component: ContactPageComponent, title: 'Contacto | Laboratorio Dental Tláhuac' }
     ]
   },
   { path: 'login', component: LoginPageComponent, title: 'Login' },

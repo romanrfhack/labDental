@@ -50,6 +50,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*.webp",
+                "input": "src/assets",
+                "output": "assets"
               }
             ],
             "styles": [

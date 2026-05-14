@@ -6,6 +6,33 @@ import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
 
+const defaultPrivateReturnUrl = '/app/dashboard';
+
+export function getSafePrivateReturnUrl(returnUrl: string | null) {
+  if (!returnUrl) {
+    return defaultPrivateReturnUrl;
+  }
+
+  const value = returnUrl.trim();
+
+  if (
+    value !== returnUrl ||
+    value.includes('\\') ||
+    /^[a-z][a-z0-9+.-]*:/i.test(value) ||
+    value.startsWith('//')
+  ) {
+    return defaultPrivateReturnUrl;
+  }
+
+  const isPrivateRoute =
+    value === '/app' ||
+    value.startsWith('/app/') ||
+    value.startsWith('/app?') ||
+    value.startsWith('/app#');
+
+  return isPrivateRoute ? value : defaultPrivateReturnUrl;
+}
+
 @Component({
   selector: 'app-login-page',
   imports: [ReactiveFormsModule, RouterLink],
@@ -81,6 +108,6 @@ export class LoginPageComponent {
   private getReturnUrl() {
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
-    return returnUrl?.startsWith('/app') ? returnUrl : '/app/dashboard';
+    return getSafePrivateReturnUrl(returnUrl);
   }
 }

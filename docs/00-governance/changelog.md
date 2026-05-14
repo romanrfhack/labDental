@@ -2,11 +2,22 @@
 
 Todos los cambios relevantes del proyecto deben registrarse aquí. No se deben inventar funcionalidades implementadas.
 
+## 2026-05-12 - Fase 0.2 Consolidación Documental
+
+- Se consolida la documentación para separar sistema privado, sitio público, control global, deploy, QA y documentación comercial.
+- Se crea `docs/README.md` como índice general.
+- Se crean fuentes canónicas: `docs/03-architecture/ARCHITECTURE.md`, `docs/03-architecture/AUTH_FLOW.md`, `docs/05-delivery/DEPLOYMENT.md` y `docs/08-qa/RESPONSIVE_CHECKLIST.md`.
+- Se crean documentos funcionales: `docs/01-product/public-website.md` y `docs/01-product/internal-system.md`.
+- Se actualizan `README.md`, `AGENTS.md`, `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md` y `docs/IMPLEMENTATION_LOG.md`.
+- Se agregan puentes temporales para rutas documentales anteriores.
+- No se implementa código ni se modifican pantallas, rutas, auth, deploy, dependencias ni base de datos.
+
 ## 2026-05-12 - Paquete Comercial Primera Ronda
 
 - Se crea documentación ejecutiva/comercial en `docs/09-commercial`.
 - Se documenta alcance incluido, opcional y fuera de alcance para la primera ronda de implementación.
 - Se agrega propuesta ejecutiva, matriz de alcance, fases comerciales, plan de entrega y aceptación, supuestos, exclusiones y plantilla económica sin importes.
+- Se agregan documentos contractuales base: Statement of Work, control de cambios, responsabilidades del cliente y agenda de reunión de demo.
 - Se documenta el módulo propuesto de repartidores, entregas y etiquetas como web responsive/PWA.
 - Se aclara que el servicio local de impresión queda condicionado a validación de hardware.
 - Se actualizan README y próximos pasos.
