@@ -238,6 +238,7 @@ _pkginfo.txt
 !?*.[Cc]ache/
 
 # Others
+*:Zone.Identifier
 ClientBin/
 ~$*
 *~

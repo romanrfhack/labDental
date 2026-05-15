@@ -6,6 +6,87 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-14 - Ignore De Zone.Identifier
+
+### Cambio Realizado
+
+Se agregó `*:Zone.Identifier` a `.gitignore` para evitar que vuelvan a entrar al control de versiones archivos alternos generados al copiar assets desde Windows.
+
+### Archivos Modificados
+
+- `.gitignore`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Alcance
+
+- No se modificó código.
+- No se modificó documentación fuera de esta bitácora.
+
+## 2026-05-14 - Fase 1.3.1 Cierre De Catálogo Público
+
+### Cambio Realizado
+
+Se cerró la revisión técnica del catálogo público en `/catalogo`, se retiraron del working tree los assets `:Zone.Identifier` detectados en la carpeta de productos y se preparó la documentación para revisión visual/comercial del cliente.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/public-website.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Archivos Eliminados
+
+- 22 archivos `*:Zone.Identifier` dentro de `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
+- No se borraron imágenes `.webp`.
+- No se borró `protesis-removible-unidad-acrilica.jpg`.
+
+### Validación Del Catálogo
+
+- `/catalogo` está configurado como ruta pública bajo `PublicLayoutComponent`.
+- `/servicios` enlaza a `/catalogo`.
+- `/login` sigue como ruta pública de entrada al sistema.
+- `/app` y `/app/dashboard` siguen bajo layout privado con guards.
+- `/dashboard` no existe como ruta privada real; las menciones restantes son documentación, API de dashboard o `/app/dashboard`.
+- `catalog-data.ts` contiene 12 secciones y 40 productos.
+- Los precios permanecen como números y se formatean con `Intl.NumberFormat('es-MX')`.
+- Hay 19 productos con imagen específica, 16 con imagen representativa de sección y 5 placeholders.
+- Placeholders restantes: Reparación de dentadura por fractura, Gancho volado, Descanso metálico c/u, Rebase y Aumentar dientes c/u.
+- Todas las imágenes referenciadas por el catálogo existen en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
+
+### Copy Comercial
+
+- Se agregó la nota visible `Precios de referencia 2026 sujetos a confirmación.`.
+- Los precios provienen del cartel proporcionado y requieren aprobación final del cliente antes de publicación formal.
+- No se agregaron condiciones comerciales nuevas.
+
+### Configuración Y Assets
+
+- `angular.json` no se modificó.
+- La configuración actual copia `src/assets/**/*.webp` hacia `assets`, suficiente para el catálogo actual.
+- Ese glob no copia archivos `:Zone.Identifier` desde `src/assets`.
+- `find . -name '*:Zone.Identifier' -type f -print`: sin resultados.
+- `rg "Zone.Identifier" .`: solo devuelve menciones documentales, no archivos físicos.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `git diff --check`: correcto.
+- `rg "Zone.Identifier" .`
+- `rg "/catalogo" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`
+- `rg "/dashboard" .`
+- `rg "/app/dashboard" .`
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`
+- `git status --short`: muestra las bajas esperadas de `*:Zone.Identifier` y cambios documentales/frontend de esta fase.
+
+### Pendientes
+
+- Revisión visual real de `/catalogo` y rutas públicas en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+- Aprobación final del cliente sobre precios 2026, vigencia, condiciones comerciales y publicación.
+- Reemplazar placeholders y fallbacks por imágenes `.webp` específicas cuando el cliente entregue o apruebe assets.
+
 ## 2026-05-13 - Fase 1.3 Catálogo Público
 
 ### Cambio Realizado

@@ -22,6 +22,7 @@ Fuente funcional: `docs/01-product/public-website.md`.
 - Fase sitio 1.1: revisión responsive técnica ejecutada; revisión visual por viewport pendiente.
 - Fase sitio 1.2: contenido aprobado y reemplazo de placeholders. Parcial; faltan datos reales confirmados.
 - Fase sitio 1.3: catálogo público con precios e imágenes locales en `/catalogo`. Implementada.
+- Fase sitio 1.3.1: cierre técnico del catálogo, limpieza de assets `:Zone.Identifier`, documentación de placeholders y preparación para revisión visual del cliente. Implementada por código/documentación; revisión visual real pendiente.
 - Fase sitio 2: revisión visual de `/login` como entrada al sistema, sin cambiar auth. Pendiente.
 - Fase sitio 3: QA mobile-first completo y preparación de contenido final. Pendiente.
 - Fase sitio 4: publicación en `laboratoriodentaltlahuac.com` cuando deploy/DNS estén definidos. Pendiente.
@@ -41,7 +42,7 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Revisar `/catalogo` con el cliente, confirmar vigencia de precios y completar imágenes `.webp` faltantes. En paralelo, completar revisión visual manual en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+Revisar `/catalogo` con el cliente, confirmar vigencia de precios 2026, aprobar condiciones comerciales antes de publicar y completar imágenes `.webp` faltantes. En paralelo, completar revisión visual manual en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
 
 ## Regla De Actualización
 

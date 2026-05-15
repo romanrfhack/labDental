@@ -22,6 +22,7 @@ Secciones listas en `/`:
 Páginas públicas listas:
 
 - `/`: landing institucional mobile-first.
+- `/catalogo`: catálogo público con productos, precios de referencia e imágenes locales.
 - `/servicios`: página de capacidades provisionales.
 - `/contacto`: página de contacto con datos pendientes.
 
@@ -106,6 +107,56 @@ Contenido incorporado:
 
 - Catálogo inicial completo con secciones, productos y precios provistos para Fase 1.3.
 - No se agregaron WhatsApp, dirección, horarios ni logo porque siguen sin confirmarse.
+
+## Estado Fase 1.3.1
+
+Cierre técnico del catálogo y preparación para revisión visual del cliente.
+
+Ruta y estructura:
+
+- Ruta pública: `/catalogo`.
+- `/servicios` permanece como página introductoria y enlaza a `/catalogo`.
+- Archivo de datos: `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
+- Carpeta de imágenes: `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
+- Ruta pública esperada de imágenes: `/assets/catalog/products/`.
+- `angular.json` conserva el copiado de `src/assets/**/*.webp` hacia `assets`; no se requirió cambiar configuración.
+
+Conteo validado por código:
+
+- Secciones: 12.
+- Productos: 40.
+- Productos con imagen específica: 19.
+- Productos con imagen representativa de sección: 16.
+- Productos con placeholder visual: 5.
+
+Placeholders restantes:
+
+- Reparación de dentadura por fractura.
+- Gancho volado.
+- Descanso metálico c/u.
+- Rebase.
+- Aumentar dientes c/u.
+
+Datos y precios:
+
+- Los precios permanecen como números en `catalog-data.ts`, no como strings formateados.
+- La UI formatea precios con `Intl.NumberFormat('es-MX')` y moneda `MXN`.
+- El copy visible usa la nota `Precios de referencia 2026 sujetos a confirmación.`.
+- El catálogo se cargó desde el cartel proporcionado; precios, vigencia 2026 y cualquier condición comercial requieren aprobación final del cliente antes de publicar formalmente.
+- No se agregaron condiciones comerciales nuevas en esta fase.
+
+Assets:
+
+- Se retiraron del working tree los archivos `:Zone.Identifier` detectados dentro de `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
+- No se borraron imágenes `.webp`.
+- No se borró `protesis-removible-unidad-acrilica.jpg`; sigue documentado como asset local no usado porque el catálogo de esta fase referencia `.webp`.
+
+Rutas confirmadas por revisión de código:
+
+- `/catalogo`, `/servicios` y `/contacto` están bajo layout público.
+- `/login` sigue como entrada pública al sistema.
+- `/app` y `/app/dashboard` siguen bajo zona privada con guards.
+- `/dashboard` no existe como ruta privada real.
 
 ## Audiencia
 

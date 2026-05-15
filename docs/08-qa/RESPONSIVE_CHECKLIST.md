@@ -33,6 +33,17 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - Productos sin imagen específica usan imagen de sección o placeholder visual.
 - Pendiente revisión visual real en los viewports obligatorios.
 
+## Estado Fase 1.3.1
+
+- Cierre técnico del catálogo ejecutado por revisión de código/configuración.
+- Catálogo validado por código: 12 secciones, 40 productos, 19 imágenes específicas, 16 imágenes representativas de sección y 5 placeholders.
+- Placeholders restantes: Reparación de dentadura por fractura, Gancho volado, Descanso metálico c/u, Rebase y Aumentar dientes c/u.
+- Precios en data como números y formateados en UI con `Intl.NumberFormat('es-MX')`.
+- Nota comercial visible: `Precios de referencia 2026 sujetos a confirmación.`.
+- Assets `:Zone.Identifier` retirados del working tree en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
+- `angular.json` mantiene el glob `src/assets/**/*.webp`, por lo que no copia `:Zone.Identifier` desde esa carpeta.
+- Revisión visual real sigue pendiente porque no hay navegador/headless disponible en el entorno actual.
+
 ## Verificado Por Código / Build
 
 - [x] Build frontend correcto con `npm run build`.
@@ -52,6 +63,12 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 1.3 renderiza catálogo desde data tipada, no desde una plantilla hardcodeada.
 - [x] Fase 1.3 mantiene `/login` como entrada pública y `/app` como zona privada.
 - [x] Fase 1.3 usa frames uniformes para imágenes y placeholder cuando faltan assets.
+- [x] Fase 1.3.1 confirma por código que no hay `min-width` rígido que fuerce overflow en `/catalogo`.
+- [x] Fase 1.3.1 confirma grids de catálogo con `minmax(0, 1fr)`.
+- [x] Fase 1.3.1 confirma tarjetas del catálogo con `min-width: 0`.
+- [x] Fase 1.3.1 confirma imágenes del catálogo con frame uniforme y `object-fit: contain`.
+- [x] Fase 1.3.1 confirma enlaces/botones principales con área táctil de 40px a 48px según contexto.
+- [x] Fase 1.3.1 build final, `git diff --check` y búsquedas solicitadas ejecutadas.
 
 ## Hallazgos Manuales Recibidos
 
@@ -63,6 +80,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 
 - [ ] Confirmar en navegador real que `/app/dashboard` sin sesión redirige a `/login?returnUrl=/app/dashboard`.
 - [ ] Resto de revisión visual por breakpoint pendiente. El entorno actual no tiene navegador/headless disponible sin instalar dependencias.
+- [ ] Revisar visualmente `/catalogo` antes de aprobación del cliente.
 
 ## Pendiente De Revisión Manual
 
@@ -81,6 +99,8 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 | 768px | Revisado por código/SCSS; visual pendiente | Footer ajustado para columnas flexibles. |
 | 1024px | Revisado por código/SCSS; visual pendiente | Grids de 3 columnas con `minmax(0, 1fr)`. |
 | Desktop amplio | Revisado por código/SCSS; visual pendiente | Padding horizontal queda limitado por cálculo responsive. |
+
+Breakpoints pendientes de revisar visualmente antes de presentar al cliente: 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
 
 ## Navegación
 

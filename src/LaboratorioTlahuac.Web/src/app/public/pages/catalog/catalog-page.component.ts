@@ -14,6 +14,7 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
         <p>
           Lista inicial de laboratorio organizada por secciones. Las imágenes se cargan desde assets locales
           cuando existen; si falta una imagen específica, se usa una referencia de sección o un placeholder.
+          Precios de referencia 2026 sujetos a confirmación.
         </p>
       </div>
       <a class="login-action" routerLink="/login">Iniciar sesión</a>
@@ -36,7 +37,7 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
       </div>
       <div>
         <strong>MXN</strong>
-        <span>precios publicados</span>
+        <span>precios de referencia</span>
       </div>
     </section>
 
