@@ -56,6 +56,15 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - `Anticipo 50%` y `Trabajos urgentes +40%` se muestran solo con texto prudente de confirmación pendiente.
 - Revisión visual real sigue pendiente porque no hay navegador/headless disponible en el entorno actual.
 
+## Estado Fase 2.0
+
+- Validación de flujo login/sesión/redirección ejecutada por código, build, tests y `curl`.
+- `/login` sigue público.
+- `/app` y `/app/dashboard` siguen privados por routing/guards.
+- `/dashboard` no se convirtió en ruta privada real.
+- `returnUrl` externo o inválido sigue bloqueado por sanitización en login.
+- Login real queda pendiente porque no hay navegador local disponible ni API/base/credenciales Admin configuradas en el entorno.
+
 ## Verificado Por Código / Build
 
 - [x] Build frontend correcto con `npm run build`.
@@ -85,6 +94,10 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 1.5 confirma contacto visible en home, `/catalogo`, `/contacto` y footer.
 - [x] Fase 1.5 mantiene `/login` como entrada pública y `/app` como zona privada por routing/guards.
 - [x] Fase 1.5 no introduce `/dashboard` como ruta privada real.
+- [x] Fase 2.0 confirma por código que los cambios visuales de login no alteraron `AuthService.login()`.
+- [x] Fase 2.0 confirma por código que `/login?returnUrl=%2Fapp%2Fdashboard` acepta el destino interno seguro.
+- [x] Fase 2.0 confirma por código que `https://example.com`, `//example.com` y `javascript:alert(1)` usan fallback seguro.
+- [x] Fase 2.0 ejecuta `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctamente.
 
 ## Hallazgos Manuales Recibidos
 
@@ -95,6 +108,8 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 ## Verificado Visualmente
 
 - [ ] Confirmar en navegador real que `/app/dashboard` sin sesión redirige a `/login?returnUrl=/app/dashboard`.
+- [ ] Confirmar en navegador real login correcto desde `/login` hacia `/app/dashboard` con API/base local y Admin configurado.
+- [ ] Confirmar en navegador real que después de logout `/app/dashboard` vuelve a redirigir a `/login?returnUrl=%2Fapp%2Fdashboard`.
 - [ ] Resto de revisión visual por breakpoint pendiente. El entorno actual no tiene navegador/headless disponible sin instalar dependencias.
 - [ ] Revisar visualmente `/catalogo` antes de aprobación del cliente.
 - [ ] Revisar visualmente logo, header y navegación de Fase 1.5 en 360px antes de aprobación del cliente.

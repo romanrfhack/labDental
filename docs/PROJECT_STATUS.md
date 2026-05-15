@@ -4,7 +4,7 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público: Fase 1.5 del sitio público institucional, integración de identidad visual LDT, tokens de marca y datos de contacto del cartel/catálogo.
+Fase actual del frente público/sistema: Fase 2.0 de validación del flujo real de login, sesión y redirección hacia la app privada.
 
 ## Sistema Privado / MVP Administrativo
 
@@ -18,6 +18,10 @@ Estado: avanzado, con QA funcional y demo documentadas.
 - Módulos implementados: clientes, doctores, clínicas, doctores internos, órdenes de trabajo, estados, pagos, saldos calculados y dashboard básico.
 - QA funcional documentada en `docs/08-qa/`.
 - Demo administrativa documentada en `docs/08-qa/demo-script.md`.
+- Validación Fase 2.0 por código: `/login` sigue público; `/app` está protegido por `authGuard`; `/app/dashboard` está protegido por `permissionGuard` y requiere `reports.view`; `/dashboard` no existe como ruta privada real.
+- Validación Fase 2.0 de login visual/lógica: los cambios visuales de Fase 1.5 en `login-page.component.ts` no alteraron `AuthService.login()`, manejo de errores, sanitización de `returnUrl`, navegación posterior al login ni solicitud de CSRF desde `AuthService`.
+- Validación Fase 2.0 de `returnUrl`: se aceptan rutas internas seguras bajo `/app`, como `/app/dashboard`; valores externos o inválidos como `https://example.com`, `//example.com` y `javascript:alert(1)` usan fallback seguro `/app/dashboard`.
+- Validación real con credenciales locales quedó pendiente: `appsettings*.json` no contiene Admin local configurado, `SecuritySeed:RunOnStartup` está en `false` y no se deben inventar credenciales ni modificar seed en esta fase.
 
 La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
 
@@ -83,6 +87,8 @@ Estado: pendiente de definición productiva.
 - Validación Fase 1.3: `npm run build`, `git diff --check`, búsqueda de rutas y verificación de assets del catálogo ejecutadas.
 - Validación Fase 1.3.1: `npm run build`, `git diff --check`, búsquedas solicitadas y verificación por nombre de archivos `*:Zone.Identifier` ejecutadas correctamente.
 - Validación Fase 1.5: `npm run build`, `git diff --check` y búsquedas solicitadas de logo, contacto, WhatsApp y rutas ejecutadas correctamente.
+- Validación Fase 2.0: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` ejecutados correctamente.
+- Validación HTTP Fase 2.0 con Angular dev server en `http://127.0.0.1:4201/`: `/`, `/servicios`, `/catalogo`, `/contacto`, `/login`, `/app`, `/app/dashboard`, `/dashboard` y casos de `/login?returnUrl=...` respondieron con shell Angular `200`; la protección privada se confirmó por router/guards porque `curl` no ejecuta Angular.
 - No existe script `lint` en `src/LaboratorioTlahuac.Web/package.json`.
 - Zona horaria formal de negocio sigue pendiente para métricas de "hoy", vencidas y próximos 7 días.
 
@@ -94,6 +100,8 @@ Estado: pendiente de definición productiva.
 
 ## Próxima Tarea Recomendada
 
-Revisión visual y comercial del cliente del sitio público con identidad LDT aplicada, confirmación de vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
+Completar la validación real de login en navegador con API/base local disponibles y usuario Admin configurado por el humano: iniciar sesión desde `/login`, confirmar redirección a `/app/dashboard`, validar `GET /api/auth/me`, ejecutar logout y confirmar que `/app/dashboard` vuelve a redirigir a `/login?returnUrl=%2Fapp%2Fdashboard`.
+
+En paralelo, mantener la revisión visual y comercial del cliente del sitio público con identidad LDT aplicada, confirmación de vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
 
 Backlog futuro separado: evaluar la fase de administración de catálogo, precios e imágenes en la app privada solo después de definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes, reglas de publicación y aprobación del cliente para precios públicos.

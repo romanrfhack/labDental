@@ -68,6 +68,19 @@ Al diseñarla se deberá definir modelo de datos, endpoints, almacenamiento de i
   - cobranza con `payments.view`;
   - clientes con `customers.view`.
 
+## Validación De Acceso Fase 2.0
+
+Estado: validado por código, build, tests y shell Angular; login real queda pendiente por falta de API/base/credenciales Admin locales.
+
+- `/login` sigue siendo la entrada pública al sistema privado.
+- `/app` sigue protegido por `authGuard`.
+- `/app/dashboard` sigue siendo el dashboard privado real y requiere `reports.view`.
+- Usuario sin sesión en `/app/dashboard` debe ser redirigido a `/login?returnUrl=%2Fapp%2Fdashboard`.
+- Usuario autenticado sin `reports.view` debe ir a `/app/access-denied`, no a `/login`.
+- `/dashboard` no es ruta privada real.
+- `returnUrl` posterior al login solo acepta rutas internas seguras bajo `/app`; destinos externos o inválidos usan fallback `/app/dashboard`.
+- Para validar login real, el humano debe configurar API/base local y Admin seguro, iniciar sesión desde `/login`, confirmar redirección a `/app/dashboard`, validar `GET /api/auth/me`, ejecutar logout y confirmar que `/app/dashboard` vuelve a pedir login.
+
 ## Permisos
 
 El sistema autoriza por permisos, no por nombre de rol. El rol Admin inicial recibe todos los permisos mediante seed.

@@ -246,6 +246,8 @@ Rutas futuras opcionales:
 - `/login` debe mantenerse visible como acceso al sistema.
 - `/login` no debe mezclarse visualmente con rutas privadas.
 - El rediseño visual del sitio público no debe cambiar auth, cookies, guards, permisos ni CSRF/XSRF.
+- Validación Fase 2.0: `/login` sigue público y los cambios visuales de Fase 1.5 no alteraron `AuthService.login()`, manejo de errores, sanitización de `returnUrl` ni navegación posterior al login.
+- El flujo esperado desde sitio público es `/` -> `/login` -> login correcto -> `/app/dashboard` o `returnUrl` interno seguro. La ejecución real con credenciales queda pendiente hasta tener API/base local y Admin configurado.
 
 ## Contenido Pendiente Del Cliente
 

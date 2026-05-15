@@ -4,7 +4,7 @@ Fuente canónica de login, sesión, cookies, CSRF/XSRF, permisos, rutas privadas
 
 ## Rutas Reales
 
-- Sitio público: `/`, `/servicios`, `/contacto`.
+- Sitio público: `/`, `/catalogo`, `/servicios`, `/contacto`.
 - Login: `/login`.
 - App privada: `/app`.
 - Dashboard privado real: `/app/dashboard`.
@@ -136,3 +136,44 @@ La sanitización vive en el componente de login antes de ejecutar `router.naviga
 - Evaluar Content Security Policy cuando el sitio público incorpore más assets o integraciones.
 - Mantener revisión de dependencias frontend y backend.
 - Validar protección contra abuso para cualquier formulario público futuro.
+
+## Validación Fase 2.0 - 2026-05-15
+
+Resultado de `/login`:
+
+- `/login` sigue configurado como ruta pública en `app.routes.ts`.
+- La revisión de `login-page.component.ts` confirma que los cambios visuales de Fase 1.5 no alteraron la llamada a `AuthService.login()`, el manejo de errores, la navegación posterior al login ni la sanitización de `returnUrl`.
+- `AuthService.login()` sigue solicitando CSRF, enviando `POST /api/auth/login` con `withCredentials`, renovando CSRF después del login correcto y guardando el usuario autenticado en memoria.
+
+Resultado de `returnUrl`:
+
+- `/login?returnUrl=%2Fapp%2Fdashboard` conserva el destino interno seguro `/app/dashboard`.
+- `https://example.com`, `//example.com` y `javascript:alert(1)` no se usan como destino de navegación posterior al login.
+- Valores externos, valores con esquema, protocol-relative, espacios, backslash o rutas fuera de `/app` usan fallback seguro `/app/dashboard`.
+
+Resultado de `/app/dashboard` sin sesión:
+
+- Por código, `/app` está protegido con `authGuard` y `/app/dashboard` está dentro de esa zona privada.
+- Si `ensureSession()` devuelve `false` o falla con error durante la navegación a `/app/*`, el guard redirige a `/login?returnUrl=...`.
+- `/app/dashboard` además requiere el permiso `reports.view` mediante `permissionGuard`.
+
+Resultado de validación de rutas:
+
+- Confirmado por código: `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` son rutas públicas.
+- Confirmado por código: `/app` y `/app/dashboard` son rutas privadas.
+- Confirmado por código: `/dashboard` no es ruta privada real; el wildcard del router redirige a la home pública.
+- Confirmado por `curl` con Angular dev server en `http://127.0.0.1:4201/`: todas las rutas solicitadas respondieron con shell Angular `200`. `curl` no ejecuta Angular, por lo que la redirección real del guard queda como validación por código hasta probar en navegador.
+
+Resultado de login real:
+
+- Pendiente en entorno local porque no hay API/base/credenciales Admin configuradas.
+- `appsettings.Development.json` tiene `SecuritySeed:RunOnStartup` en `false`.
+- `appsettings.json` conserva `SecuritySeed:Admin` vacío.
+- No se inventaron credenciales, no se modificó seed y no se tocó base de datos en esta fase.
+
+Diferencia entre usuario sin sesión y usuario sin permiso:
+
+- Sin sesión: `authGuard` o `permissionGuard` redirige a `/login?returnUrl=...`.
+- Error al verificar sesión: se trata como no autenticado y redirige a `/login?returnUrl=...`.
+- Con sesión pero sin permiso: `permissionGuard` redirige a `/app/access-denied`.
+- La API mantiene la diferencia HTTP: `401` para sin sesión y `403` para sin permiso.

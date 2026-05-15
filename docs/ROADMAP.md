@@ -26,7 +26,7 @@ Fuente funcional: `docs/01-product/public-website.md`.
 - Fase sitio 1.3.1: cierre técnico del catálogo, limpieza de assets `:Zone.Identifier`, documentación de placeholders y preparación para revisión visual del cliente. Implementada por código/documentación; revisión visual real pendiente.
 - Fase sitio 1.5: identidad visual LDT, logo, tokens de marca y datos de contacto del cartel/catálogo. Implementada; revisión visual real y aprobación comercial del cliente pendientes.
 - Backlog relacionado: administración privada futura de catálogo, precios e imágenes. No modifica el catálogo público actual; `/catalogo` sigue usando data frontend hasta diseñar esa fase. Fuente: `docs/01-product/admin-catalog-management.md`.
-- Fase sitio 2: revisión visual de `/login` como entrada al sistema, sin cambiar auth. Pendiente.
+- Fase sitio/sistema 2.0: validación real del flujo de `/login`, sesión, `returnUrl` y acceso a `/app/dashboard`, sin rediseñar pantallas ni implementar módulos nuevos. Ejecutada por código/build/tests/curl; login real con Admin local queda pendiente por falta de API/base/credenciales configuradas.
 - Fase sitio 3: QA mobile-first completo y preparación de contenido final. Pendiente.
 - Fase sitio 4: publicación en `laboratoriodentaltlahuac.com` cuando deploy/DNS estén definidos. Pendiente.
 - Fase sitio 5: optimización, Lighthouse o revisión equivalente, y mejoras por feedback. Pendiente.
@@ -45,7 +45,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Revisar el sitio público con identidad LDT aplicada, confirmar vigencia de precios 2026, aprobar condiciones comerciales antes de publicar, confirmar WhatsApp/dirección/horarios y completar imágenes `.webp` faltantes. En paralelo, completar revisión visual manual en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+Completar validación manual de login real con API/base local y Admin configurado: `/login` -> login correcto -> `/app/dashboard` -> `GET /api/auth/me` -> logout -> `/app/dashboard` redirige de nuevo a `/login?returnUrl=%2Fapp%2Fdashboard`.
+
+Después, revisar el sitio público con identidad LDT aplicada, confirmar vigencia de precios 2026, aprobar condiciones comerciales antes de publicar, confirmar WhatsApp/dirección/horarios y completar imágenes `.webp` faltantes. En paralelo, completar revisión visual manual en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
 
 ## Regla De Actualización
 

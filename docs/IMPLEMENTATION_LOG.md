@@ -6,6 +6,83 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-15 - Fase 2.0 Validación Login, Sesión Y Redirección
+
+### Cambio Realizado
+
+Se validó el flujo técnico de entrada desde el sitio público hacia la app privada sin rediseñar pantallas, sin implementar módulos nuevos y sin tocar backend, guards, `AuthService`, cookies, XSRF, endpoints, base de datos, migraciones, deploy, dependencias ni rutas privadas.
+
+### Archivos Leídos
+
+- `AGENTS.md`
+- `README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/01-product/public-website.md`
+- `docs/01-product/internal-system.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+- `docs/ROADMAP.md`
+- `src/LaboratorioTlahuac.Web/src/app/app.routes.ts`
+- `src/LaboratorioTlahuac.Web/src/app/auth/pages/login/login-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/core/auth/auth.service.ts`
+- `src/LaboratorioTlahuac.Web/src/app/core/guards/auth.guard.ts`
+- `src/LaboratorioTlahuac.Web/src/app/core/guards/permission.guard.ts`
+- `src/LaboratorioTlahuac.Web/src/environments/environment.ts`
+- `src/LaboratorioTlahuac.Web/src/environments/environment.development.ts`
+- `src/LaboratorioTlahuac.Api/appsettings.json`
+- `src/LaboratorioTlahuac.Api/appsettings.Development.json`
+- `src/LaboratorioTlahuac.Api/Program.cs`
+- `src/LaboratorioTlahuac.Api/Endpoints/AuthEndpoints.cs`
+
+### Archivos Modificados
+
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/01-product/internal-system.md`
+- `docs/01-product/public-website.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Resultados De Validación
+
+- `/login` sigue público en `app.routes.ts`.
+- `/app` sigue bajo `PrivateLayoutComponent` con `authGuard`.
+- `/app/dashboard` sigue bajo `/app`, con `permissionGuard` y permiso `reports.view`.
+- `/dashboard` no existe como ruta privada real; el wildcard del router redirige a la home pública.
+- `AuthService.login()` sigue solicitando CSRF, ejecutando `POST /api/auth/login` con `withCredentials`, renovando CSRF y guardando usuario en memoria.
+- `login-page.component.ts` conserva manejo de error `423` e inválidos, usa `AuthService.login()` y navega con `router.navigateByUrl(this.getReturnUrl())`.
+- `returnUrl` acepta `/app`, `/app/...`, `/app?...` y `/app#...`.
+- `returnUrl` rechaza valores externos o inválidos como `https://example.com`, `//example.com`, `javascript:alert(1)`, valores con espacios, backslash o rutas fuera de `/app`; el fallback es `/app/dashboard`.
+- Usuario sin sesión en `/app/*` se redirige por guards a `/login?returnUrl=...`.
+- Usuario autenticado sin permiso se redirige por `permissionGuard` a `/app/access-denied`; no se trata como usuario sin sesión.
+
+### Validaciones Ejecutadas
+
+- `git status --short`: sin cambios iniciales.
+- `git diff --stat`: sin cambios iniciales.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build` desde la raíz: correcto, 0 warnings y 0 errores.
+- `dotnet test` desde la raíz: correcto; Domain 1/1, Application 1/1 y API 90/90.
+- `git diff --check`: correcto.
+- Angular dev server en `http://127.0.0.1:4201/` porque el puerto 4200 ya estaba ocupado.
+- `curl` contra `http://127.0.0.1:4201/`, `/servicios`, `/catalogo`, `/contacto`, `/login`, `/app`, `/app/dashboard`, `/dashboard`, `/login?returnUrl=%2Fapp%2Fdashboard`, `/login?returnUrl=https://example.com`, `/login?returnUrl=//example.com` y `/login?returnUrl=javascript:alert(1)`: todos respondieron con shell Angular `200`.
+
+### Pendiente De Login Real
+
+No se validó login real con credenciales porque el entorno local no tiene Admin configurado en `appsettings*.json`: `SecuritySeed:RunOnStartup` está en `false` y `SecuritySeed:Admin` está vacío. No se inventaron credenciales, no se modificó seed y no se tocó base de datos.
+
+Pasos exactos para validación humana:
+
+1. Configurar API/base local y usuario Admin por los mecanismos seguros del proyecto.
+2. Levantar API con `dotnet run --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`.
+3. Levantar Angular desde `src/LaboratorioTlahuac.Web` con `npm start`.
+4. Abrir `/login`, iniciar sesión con el Admin local configurado y confirmar redirección a `/app/dashboard`.
+5. Confirmar que `GET /api/auth/me` responde el usuario autenticado.
+6. Ejecutar logout desde la UI si está disponible.
+7. Confirmar que después de logout `/app/dashboard` vuelve a redirigir a `/login?returnUrl=%2Fapp%2Fdashboard`.
+
 ## 2026-05-15 - Fase 1.5 Identidad Visual Y Contacto
 
 ### Cambio Realizado
