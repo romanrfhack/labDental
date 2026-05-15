@@ -9,13 +9,19 @@ import { RouterLink } from '@angular/router';
       <p class="eyebrow">Contacto</p>
       <h1>Datos de contacto</h1>
       <p>
-        Esta sección queda preparada para publicar WhatsApp, dirección y horarios cuando el cliente confirme
-        la información. Por ahora no se muestra ningún dato como definitivo.
+        Teléfonos y correo tomados del cartel/catálogo. Se muestran como canales de contacto generales; WhatsApp,
+        dirección y horarios siguen pendientes de confirmación.
       </p>
       <div class="contact-grid">
         <article>
-          <strong>WhatsApp</strong>
-          <span>No confirmado.</span>
+          <strong>Teléfonos</strong>
+          <a href="tel:+525533319445">55 3331 9445</a>
+          <a href="tel:+525521612311">55 2161 2311</a>
+          <a href="tel:+525598029816">55 9802 9816</a>
+        </article>
+        <article>
+          <strong>Correo</strong>
+          <a href="mailto:contacto@laboratoriodentaltlahuac.com">contacto@laboratoriodentaltlahuac.com</a>
         </article>
         <article>
           <strong>Dirección</strong>
@@ -24,6 +30,10 @@ import { RouterLink } from '@angular/router';
         <article>
           <strong>Horarios</strong>
           <span>No confirmados.</span>
+        </article>
+        <article>
+          <strong>WhatsApp</strong>
+          <span>Pendiente de confirmar; no se publica como canal real todavía.</span>
         </article>
       </div>
       <a class="detail-action" routerLink="/login">Iniciar sesión</a>
@@ -38,7 +48,7 @@ import { RouterLink } from '@angular/router';
       }
 
       .eyebrow {
-        color: #0f766e;
+        color: var(--ldt-blue-dark, #0781e6);
         font-size: 0.78rem;
         font-weight: 800;
         margin: 0;
@@ -46,13 +56,13 @@ import { RouterLink } from '@angular/router';
       }
 
       h1 {
-        color: #163235;
+        color: var(--ldt-navy, #032155);
         line-height: 1.08;
       }
 
       p,
       span {
-        color: #4b6366;
+        color: var(--ldt-gray, #65738e);
         line-height: 1.6;
       }
 
@@ -67,7 +77,7 @@ import { RouterLink } from '@angular/router';
 
       article {
         background: #ffffff;
-        border: 1px solid #dce9e7;
+        border: 1px solid rgba(84, 177, 232, 0.35);
         border-radius: 8px;
         display: grid;
         gap: 8px;
@@ -76,15 +86,24 @@ import { RouterLink } from '@angular/router';
       }
 
       strong {
-        color: #163235;
+        color: var(--ldt-navy, #032155);
+      }
+
+      article a {
+        color: var(--ldt-blue-dark, #0781e6);
+        font-weight: 800;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+        text-decoration-color: var(--ldt-sky, #54b1e8);
+        text-underline-offset: 3px;
       }
 
       .detail-action {
         align-items: center;
         background: #ffffff;
-        border: 1px solid #91b9b5;
+        border: 1px solid var(--ldt-sky, #54b1e8);
         border-radius: 7px;
-        color: #0f766e;
+        color: var(--ldt-navy-soft, #0b3069);
         display: inline-flex;
         font-weight: 800;
         justify-content: center;
@@ -97,7 +116,7 @@ import { RouterLink } from '@angular/router';
 
       .detail-action:focus-visible,
       .detail-action:hover {
-        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.24);
+        box-shadow: 0 0 0 3px var(--ldt-focus, rgba(3, 158, 247, 0.24));
         outline: 2px solid transparent;
       }
 
@@ -108,7 +127,7 @@ import { RouterLink } from '@angular/router';
         }
 
         .contact-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .detail-action {

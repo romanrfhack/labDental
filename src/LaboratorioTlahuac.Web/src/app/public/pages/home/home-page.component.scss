@@ -10,14 +10,21 @@
 
 .hero-section {
   background:
-    linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(214, 239, 235, 0.72)),
-    #f7fbfa;
+    linear-gradient(135deg, rgba(3, 158, 247, 0.12), rgba(166, 223, 247, 0.42)),
+    #f5fbff;
   display: grid;
   gap: 24px;
 }
 
+.hero-logo {
+  display: block;
+  height: auto;
+  margin-bottom: 18px;
+  max-width: min(210px, 62vw);
+}
+
 .eyebrow {
-  color: #0f766e;
+  color: var(--ldt-blue-dark, #0781e6);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0;
@@ -28,7 +35,7 @@
 h1,
 h2,
 h3 {
-  color: #163235;
+  color: var(--ldt-navy, #032155);
   letter-spacing: 0;
 }
 
@@ -53,7 +60,7 @@ h3 {
 .hero-text,
 .section-heading p,
 .contact-band p {
-  color: #38595c;
+  color: var(--ldt-gray, #65738e);
   font-size: 1rem;
   line-height: 1.6;
 }
@@ -86,48 +93,55 @@ h3 {
 }
 
 .primary-action {
-  background: #0f766e;
-  border: 1px solid #0f766e;
-  color: #ffffff;
+  background: var(--ldt-blue-dark, #0781e6);
+  border: 1px solid var(--ldt-blue-dark, #0781e6);
+  color: var(--ldt-white, #ffffff);
 }
 
 .secondary-action {
-  background: #ffffff;
-  border: 1px solid #91b9b5;
-  color: #0f766e;
+  background: var(--ldt-white, #ffffff);
+  border: 1px solid var(--ldt-sky, #54b1e8);
+  color: var(--ldt-navy-soft, #0b3069);
 }
 
 .primary-action:focus-visible,
 .primary-action:hover,
 .secondary-action:focus-visible,
 .secondary-action:hover {
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.24);
+  box-shadow: 0 0 0 3px var(--ldt-focus, rgba(3, 158, 247, 0.24));
   outline: 2px solid transparent;
 }
 
 .hero-panel {
-  background: #ffffff;
-  border: 1px solid #d4e5e2;
+  background: var(--ldt-white, #ffffff);
+  border: 1px solid rgba(84, 177, 232, 0.45);
   border-radius: 8px;
-  box-shadow: 0 18px 42px rgba(22, 50, 53, 0.11);
+  box-shadow: 0 18px 42px rgba(3, 33, 85, 0.11);
   display: grid;
   gap: 10px;
   padding: 20px;
 }
 
 .hero-panel strong {
-  color: #163235;
+  color: var(--ldt-navy, #032155);
   font-size: 1.2rem;
   line-height: 1.25;
 }
 
-.hero-panel p {
-  color: #4b6366;
+.hero-panel p,
+.hero-panel a {
+  color: var(--ldt-gray, #65738e);
+}
+
+.hero-panel a {
+  font-weight: 800;
+  text-decoration-color: var(--ldt-sky, #54b1e8);
+  text-underline-offset: 3px;
 }
 
 .panel-label,
 .card-grid span {
-  color: #0f766e;
+  color: var(--ldt-blue-dark, #0781e6);
   font-size: 0.78rem;
   font-weight: 800;
 }
@@ -151,8 +165,8 @@ h3 {
 
 .card-grid article,
 .benefit-list div {
-  background: #f7fbfa;
-  border: 1px solid #dce9e7;
+  background: #f5fbff;
+  border: 1px solid rgba(84, 177, 232, 0.35);
   border-radius: 8px;
   min-width: 0;
   padding: 18px;
@@ -161,12 +175,12 @@ h3 {
 .card-grid p,
 .benefit-list span,
 .process-list span {
-  color: #4b6366;
+  color: var(--ldt-gray, #65738e);
   line-height: 1.55;
 }
 
 .process-section {
-  background: #eef7f5;
+  background: rgba(166, 223, 247, 0.24);
 }
 
 .process-list {
@@ -179,8 +193,8 @@ h3 {
 }
 
 .process-list li {
-  background: #ffffff;
-  border: 1px solid #d4e5e2;
+  background: var(--ldt-white, #ffffff);
+  border: 1px solid rgba(84, 177, 232, 0.4);
   border-radius: 8px;
   display: grid;
   gap: 7px;
@@ -189,7 +203,7 @@ h3 {
 }
 
 .process-list li::before {
-  color: #0f766e;
+  color: var(--ldt-blue-dark, #0781e6);
   content: counter(process, decimal-leading-zero);
   counter-increment: process;
   font-size: 0.8rem;
@@ -198,7 +212,7 @@ h3 {
 
 .process-list strong,
 .benefit-list strong {
-  color: #163235;
+  color: var(--ldt-navy, #032155);
 }
 
 .benefits-section {
@@ -206,19 +220,33 @@ h3 {
 }
 
 .contact-band {
-  background: #163235;
-  color: #ffffff;
+  background: var(--ldt-navy, #032155);
+  color: var(--ldt-white, #ffffff);
   display: grid;
   gap: 22px;
 }
 
 .contact-band h2,
 .contact-band .eyebrow {
-  color: #ffffff;
+  color: var(--ldt-white, #ffffff);
 }
 
 .contact-band p {
-  color: #d9eeee;
+  color: #d7ecff;
+}
+
+.contact-links {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.contact-links a {
+  color: var(--ldt-white, #ffffff);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+  text-decoration-color: var(--ldt-sky-light, #a6dff7);
+  text-underline-offset: 3px;
 }
 
 @media (min-width: 560px) {

@@ -37,6 +37,7 @@ Fuente canónica de arquitectura para Laboratorio Dental Tláhuac.
 
 - Sitio público: rutas públicas dentro de `src/LaboratorioTlahuac.Web/src/app/public`.
 - Catálogo público: ruta `/catalogo`, renderizada desde data tipada local.
+- Logo público: asset local en `src/LaboratorioTlahuac.Web/src/assets/brand/logo-ldt.webp`, servido como `/assets/brand/logo-ldt.webp`.
 - Login: ruta pública `/login`, fuera del layout privado.
 - App privada: rutas bajo `/app`, renderizadas por `PrivateLayoutComponent`.
 - Dashboard privado real: `/app/dashboard`.
@@ -127,6 +128,12 @@ Assets públicos del catálogo:
 - Fuente local: `src/assets/catalog/products/`.
 - Ruta servida por Angular: `/assets/catalog/products/`.
 - `angular.json` copia `src/assets/**/*.webp` para el catálogo público.
+
+Assets públicos de marca:
+
+- Fuente local: `src/assets/brand/logo-ldt.webp`.
+- Ruta servida por Angular: `/assets/brand/logo-ldt.webp`.
+- `angular.json` ya copia `src/assets/**/*.webp`, por lo que no se requirió cambiar configuración para el logo.
 
 Detalle frontend: `docs/03-architecture/frontend-architecture.md`.
 

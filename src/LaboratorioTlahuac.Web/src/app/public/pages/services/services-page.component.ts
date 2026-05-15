@@ -10,7 +10,8 @@ import { RouterLink } from '@angular/router';
       <h1>Servicios del laboratorio</h1>
       <p>
         Consulta el catálogo público para revisar secciones, productos, precios e imágenes disponibles. Esta
-        página mantiene una vista resumida para orientar a doctores, consultorios y clínicas.
+        página mantiene una vista resumida para orientar a doctores, consultorios y clínicas con la identidad
+        visual del laboratorio.
       </p>
       <div class="detail-grid">
         <article>
@@ -23,7 +24,7 @@ import { RouterLink } from '@angular/router';
         </article>
         <article>
           <strong>Comunicación con clínicas</strong>
-          <span>Texto comercial pendiente para doctores, consultorios y clínicas dentales.</span>
+          <span>Prótesis, restauraciones y soluciones dentales con contacto por teléfono y correo.</span>
         </article>
       </div>
       <div class="detail-actions">
@@ -41,7 +42,7 @@ import { RouterLink } from '@angular/router';
       }
 
       .eyebrow {
-        color: #0f766e;
+        color: var(--ldt-blue-dark, #0781e6);
         font-size: 0.78rem;
         font-weight: 800;
         margin: 0;
@@ -49,13 +50,13 @@ import { RouterLink } from '@angular/router';
       }
 
       h1 {
-        color: #163235;
+        color: var(--ldt-navy, #032155);
         line-height: 1.08;
       }
 
       p,
       span {
-        color: #4b6366;
+        color: var(--ldt-gray, #65738e);
         line-height: 1.6;
       }
 
@@ -70,7 +71,7 @@ import { RouterLink } from '@angular/router';
 
       article {
         background: #ffffff;
-        border: 1px solid #dce9e7;
+        border: 1px solid rgba(84, 177, 232, 0.35);
         border-radius: 8px;
         display: grid;
         gap: 8px;
@@ -79,7 +80,7 @@ import { RouterLink } from '@angular/router';
       }
 
       strong {
-        color: #163235;
+        color: var(--ldt-navy, #032155);
       }
 
       .detail-actions {
@@ -90,9 +91,9 @@ import { RouterLink } from '@angular/router';
       .detail-action {
         align-items: center;
         background: #ffffff;
-        border: 1px solid #91b9b5;
+        border: 1px solid var(--ldt-sky, #54b1e8);
         border-radius: 7px;
-        color: #0f766e;
+        color: var(--ldt-navy-soft, #0b3069);
         display: inline-flex;
         font-weight: 800;
         justify-content: center;
@@ -104,14 +105,14 @@ import { RouterLink } from '@angular/router';
       }
 
       .detail-action.primary {
-        background: #0f766e;
-        border-color: #0f766e;
-        color: #ffffff;
+        background: var(--ldt-blue-dark, #0781e6);
+        border-color: var(--ldt-blue-dark, #0781e6);
+        color: var(--ldt-white, #ffffff);
       }
 
       .detail-action:focus-visible,
       .detail-action:hover {
-        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.24);
+        box-shadow: 0 0 0 3px var(--ldt-focus, rgba(3, 158, 247, 0.24));
         outline: 2px solid transparent;
       }
 

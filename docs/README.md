@@ -12,6 +12,8 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 | Changelog histórico de entregas | `docs/00-governance/changelog.md` |
 | Sitio público | `docs/01-product/public-website.md` |
 | Sistema privado | `docs/01-product/internal-system.md` |
+| Backlog administración de catálogo | `docs/01-product/admin-catalog-management.md` |
+| Lineamientos de marca | `docs/02-domain/brand-guidelines.md` |
 | Arquitectura global | `docs/03-architecture/ARCHITECTURE.md` |
 | Auth y permisos | `docs/03-architecture/AUTH_FLOW.md` |
 | Deploy y dominio | `docs/05-delivery/DEPLOYMENT.md` |

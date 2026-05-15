@@ -7,21 +7,28 @@ import { RouterLink } from '@angular/router';
   template: `
     <section class="hero-section">
       <div class="hero-copy">
-        <p class="eyebrow">Laboratorio Dental Tláhuac</p>
-        <h1>Soluciones dentales confiables para tu consulta</h1>
+        <img
+          class="hero-logo"
+          src="/assets/brand/logo-ldt.webp"
+          alt="Laboratorio Dental Tláhuac"
+          width="809"
+          height="545"
+        />
+        <p class="eyebrow">Precisión • Estética • Confianza</p>
+        <h1>Prótesis, restauraciones y soluciones dentales</h1>
         <p class="hero-text">
-          Sitio institucional para presentar el laboratorio y entrada al sistema administrativo para seguimiento
-          operativo interno.
+          Catálogo público del laboratorio y entrada al sistema administrativo para seguimiento operativo interno.
         </p>
         <div class="hero-actions" aria-label="Acciones principales">
           <a class="primary-action" routerLink="/catalogo">Ver catálogo</a>
-          <a class="secondary-action" routerLink="/login">Iniciar sesión</a>
+          <a class="secondary-action" routerLink="/contacto">Contactar</a>
         </div>
       </div>
       <div class="hero-panel" aria-label="Información resumida">
-        <span class="panel-label">Para revisión</span>
+        <span class="panel-label">Catálogo de precios 2026</span>
         <strong>Doctores, consultorios y clínicas dentales</strong>
-        <p>Presencia pública separada de la operación privada bajo /app.</p>
+        <p>Precios de referencia sujetos a confirmación del cliente antes de publicación formal.</p>
+        <a href="tel:+525533319445">55 3331 9445</a>
       </div>
     </section>
     <section class="section-block" id="servicios">
@@ -37,7 +44,7 @@ import { RouterLink } from '@angular/router';
         <article>
           <span aria-hidden="true">01</span>
           <h3>Catálogo de servicios</h3>
-          <p>Espacio reservado para describir los servicios exactos cuando el cliente confirme la lista final.</p>
+          <p>Productos y precios organizados por secciones para revisión pública del catálogo 2026.</p>
         </article>
         <article>
           <span aria-hidden="true">02</span>
@@ -47,7 +54,7 @@ import { RouterLink } from '@angular/router';
         <article>
           <span aria-hidden="true">03</span>
           <h3>Comunicación profesional</h3>
-          <p>Mensaje orientado a doctores, consultorios y clínicas, pendiente de textos comerciales finales.</p>
+          <p>Contacto visible por teléfono y correo, sin publicar dirección, horarios ni WhatsApp no confirmados.</p>
         </article>
       </div>
     </section>
@@ -59,7 +66,7 @@ import { RouterLink } from '@angular/router';
       <ol class="process-list">
         <li>
           <strong>Contacto</strong>
-          <span>El doctor, consultorio o clínica consulta el canal oficial cuando el cliente lo confirme.</span>
+          <span>El doctor, consultorio o clínica puede llamar o escribir al correo publicado.</span>
         </li>
         <li>
           <strong>Coordinación</strong>
@@ -94,11 +101,17 @@ import { RouterLink } from '@angular/router';
     <section class="contact-band" id="contacto">
       <div>
         <p class="eyebrow">Contacto</p>
-        <h2>Datos listos para completarse con información confirmada</h2>
+        <h2>Contacto directo del laboratorio</h2>
         <p>
-          WhatsApp, dirección y horarios siguen pendientes de confirmación. No se publica ningún dato de contacto
-          como definitivo hasta recibirlo del cliente.
+          Teléfonos y correo tomados del cartel/catálogo. Dirección, horarios y WhatsApp siguen pendientes de
+          confirmación.
         </p>
+        <div class="contact-links" aria-label="Datos de contacto">
+          <a href="tel:+525533319445">55 3331 9445</a>
+          <a href="tel:+525521612311">55 2161 2311</a>
+          <a href="tel:+525598029816">55 9802 9816</a>
+          <a href="mailto:contacto@laboratoriodentaltlahuac.com">contacto@laboratoriodentaltlahuac.com</a>
+        </div>
       </div>
       <div class="contact-actions">
         <a class="primary-action" routerLink="/contacto">Ver contacto</a>

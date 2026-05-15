@@ -6,6 +6,126 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-15 - Fase 1.5 Identidad Visual Y Contacto
+
+### Cambio Realizado
+
+Se incorporó identidad visual real del laboratorio en el sitio público: logo LDT, colores institucionales y datos de contacto tomados del cartel/catálogo.
+
+### Archivos Creados
+
+- `docs/02-domain/brand-guidelines.md`
+
+### Asset Incorporado
+
+- `src/LaboratorioTlahuac.Web/src/assets/brand/logo-ldt.webp`
+- Ruta pública esperada: `/assets/brand/logo-ldt.webp`
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/public/layout/public-layout.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/layout/public-layout.component.scss`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/home/home-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/home/home-page.component.scss`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/services/services-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.scss`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/contact/contact-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/auth/pages/login/login-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/auth/pages/login/login-page.component.scss`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/public-website.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/README.md`
+
+### Identidad Y Contacto
+
+- Tokens aplicados: `--ldt-navy`, `--ldt-navy-soft`, `--ldt-blue`, `--ldt-blue-dark`, `--ldt-sky`, `--ldt-sky-light`, `--ldt-gray` y `--ldt-white`.
+- Eslogan incorporado: `Precisión • Estética • Confianza`.
+- Línea descriptiva incorporada: `Prótesis, restauraciones y soluciones dentales`.
+- Teléfonos incorporados como `tel:`: 55 3331 9445, 55 2161 2311 y 55 9802 9816.
+- Correo incorporado como `mailto:`: `contacto@laboratoriodentaltlahuac.com`.
+- Condiciones visibles en cartel documentadas con prudencia: `Anticipo 50%` y `Trabajos urgentes +40%` requieren confirmación final del cliente.
+
+### Alcance
+
+- No se modificó backend.
+- No se modificó `AuthService`.
+- No se modificaron `auth.guard.ts` ni `permission.guard.ts`.
+- No se modificaron cookies, XSRF, endpoints, base de datos, migraciones, deploy ni dependencias.
+- No se modificaron rutas privadas.
+- `/login` sigue como entrada pública.
+- `/app` y `/app/dashboard` siguen como zona privada.
+- `/dashboard` no se creó como ruta privada real.
+- No se inventó dirección, horario, WhatsApp, redes sociales ni mapa.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `git diff --check`: correcto.
+- `rg "logo-ldt" src/LaboratorioTlahuac.Web/src docs`
+- `rg "55 3331 9445" .`
+- `rg "55 2161 2311" .`
+- `rg "55 9802 9816" .`
+- `rg "contacto@laboratoriodentaltlahuac.com" .`
+- `rg "WhatsApp" src/LaboratorioTlahuac.Web/src/app/public docs/01-product/public-website.md`
+- `rg "/dashboard" .`
+- `rg "/app/dashboard" .`
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`
+
+### Pendientes
+
+- Revisión visual real en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+- Confirmar con el cliente si algún teléfono debe publicarse como WhatsApp.
+- Confirmar dirección, horarios y mapa antes de publicarlos.
+- Aprobar precios 2026 y condiciones comerciales antes de publicación formal.
+
+## 2026-05-15 - Backlog Futuro Administración De Catálogo
+
+### Cambio Realizado
+
+Se documentó como backlog futuro la funcionalidad `Administración de catálogo, precios e imágenes`.
+
+### Archivos Creados
+
+- `docs/01-product/admin-catalog-management.md`
+
+### Archivos Modificados
+
+- `docs/ROADMAP.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/public-website.md`
+- `docs/01-product/internal-system.md`
+- `docs/README.md`
+
+### Alcance Documentado
+
+- No pertenece a la fase actual.
+- No se implementa todavía.
+- Será una futura mejora de la app privada bajo `/app`.
+- Requerirá permisos administrativos, con permiso sugerido `catalog.manage` o equivalente.
+- Requerirá definir modelo de datos, endpoints, almacenamiento de imágenes, reglas de publicación y aprobación de precios públicos.
+- El catálogo público actual seguirá funcionando desde `catalog-data.ts` hasta que se diseñe y apruebe esta fase.
+
+### Alcance No Ejecutado
+
+- No se implementaron pantallas.
+- No se crearon rutas.
+- No se tocó backend.
+- No se tocó frontend funcional.
+- No se tocó auth.
+- No se tocaron guards.
+- No se tocó base de datos.
+- No se crearon migraciones.
+- No se crearon endpoints.
+- No se instalaron dependencias.
+- No se cambió deploy.
+- No se modificó el catálogo público actual.
+
 ## 2026-05-14 - Ignore De Zone.Identifier
 
 ### Cambio Realizado

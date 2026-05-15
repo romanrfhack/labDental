@@ -24,7 +24,7 @@ Páginas públicas listas:
 - `/`: landing institucional mobile-first.
 - `/catalogo`: catálogo público con productos, precios de referencia e imágenes locales.
 - `/servicios`: página de capacidades provisionales.
-- `/contacto`: página de contacto con datos pendientes.
+- `/contacto`: página de contacto con teléfonos y correo del cartel/catálogo; dirección, horarios y WhatsApp siguen pendientes.
 
 Decisión de navegación: se mantienen páginas públicas existentes y la home también usa secciones internas para que la primera experiencia móvil sea recorrible sin cambiar de ruta.
 
@@ -145,6 +145,14 @@ Datos y precios:
 - El catálogo se cargó desde el cartel proporcionado; precios, vigencia 2026 y cualquier condición comercial requieren aprobación final del cliente antes de publicar formalmente.
 - No se agregaron condiciones comerciales nuevas en esta fase.
 
+Backlog futuro relacionado:
+
+- La administración de catálogo, precios e imágenes queda documentada como fase futura separada en `docs/01-product/admin-catalog-management.md`.
+- No pertenece a la fase actual del sitio público.
+- No se implementa todavía.
+- El catálogo público actual sigue funcionando desde `catalog-data.ts` hasta que se diseñe la fase privada.
+- La edición futura deberá vivir bajo `/app`, requerir permisos administrativos y no exponerse en el sitio público.
+
 Assets:
 
 - Se retiraron del working tree los archivos `:Zone.Identifier` detectados dentro de `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
@@ -157,6 +165,48 @@ Rutas confirmadas por revisión de código:
 - `/login` sigue como entrada pública al sistema.
 - `/app` y `/app/dashboard` siguen bajo zona privada con guards.
 - `/dashboard` no existe como ruta privada real.
+
+## Estado Fase 1.5
+
+Identidad visual y contacto real del cartel/catálogo incorporados.
+
+Marca:
+
+- Logo fuente: `src/LaboratorioTlahuac.Web/src/assets/brand/logo-ldt.webp`.
+- Ruta pública: `/assets/brand/logo-ldt.webp`.
+- El logo se usa proporcionalmente en header público, home y login visual.
+- Nombre comercial: Laboratorio Dental Tláhuac.
+- Eslogan: `Precisión • Estética • Confianza`.
+- Línea descriptiva: `Prótesis, restauraciones y soluciones dentales`.
+- Tokens documentados en `docs/02-domain/brand-guidelines.md`.
+
+Datos de contacto incorporados:
+
+- Teléfonos: 55 3331 9445, 55 2161 2311 y 55 9802 9816.
+- Correo: `contacto@laboratoriodentaltlahuac.com`.
+- Los teléfonos se muestran como teléfonos con enlaces `tel:`.
+- El correo se muestra con enlace `mailto:`.
+
+Datos pendientes:
+
+- Dirección.
+- Horarios.
+- WhatsApp como canal real.
+- Redes sociales.
+- Mapa o ubicación pública.
+
+Condiciones comerciales:
+
+- Se mantiene `Precios de referencia 2026 sujetos a confirmación.`.
+- `Anticipo 50%` y `Trabajos urgentes +40%` aparecen en el cartel/catálogo, pero requieren aprobación final del cliente.
+- Si se muestran en UI, deben aparecer con texto prudente de confirmación pendiente, no como condiciones definitivas.
+
+Alcance técnico:
+
+- No se modificaron backend, `AuthService`, guards, cookies, XSRF, endpoints, base de datos, migraciones, deploy, dependencias ni rutas privadas.
+- `/login` sigue como entrada pública.
+- `/app` y `/app/dashboard` siguen como zona privada.
+- `/dashboard` no se creó como ruta privada real.
 
 ## Audiencia
 
@@ -199,20 +249,19 @@ Rutas futuras opcionales:
 
 ## Contenido Pendiente Del Cliente
 
-- Logo.
 - Servicios finales a publicar.
 - Textos institucionales.
-- Datos de contacto.
-- WhatsApp o teléfono público.
+- WhatsApp como canal real.
 - Ubicación.
 - Horarios.
-- Fotografías o materiales visuales aprobados.
+- Fotografías o materiales visuales adicionales aprobados.
+- Aprobación final de precios y condiciones comerciales visibles en el cartel.
 
 Estos datos siguen pendientes después de Fase 1.2; no se deben presentar placeholders como información definitiva.
 
 ## Contenido Provisional
 
-No se inventaron datos reales de teléfono, dirección ni horarios. Mientras el cliente confirma información, el sitio evita enlazar canales no confirmados y muestra avisos seguros:
+No se inventaron dirección, horarios, WhatsApp, redes sociales ni mapa. Mientras el cliente confirma información, el sitio evita enlazar canales no confirmados y muestra avisos seguros:
 
 - WhatsApp no confirmado.
 - Dirección no confirmada.
@@ -234,6 +283,8 @@ Las capacidades publicadas en Fase 1 son descripciones generales provisionales, 
 - Cambiar deploy productivo.
 - Crear una app o repo nuevo.
 - Implementar módulos privados nuevos.
+- Implementar administración de catálogo, precios o imágenes.
+- Migrar el catálogo de `catalog-data.ts` a backend/base de datos.
 
 ## Secciones Faltantes O Pendientes
 

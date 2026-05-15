@@ -22,6 +22,18 @@ Permitir que el laboratorio opere registros nuevos sin depender del Excel para e
 - Dashboard operativo y financiero básico.
 - Páginas iniciales de inventario, proveedores, usuarios y roles.
 
+## Backlog Futuro
+
+### Administración De Catálogo, Precios E Imágenes
+
+Estado: pendiente, fuera de la fase actual y no implementado.
+
+Esta mejora futura deberá vivir dentro de la app privada bajo `/app` y requerir permisos administrativos. Permitiría administrar secciones, productos, precios e imágenes del catálogo público sin exponer edición en el sitio público.
+
+Fuente funcional: `docs/01-product/admin-catalog-management.md`.
+
+Al diseñarla se deberá definir modelo de datos, endpoints, almacenamiento de imágenes, reglas de publicación, validación de formatos y permisos como `catalog.manage` o equivalente. El catálogo público actual seguirá usando `catalog-data.ts` hasta que esta fase sea aprobada e implementada.
+
 ## Clientes
 
 - El cliente puede ser `Doctor`, `Clinic` u `Other`.
@@ -72,6 +84,7 @@ Fuente técnica de auth: `docs/03-architecture/AUTH_FLOW.md`.
 - Migración completa del Excel.
 - WhatsApp automatizado.
 - App móvil nativa.
+- Administración de catálogo, precios e imágenes.
 
 ## QA
 

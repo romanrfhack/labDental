@@ -39,6 +39,14 @@ export function getSafePrivateReturnUrl(returnUrl: string | null) {
   template: `
     <main class="login-page">
       <section class="login-panel">
+        <img
+          class="login-logo"
+          src="/assets/brand/logo-ldt.webp"
+          alt="Laboratorio Dental Tláhuac"
+          width="809"
+          height="545"
+        />
+        <p class="login-brand">Precisión • Estética • Confianza</p>
         <h1>Acceso privado</h1>
         <form [formGroup]="form" (ngSubmit)="submit()">
           <label>

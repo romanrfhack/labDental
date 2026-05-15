@@ -12,6 +12,7 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase técnica 3: inventario y proveedores. Pendiente.
 - Fase técnica 4: reportes administrativos. Pendiente.
 - Fase técnica 5: automatizaciones y WhatsApp. Pendiente.
+- Backlog futuro: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; no pertenece a la fase actual y requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
 
@@ -23,6 +24,8 @@ Fuente funcional: `docs/01-product/public-website.md`.
 - Fase sitio 1.2: contenido aprobado y reemplazo de placeholders. Parcial; faltan datos reales confirmados.
 - Fase sitio 1.3: catálogo público con precios e imágenes locales en `/catalogo`. Implementada.
 - Fase sitio 1.3.1: cierre técnico del catálogo, limpieza de assets `:Zone.Identifier`, documentación de placeholders y preparación para revisión visual del cliente. Implementada por código/documentación; revisión visual real pendiente.
+- Fase sitio 1.5: identidad visual LDT, logo, tokens de marca y datos de contacto del cartel/catálogo. Implementada; revisión visual real y aprobación comercial del cliente pendientes.
+- Backlog relacionado: administración privada futura de catálogo, precios e imágenes. No modifica el catálogo público actual; `/catalogo` sigue usando data frontend hasta diseñar esa fase. Fuente: `docs/01-product/admin-catalog-management.md`.
 - Fase sitio 2: revisión visual de `/login` como entrada al sistema, sin cambiar auth. Pendiente.
 - Fase sitio 3: QA mobile-first completo y preparación de contenido final. Pendiente.
 - Fase sitio 4: publicación en `laboratoriodentaltlahuac.com` cuando deploy/DNS estén definidos. Pendiente.
@@ -42,7 +45,7 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Revisar `/catalogo` con el cliente, confirmar vigencia de precios 2026, aprobar condiciones comerciales antes de publicar y completar imágenes `.webp` faltantes. En paralelo, completar revisión visual manual en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+Revisar el sitio público con identidad LDT aplicada, confirmar vigencia de precios 2026, aprobar condiciones comerciales antes de publicar, confirmar WhatsApp/dirección/horarios y completar imágenes `.webp` faltantes. En paralelo, completar revisión visual manual en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
 
 ## Regla De Actualización
 

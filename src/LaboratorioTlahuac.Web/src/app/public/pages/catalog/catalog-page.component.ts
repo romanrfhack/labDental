@@ -12,12 +12,12 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
         <p class="eyebrow">Catálogo público</p>
         <h1>Productos y precios</h1>
         <p>
-          Lista inicial de laboratorio organizada por secciones. Las imágenes se cargan desde assets locales
-          cuando existen; si falta una imagen específica, se usa una referencia de sección o un placeholder.
-          Precios de referencia 2026 sujetos a confirmación.
+          Catálogo de precios 2026 organizado por secciones. Las imágenes se cargan desde assets locales cuando
+          existen; si falta una imagen específica, se usa una referencia de sección o un placeholder. Precios de
+          referencia 2026 sujetos a confirmación.
         </p>
       </div>
-      <a class="login-action" routerLink="/login">Iniciar sesión</a>
+      <a class="login-action" routerLink="/contacto">Contactar</a>
     </section>
 
     <nav class="category-nav" aria-label="Secciones del catálogo">
@@ -38,6 +38,24 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
       <div>
         <strong>MXN</strong>
         <span>precios de referencia</span>
+      </div>
+    </section>
+
+    <section class="catalog-contact" aria-label="Contacto y condiciones del catálogo">
+      <div>
+        <p class="eyebrow">Contacto</p>
+        <h2>Laboratorio Dental Tláhuac</h2>
+        <p>Prótesis, restauraciones y soluciones dentales.</p>
+        <div class="contact-links">
+          <a href="tel:+525533319445">55 3331 9445</a>
+          <a href="tel:+525521612311">55 2161 2311</a>
+          <a href="tel:+525598029816">55 9802 9816</a>
+          <a href="mailto:contacto@laboratoriodentaltlahuac.com">contacto@laboratoriodentaltlahuac.com</a>
+        </div>
+      </div>
+      <div class="commercial-note">
+        <strong>Condiciones visibles en cartel</strong>
+        <span>Anticipo 50% y trabajos urgentes +40% requieren confirmación final del cliente antes de publicarse como condiciones definitivas.</span>
       </div>
     </section>
 

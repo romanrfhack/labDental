@@ -44,6 +44,18 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - `angular.json` mantiene el glob `src/assets/**/*.webp`, por lo que no copia `:Zone.Identifier` desde esa carpeta.
 - Revisión visual real sigue pendiente porque no hay navegador/headless disponible en el entorno actual.
 
+## Estado Fase 1.5
+
+- Logo LDT incorporado desde `/assets/brand/logo-ldt.webp` en header público, home y login visual.
+- Tokens institucionales aplicados en componentes públicos y login visual: navy, blue, sky, gray y white.
+- Header público mantiene layout mobile-first; bajo 640px apila marca y navegación.
+- Teléfonos incorporados como enlaces `tel:`: 55 3331 9445, 55 2161 2311 y 55 9802 9816.
+- Correo incorporado como `mailto:contacto@laboratoriodentaltlahuac.com`.
+- Dirección, horarios y WhatsApp siguen pendientes de confirmar; no se agregó mapa.
+- `/catalogo` mantiene la nota `Precios de referencia 2026 sujetos a confirmación.`.
+- `Anticipo 50%` y `Trabajos urgentes +40%` se muestran solo con texto prudente de confirmación pendiente.
+- Revisión visual real sigue pendiente porque no hay navegador/headless disponible en el entorno actual.
+
 ## Verificado Por Código / Build
 
 - [x] Build frontend correcto con `npm run build`.
@@ -69,6 +81,10 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 1.3.1 confirma imágenes del catálogo con frame uniforme y `object-fit: contain`.
 - [x] Fase 1.3.1 confirma enlaces/botones principales con área táctil de 40px a 48px según contexto.
 - [x] Fase 1.3.1 build final, `git diff --check` y búsquedas solicitadas ejecutadas.
+- [x] Fase 1.5 confirma logo en rutas públicas y login visual sin cambiar lógica de auth.
+- [x] Fase 1.5 confirma contacto visible en home, `/catalogo`, `/contacto` y footer.
+- [x] Fase 1.5 mantiene `/login` como entrada pública y `/app` como zona privada por routing/guards.
+- [x] Fase 1.5 no introduce `/dashboard` como ruta privada real.
 
 ## Hallazgos Manuales Recibidos
 
@@ -81,6 +97,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [ ] Confirmar en navegador real que `/app/dashboard` sin sesión redirige a `/login?returnUrl=/app/dashboard`.
 - [ ] Resto de revisión visual por breakpoint pendiente. El entorno actual no tiene navegador/headless disponible sin instalar dependencias.
 - [ ] Revisar visualmente `/catalogo` antes de aprobación del cliente.
+- [ ] Revisar visualmente logo, header y navegación de Fase 1.5 en 360px antes de aprobación del cliente.
 
 ## Pendiente De Revisión Manual
 
@@ -92,7 +109,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 
 | Viewport | Estado Fase 1.1 | Hallazgo |
 | --- | --- | --- |
-| 360px | Revisado por código/SCSS; visual pendiente | Header usa layout apilado y nav en 3 columnas. |
+| 360px | Revisado por código/SCSS; visual pendiente | Header usa logo proporcional, layout apilado y nav en 2 columnas. |
 | 375px | Revisado por código/SCSS; visual pendiente | CTAs usan ancho completo y mínimo táctil. |
 | 390px | Revisado por código/SCSS; visual pendiente | Cards y listas apilan en una columna. |
 | 414px | Revisado por código/SCSS; visual pendiente | Header conserva layout móvil hasta 420px. |
