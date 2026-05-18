@@ -65,6 +65,16 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - `returnUrl` externo o inválido sigue bloqueado por sanitización en login.
 - Login real queda pendiente porque no hay navegador local disponible ni API/base/credenciales Admin configuradas en el entorno.
 
+## Estado Fase 2.1
+
+- API local levantada en `http://localhost:5277`; `/health` respondió saludable.
+- Angular levantado en `http://localhost:4200/`; `/login` respondió con shell Angular.
+- `GET /api/auth/csrf` respondió `204`.
+- `GET /api/auth/me` sin sesión respondió `401`.
+- Login real en navegador queda pendiente porque SQL Server local no estuvo accesible y no hay Admin local configurado.
+- Redirección visual de `/app/dashboard` sin sesión y después de logout sigue pendiente de navegador con sesión real.
+- Validación de usuario sin `reports.view` sigue pendiente por falta de base local con usuarios de prueba.
+
 ## Verificado Por Código / Build
 
 - [x] Build frontend correcto con `npm run build`.
@@ -98,6 +108,9 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 2.0 confirma por código que `/login?returnUrl=%2Fapp%2Fdashboard` acepta el destino interno seguro.
 - [x] Fase 2.0 confirma por código que `https://example.com`, `//example.com` y `javascript:alert(1)` usan fallback seguro.
 - [x] Fase 2.0 ejecuta `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctamente.
+- [x] Fase 2.1 ejecuta `npm run build`, `dotnet build` y `dotnet test` correctamente.
+- [x] Fase 2.1 confirma API local saludable y Angular local sirviendo `/login`.
+- [x] Fase 2.1 confirma `GET /api/auth/me` sin sesión con `401`.
 
 ## Hallazgos Manuales Recibidos
 

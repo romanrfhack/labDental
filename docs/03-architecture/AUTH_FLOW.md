@@ -177,3 +177,48 @@ Diferencia entre usuario sin sesión y usuario sin permiso:
 - Error al verificar sesión: se trata como no autenticado y redirige a `/login?returnUrl=...`.
 - Con sesión pero sin permiso: `permissionGuard` redirige a `/app/access-denied`.
 - La API mantiene la diferencia HTTP: `401` para sin sesión y `403` para sin permiso.
+
+## Validación Fase 2.1 - 2026-05-15
+
+Resultado de ambiente local:
+
+- `appsettings.Development.json` apunta a `Server=localhost;Database=LaboratorioTlahuac_Dev`, por lo que la conexión declarada es local.
+- `dotnet ef` está disponible en versión `10.0.7`.
+- `dotnet ef migrations list` listó las migraciones existentes, pero no pudo consultar estado aplicado porque SQL Server no estuvo accesible en `localhost`.
+- `dotnet ef database update` falló por conexión a SQL Server; no se aplicaron migraciones.
+
+Resultado de Admin local:
+
+- No hay variables `LT_ADMIN_EMAIL`, `LT_ADMIN_PASSWORD` ni `LT_ADMIN_FULL_NAME` en el proceso.
+- `SecuritySeed__RunOnStartup` no está en `true`.
+- No existe archivo de user-secrets para `laboratorio-tlahuac-api-dev` en este entorno.
+- No se creó Admin local, no se inventaron credenciales y no se guardaron secretos en archivos versionados.
+
+Resultado de API/auth:
+
+- API local levantó en `http://localhost:5277`.
+- `GET /health` respondió saludable.
+- `GET /api/auth/csrf` respondió `204` y emitió cookies de CSRF.
+- `GET /api/auth/me` sin sesión respondió `401`.
+- Login real, `/api/auth/me` autenticado, logout y redirección posterior de `/app/dashboard` quedan pendientes hasta contar con base local accesible y Admin local configurado.
+
+Resultado de permisos:
+
+- Por código, `SecuritySeeder` asigna al rol Admin todos los permisos de `Permissions.All`.
+- `Permissions.All` incluye `reports.view`.
+- `/app/dashboard` sigue protegido por `permissionGuard` y requiere `reports.view`.
+
+Comandos seguros pendientes para Admin local:
+
+```bash
+dotnet user-secrets set LT_ADMIN_EMAIL "<email-local>" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set LT_ADMIN_PASSWORD "<password-local-seguro>" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set LT_ADMIN_FULL_NAME "Administrador" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set SecuritySeed:RunOnStartup true --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+```
+
+Después de crear el Admin, se recomienda apagar el seed local si ya no se necesita:
+
+```bash
+dotnet user-secrets set SecuritySeed:RunOnStartup false --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+```

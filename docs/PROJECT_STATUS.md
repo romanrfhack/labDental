@@ -4,7 +4,7 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público/sistema: Fase 2.0 de validación del flujo real de login, sesión y redirección hacia la app privada.
+Fase actual del frente público/sistema: Fase 2.1 de configuración local segura de Admin y validación real de login contra API/base local.
 
 ## Sistema Privado / MVP Administrativo
 
@@ -21,7 +21,10 @@ Estado: avanzado, con QA funcional y demo documentadas.
 - Validación Fase 2.0 por código: `/login` sigue público; `/app` está protegido por `authGuard`; `/app/dashboard` está protegido por `permissionGuard` y requiere `reports.view`; `/dashboard` no existe como ruta privada real.
 - Validación Fase 2.0 de login visual/lógica: los cambios visuales de Fase 1.5 en `login-page.component.ts` no alteraron `AuthService.login()`, manejo de errores, sanitización de `returnUrl`, navegación posterior al login ni solicitud de CSRF desde `AuthService`.
 - Validación Fase 2.0 de `returnUrl`: se aceptan rutas internas seguras bajo `/app`, como `/app/dashboard`; valores externos o inválidos como `https://example.com`, `//example.com` y `javascript:alert(1)` usan fallback seguro `/app/dashboard`.
-- Validación real con credenciales locales quedó pendiente: `appsettings*.json` no contiene Admin local configurado, `SecuritySeed:RunOnStartup` está en `false` y no se deben inventar credenciales ni modificar seed en esta fase.
+- Validación Fase 2.1: la connection string de desarrollo apunta a `Server=localhost;Database=LaboratorioTlahuac_Dev`, por lo que es local, pero SQL Server no estuvo accesible en este entorno; `dotnet ef database update` falló por conexión y no aplicó migraciones.
+- Admin local Fase 2.1 quedó pendiente: no existen variables `LT_ADMIN_EMAIL`, `LT_ADMIN_PASSWORD`, `LT_ADMIN_FULL_NAME`, `SecuritySeed__RunOnStartup=true` en el proceso y no existe archivo de user-secrets para `laboratorio-tlahuac-api-dev`; no se inventaron credenciales ni se guardaron secretos.
+- Validación real de login Fase 2.1 quedó pendiente por falta de base local accesible y credenciales Admin locales. Se validó API local con `/health`, Angular local en `http://localhost:4200/login`, `GET /api/auth/csrf` con `204` y `GET /api/auth/me` sin sesión con `401`.
+- Permisos Fase 2.1 confirmados por código: el seed Admin asigna todos los permisos de `Permissions.All`, incluyendo `reports.view`, y `/app/dashboard` requiere `reports.view`.
 
 La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
 
@@ -88,6 +91,9 @@ Estado: pendiente de definición productiva.
 - Validación Fase 1.3.1: `npm run build`, `git diff --check`, búsquedas solicitadas y verificación por nombre de archivos `*:Zone.Identifier` ejecutadas correctamente.
 - Validación Fase 1.5: `npm run build`, `git diff --check` y búsquedas solicitadas de logo, contacto, WhatsApp y rutas ejecutadas correctamente.
 - Validación Fase 2.0: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` ejecutados correctamente.
+- Validación Fase 2.1: `npm run build`, `dotnet build` y `dotnet test` ejecutados correctamente; el primer `dotnet test` se repitió porque chocó con un `dotnet build` paralelo y produjo bloqueo temporal de archivo en `obj`.
+- Validación Fase 2.1 parcial: API levantada en `http://localhost:5277` y `/health` respondió `Healthy`; Angular levantó en `http://localhost:4200/` y `/login` respondió con shell Angular.
+- Validación Fase 2.1 bloqueada: no se pudo validar login real, `/api/auth/me` autenticado, logout ni redirección visual de `/app/dashboard` tras logout porque no hay SQL Server local accesible ni Admin local configurado.
 - Validación HTTP Fase 2.0 con Angular dev server en `http://127.0.0.1:4201/`: `/`, `/servicios`, `/catalogo`, `/contacto`, `/login`, `/app`, `/app/dashboard`, `/dashboard` y casos de `/login?returnUrl=...` respondieron con shell Angular `200`; la protección privada se confirmó por router/guards porque `curl` no ejecuta Angular.
 - No existe script `lint` en `src/LaboratorioTlahuac.Web/package.json`.
 - Zona horaria formal de negocio sigue pendiente para métricas de "hoy", vencidas y próximos 7 días.
@@ -100,7 +106,7 @@ Estado: pendiente de definición productiva.
 
 ## Próxima Tarea Recomendada
 
-Completar la validación real de login en navegador con API/base local disponibles y usuario Admin configurado por el humano: iniciar sesión desde `/login`, confirmar redirección a `/app/dashboard`, validar `GET /api/auth/me`, ejecutar logout y confirmar que `/app/dashboard` vuelve a redirigir a `/login?returnUrl=%2Fapp%2Fdashboard`.
+Completar la configuración local segura de Fase 2.1: levantar SQL Server local o contenedor local, configurar `ConnectionStrings:DefaultConnection` por user-secrets si se usa usuario/contraseña local, aplicar migraciones, configurar Admin local por user-secrets o variables de entorno, ejecutar seed una vez, iniciar sesión desde `/login`, confirmar redirección a `/app/dashboard`, validar `GET /api/auth/me`, ejecutar logout y confirmar que `/app/dashboard` vuelve a redirigir a `/login?returnUrl=%2Fapp%2Fdashboard`.
 
 En paralelo, mantener la revisión visual y comercial del cliente del sitio público con identidad LDT aplicada, confirmación de vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
 

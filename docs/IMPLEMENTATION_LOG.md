@@ -6,6 +6,121 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-15 - Fase 2.1 Preflight Local Admin Y Login Real
+
+### Cambio Realizado
+
+Se ejecutó el preflight de configuración local segura para validar login real contra API/base local sin modificar backend, frontend, `AuthService`, guards, cookies, XSRF, endpoints, migraciones, deploy, dependencias ni rutas privadas.
+
+### Archivos Leídos
+
+- `AGENTS.md`
+- `README.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `src/LaboratorioTlahuac.Api/appsettings.json`
+- `src/LaboratorioTlahuac.Api/appsettings.Development.json`
+- `src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`
+- `src/LaboratorioTlahuac.Infrastructure/Security/Seed/SecuritySeeder.cs`
+- `src/LaboratorioTlahuac.Domain/Security/Permissions.cs`
+- `src/LaboratorioTlahuac.Web/src/app/app.routes.ts`
+- `docs/01-product/internal-system.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Archivos Modificados
+
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/01-product/internal-system.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Preflight De Ambiente
+
+- `git status --short`: sin cambios iniciales.
+- `git diff --stat`: sin cambios iniciales.
+- Connection string de desarrollo detectada: `Server=localhost;Database=LaboratorioTlahuac_Dev;Trusted_Connection=True;TrustServerCertificate=True`.
+- La connection string apunta claramente a ambiente local por `localhost`; no se detectó conexión remota/productiva.
+- `dotnet ef --version`: disponible, versión `10.0.7`.
+- `dotnet ef migrations list` compiló correctamente y listó migraciones existentes, pero no pudo determinar estado aplicado porque SQL Server no estuvo accesible.
+- Migraciones existentes: `InitialSecurityModel`, `AddCustomersAndInternalDoctors`, `AddWorkOrders`, `AddPayments`.
+
+### Base Local Y Migraciones
+
+- `dotnet ef database update` falló por no poder conectar a SQL Server en `localhost`.
+- No se aplicaron migraciones.
+- No se creó ni modificó base de datos.
+
+Comandos exactos para preparar una base local con SQL Server disponible, sin guardar secretos en archivos versionados:
+
+```bash
+docker run --name laboratorio-tlahuac-sql-local -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=<password-local-sql-seguro>" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=LaboratorioTlahuac_Dev;User Id=sa;Password=<password-local-sql-seguro>;TrustServerCertificate=True" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet ef database update --project src/LaboratorioTlahuac.Infrastructure/LaboratorioTlahuac.Infrastructure.csproj --startup-project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+```
+
+Si ya existe SQL Server local compatible con `Trusted_Connection=True`, basta con levantarlo y repetir `dotnet ef database update`.
+
+### Admin Local
+
+- Variables de entorno revisadas sin imprimir valores: `LT_ADMIN_EMAIL`, `LT_ADMIN_PASSWORD` y `LT_ADMIN_FULL_NAME` no están definidas; `SecuritySeed__RunOnStartup` no está en `true`.
+- No existe archivo de user-secrets para `laboratorio-tlahuac-api-dev` en este entorno.
+- No se ejecutó seed Admin porque faltan credenciales locales seguras y la base local no está accesible.
+- No se inventaron credenciales, no se imprimieron passwords y no se documentó ningún secreto real.
+
+Comandos exactos para configurar Admin local con user-secrets:
+
+```bash
+dotnet user-secrets set LT_ADMIN_EMAIL "<email-local>" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set LT_ADMIN_PASSWORD "<password-local-seguro>" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set LT_ADMIN_FULL_NAME "Administrador" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set SecuritySeed:RunOnStartup true --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+```
+
+Después de crear el Admin, se recomienda apagar el seed local:
+
+```bash
+dotnet user-secrets set SecuritySeed:RunOnStartup false --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+```
+
+### Validación Ejecutada
+
+- API levantada con `dotnet run --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`.
+- `curl -s http://localhost:5277/health`: respondió `{"status":"Healthy","application":"LaboratorioTlahuac.Api"}`.
+- Angular levantado desde `src/LaboratorioTlahuac.Web` con `npm start` en `http://localhost:4200/`.
+- `curl -s http://localhost:4200/login`: respondió shell Angular.
+- `GET /api/auth/csrf` con cookie jar temporal: `204`.
+- `GET /api/auth/me` sin sesión: `401`.
+- `npm run build`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto después de repetirlo en serial; Domain 1/1, Application 1/1 y API 90/90.
+
+### Validación Bloqueada
+
+- Login real desde `/login`: pendiente por falta de SQL Server local accesible y Admin local configurado.
+- Redirección post-login a `/app/dashboard`: pendiente.
+- `/api/auth/me` autenticado: pendiente.
+- Logout autenticado: pendiente.
+- Redirección de `/app/dashboard` sin sesión tras logout a `/login?returnUrl=%2Fapp%2Fdashboard`: pendiente de navegador con sesión real.
+- Validación con usuario sin `reports.view`: pendiente porque no hay base local con usuarios de prueba.
+
+### Permisos Confirmados Por Código
+
+- `SecuritySeeder` asigna al rol Admin todos los permisos de `Permissions.All`.
+- `Permissions.All` incluye `reports.view`.
+- `/app/dashboard` tiene `permissionGuard` con `data: { permission: 'reports.view' }`.
+
+### Pendientes Para El Humano
+
+1. Levantar SQL Server local o contenedor local y configurar la connection string por user-secrets si se usa usuario/contraseña.
+2. Aplicar migraciones con `dotnet ef database update`.
+3. Configurar Admin local con user-secrets o variables de entorno.
+4. Arrancar API con `SecuritySeed:RunOnStartup=true` una vez para crear/actualizar Admin.
+5. Apagar `SecuritySeed:RunOnStartup` en user-secrets cuando ya no se necesite.
+6. Validar login real en navegador y con `curl` sin imprimir contraseña.
+
 ## 2026-05-15 - Fase 2.0 Validación Login, Sesión Y Redirección
 
 ### Cambio Realizado

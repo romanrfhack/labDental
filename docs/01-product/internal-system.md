@@ -81,6 +81,19 @@ Estado: validado por código, build, tests y shell Angular; login real queda pen
 - `returnUrl` posterior al login solo acepta rutas internas seguras bajo `/app`; destinos externos o inválidos usan fallback `/app/dashboard`.
 - Para validar login real, el humano debe configurar API/base local y Admin seguro, iniciar sesión desde `/login`, confirmar redirección a `/app/dashboard`, validar `GET /api/auth/me`, ejecutar logout y confirmar que `/app/dashboard` vuelve a pedir login.
 
+## Validación De Acceso Fase 2.1
+
+Estado: preflight local ejecutado; login real sigue pendiente por falta de SQL Server local accesible y Admin local configurado.
+
+- La API local levantó en `http://localhost:5277` y `/health` respondió saludable.
+- Angular levantó en `http://localhost:4200/` y `/login` respondió con shell Angular.
+- La base declarada para desarrollo es local: `Server=localhost;Database=LaboratorioTlahuac_Dev`.
+- SQL Server no estuvo accesible en `localhost`; las migraciones no se aplicaron.
+- No existen credenciales Admin locales en variables de entorno ni user-secrets en este entorno.
+- `GET /api/auth/csrf` respondió `204`; `GET /api/auth/me` sin sesión respondió `401`.
+- Login real, `/api/auth/me` autenticado, logout y redirección tras logout quedan pendientes hasta configurar base y Admin locales.
+- Admin recibirá `reports.view` cuando el seed pueda ejecutarse, porque el seed asigna todos los permisos a Admin y `/app/dashboard` requiere `reports.view`.
+
 ## Permisos
 
 El sistema autoriza por permisos, no por nombre de rol. El rol Admin inicial recibe todos los permisos mediante seed.
