@@ -222,3 +222,128 @@ Después de crear el Admin, se recomienda apagar el seed local si ya no se neces
 ```bash
 dotnet user-secrets set SecuritySeed:RunOnStartup false --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
 ```
+
+## Validación Fase 2.1c - 2026-05-18
+
+Resultado de ambiente local Docker:
+
+- Docker está disponible.
+- El contenedor dedicado esperado es `ldt-labdental-sql`.
+- `ldt-labdental-sql` no existe todavía en este entorno.
+- No se usó `codex-cobranza-sql` ni ningún contenedor de otro proyecto.
+- Los puertos `14336`, `14337` y `14338` no aparecen en escucha; el puerto preferido para reintentar es `14336`.
+- La ejecución se detuvo porque `LDT_SQL_SA_PASSWORD` no está definida.
+
+Resultado de conexión/base:
+
+- No se creó el contenedor SQL Server.
+- No se creó el volumen `ldt-labdental-sql-data`.
+- No se configuró `ConnectionStrings:DefaultConnection` en user-secrets.
+- No se aplicaron migraciones.
+- Base local esperada al reintentar: `LaboratorioTlahuac_Dev`.
+- Connection string esperada en user-secrets, redactada: `Server=localhost,14336;Database=LaboratorioTlahuac_Dev;User Id=sa;Password=<redacted>;TrustServerCertificate=True;Encrypt=True`.
+
+Resultado de Admin local:
+
+- `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están definidas.
+- `LT_ADMIN_FULL_NAME` existe en el proceso, pero no se usó.
+- No se ejecutó seed Admin, no se inventaron credenciales y no se imprimieron secretos.
+
+Resultado de login real:
+
+- Login real queda pendiente por falta de contenedor/base local dedicada y credenciales Admin locales.
+- `/api/auth/me` autenticado queda pendiente.
+- Logout queda pendiente.
+- Redirección visual de `/app/dashboard` sin sesión queda pendiente.
+- `/login` sigue documentado como ruta pública; `/app` y `/app/dashboard` siguen documentadas como rutas privadas; `/dashboard` sigue sin ser ruta privada real.
+
+## Validación Fase 2.1c - 2026-05-23
+
+Resultado de ambiente local Docker:
+
+- Contenedor usado: `ldt-labdental-sql`.
+- Puerto usado: `14336`, mapeado desde `1433/tcp`.
+- Base validada por EF: `LaboratorioTlahuac_Dev`.
+- No se usó `codex-cobranza-sql` ni ningún contenedor de otro proyecto.
+
+Resultado de migraciones:
+
+- `dotnet ef migrations list` con `LaboratorioTlahuac.Infrastructure` como proyecto y `LaboratorioTlahuac.Api` como startup project listó:
+  - `20260508044157_InitialSecurityModel`
+  - `20260509004819_AddCustomersAndInternalDoctors`
+  - `20260509022531_AddWorkOrders`
+  - `20260509053231_AddPayments`
+- `dotnet ef database update` confirmó que no había migraciones pendientes: la base ya estaba al día.
+
+Resultado de seed Admin:
+
+- La API local levantó en `http://localhost:5277`.
+- `SecuritySeed:RunOnStartup` estaba activo al iniciar la API y ejecutó la ruta de seed.
+- El seed tuvo configuración Admin disponible desde user-secrets, confirmado por las consultas parametrizadas de arranque sin imprimir valores.
+- Al finalizar la validación se ejecutó `dotnet user-secrets set SecuritySeed:RunOnStartup false --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`.
+
+Resultado de API/auth:
+
+- `GET /health` respondió `200`.
+- `GET /api/auth/csrf` respondió `204`.
+- `GET /api/auth/me` sin sesión respondió `401`.
+- Login real no se ejecutó porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex.
+- `/api/auth/me` autenticado, logout y `/api/auth/me` después de logout quedan pendientes hasta ejecutar la prueba con credenciales Admin disponibles en el proceso o desde navegador.
+- No se ejecutó `dotnet user-secrets list`, no se imprimieron secretos y no se modificaron `appsettings` con contraseñas.
+
+## Validación Manual Fase 2.1c - 2026-05-23
+
+Resultado reportado desde navegador con Admin local creado por seed:
+
+- `/login` carga correctamente.
+- Login con Admin local: validado.
+- Redirección posterior al login a `/app/dashboard`: validada.
+- Dashboard: no validado; cargó una vez, pero al regresar a la página queda en `Cargando dashboard...`.
+- `GET /api/auth/me` autenticado: no confirmado porque el resultado manual no fue marcado como `sí`.
+- Logout: no confirmado como acción independiente porque el resultado manual no fue marcado.
+- Después de logout, `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
+
+Confirmación de rutas y seguridad:
+
+- `/login` sigue siendo ruta pública.
+- `/app` y `/app/dashboard` siguen siendo rutas privadas.
+- `/dashboard` no es ruta privada real.
+- No se imprimieron secretos, no se ejecutó `dotnet user-secrets list`, no se usó `codex-cobranza-sql` y no se modificaron `appsettings` con contraseñas.
+
+## Diagnóstico Fase 2.1d - 2026-05-23
+
+Resultado de revisión de rutas, auth y permisos:
+
+- `/login` sigue siendo ruta pública.
+- `/app` sigue protegido por `authGuard`.
+- `/app/dashboard` sigue protegido por `permissionGuard` y requiere `reports.view`.
+- `/dashboard` no es ruta privada real.
+- `AuthService` y guards no se modificaron.
+- El Admin seed incluye `reports.view` porque `Permissions.All` contiene ese permiso y el seed asigna todos los permisos al rol Admin.
+
+Resultado de endpoints revisados:
+
+- `GET /health`: `200`.
+- `GET /api/auth/csrf`: `204`.
+- `GET /api/auth/me` sin sesión: `401`.
+- `GET /api/dashboard/summary` sin sesión: `401`.
+- `GET /api/auth/me` autenticado: pendiente porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex.
+- `GET /api/dashboard/summary` autenticado: pendiente por la misma razón.
+- Logout autenticado por curl: pendiente por la misma razón.
+
+Causa probable del estado `Cargando dashboard...`:
+
+- El componente del dashboard solo hace una llamada HTTP: `GET /api/dashboard/summary`.
+- Los errores HTTP ya apagaban `isLoading` mediante `finalize`.
+- Si la llamada quedaba pendiente sin completar ni fallar, no existia timeout y el texto `Cargando dashboard...` podia permanecer indefinidamente.
+
+Corrección aplicada:
+
+- `dashboard-page.component.ts` agrega timeout de 15 segundos a la consulta de resumen.
+- Si la consulta tarda demasiado, el dashboard apaga el estado de carga y muestra un error controlado.
+- No se modificaron cookies, CSRF/XSRF, endpoints, permisos, migraciones, seed, deploy ni `appsettings`.
+
+Limitación de validación:
+
+- No hay navegador/headless disponible sin instalar dependencias.
+- Validación manual sugerida con DevTools: revisar `GET /api/auth/me`, `GET /api/dashboard/summary`, status code, respuesta y errores de consola después de login y al regresar a `/app/dashboard`.

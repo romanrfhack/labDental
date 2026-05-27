@@ -208,6 +208,46 @@ Alcance técnico:
 - `/app` y `/app/dashboard` siguen como zona privada.
 - `/dashboard` no se creó como ruta privada real.
 
+## Estado Fase 1.6
+
+Pulido visual premium del sitio público implementado y parcialmente validado visualmente.
+
+Enfoque técnico:
+
+- Se resolvió sin GSAP y sin dependencias nuevas.
+- Se agregó una directiva pública reusable basada en `IntersectionObserver`, `matchMedia('(prefers-reduced-motion: reduce)')` y CSS transitions.
+- El parallax es ligero y limitado al logo del hero en home mediante `transform`, sin pinning, sin scrub agresivo y sin smooth scroll global.
+- Los estilos pesados de home y catálogo viven en `src/LaboratorioTlahuac.Web/src/styles.scss` con selectores acotados por `.home-page` y `.catalog-page` para no afectar la app privada.
+- Si JS de animación falla, el contenido queda visible porque el estado oculto solo se activa cuando la directiva agrega `public-animation-ready`.
+
+Páginas afectadas:
+
+- `/`: hero institucional con fondo más cinematográfico, logo con profundidad, entrada de copy/CTAs, reveal escalonado de beneficios, proceso y contacto.
+- `/servicios`: composición más editorial, tarjetas con índice visual, banda de ruta recomendada y CTA claro a `/catalogo`.
+- `/catalogo`: encabezado premium, resumen visual, contacto/condiciones más claras, cards de producto con frame uniforme, microinteracción de imagen y reveal por lote por sección.
+- `/contacto`: cards separan datos confirmados y pendientes; teléfonos/correo quedan destacados sin inventar dirección, horarios ni WhatsApp.
+- `/login`: solo pulido visual de SCSS para reforzar marca; no se modificó lógica, `AuthService`, guards ni `returnUrl`.
+
+Accesibilidad y movimiento:
+
+- `prefers-reduced-motion: reduce` desactiva reveal, parallax y transformaciones de hover relevantes.
+- Las animaciones no son necesarias para entender el contenido.
+- Focus visible y contraste se mantienen con tokens LDT.
+- No se oculta contenido esencial sin JS.
+
+Validación visual manual 2026-05-27:
+
+- El humano reportó revisión visual de `/`, `/servicios`, `/catalogo`, `/contacto` y `/login`.
+- El humano reportó revisión en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+- El humano reportó revisión de reduced motion y scroll horizontal.
+- Cierre: parcial, porque el reporte recibido conserva marcadores sin selección final ni observaciones concretas por punto.
+
+Pendientes visuales:
+
+- Sustituir los marcadores del reporte manual por resultados explícitos si se requiere cierre visual completo.
+- Validar en dispositivo móvil del cliente que el header, CTAs, catálogo y precios se sienten cómodos, si la revisión manual actual no se considera aprobación final.
+- Lighthouse o revisión equivalente queda para una fase posterior.
+
 ## Audiencia
 
 - Doctores y doctoras que buscan un laboratorio dental.
@@ -295,4 +335,4 @@ Las capacidades publicadas en Fase 1 son descripciones generales provisionales, 
 - Fotografías o materiales visuales propios del laboratorio.
 - Aviso de privacidad si se solicitarán datos personales desde el sitio público.
 - Formulario real de contacto, solo cuando exista backend o herramienta confirmada para recibir mensajes.
-- QA visual completa en los viewports del checklist responsive.
+- QA visual completa en los viewports del checklist responsive, cuando el reporte manual incluya resultados explícitos y observaciones concretas.

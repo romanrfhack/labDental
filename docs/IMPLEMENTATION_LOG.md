@@ -6,6 +6,423 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-27 - Cierre Documental Parcial De Validación Visual Fase 1.6
+
+### Cambio Realizado
+
+Se actualizó documentación para registrar el reporte manual de revisión visual de Fase 1.6 del sitio público sin modificar código, instalar dependencias ni tocar backend/auth/guards/endpoints/base/deploy.
+
+El cierre queda como parcialmente validado visualmente porque el reporte recibido conserva marcadores sin selección final ni observaciones concretas por ruta o breakpoint.
+
+### Resultado Manual Recibido
+
+- Rutas reportadas como revisadas: `/`, `/servicios`, `/catalogo`, `/contacto` y `/login`.
+- Viewports reportados como revisados: 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+- Puntos adicionales reportados: reduced motion y scroll horizontal.
+- Limitación documental: los puntos llegaron como `[correcto / observaciones]`, `[correcto / no probado / observaciones]` y `[no hay / observaciones]`, sin selección explícita ni observaciones.
+
+### Archivos Modificados
+
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/public-website.md`
+- `docs/02-domain/brand-guidelines.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Alcance No Tocado
+
+- No se modificó código frontend ni backend.
+- No se modificaron `AuthService`, guards, rutas, cookies, XSRF, endpoints, base de datos, migraciones, deploy ni dependencias.
+- El working tree conserva cambios previos de código de Fase 1.6; este cierre documental modificó únicamente los cinco documentos listados.
+- `/login` sigue documentado como público.
+- `/app` y `/app/dashboard` siguen documentados como privados.
+- `/dashboard` sigue documentado como no ruta privada real.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 90/90.
+- `git diff --check`: correcto.
+- Búsqueda de rutas: `/login` sigue fuera de `/app`; `/app` conserva `authGuard`; `/app/dashboard` conserva `permissionGuard` y `reports.view`; `/dashboard` no aparece como ruta privada real raíz.
+- Búsqueda de secretos en los documentos tocados: solo aparecen nombres de variables, placeholders, textos redactados o menciones de `user-secrets`; no se detectaron valores reales de contraseña, tokens, API keys ni llaves privadas.
+
+## 2026-05-27 - Fase 1.6 Pulido Visual Premium Del Sitio Público
+
+### Cambio Realizado
+
+Se implementó pulido visual premium del sitio público mobile-first con animaciones sutiles, composición más moderna, microinteracciones y mejoras de catálogo/contacto.
+
+Enfoque elegido: CSS + `IntersectionObserver`. No se instaló GSAP ni otra dependencia porque los requerimientos de reveal, microinteracción y parallax ligero se cubren con APIs nativas, menor impacto de bundle y limpieza directa al destruir componentes Angular.
+
+### Archivos Leídos
+
+- `AGENTS.md`
+- `README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/01-product/public-website.md`
+- `docs/02-domain/brand-guidelines.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+- Componentes públicos de layout, home, servicios, catálogo y contacto.
+- SCSS visual de `/login`.
+- `src/LaboratorioTlahuac.Web/src/app/app.routes.ts`
+- `src/LaboratorioTlahuac.Web/package.json`
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/public/animations/public-scroll-animations.directive.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/layout/public-layout.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/layout/public-layout.component.scss`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/home/home-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/home/home-page.component.scss`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/services/services-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.scss`
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/contact/contact-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/auth/pages/login/login-page.component.scss`
+- `src/LaboratorioTlahuac.Web/src/styles.scss`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/public-website.md`
+- `docs/02-domain/brand-guidelines.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Mejoras Visuales
+
+- Header público con mejor presencia de logo, navegación con estado activo más claro y microinteracciones.
+- Footer más visual, ordenado y con todos los teléfonos/correo confirmados.
+- Home con hero institucional más cinematográfico, logo con profundidad, reveal de copy/CTAs, beneficios, proceso y contacto.
+- Servicios con composición editorial, tarjetas numeradas y CTA claro al catálogo.
+- Catálogo con encabezado premium, resumen visual, contacto/condiciones más claras, cards con frame uniforme, precios legibles y microinteracción de imagen.
+- Contacto con cards que separan datos confirmados de pendientes sin inventar dirección, horarios ni WhatsApp.
+- Login recibió solo pulido visual de SCSS; la lógica quedó intacta.
+
+### Animación Y Accesibilidad
+
+- La directiva pública observa elementos `data-animate` y `data-parallax`.
+- `prefers-reduced-motion: reduce` desactiva reveal, parallax y transformaciones relevantes.
+- Si `IntersectionObserver` no existe o JS falla antes de activar la directiva, el contenido permanece visible.
+- Las animaciones usan `opacity` y `transform`; no animan propiedades de layout costosas.
+- En catálogo, el reveal de productos se limita por lote inicial por sección.
+
+### Alcance No Tocado
+
+- No se modificó backend.
+- No se modificaron `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies, XSRF, endpoints, base de datos, migraciones, deploy ni contratos API.
+- No se cambiaron rutas privadas.
+- `/dashboard` no se convirtió en ruta privada real.
+- No se instalaron dependencias.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto, sin warnings de presupuesto tras mover estilos públicos pesados a CSS global acotado.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 90/90.
+- `git diff --check`: correcto.
+- `rg "/dashboard" .`: revisado; no muestra `/dashboard` como ruta privada real nueva, las menciones corresponden a documentación, API o `/app/dashboard`.
+- `rg "/app/dashboard" .`: revisado; confirma que el dashboard privado real sigue bajo `/app`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada pública y endpoints de auth existentes.
+- `rg "prefers-reduced-motion" src/LaboratorioTlahuac.Web/src docs`: revisado; confirma soporte CSS/JS/documentación.
+- `rg "gsap" src/LaboratorioTlahuac.Web src/LaboratorioTlahuac.Web/package.json docs`: sin resultados.
+- Verificación de navegador/headless: no se encontró `chromium`, `google-chrome`, `firefox` ni Playwright local en `node_modules`; revisión visual real queda pendiente.
+
+## 2026-05-23 - Fase 2.1d Diagnóstico Y Corrección Mínima De Dashboard
+
+### Cambio Realizado
+
+Se diagnosticó el estado `Cargando dashboard...` en `/app/dashboard` y se aplicó una corrección mínima en frontend para evitar carga indefinida cuando la consulta del resumen no termina.
+
+No se modificaron `AuthService`, guards, rutas privadas, cookies, XSRF, backend, endpoints, permisos, seed, migraciones, deploy, dependencias ni `appsettings`.
+
+### Archivos Leídos
+
+- `AGENTS.md`
+- `README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/01-product/internal-system.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `src/LaboratorioTlahuac.Web/src/app/app.routes.ts`
+- `src/LaboratorioTlahuac.Web/src/app/core/guards/auth.guard.ts`
+- `src/LaboratorioTlahuac.Web/src/app/core/guards/permission.guard.ts`
+- `src/LaboratorioTlahuac.Web/src/app/core/auth/auth.service.ts`
+- `src/LaboratorioTlahuac.Web/src/app/auth/pages/login/login-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/dashboard/dashboard-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/dashboard/dashboard.service.ts`
+- `src/LaboratorioTlahuac.Api/Endpoints/DashboardEndpoints.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Dashboard/DashboardService.cs`
+- `src/LaboratorioTlahuac.Domain/Security/Permissions.cs`
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/dashboard/dashboard-page.component.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/01-product/internal-system.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Diagnóstico
+
+- `/app/dashboard` sigue protegido por `permissionGuard` con `reports.view`.
+- `GET /api/dashboard/summary` sigue protegido en backend con `Permissions.ReportsView`.
+- El Admin seed recibe `reports.view` porque `SecuritySeeder` asigna todos los permisos de `Permissions.All`.
+- El dashboard solo consulta `GET /api/dashboard/summary`.
+- El componente ya apagaba `isLoading` con `finalize` para respuestas correctas o errores HTTP.
+- La causa probable del estado persistente es una llamada pendiente a `GET /api/dashboard/summary`: sin timeout, el observable no completa ni falla y `isLoading` permanece activo.
+
+### Corrección
+
+- Se agregó timeout de 15 segundos a `DashboardPageComponent.load()`.
+- Si `GET /api/dashboard/summary` tarda demasiado, el dashboard apaga `isLoading` y muestra un error controlado.
+- No se cambió la estructura visual del dashboard ni se agregaron modulos.
+
+### Endpoints Revisados
+
+- `GET /health`: `200`.
+- `GET /api/auth/csrf`: `204`.
+- `GET /api/auth/me` sin sesión: `401`.
+- `GET /api/dashboard/summary` sin sesión: `401`.
+- `GET /api/auth/me` autenticado: pendiente porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex.
+- `GET /api/dashboard/summary` autenticado: pendiente por la misma razón.
+- Logout autenticado: pendiente por la misma razón.
+
+### Ambiente
+
+- Contenedor SQL usado/documentado: `ldt-labdental-sql`.
+- Puerto SQL documentado: `14336 -> 1433/tcp`.
+- No se usó `codex-cobranza-sql`.
+- API y frontend estaban activos en `http://localhost:5277` y `http://localhost:4200`.
+- No hay navegador/headless disponible sin instalar dependencias.
+
+### Validaciones
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 90/90.
+- `dotnet build`: primer intento falló por bloqueo temporal de `MvcTestingAppManifest.json` al ejecutarse en paralelo con `dotnet test`; repetido en serial, correcto con 0 warnings y 0 errores.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias de rutas: `/dashboard`, `/app/dashboard` y `/login` revisadas; `/dashboard` no aparece como ruta privada real nueva.
+- Búsquedas obligatorias de secretos: `LT_ADMIN_PASSWORD`, `LDT_SQL_SA_PASSWORD` y `ConnectionStrings` revisadas; solo aparecen nombres de variables, placeholders o cadenas locales/redactadas, no valores reales de contraseña.
+
+### Seguridad
+
+- No se ejecutó `dotnet user-secrets list`.
+- No se imprimieron secretos.
+- No se modificaron `appsettings*.json` con contraseñas.
+- No se instalaron dependencias.
+
+## 2026-05-23 - Fase 2.1c Cierre Parcial Por Validación Manual De Login
+
+### Cambio Realizado
+
+Se actualizó la documentación con la validación manual del login real usando el Admin local creado por seed. No se modificó código, backend, frontend, auth, guards, cookies, XSRF, endpoints, migraciones, deploy ni dependencias.
+
+### Resultado Manual Reportado
+
+- `/login` carga correctamente.
+- Login con Admin local: validado.
+- Redirección a `/app/dashboard`: validada.
+- Dashboard: no validado; cargó una vez, pero al regresar a la página queda en `Cargando dashboard...`.
+- `GET /api/auth/me` autenticado: no confirmado porque el resultado manual no fue marcado como `sí`.
+- Logout: no confirmado como acción independiente porque el resultado manual no fue marcado.
+- Después de logout, `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
+
+### Confirmaciones De Rutas
+
+- `/login` sigue documentado como público.
+- `/app` y `/app/dashboard` siguen documentadas como rutas privadas.
+- `/dashboard` sigue documentado como no ruta privada real.
+
+### Seguridad
+
+- No se ejecutó `dotnet user-secrets list`.
+- No se imprimieron secretos.
+- No se usó `codex-cobranza-sql`.
+- SQL correcto documentado: `ldt-labdental-sql` en puerto `14336`.
+- No se modificaron `appsettings*.json` con contraseñas.
+
+### Validaciones Técnicas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 90/90.
+- `git diff --check`: correcto.
+
+## 2026-05-23 - Fase 2.1c Validación SQL Dedicado, Seed Y Auth Anónima
+
+### Cambio Realizado
+
+Se validó el entorno local dedicado de Laboratorio Dental Tláhuac contra `ldt-labdental-sql` sin usar `codex-cobranza-sql`, sin listar user-secrets, sin imprimir secretos y sin modificar backend, frontend, auth, guards, endpoints, migraciones, deploy, dependencias ni `appsettings` con contraseñas.
+
+Solo se actualizaron documentos de estado para registrar los resultados.
+
+### Contenedor Y Base
+
+- Contenedor usado: `ldt-labdental-sql`.
+- Puerto usado: `14336`, mapeado a `1433/tcp`.
+- Base validada por EF: `LaboratorioTlahuac_Dev`.
+- `docker ps --filter "name=ldt-labdental-sql"` confirmó el contenedor activo.
+- `docker port ldt-labdental-sql` confirmó el mapeo `1433/tcp -> 0.0.0.0:14336` y `1433/tcp -> [::]:14336`.
+
+### Migraciones
+
+- Proyecto EF: `src/LaboratorioTlahuac.Infrastructure/LaboratorioTlahuac.Infrastructure.csproj`.
+- Startup project: `src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`.
+- `dotnet ef migrations list` listó:
+  - `20260508044157_InitialSecurityModel`
+  - `20260509004819_AddCustomersAndInternalDoctors`
+  - `20260509022531_AddWorkOrders`
+  - `20260509053231_AddPayments`
+- `dotnet ef database update` terminó correctamente y reportó que no había migraciones pendientes.
+
+### Seed Admin
+
+- La API se levantó con `dotnet run --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`.
+- La ruta de seed se ejecutó al inicio porque `SecuritySeed:RunOnStartup` estaba activo en la configuración efectiva.
+- La configuración Admin estuvo disponible para la API desde user-secrets; los logs solo mostraron consultas parametrizadas, no valores.
+- Al terminar, se apagó el seed con `dotnet user-secrets set SecuritySeed:RunOnStartup false --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`.
+
+### API/Auth
+
+- `GET /health`: `200`.
+- `GET /api/auth/csrf`: `204`.
+- `GET /api/auth/me` sin sesión: `401`.
+- Login real: pendiente porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex.
+- `/api/auth/me` autenticado: pendiente por la misma razón.
+- Logout: pendiente por la misma razón.
+- `/api/auth/me` después de logout: pendiente por la misma razón.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 90/90.
+- `git diff --check`: correcto.
+
+### Seguridad
+
+- No se ejecutó `dotnet user-secrets list`.
+- No se imprimieron secretos.
+- No se extrajeron credenciales Admin desde user-secrets para simular login.
+- No se modificaron `appsettings*.json` con contraseñas.
+- La API local se apagó después de la validación.
+
+## 2026-05-18 - Fase 2.1c Preflight SQL Server Docker Dedicado
+
+### Cambio Realizado
+
+Se ejecutó el preflight para crear o usar una instancia SQL Server Docker dedicada del proyecto Laboratorio Dental Tláhuac sin usar contenedores de otros proyectos y sin imprimir secretos.
+
+La ejecución se detuvo antes de crear el contenedor porque `LDT_SQL_SA_PASSWORD` no está definida en el proceso. No se inventó password, no se guardaron secretos y no se modificaron backend, frontend, auth, guards, cookies, XSRF, endpoints, rutas, deploy, dependencias, appsettings ni migraciones.
+
+### Archivos Leídos
+
+- `AGENTS.md`
+- `README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/01-product/internal-system.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Archivos Modificados
+
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/01-product/internal-system.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Preflight Del Repo
+
+- `pwd`: `/home/romanrfhack/code/labDental`.
+- `git rev-parse --show-toplevel`: `/home/romanrfhack/code/labDental`.
+- `git status --short`: sin cambios iniciales.
+- `git diff --stat`: sin cambios iniciales.
+
+### Preflight Docker
+
+- Docker está disponible.
+- Contenedores activos detectados: `codex-cobranza-sql`, `mysql-ipn` y `n8n`.
+- `codex-cobranza-sql` pertenece a otro proyecto y no se usó.
+- No se usaron `facturacion-mysqlit`, `mercadosfmcpa-sql`, `bigsmile-sql`, `opticsoft-h1007-sql-0424` ni otros contenedores de otros proyectos.
+- `ldt-labdental-sql` no existe en este entorno.
+- Puertos revisados: `14336`, `14337` y `14338` no aparecen en escucha; el puerto preferido sigue siendo `14336`.
+- No se ejecutó `docker inspect` completo para evitar exponer variables de entorno.
+- No se borraron contenedores ni volúmenes.
+
+### Bloqueo Seguro
+
+- `LDT_SQL_SA_PASSWORD` no está definida.
+- Por regla de seguridad, no se creó `ldt-labdental-sql`.
+- No se creó el volumen `ldt-labdental-sql-data`.
+- No se configuró `ConnectionStrings:DefaultConnection` en user-secrets.
+- No se ejecutó `dotnet user-secrets list`.
+- No se escribió ningún secreto en documentación ni en `appsettings`.
+
+Comandos para que el humano prepare la variable en su terminal local antes de reintentar:
+
+```bash
+read -s -p "Password local para sa de SQL Server LDT: " LDT_SQL_SA_PASSWORD
+echo
+export LDT_SQL_SA_PASSWORD
+```
+
+### Admin Local
+
+- `LT_ADMIN_EMAIL` no está definida.
+- `LT_ADMIN_PASSWORD` no está definida.
+- `LT_ADMIN_FULL_NAME` existe en el proceso, pero no se usó porque seed/login quedaron bloqueados antes de crear SQL Server.
+- No se inventaron credenciales Admin.
+
+Comandos para que el humano prepare Admin local antes de validar login real:
+
+```bash
+read -p "Admin email local: " LT_ADMIN_EMAIL
+export LT_ADMIN_EMAIL
+read -s -p "Admin password local: " LT_ADMIN_PASSWORD
+echo
+export LT_ADMIN_PASSWORD
+export LT_ADMIN_FULL_NAME="Administrador Local"
+```
+
+### Migraciones Y Login Real
+
+- `dotnet ef migrations list` no se ejecutó en esta fase porque no hay contenedor/base local dedicada disponible.
+- `dotnet ef database update` no se ejecutó.
+- Seed Admin no se ejecutó.
+- Login real no se validó.
+- `/api/auth/me` autenticado no se validó.
+- Logout no se validó.
+- `/app/dashboard` sin sesión no se validó en navegador en esta fase.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 90/90.
+- `git diff --check`: correcto.
+- `rg "/dashboard" .`: no muestra `/dashboard` como ruta privada real; las menciones corresponden a documentación, API de dashboard o `/app/dashboard`.
+- `rg "/app/dashboard" .`: confirma que la ruta privada real se mantiene bajo `/app`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: confirma `/login` como entrada pública y endpoint de auth.
+- `rg "LT_ADMIN_PASSWORD" .`: solo muestra nombres de variable, placeholders o código de seed; no muestra valores reales.
+- `rg "LDT_SQL_SA_PASSWORD" .`: solo muestra nombres de variable y comandos de preparación; no muestra valores reales.
+- `rg "ConnectionStrings" src docs README.md`: no muestra una connection string local con password real.
+- Revisión adicional de patrones `Password=`, `MSSQL_SA_PASSWORD` y `User Id=sa`: solo placeholders o connection strings redactadas.
+
+### Estado Esperado Al Reintentar
+
+- Contenedor: `ldt-labdental-sql`.
+- Imagen: `mcr.microsoft.com/mssql/server:2022-latest`.
+- Puerto local preferido: `14336`.
+- Volumen: `ldt-labdental-sql-data`.
+- Base local: `LaboratorioTlahuac_Dev`.
+- Connection string efectiva esperada en user-secrets, redactada: `Server=localhost,14336;Database=LaboratorioTlahuac_Dev;User Id=sa;Password=<redacted>;TrustServerCertificate=True;Encrypt=True`.
+
 ## 2026-05-15 - Fase 2.1 Preflight Local Admin Y Login Real
 
 ### Cambio Realizado
@@ -53,15 +470,15 @@ Se ejecutó el preflight de configuración local segura para validar login real 
 - No se aplicaron migraciones.
 - No se creó ni modificó base de datos.
 
-Comandos exactos para preparar una base local con SQL Server disponible, sin guardar secretos en archivos versionados:
+Plantilla actualizada para preparar la base local con el contenedor dedicado de Fase 2.1c, sin guardar secretos en archivos versionados:
 
 ```bash
-docker run --name laboratorio-tlahuac-sql-local -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=<password-local-sql-seguro>" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=LaboratorioTlahuac_Dev;User Id=sa;Password=<password-local-sql-seguro>;TrustServerCertificate=True" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+docker run --name ldt-labdental-sql -e "ACCEPT_EULA=Y" -e "MSSQL_PID=Developer" -e "MSSQL_SA_PASSWORD=$LDT_SQL_SA_PASSWORD" -p 14336:1433 -v ldt-labdental-sql-data:/var/opt/mssql -d mcr.microsoft.com/mssql/server:2022-latest
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<connection-string-local-redacted>" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
 dotnet ef database update --project src/LaboratorioTlahuac.Infrastructure/LaboratorioTlahuac.Infrastructure.csproj --startup-project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
 ```
 
-Si ya existe SQL Server local compatible con `Trusted_Connection=True`, basta con levantarlo y repetir `dotnet ef database update`.
+Si ya existe `ldt-labdental-sql`, se debe iniciar ese contenedor dedicado y repetir `dotnet ef database update`. No usar contenedores de otros proyectos.
 
 ### Admin Local
 

@@ -33,6 +33,30 @@ Fuente para identidad visual del sitio público de Laboratorio Dental Tláhuac.
 - Footer: base `--ldt-navy`.
 - Evitar verde, rojo u otros colores como base de marca; reservarlos solo para estados funcionales cuando aplique.
 
+## Estilo Visual Fase 1.6
+
+- Fondos premium: degradados institucionales con `--ldt-navy`, `--ldt-navy-soft`, `--ldt-blue` y tramas lineales suaves; evitar decoraciones saturadas.
+- Botones activos y CTAs: usar degradado azul institucional, sombra controlada y microinteracción vertical máxima de 1px.
+- Cards públicas: fondo blanco o azul muy claro, borde basado en `--ldt-sky`, sombra ligera y radio máximo de 8px.
+- Catálogo: mantener precios en pastilla legible con contraste alto; imagen en frame uniforme sin deformación.
+- Estados focus: conservar halo visible basado en `--ldt-focus` o `--ldt-sky`; no retirar outline sin reemplazo claro.
+- Datos confirmados: destacar con azul institucional; datos pendientes: usar gris/neutral sin parecer error.
+
+## Movimiento Y Animación
+
+- En móvil, las animaciones deben ser breves y discretas: opacity y transform únicamente.
+- No usar pinning largo, smooth scroll global ni scrub agresivo en esta fase.
+- El parallax permitido es ligero, decorativo y no debe mover texto crítico.
+- `prefers-reduced-motion: reduce` debe desactivar reveal, parallax y microinteracciones de transform.
+- No depender del movimiento para comunicar estados, precios, CTAs o datos de contacto.
+
+## Validación Visual Fase 1.6
+
+- Reporte manual recibido el 2026-05-27 para rutas públicas, login visual, viewports obligatorios, reduced motion y scroll horizontal.
+- Estado de cierre: parcialmente validado visualmente.
+- Motivo del cierre parcial: el reporte llegó con marcadores sin selección final ni observaciones concretas, por lo que no se interpreta como aprobación visual completa de marca.
+- No se deben cambiar tokens, logo, movimiento ni composición de marca hasta recibir observaciones concretas o aprobación final.
+
 ## Datos Del Cartel Incorporados
 
 - Nombre comercial: Laboratorio Dental Tláhuac.

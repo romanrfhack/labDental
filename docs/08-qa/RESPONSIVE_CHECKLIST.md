@@ -56,6 +56,19 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - `Anticipo 50%` y `Trabajos urgentes +40%` se muestran solo con texto prudente de confirmación pendiente.
 - Revisión visual real sigue pendiente porque no hay navegador/headless disponible en el entorno actual.
 
+## Estado Fase 1.6
+
+- Pulido visual premium del sitio público aplicado en `/`, `/servicios`, `/catalogo`, `/contacto` y SCSS visual de `/login`.
+- Enfoque elegido: CSS moderno + `IntersectionObserver`; no se instaló GSAP ni otra dependencia.
+- `prefers-reduced-motion` queda implementado en CSS y en la directiva pública de animación.
+- El contenido permanece visible si JS falla; la clase de estado animado solo se activa cuando la directiva corre en navegador.
+- Las animaciones usan `opacity` y `transform`; no se animan `width`, `height`, `top` ni `left`.
+- En catálogo, el reveal de productos se limita por sección con lote inicial, para evitar animar listas grandes completas de golpe.
+- Header/footer, CTAs, cards, catálogo y contacto mantienen enfoque mobile-first por grids apilados, `minmax(0, 1fr)` y wrapping.
+- No se encontró navegador/headless local disponible: `chromium`, `google-chrome` y `firefox` no existen en el entorno; Playwright no está instalado en `node_modules`.
+- Revisión visual manual recibida el 2026-05-27 para `/`, `/servicios`, `/catalogo`, `/contacto`, `/login`, 360px, 375px, 390px, 414px, 768px, 1024px, desktop, reduced motion y scroll horizontal.
+- Cierre visual Fase 1.6: parcial, porque el reporte conserva marcadores sin selección final ni observaciones concretas por punto.
+
 ## Estado Fase 2.0
 
 - Validación de flujo login/sesión/redirección ejecutada por código, build, tests y `curl`.
@@ -74,6 +87,30 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - Login real en navegador queda pendiente porque SQL Server local no estuvo accesible y no hay Admin local configurado.
 - Redirección visual de `/app/dashboard` sin sesión y después de logout sigue pendiente de navegador con sesión real.
 - Validación de usuario sin `reports.view` sigue pendiente por falta de base local con usuarios de prueba.
+
+## Estado Fase 2.1c
+
+- Preflight Docker dedicado ejecutado para `ldt-labdental-sql` y validación local actualizada el 2026-05-23.
+- `ldt-labdental-sql` está activo y expone SQL Server en el puerto local `14336`.
+- No se usó `codex-cobranza-sql` ni ningún contenedor de otro proyecto.
+- `dotnet ef migrations list` y `dotnet ef database update` confirmaron que `LaboratorioTlahuac_Dev` está al día con las cuatro migraciones existentes.
+- La API local ejecutó el seed Admin al iniciar y después se apagó `SecuritySeed:RunOnStartup` en user-secrets.
+- `GET /health`, `GET /api/auth/csrf` y `GET /api/auth/me` sin sesión fueron validados por `curl`.
+- Login real en navegador con Admin local fue validado manualmente.
+- Redirección posterior al login a `/app/dashboard` fue validada manualmente.
+- Dashboard no queda validado: cargó una vez, pero al regresar queda en `Cargando dashboard...`.
+- Redirección post-logout de `/app/dashboard` a `/login?returnUrl=%2Fapp%2Fdashboard` fue validada manualmente.
+- `GET /api/auth/me` autenticado y logout como acción independiente quedan sin confirmación explícita.
+- No se modificaron frontend, rutas, guards ni lógica de auth.
+
+## Estado Fase 2.1d
+
+- Diagnóstico de `/app/dashboard` ejecutado por código y endpoints anónimos.
+- `/app/dashboard` consulta `GET /api/dashboard/summary` y requiere `reports.view`.
+- Causa probable: una consulta pendiente a `GET /api/dashboard/summary` no tenia timeout y podia dejar `Cargando dashboard...` indefinidamente.
+- Corrección mínima aplicada: timeout de 15 segundos y error controlado en el dashboard.
+- No se rediseñó dashboard y no se cambiaron rutas privadas, guards, `AuthService`, backend, endpoints, permisos ni dependencias.
+- `/api/auth/me` autenticado, dashboard autenticado y logout autenticado quedan pendientes de navegador manual o variables Admin disponibles en el proceso.
 
 ## Verificado Por Código / Build
 
@@ -111,41 +148,66 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 2.1 ejecuta `npm run build`, `dotnet build` y `dotnet test` correctamente.
 - [x] Fase 2.1 confirma API local saludable y Angular local sirviendo `/login`.
 - [x] Fase 2.1 confirma `GET /api/auth/me` sin sesión con `401`.
+- [x] Fase 2.1c confirma que el preflight Docker no usó contenedores de otros proyectos y se detuvo sin secretos al faltar `LDT_SQL_SA_PASSWORD`.
+- [x] Fase 2.1c ejecuta `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas de rutas/secretos correctamente.
+- [x] Fase 2.1c 2026-05-23 confirma `ldt-labdental-sql` activo en `14336`, migraciones al día, seed de arranque ejecutado, `/health` 200, CSRF 204 y `/api/auth/me` sin sesión 401.
+- [x] Fase 2.1c 2026-05-23 valida manualmente `/login`, login con Admin local, redirección a `/app/dashboard` y redirección post-logout a `/login?returnUrl=%2Fapp%2Fdashboard`.
+- [ ] Fase 2.1c 2026-05-23 deja pendiente el dashboard porque puede quedarse en `Cargando dashboard...` al regresar a la página.
+- [ ] Fase 2.1c 2026-05-23 deja pendiente confirmar explícitamente `GET /api/auth/me` autenticado y logout como acción independiente.
+- [x] Fase 2.1d identifica que la única llamada del dashboard es `GET /api/dashboard/summary` y agrega timeout para evitar carga indefinida.
+- [x] Fase 2.1d mantiene `/login` público, `/app` y `/app/dashboard` privados, y no introduce `/dashboard` como ruta privada real.
+- [ ] Fase 2.1d deja pendiente validación visual autenticada post-fix por falta de credenciales en el proceso y navegador/headless local.
+- [x] Fase 1.6 implementa `prefers-reduced-motion` para reveal, parallax y microinteracciones relevantes.
+- [x] Fase 1.6 mantiene el sitio usable si falla JS de animación.
+- [x] Fase 1.6 mantiene `/catalogo` legible por código: grids responsive, frames uniformes, precios visibles y cards con `min-width: 0`.
+- [x] Fase 1.6 ejecuta `npm run build`, `dotnet build` y `dotnet test` correctamente.
+- [x] Fase 1.6 ejecuta `git diff --check` y búsquedas de rutas, reduced motion y GSAP.
+- [x] Cierre documental Fase 1.6 2026-05-27 ejecuta nuevamente `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctamente.
+- [x] Cierre documental Fase 1.6 2026-05-27 confirma que `/login` sigue público, `/app` y `/app/dashboard` siguen privados y `/dashboard` no es ruta privada real.
+- [x] Cierre documental Fase 1.6 2026-05-27 confirma que no se detectaron valores reales de secretos en documentos tocados.
+- [ ] Fase 1.6 deja pendiente cierre visual completo porque el reporte manual recibido no incluye selección final ni observaciones concretas por punto.
 
 ## Hallazgos Manuales Recibidos
 
 | Ruta | Hallazgo | Estado |
 | --- | --- | --- |
 | `/app/dashboard` | Sin sesión, al escribir la URL directa no redirigió a `/login` y quedó sin contenido visible. | Corregido por código; confirmación visual manual pendiente. |
+| `/app/dashboard` | Después de login con Admin local redirige correctamente, pero al regresar a la página puede quedar en `Cargando dashboard...`. | Abierto; documentado, sin cambio de código en esta fase. |
+| `/app/dashboard` | Si `GET /api/dashboard/summary` queda pendiente, el componente no tenia timeout. | Corregido con timeout y error controlado; confirmación visual manual pendiente. |
+| Sitio público Fase 1.6 | Reporte manual recibido para rutas públicas, `/login`, viewports obligatorios, reduced motion y scroll horizontal, pero sin selección final ni observaciones concretas. | Parcialmente validado visualmente. |
 
 ## Verificado Visualmente
 
-- [ ] Confirmar en navegador real que `/app/dashboard` sin sesión redirige a `/login?returnUrl=/app/dashboard`.
-- [ ] Confirmar en navegador real login correcto desde `/login` hacia `/app/dashboard` con API/base local y Admin configurado.
-- [ ] Confirmar en navegador real que después de logout `/app/dashboard` vuelve a redirigir a `/login?returnUrl=%2Fapp%2Fdashboard`.
-- [ ] Resto de revisión visual por breakpoint pendiente. El entorno actual no tiene navegador/headless disponible sin instalar dependencias.
+- [x] Confirmar en navegador real que después de logout `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
+- [x] Confirmar en navegador real login correcto desde `/login` hacia `/app/dashboard` con API/base local y Admin configurado.
+- [ ] Confirmar que `/app/dashboard` deja de quedarse en `Cargando dashboard...` al regresar a la página.
+- [ ] Confirmar explícitamente `GET /api/auth/me` autenticado desde navegador/devtools o `curl` con sesión.
+- [x] Registrar revisión visual manual Fase 1.6 recibida para rutas públicas, `/login` y viewports obligatorios.
+- [ ] Cerrar Fase 1.6 como validación visual completa; pendiente sustituir marcadores por resultados explícitos y observaciones concretas.
 - [ ] Revisar visualmente `/catalogo` antes de aprobación del cliente.
 - [ ] Revisar visualmente logo, header y navegación de Fase 1.5 en 360px antes de aprobación del cliente.
 
-## Pendiente De Revisión Manual
+## Pendiente De Cierre Visual Completo
 
-- Abrir `http://127.0.0.1:4200/` en la computadora local.
-- Revisar `/`, `/catalogo`, `/servicios`, `/contacto` y `/login` en navegador real.
+- Sustituir los marcadores `[correcto / observaciones]`, `[correcto / no probado / observaciones]` y `[no hay / observaciones]` por resultados explícitos si se requiere aprobación visual completa.
+- Registrar observaciones específicas por ruta, viewport, reduced motion y scroll horizontal cuando existan.
 - Para celular en la misma red local, levantar temporalmente Angular con `npm start -- --host 0.0.0.0 --port 4200`. No es despliegue productivo.
 
 ## Viewports Obligatorios
 
-| Viewport | Estado Fase 1.1 | Hallazgo |
+| Viewport | Estado Fase 1.6 | Hallazgo |
 | --- | --- | --- |
-| 360px | Revisado por código/SCSS; visual pendiente | Header usa logo proporcional, layout apilado y nav en 2 columnas. |
-| 375px | Revisado por código/SCSS; visual pendiente | CTAs usan ancho completo y mínimo táctil. |
-| 390px | Revisado por código/SCSS; visual pendiente | Cards y listas apilan en una columna. |
-| 414px | Revisado por código/SCSS; visual pendiente | Header conserva layout móvil hasta 420px. |
-| 768px | Revisado por código/SCSS; visual pendiente | Footer ajustado para columnas flexibles. |
-| 1024px | Revisado por código/SCSS; visual pendiente | Grids de 3 columnas con `minmax(0, 1fr)`. |
-| Desktop amplio | Revisado por código/SCSS; visual pendiente | Padding horizontal queda limitado por cálculo responsive. |
+| 360px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
+| 375px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
+| 390px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
+| 414px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
+| 768px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
+| 1024px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
+| Desktop amplio | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
 
-Breakpoints pendientes de revisar visualmente antes de presentar al cliente: 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+Breakpoints revisados manualmente según reporte recibido; cierre completo pendiente de resultados explícitos por breakpoint.
+
+Estado Fase 1.6 por código: se revisaron reglas responsive, `overflow-x: clip`, grids móviles, nav horizontal controlado del catálogo, CTAs táctiles y reduced motion por CSS/JS.
 
 ## Navegación
 

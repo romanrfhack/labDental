@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { finalize } from 'rxjs';
+import { finalize, TimeoutError, timeout } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { DashboardDueSoonWorkOrdersComponent } from './components/dashboard-due-soon-work-orders.component';
@@ -198,6 +198,8 @@ import { DashboardService } from './dashboard.service';
   ]
 })
 export class DashboardPageComponent implements OnInit {
+  private static readonly SummaryTimeoutMs = 15000;
+
   summary: DashboardSummary | null = null;
   isLoading = false;
   errorMessage = '';
@@ -221,18 +223,29 @@ export class DashboardPageComponent implements OnInit {
 
     this.dashboardService
       .getSummary()
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(
+        timeout(DashboardPageComponent.SummaryTimeoutMs),
+        finalize(() => (this.isLoading = false))
+      )
       .subscribe({
         next: (summary) => {
           this.summary = summary;
         },
-        error: (error: HttpErrorResponse) => {
+        error: (error: unknown) => {
           this.errorMessage = this.toErrorMessage(error);
         }
       });
   }
 
-  private toErrorMessage(error: HttpErrorResponse): string {
+  private toErrorMessage(error: unknown): string {
+    if (error instanceof TimeoutError) {
+      return 'La consulta del dashboard tardo demasiado. Reintenta en unos segundos.';
+    }
+
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'No fue posible cargar el dashboard.';
+    }
+
     if (error.status === 403) {
       return 'No tienes permiso para consultar el dashboard.';
     }

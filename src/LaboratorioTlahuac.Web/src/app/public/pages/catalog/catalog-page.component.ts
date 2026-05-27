@@ -1,14 +1,16 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-animations.directive';
 import { CatalogProduct, CatalogSection, catalogSections } from '../../data/catalog-data';
 
 @Component({
   selector: 'app-catalog-page',
-  imports: [RouterLink],
+  imports: [RouterLink, PublicScrollAnimationsDirective],
   template: `
+    <div class="catalog-page public-animation-scope" appPublicScrollAnimations>
     <section class="catalog-hero">
-      <div>
+      <div data-animate="fade-up">
         <p class="eyebrow">Catálogo público</p>
         <h1>Productos y precios</h1>
         <p>
@@ -17,7 +19,7 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
           referencia 2026 sujetos a confirmación.
         </p>
       </div>
-      <a class="login-action" routerLink="/contacto">Contactar</a>
+      <a class="login-action" routerLink="/contacto" data-animate="fade-in">Contactar</a>
     </section>
 
     <nav class="category-nav" aria-label="Secciones del catálogo">
@@ -27,22 +29,22 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
     </nav>
 
     <section class="catalog-summary" aria-label="Resumen del catálogo">
-      <div>
+      <div data-animate="stagger-card">
         <strong>{{ sections.length }}</strong>
         <span>secciones</span>
       </div>
-      <div>
+      <div data-animate="stagger-card">
         <strong>{{ totalProducts }}</strong>
         <span>productos</span>
       </div>
-      <div>
+      <div data-animate="stagger-card">
         <strong>MXN</strong>
         <span>precios de referencia</span>
       </div>
     </section>
 
     <section class="catalog-contact" aria-label="Contacto y condiciones del catálogo">
-      <div>
+      <div data-animate="fade-up">
         <p class="eyebrow">Contacto</p>
         <h2>Laboratorio Dental Tláhuac</h2>
         <p>Prótesis, restauraciones y soluciones dentales.</p>
@@ -53,7 +55,7 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
           <a href="mailto:contacto@laboratoriodentaltlahuac.com">contacto@laboratoriodentaltlahuac.com</a>
         </div>
       </div>
-      <div class="commercial-note">
+      <div class="commercial-note" data-animate="fade-up">
         <strong>Condiciones visibles en cartel</strong>
         <span>Anticipo 50% y trabajos urgentes +40% requieren confirmación final del cliente antes de publicarse como condiciones definitivas.</span>
       </div>
@@ -62,14 +64,14 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
     <section class="catalog-content">
       @for (section of sections; track section.id) {
         <article class="catalog-section" [id]="section.id">
-          <div class="section-heading">
+          <div class="section-heading" data-animate="fade-up">
             <p class="eyebrow">Sección</p>
             <h2>{{ section.name }}</h2>
           </div>
 
           <div class="product-grid">
-            @for (product of section.products; track product.id) {
-              <article class="product-card">
+            @for (product of section.products; track product.id; let productIndex = $index) {
+              <article class="product-card" [attr.data-animate]="productIndex < 6 ? 'stagger-card' : null">
                 <div class="image-frame">
                   @if (shouldShowImage(section, product)) {
                     <img
@@ -97,6 +99,7 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
         </article>
       }
     </section>
+    </div>
   `,
   styleUrl: './catalog-page.component.scss'
 })
