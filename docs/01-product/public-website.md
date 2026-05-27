@@ -210,7 +210,7 @@ Alcance técnico:
 
 ## Estado Fase 1.6
 
-Pulido visual premium del sitio público implementado y parcialmente validado visualmente.
+Pulido visual premium del sitio público implementado y validado visualmente por el responsable del proyecto.
 
 Enfoque técnico:
 
@@ -237,15 +237,32 @@ Accesibilidad y movimiento:
 
 Validación visual manual 2026-05-27:
 
-- El humano reportó revisión visual de `/`, `/servicios`, `/catalogo`, `/contacto` y `/login`.
-- El humano reportó revisión en 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
-- El humano reportó revisión de reduced motion y scroll horizontal.
-- Cierre: parcial, porque el reporte recibido conserva marcadores sin selección final ni observaciones concretas por punto.
+- `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron revisados visualmente y aprobados.
+- Breakpoints revisados y aprobados: 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+- No se detectó scroll horizontal.
+- El header no se rompe en móvil, el logo se ve proporcionado y los botones son cómodos en celular.
+- El catálogo sigue legible, las imágenes se ven uniformes, los precios se leen correctamente y los placeholders se ven intencionales.
+- `/contacto` separa datos confirmados y pendientes correctamente.
+- El diseño se considera más atractivo visualmente y las animaciones se sienten sutiles y profesionales.
+- El sitio sigue siendo mobile-first y no se detectaron problemas visuales bloqueantes.
+- Reduced motion queda validado por implementación/código; no se reportaron hallazgos manuales bloqueantes.
 
-Pendientes visuales:
+Cierre:
 
-- Sustituir los marcadores del reporte manual por resultados explícitos si se requiere cierre visual completo.
-- Validar en dispositivo móvil del cliente que el header, CTAs, catálogo y precios se sienten cómodos, si la revisión manual actual no se considera aprobación final.
+- Fase 1.6 queda cerrada como validada visualmente.
+- El enfoque CSS + `IntersectionObserver` queda aceptado para esta etapa.
+- No se usó GSAP ni se instalaron dependencias nuevas.
+- El sitio queda listo para revisión y retroalimentación del cliente.
+
+Pendientes de cliente:
+
+- Dirección.
+- Horarios.
+- WhatsApp como canal real.
+- Aprobación final de precios 2026.
+- Aprobación de `Anticipo 50%`.
+- Aprobación de `Trabajos urgentes +40%`.
+- Imágenes faltantes de `Servicios prostodónticos`.
 - Lighthouse o revisión equivalente queda para una fase posterior.
 
 ## Audiencia
@@ -287,7 +304,7 @@ Rutas futuras opcionales:
 - `/login` no debe mezclarse visualmente con rutas privadas.
 - El rediseño visual del sitio público no debe cambiar auth, cookies, guards, permisos ni CSRF/XSRF.
 - Validación Fase 2.0: `/login` sigue público y los cambios visuales de Fase 1.5 no alteraron `AuthService.login()`, manejo de errores, sanitización de `returnUrl` ni navegación posterior al login.
-- El flujo esperado desde sitio público es `/` -> `/login` -> login correcto -> `/app/dashboard` o `returnUrl` interno seguro. La ejecución real con credenciales queda pendiente hasta tener API/base local y Admin configurado.
+- El flujo validado manualmente para Fase 2.1d es `/` o ruta pública -> `/login` -> login correcto con Admin local -> `/app/dashboard`; QA manual más amplio del sistema privado queda para Fase 2.2.
 
 ## Contenido Pendiente Del Cliente
 

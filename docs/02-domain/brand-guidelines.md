@@ -52,10 +52,12 @@ Fuente para identidad visual del sitio público de Laboratorio Dental Tláhuac.
 
 ## Validación Visual Fase 1.6
 
-- Reporte manual recibido el 2026-05-27 para rutas públicas, login visual, viewports obligatorios, reduced motion y scroll horizontal.
-- Estado de cierre: parcialmente validado visualmente.
-- Motivo del cierre parcial: el reporte llegó con marcadores sin selección final ni observaciones concretas, por lo que no se interpreta como aprobación visual completa de marca.
-- No se deben cambiar tokens, logo, movimiento ni composición de marca hasta recibir observaciones concretas o aprobación final.
+- Validación manual confirmada el 2026-05-27 para rutas públicas, login visual, viewports obligatorios y ausencia de scroll horizontal.
+- Estado de cierre: identidad visual aplicada y aceptada visualmente para esta etapa.
+- Las animaciones se consideran sutiles y profesionales; el enfoque CSS + `IntersectionObserver` queda vigente.
+- Reduced motion queda validado por implementación/código; no se reportaron hallazgos manuales bloqueantes.
+- Los tokens LDT, criterios de logo y criterios de movimiento se mantienen como guía vigente.
+- No se deben cambiar tokens, logo, movimiento ni composición de marca salvo observaciones concretas del cliente o una fase aprobada.
 
 ## Datos Del Cartel Incorporados
 

@@ -4,11 +4,19 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público/sistema: Fase 1.6 del sitio público aplicada con pulido visual premium sin dependencias nuevas y Fase 2.1d del sistema privado aplicada con corrección mínima para evitar que `/app/dashboard` quede indefinidamente en `Cargando dashboard...` si `GET /api/dashboard/summary` no termina. La revisión manual visual de Fase 1.6 fue recibida el 2026-05-27, pero el reporte conserva marcadores sin selección final ni observaciones concretas por ruta/breakpoint; por eso queda cerrada como parcialmente validada visualmente, no como aprobación final completa. Queda pendiente confirmar el dashboard autenticado en navegador con sesión real.
+Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto y Fase 2.1d del sistema privado cerrada como validada manualmente para el dashboard autenticado. La siguiente fase recomendada es Fase 2.2 - QA manual del sistema privado con Admin.
+
+## Estado Por Frente
+
+- Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto.
+- Catálogo: legible y aprobado visualmente; mantiene precios de referencia 2026, frames uniformes de imágenes, placeholders intencionales y condiciones comerciales con texto prudente.
+- Login/auth: `/login` sigue público; login con Admin local validado manualmente; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en este cierre documental.
+- Dashboard privado: `/app` y `/app/dashboard` siguen privados; `/app/dashboard` ya no queda indefinidamente en `Cargando dashboard...` y queda cerrado manualmente para Fase 2.1d.
+- Pendientes del cliente: dirección, horarios, WhatsApp real, aprobación final de precios 2026, aprobación de `Anticipo 50%`, aprobación de `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 
 ## Sistema Privado / MVP Administrativo
 
-Estado: avanzado, con QA funcional y demo documentadas.
+Estado: avanzado, con QA funcional y demo documentadas; Fase 2.1d queda cerrada manualmente.
 
 - Ruta privada base: `/app`.
 - Dashboard real: `/app/dashboard`.
@@ -38,21 +46,24 @@ Estado: avanzado, con QA funcional y demo documentadas.
 - Validación HTTP 2026-05-23: `/health` respondió `200`, `GET /api/auth/csrf` respondió `204` y `GET /api/auth/me` sin sesión respondió `401`.
 - Login real, `/api/auth/me` autenticado, logout y `/api/auth/me` después de logout siguen pendientes porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex; no se extrajeron ni imprimieron secretos.
 - Validación manual 2026-05-23: `/login` carga correctamente, el login con Admin local creado por seed funciona, la navegación redirige a `/app/dashboard` y la ruta privada post-logout redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
-- Hallazgo manual 2026-05-23: el dashboard cargó una vez, pero al regresar a la página queda en `Cargando dashboard...`; el dashboard no queda cerrado como validado.
+- Hallazgo manual 2026-05-23: el dashboard cargó una vez, pero al regresar a la página queda en `Cargando dashboard...`; este pendiente queda cerrado posteriormente con la validación manual de Fase 2.1d.
 - `/api/auth/me` autenticado no queda confirmado porque el resultado manual no fue marcado como `sí`; logout independiente tampoco fue marcado, aunque la redirección posterior a logout sí fue reportada como correcta.
 - Confirmación de rutas 2026-05-23: `/login` sigue siendo público; `/app` y `/app/dashboard` siguen siendo privados; `/dashboard` no es ruta privada real.
 - Diagnóstico Fase 2.1d: `/app/dashboard` solo consulta `GET /api/dashboard/summary`; los errores HTTP sí apagaban `isLoading` con `finalize`, pero una petición que queda pendiente no tenía timeout y podía dejar visible `Cargando dashboard...` indefinidamente.
 - Corrección Fase 2.1d: `dashboard-page.component.ts` agrega timeout de 15 segundos a la consulta de resumen y muestra error controlado si la API no responde a tiempo.
 - Fase 2.1d no modificó `AuthService`, guards, rutas, cookies, XSRF, backend, endpoints, permisos, migraciones, deploy ni dependencias.
 - Validación Fase 2.1d sin sesión: `/health` respondió `200`, `GET /api/auth/csrf` respondió `204`, `GET /api/auth/me` respondió `401` y `GET /api/dashboard/summary` respondió `401`.
-- `/api/auth/me` autenticado, `GET /api/dashboard/summary` autenticado y logout autenticado por curl quedan pendientes porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex.
-- No hubo navegador/headless disponible sin instalar dependencias; la confirmación visual post-fix queda pendiente de navegador manual con DevTools.
+- Validación manual Fase 2.1d 2026-05-27: `/login` carga correctamente, login con Admin local validado, redirección posterior a `/app/dashboard` validada y `/app/dashboard` ya no queda indefinidamente en `Cargando dashboard...`.
+- Flujo autenticado validado manualmente; `GET /api/auth/me` autenticado no fue inspeccionado de forma independiente.
+- `GET /api/dashboard/summary` autenticado queda validado indirectamente por la carga correcta del dashboard; el endpoint no fue inspeccionado de forma independiente.
+- Redirección posterior a logout o sesión cerrada validada: `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`; logout como acción independiente no queda documentado como inspeccionado por separado.
+- Cierre Fase 2.1d: validado manualmente por el responsable del proyecto sin modificar `AuthService`, guards, rutas, cookies, XSRF, backend, endpoints, base de datos, migraciones, deploy ni dependencias.
 
 La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
 
 ## Sitio Público Institucional
 
-Estado: Fase 1 implementada como primera versión pública revisable; Fase 1.6 incorporó pulido visual premium con animaciones sutiles, sin cambiar rutas públicas/privadas, y queda parcialmente validada visualmente por reporte manual recibido sin detalle final.
+Estado: Fase 1 implementada como primera versión pública revisable; Fase 1.6 incorporó pulido visual premium con animaciones sutiles, sin cambiar rutas públicas/privadas, y queda cerrada como validada visualmente por el responsable del proyecto.
 
 - Rutas públicas existentes: `/`, `/catalogo`, `/servicios`, `/contacto`.
 - Entrada al sistema: `/login`.
@@ -81,7 +92,7 @@ Estado: Fase 1 implementada como primera versión pública revisable; Fase 1.6 i
 - Fase 1.1 ajustó wrapping, espaciado, footer responsive y contenedores públicos para reducir riesgo de overflow.
 - Hallazgo manual corregido: al abrir `/app/dashboard` sin sesión, el frontend debe redirigir a `/login?returnUrl=/app/dashboard` en vez de quedar en blanco si falla la verificación de sesión.
 - Revisión de seguridad/routing completada: `returnUrl` se restringe a rutas internas seguras bajo `/app` y usa fallback `/app/dashboard` si recibe valores externos o inválidos.
-- No se contó con navegador/headless local para capturas; la revisión visual real en dispositivo o navegador queda pendiente.
+- No se contó con navegador/headless local para capturas automatizadas; la revisión visual manual ya fue realizada por el responsable del proyecto.
 - Login/guards: sin cambios en Fase 1.3.
 - No se modificaron backend, `AuthService`, cookies, XSRF, endpoints, base de datos, deploy, dependencias ni rutas privadas en Fase 1.3.
 - Documento funcional canónico: `docs/01-product/public-website.md`.
@@ -92,8 +103,11 @@ Estado: Fase 1 implementada como primera versión pública revisable; Fase 1.6 i
 - `/catalogo` mantiene precios legibles, frames uniformes de imágenes, nota `Precios de referencia 2026 sujetos a confirmación.` y condiciones prudentes.
 - `/contacto` diferencia datos confirmados contra pendientes sin inventar dirección, horarios ni WhatsApp.
 - `/login` solo recibió pulido visual en SCSS; no se modificó lógica de login, `AuthService`, guards, cookies, XSRF ni `returnUrl`.
-- Revisión visual manual Fase 1.6 recibida el 2026-05-27 para `/`, `/servicios`, `/catalogo`, `/contacto`, `/login`, 360px, 375px, 390px, 414px, 768px, 1024px, desktop, reduced motion y scroll horizontal.
-- Cierre visual Fase 1.6: parcial. El reporte recibido conserva marcadores `[correcto / observaciones]`, `[correcto / no probado / observaciones]` y `[no hay / observaciones]`; no se registraron observaciones concretas ni selección explícita por punto.
+- Validación visual manual Fase 1.6 2026-05-27: `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron revisados y aprobados.
+- Breakpoints revisados y aprobados manualmente: 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+- Resultado visual Fase 1.6: diseño más atractivo, animaciones sutiles y profesionales, sin scroll horizontal, header móvil estable, logo proporcionado, botones cómodos en celular, catálogo legible, imágenes uniformes, precios correctos, placeholders intencionales y `/contacto` separando datos confirmados contra pendientes.
+- Reduced motion queda validado por implementación/código; no se reportaron hallazgos manuales bloqueantes.
+- Cierre visual Fase 1.6: cerrada y aprobada visualmente por el responsable del proyecto; lista para revisión/retroalimentación del cliente, manteniendo pendientes de contenido real.
 
 La Fase 0/Fase 1 del sitio público corresponde a este frente nuevo. No contradice el avance del MVP administrativo.
 
@@ -110,7 +124,7 @@ Estado: pendiente de definición productiva.
 ## QA
 
 - QA funcional del MVP administrativo: ejecutada y documentada.
-- QA responsive del sitio público: revisión por código/build ejecutada; revisión visual manual Fase 1.6 recibida y documentada como parcial por falta de resultados concretos por viewport.
+- QA responsive del sitio público: revisión por código/build ejecutada; Fase 1.6 cerrada como validada visualmente por el responsable del proyecto.
 - No existe runner frontend no interactivo; frontend se valida hoy con `npm run build` y revisión manual cuando aplique.
 - Validación Fase 1: `npm run build` ejecutado correctamente en `src/LaboratorioTlahuac.Web`.
 - Validación Fase 1.1: `npm run build`, `git diff --check`, rutas por `curl` y búsquedas de `/login`, `/app/dashboard` y `/dashboard` ejecutadas.
@@ -128,10 +142,10 @@ Estado: pendiente de definición productiva.
 - Validación Fase 2.1c bloqueada: no se creó SQL Server dedicado porque `LDT_SQL_SA_PASSWORD` no está definida; no se configuró user-secrets de conexión, no se ejecutó `dotnet ef database update`, no se levantó API para seed y no se validó login real.
 - Validación Fase 2.1c documental: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas solicitadas ejecutadas correctamente; no se detectaron valores reales de contraseña en archivos versionados, solo nombres de variables o placeholders.
 - Validación Fase 2.1c 2026-05-23: `docker ps --filter "name=ldt-labdental-sql"`, `docker port ldt-labdental-sql`, `dotnet ef migrations list`, `dotnet ef database update`, API local, `/health`, `/api/auth/csrf`, `/api/auth/me` sin sesión, apagado de seed, `npm run build`, `dotnet build` y `dotnet test` ejecutados correctamente.
-- Validación Fase 2.1c 2026-05-23 pendiente: login real autenticado, `/api/auth/me` autenticado, logout y `/api/auth/me` posterior a logout por ausencia de `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` en el proceso.
+- Validación Fase 2.1c 2026-05-23 pendiente en ejecución por Codex: login real autenticado, `/api/auth/me` autenticado, logout y `/api/auth/me` posterior a logout por ausencia de `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` en el proceso; login real y dashboard autenticado se cerraron posteriormente por validación manual de Fase 2.1d.
 - Validación manual Fase 2.1c 2026-05-23: login real con Admin local confirmado por navegador, redirección a `/app/dashboard` confirmada y redirección post-logout a `/login?returnUrl=%2Fapp%2Fdashboard` confirmada.
-- Validación manual Fase 2.1c 2026-05-23 con hallazgo: `/app/dashboard` no queda validado funcionalmente porque al regresar a la página permanece en `Cargando dashboard...`.
-- Validación manual Fase 2.1c 2026-05-23 pendiente: confirmar explícitamente `GET /api/auth/me` autenticado y logout como acción independiente.
+- Validación manual Fase 2.1c 2026-05-23 con hallazgo: `/app/dashboard` no queda validado funcionalmente porque al regresar a la página permanece en `Cargando dashboard...`; este hallazgo se cerró posteriormente en Fase 2.1d.
+- Validación manual Fase 2.1c 2026-05-23 pendiente como evidencia independiente: confirmar explícitamente `GET /api/auth/me` autenticado y logout como acción independiente.
 - Validación técnica post-documentación 2026-05-23: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` ejecutados correctamente.
 - Validación Fase 2.1d 2026-05-23: diagnóstico por código de rutas, guards, `AuthService`, login, dashboard, servicio dashboard y endpoint backend; permiso confirmado como `reports.view` y Admin seed confirmado con `Permissions.All`.
 - Validación Fase 2.1d 2026-05-23: `npm run build`, `dotnet test` y `dotnet build` pasaron; un primer `dotnet build` falló por ejecutarse en paralelo con `dotnet test` y bloquear temporalmente `MvcTestingAppManifest.json`, luego pasó en serial.
@@ -141,8 +155,10 @@ Estado: pendiente de definición productiva.
 - Validación Fase 1.6 2026-05-27: `dotnet build` correcto con 0 warnings y 0 errores.
 - Validación Fase 1.6 2026-05-27: `dotnet test` correcto; Domain 1/1, Application 1/1 y API 90/90.
 - Validación Fase 1.6 2026-05-27: `git diff --check` correcto y búsquedas solicitadas de rutas, `prefers-reduced-motion` y `gsap` ejecutadas.
-- Validación visual Fase 1.6 2026-05-27: reporte manual recibido; cierre parcial porque los puntos llegaron con marcadores sin selección final ni observaciones concretas.
+- Validación visual Fase 1.6 2026-05-27: cierre manual confirmado por el responsable del proyecto para rutas públicas, `/login`, breakpoints obligatorios, ausencia de scroll horizontal y comportamiento mobile-first.
 - Cierre documental Fase 1.6 2026-05-27: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` se ejecutaron nuevamente correctamente.
+- Cierre documental Fase 1.6 y Fase 2.1d 2026-05-27: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias ejecutadas correctamente.
+- Confirmación Fase 2.1d 2026-05-27: dashboard autenticado cerrado manualmente; `GET /api/auth/me` autenticado queda sin inspección independiente y `GET /api/dashboard/summary` autenticado queda validado indirectamente por carga del dashboard.
 - Confirmación de rutas 2026-05-27: `/login` sigue público; `/app` y `/app/dashboard` siguen privados por routing/guards; `/dashboard` no es ruta privada real.
 - Confirmación de secretos 2026-05-27: la búsqueda en documentos tocados solo encontró nombres de variables, placeholders, textos redactados o menciones de `user-secrets`; no se detectaron valores reales de contraseña, tokens, API keys ni llaves privadas.
 - Zona horaria formal de negocio sigue pendiente para métricas de "hoy", vencidas y próximos 7 días.
@@ -155,8 +171,10 @@ Estado: pendiente de definición productiva.
 
 ## Próxima Tarea Recomendada
 
-Completar cierre manual de Fase 2.1d: con sesión Admin real en navegador, abrir DevTools Network, confirmar `GET /api/auth/me` con `200`, confirmar `GET /api/dashboard/summary` con `200` o registrar status/error exacto, verificar que el dashboard muestra datos, estado vacío o error controlado y confirmar logout como acción independiente. `SecuritySeed:RunOnStartup` quedó apagado en user-secrets.
+Fase 2.2 - QA manual del sistema privado con Admin.
 
-En paralelo, convertir el cierre parcial visual de Fase 1.6 en cierre completo cuando se sustituyan los marcadores del reporte manual por resultados explícitos y observaciones concretas; confirmar vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
+Alcance sugerido: recorrer clientes, órdenes, pagos, saldos, dashboard, permisos visibles, cierre de sesión y redirecciones privadas con sesión Admin real. Si se requiere evidencia de red, inspeccionar de forma independiente `GET /api/auth/me`, `GET /api/dashboard/summary` y logout.
+
+Mantener pendientes de cliente para el sitio público: confirmar vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
 
 Backlog futuro separado: evaluar la fase de administración de catálogo, precios e imágenes en la app privada solo después de definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes, reglas de publicación y aprobación del cliente para precios públicos.

@@ -70,7 +70,7 @@ Al diseñarla se deberá definir modelo de datos, endpoints, almacenamiento de i
 
 ## Validación De Acceso Fase 2.0
 
-Estado: validado por código, build, tests y shell Angular; login real queda pendiente por falta de API/base/credenciales Admin locales.
+Estado: validado por código, build, tests y shell Angular; login real quedó pendiente en esa fase y fue cerrado posteriormente por validación manual con Admin local.
 
 - `/login` sigue siendo la entrada pública al sistema privado.
 - `/app` sigue protegido por `authGuard`.
@@ -79,11 +79,11 @@ Estado: validado por código, build, tests y shell Angular; login real queda pen
 - Usuario autenticado sin `reports.view` debe ir a `/app/access-denied`, no a `/login`.
 - `/dashboard` no es ruta privada real.
 - `returnUrl` posterior al login solo acepta rutas internas seguras bajo `/app`; destinos externos o inválidos usan fallback `/app/dashboard`.
-- Para validar login real, el humano debe configurar API/base local y Admin seguro, iniciar sesión desde `/login`, confirmar redirección a `/app/dashboard`, validar `GET /api/auth/me`, ejecutar logout y confirmar que `/app/dashboard` vuelve a pedir login.
+- La validación manual posterior confirmó inicio de sesión con Admin local y acceso a `/app/dashboard`; `GET /api/auth/me` autenticado y logout independiente quedan como evidencia opcional para Fase 2.2.
 
 ## Validación De Acceso Fase 2.1
 
-Estado: preflight local ejecutado; login real sigue pendiente por falta de SQL Server local accesible y Admin local configurado.
+Estado: preflight local ejecutado; login real quedó pendiente en esa fase por falta de SQL Server local accesible y Admin local configurado.
 
 - La API local levantó en `http://localhost:5277` y `/health` respondió saludable.
 - Angular levantó en `http://localhost:4200/` y `/login` respondió con shell Angular.
@@ -91,12 +91,12 @@ Estado: preflight local ejecutado; login real sigue pendiente por falta de SQL S
 - SQL Server no estuvo accesible en `localhost`; las migraciones no se aplicaron.
 - No existen credenciales Admin locales en variables de entorno ni user-secrets en este entorno.
 - `GET /api/auth/csrf` respondió `204`; `GET /api/auth/me` sin sesión respondió `401`.
-- Login real, `/api/auth/me` autenticado, logout y redirección tras logout quedan pendientes hasta configurar base y Admin locales.
+- Login real, `/api/auth/me` autenticado, logout y redirección tras logout quedaron pendientes en esa fase; login real y dashboard autenticado se cerraron posteriormente por validación manual.
 - Admin recibirá `reports.view` cuando el seed pueda ejecutarse, porque el seed asigna todos los permisos a Admin y `/app/dashboard` requiere `reports.view`.
 
 ## Validación De Acceso Fase 2.1c
 
-Estado: SQL Server Docker dedicado activo; migraciones, seed de arranque, endpoints anónimos y login real manual validados. La fase queda parcialmente cerrada porque `/app/dashboard` presenta un hallazgo de carga persistente al regresar a la página y falta confirmar `/api/auth/me` autenticado.
+Estado: SQL Server Docker dedicado activo; migraciones, seed de arranque, endpoints anónimos y login real manual validados. La fase quedó parcialmente cerrada por el hallazgo de carga persistente en `/app/dashboard`; ese pendiente se cierra posteriormente en Fase 2.1d.
 
 - Contenedor dedicado usado: `ldt-labdental-sql`.
 - Volumen esperado: `ldt-labdental-sql-data`.
@@ -112,7 +112,7 @@ Estado: SQL Server Docker dedicado activo; migraciones, seed de arranque, endpoi
 - `GET /health` respondió `200`, `GET /api/auth/csrf` respondió `204` y `GET /api/auth/me` sin sesión respondió `401`.
 - `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están definidas en el proceso de Codex; no se inventaron ni extrajeron credenciales desde user-secrets.
 - Validación manual posterior: `/login` carga correctamente, el login con Admin local creado por seed funciona y la navegación redirige a `/app/dashboard`.
-- Dashboard: no queda validado; cargó una vez, pero al regresar a la página queda en `Cargando dashboard...`.
+- Dashboard: no queda validado en Fase 2.1c; cargó una vez, pero al regresar a la página queda en `Cargando dashboard...`. Este pendiente se cierra posteriormente en Fase 2.1d.
 - `/api/auth/me` autenticado: no confirmado porque el resultado manual no fue marcado como `sí`.
 - Logout: no confirmado como acción independiente porque el resultado manual no fue marcado; la redirección posterior sí fue reportada como correcta.
 - Después de logout, `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
@@ -120,7 +120,7 @@ Estado: SQL Server Docker dedicado activo; migraciones, seed de arranque, endpoi
 
 ## Validación De Acceso Fase 2.1d
 
-Estado: corrección mínima aplicada al dashboard privado para que una consulta pendiente no deje la pantalla indefinidamente en `Cargando dashboard...`.
+Estado: corrección mínima aplicada y cerrada manualmente; el dashboard privado ya no queda indefinidamente en `Cargando dashboard...`.
 
 - Endpoint usado por `/app/dashboard`: `GET /api/dashboard/summary`.
 - Permiso de ruta y endpoint: `reports.view`.
@@ -129,8 +129,12 @@ Estado: corrección mínima aplicada al dashboard privado para que una consulta 
 - Causa probable identificada: si `GET /api/dashboard/summary` queda pendiente, el componente no tenia timeout y `isLoading` permanecia activo.
 - Corrección aplicada: timeout de 15 segundos en la consulta del dashboard y mensaje de error controlado cuando la API tarda demasiado.
 - No se modificaron rutas privadas, `AuthService`, guards, backend, permisos, migraciones, deploy ni dependencias.
-- `/api/auth/me` autenticado y `GET /api/dashboard/summary` autenticado quedan pendientes de confirmar con credenciales Admin disponibles o navegador manual.
+- Validación manual 2026-05-27: `/login` carga correctamente, login con Admin local validado, redirección a `/app/dashboard` validada y dashboard autenticado validado por el responsable del proyecto.
+- Flujo autenticado validado manualmente; `GET /api/auth/me` autenticado no fue inspeccionado de forma independiente.
+- `GET /api/dashboard/summary` autenticado queda validado indirectamente por la carga correcta del dashboard; el endpoint no fue inspeccionado de forma independiente.
+- Redirección posterior a logout o sesión cerrada validada: `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`; logout como acción independiente no queda documentado como inspeccionado por separado.
 - `/login` sigue siendo público; `/app` y `/app/dashboard` siguen siendo privados; `/dashboard` no es ruta privada real.
+- Siguiente etapa: Fase 2.2 - QA manual más amplio del sistema privado con Admin.
 
 ## Permisos
 

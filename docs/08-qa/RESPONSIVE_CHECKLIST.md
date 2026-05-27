@@ -42,7 +42,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - Nota comercial visible: `Precios de referencia 2026 sujetos a confirmación.`.
 - Assets `:Zone.Identifier` retirados del working tree en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
 - `angular.json` mantiene el glob `src/assets/**/*.webp`, por lo que no copia `:Zone.Identifier` desde esa carpeta.
-- Revisión visual real sigue pendiente porque no hay navegador/headless disponible en el entorno actual.
+- La revisión visual real de identidad queda cubierta por el cierre manual de Fase 1.6.
 
 ## Estado Fase 1.5
 
@@ -54,7 +54,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - Dirección, horarios y WhatsApp siguen pendientes de confirmar; no se agregó mapa.
 - `/catalogo` mantiene la nota `Precios de referencia 2026 sujetos a confirmación.`.
 - `Anticipo 50%` y `Trabajos urgentes +40%` se muestran solo con texto prudente de confirmación pendiente.
-- Revisión visual real sigue pendiente porque no hay navegador/headless disponible en el entorno actual.
+- La revisión visual real de identidad, header, logo y navegación queda cubierta por el cierre manual de Fase 1.6.
 
 ## Estado Fase 1.6
 
@@ -66,8 +66,11 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - En catálogo, el reveal de productos se limita por sección con lote inicial, para evitar animar listas grandes completas de golpe.
 - Header/footer, CTAs, cards, catálogo y contacto mantienen enfoque mobile-first por grids apilados, `minmax(0, 1fr)` y wrapping.
 - No se encontró navegador/headless local disponible: `chromium`, `google-chrome` y `firefox` no existen en el entorno; Playwright no está instalado en `node_modules`.
-- Revisión visual manual recibida el 2026-05-27 para `/`, `/servicios`, `/catalogo`, `/contacto`, `/login`, 360px, 375px, 390px, 414px, 768px, 1024px, desktop, reduced motion y scroll horizontal.
-- Cierre visual Fase 1.6: parcial, porque el reporte conserva marcadores sin selección final ni observaciones concretas por punto.
+- Revisión visual manual confirmada el 2026-05-27 para `/`, `/servicios`, `/catalogo`, `/contacto` y `/login`.
+- Breakpoints aprobados manualmente: 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+- No se detectó scroll horizontal; header móvil, logo, botones, catálogo, imágenes, precios, placeholders y contacto quedaron aprobados visualmente.
+- Reduced motion queda validado por implementación/código; no se reportaron hallazgos manuales bloqueantes.
+- Cierre visual Fase 1.6: validada visualmente por el responsable del proyecto.
 
 ## Estado Fase 2.0
 
@@ -76,7 +79,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - `/app` y `/app/dashboard` siguen privados por routing/guards.
 - `/dashboard` no se convirtió en ruta privada real.
 - `returnUrl` externo o inválido sigue bloqueado por sanitización en login.
-- Login real queda pendiente porque no hay navegador local disponible ni API/base/credenciales Admin configuradas en el entorno.
+- Login real quedó pendiente en esa fase; posteriormente fue validado manualmente con Admin local.
 
 ## Estado Fase 2.1
 
@@ -84,9 +87,9 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - Angular levantado en `http://localhost:4200/`; `/login` respondió con shell Angular.
 - `GET /api/auth/csrf` respondió `204`.
 - `GET /api/auth/me` sin sesión respondió `401`.
-- Login real en navegador queda pendiente porque SQL Server local no estuvo accesible y no hay Admin local configurado.
-- Redirección visual de `/app/dashboard` sin sesión y después de logout sigue pendiente de navegador con sesión real.
-- Validación de usuario sin `reports.view` sigue pendiente por falta de base local con usuarios de prueba.
+- Login real en navegador quedó pendiente en esa fase porque SQL Server local no estuvo accesible y no había Admin local configurado; posteriormente fue validado manualmente.
+- Redirección visual de `/app/dashboard` sin sesión y después de logout quedó pendiente en esa fase; la redirección posterior a logout o sesión cerrada fue validada posteriormente.
+- Validación de usuario sin `reports.view` queda pendiente para QA amplio por falta de usuarios de prueba.
 
 ## Estado Fase 2.1c
 
@@ -98,7 +101,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - `GET /health`, `GET /api/auth/csrf` y `GET /api/auth/me` sin sesión fueron validados por `curl`.
 - Login real en navegador con Admin local fue validado manualmente.
 - Redirección posterior al login a `/app/dashboard` fue validada manualmente.
-- Dashboard no queda validado: cargó una vez, pero al regresar queda en `Cargando dashboard...`.
+- Dashboard no queda validado en Fase 2.1c: cargó una vez, pero al regresar queda en `Cargando dashboard...`. Este pendiente se cierra posteriormente en Fase 2.1d.
 - Redirección post-logout de `/app/dashboard` a `/login?returnUrl=%2Fapp%2Fdashboard` fue validada manualmente.
 - `GET /api/auth/me` autenticado y logout como acción independiente quedan sin confirmación explícita.
 - No se modificaron frontend, rutas, guards ni lógica de auth.
@@ -110,7 +113,11 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - Causa probable: una consulta pendiente a `GET /api/dashboard/summary` no tenia timeout y podia dejar `Cargando dashboard...` indefinidamente.
 - Corrección mínima aplicada: timeout de 15 segundos y error controlado en el dashboard.
 - No se rediseñó dashboard y no se cambiaron rutas privadas, guards, `AuthService`, backend, endpoints, permisos ni dependencias.
-- `/api/auth/me` autenticado, dashboard autenticado y logout autenticado quedan pendientes de navegador manual o variables Admin disponibles en el proceso.
+- Validación manual 2026-05-27: login con Admin local, redirección a `/app/dashboard` y dashboard autenticado quedan validados por el responsable del proyecto.
+- `/app/dashboard` ya no queda indefinidamente en `Cargando dashboard...`.
+- Flujo autenticado validado manualmente; `GET /api/auth/me` autenticado no fue inspeccionado de forma independiente.
+- `GET /api/dashboard/summary` autenticado queda validado indirectamente por la carga correcta del dashboard; el endpoint no fue inspeccionado de forma independiente.
+- Redirección posterior a logout o sesión cerrada validada: `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`; logout como acción independiente queda para QA amplio si se requiere evidencia separada.
 
 ## Verificado Por Código / Build
 
@@ -152,11 +159,11 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 2.1c ejecuta `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas de rutas/secretos correctamente.
 - [x] Fase 2.1c 2026-05-23 confirma `ldt-labdental-sql` activo en `14336`, migraciones al día, seed de arranque ejecutado, `/health` 200, CSRF 204 y `/api/auth/me` sin sesión 401.
 - [x] Fase 2.1c 2026-05-23 valida manualmente `/login`, login con Admin local, redirección a `/app/dashboard` y redirección post-logout a `/login?returnUrl=%2Fapp%2Fdashboard`.
-- [ ] Fase 2.1c 2026-05-23 deja pendiente el dashboard porque puede quedarse en `Cargando dashboard...` al regresar a la página.
+- [x] Fase 2.1d cierra el pendiente de Fase 2.1c: `/app/dashboard` ya no queda indefinidamente en `Cargando dashboard...`.
 - [ ] Fase 2.1c 2026-05-23 deja pendiente confirmar explícitamente `GET /api/auth/me` autenticado y logout como acción independiente.
 - [x] Fase 2.1d identifica que la única llamada del dashboard es `GET /api/dashboard/summary` y agrega timeout para evitar carga indefinida.
 - [x] Fase 2.1d mantiene `/login` público, `/app` y `/app/dashboard` privados, y no introduce `/dashboard` como ruta privada real.
-- [ ] Fase 2.1d deja pendiente validación visual autenticada post-fix por falta de credenciales en el proceso y navegador/headless local.
+- [x] Fase 2.1d queda validada manualmente por el responsable del proyecto para flujo dashboard autenticado.
 - [x] Fase 1.6 implementa `prefers-reduced-motion` para reveal, parallax y microinteracciones relevantes.
 - [x] Fase 1.6 mantiene el sitio usable si falla JS de animación.
 - [x] Fase 1.6 mantiene `/catalogo` legible por código: grids responsive, frames uniformes, precios visibles y cards con `min-width: 0`.
@@ -165,47 +172,49 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Cierre documental Fase 1.6 2026-05-27 ejecuta nuevamente `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctamente.
 - [x] Cierre documental Fase 1.6 2026-05-27 confirma que `/login` sigue público, `/app` y `/app/dashboard` siguen privados y `/dashboard` no es ruta privada real.
 - [x] Cierre documental Fase 1.6 2026-05-27 confirma que no se detectaron valores reales de secretos en documentos tocados.
-- [ ] Fase 1.6 deja pendiente cierre visual completo porque el reporte manual recibido no incluye selección final ni observaciones concretas por punto.
+- [x] Cierre documental Fase 1.6 y Fase 2.1d 2026-05-27 ejecuta `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias correctamente.
+- [x] Fase 1.6 queda cerrada como validada visualmente por el responsable del proyecto.
 
 ## Hallazgos Manuales Recibidos
 
 | Ruta | Hallazgo | Estado |
 | --- | --- | --- |
-| `/app/dashboard` | Sin sesión, al escribir la URL directa no redirigió a `/login` y quedó sin contenido visible. | Corregido por código; confirmación visual manual pendiente. |
-| `/app/dashboard` | Después de login con Admin local redirige correctamente, pero al regresar a la página puede quedar en `Cargando dashboard...`. | Abierto; documentado, sin cambio de código en esta fase. |
-| `/app/dashboard` | Si `GET /api/dashboard/summary` queda pendiente, el componente no tenia timeout. | Corregido con timeout y error controlado; confirmación visual manual pendiente. |
-| Sitio público Fase 1.6 | Reporte manual recibido para rutas públicas, `/login`, viewports obligatorios, reduced motion y scroll horizontal, pero sin selección final ni observaciones concretas. | Parcialmente validado visualmente. |
+| `/app/dashboard` | Sin sesión, al escribir la URL directa no redirigió a `/login` y quedó sin contenido visible. | Corregido; redirección posterior a logout o sesión cerrada validada manualmente. |
+| `/app/dashboard` | Después de login con Admin local redirige correctamente, pero al regresar a la página podía quedar en `Cargando dashboard...`. | Cerrado en Fase 2.1d; dashboard autenticado validado manualmente. |
+| `/app/dashboard` | Si `GET /api/dashboard/summary` queda pendiente, el componente no tenia timeout. | Corregido con timeout y error controlado; validado manualmente por carga correcta del dashboard. |
+| Sitio público Fase 1.6 | Rutas públicas, `/login`, viewports obligatorios, mobile-first, catálogo, contacto y ausencia de scroll horizontal revisados por el responsable. | Validado visualmente. |
 
 ## Verificado Visualmente
 
 - [x] Confirmar en navegador real que después de logout `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
 - [x] Confirmar en navegador real login correcto desde `/login` hacia `/app/dashboard` con API/base local y Admin configurado.
-- [ ] Confirmar que `/app/dashboard` deja de quedarse en `Cargando dashboard...` al regresar a la página.
-- [ ] Confirmar explícitamente `GET /api/auth/me` autenticado desde navegador/devtools o `curl` con sesión.
+- [x] Confirmar que `/app/dashboard` deja de quedarse en `Cargando dashboard...` al regresar a la página.
+- [ ] Confirmar explícitamente `GET /api/auth/me` autenticado desde navegador/devtools o `curl` con sesión en Fase 2.2 si se requiere evidencia independiente.
 - [x] Registrar revisión visual manual Fase 1.6 recibida para rutas públicas, `/login` y viewports obligatorios.
-- [ ] Cerrar Fase 1.6 como validación visual completa; pendiente sustituir marcadores por resultados explícitos y observaciones concretas.
-- [ ] Revisar visualmente `/catalogo` antes de aprobación del cliente.
-- [ ] Revisar visualmente logo, header y navegación de Fase 1.5 en 360px antes de aprobación del cliente.
+- [x] Cerrar Fase 1.6 como validación visual completa.
+- [x] Revisar visualmente `/catalogo` antes de aprobación del cliente.
+- [x] Revisar visualmente logo, header y navegación en 360px.
 
-## Pendiente De Cierre Visual Completo
+## Pendiente QA Amplio / Cliente
 
-- Sustituir los marcadores `[correcto / observaciones]`, `[correcto / no probado / observaciones]` y `[no hay / observaciones]` por resultados explícitos si se requiere aprobación visual completa.
-- Registrar observaciones específicas por ruta, viewport, reduced motion y scroll horizontal cuando existan.
+- Ejecutar Fase 2.2 - QA manual del sistema privado con Admin.
+- Inspeccionar de forma independiente `GET /api/auth/me`, `GET /api/dashboard/summary` y logout si se requiere evidencia de red.
+- Confirmar dirección, horarios, WhatsApp real, aprobación final de precios 2026, `Anticipo 50%`, `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 - Para celular en la misma red local, levantar temporalmente Angular con `npm start -- --host 0.0.0.0 --port 4200`. No es despliegue productivo.
 
 ## Viewports Obligatorios
 
 | Viewport | Estado Fase 1.6 | Hallazgo |
 | --- | --- | --- |
-| 360px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
-| 375px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
-| 390px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
-| 414px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
-| 768px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
-| 1024px | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
-| Desktop amplio | Reporte manual recibido; cierre parcial | Marcador recibido sin selección final ni observación concreta. |
+| 360px | Aprobado manualmente | Sin problemas visuales bloqueantes reportados. |
+| 375px | Aprobado manualmente | Sin problemas visuales bloqueantes reportados. |
+| 390px | Aprobado manualmente | Sin problemas visuales bloqueantes reportados. |
+| 414px | Aprobado manualmente | Sin problemas visuales bloqueantes reportados. |
+| 768px | Aprobado manualmente | Sin problemas visuales bloqueantes reportados. |
+| 1024px | Aprobado manualmente | Sin problemas visuales bloqueantes reportados. |
+| Desktop amplio | Aprobado manualmente | Sin problemas visuales bloqueantes reportados. |
 
-Breakpoints revisados manualmente según reporte recibido; cierre completo pendiente de resultados explícitos por breakpoint.
+Breakpoints revisados y aprobados manualmente por el responsable del proyecto.
 
 Estado Fase 1.6 por código: se revisaron reglas responsive, `overflow-x: clip`, grids móviles, nav horizontal controlado del catálogo, CTAs táctiles y reduced motion por CSS/JS.
 
@@ -216,7 +225,7 @@ Estado Fase 1.6 por código: se revisaron reglas responsive, `overflow-x: clip`,
 - [x] El acceso a `/login` es claro en header y CTAs.
 - [x] Los enlaces se separan en grid móvil bajo 420px.
 - [x] El estado foco/hover tiene feedback visual.
-- [ ] Confirmar visualmente separación y foco en navegador real.
+- [x] Confirmar visualmente separación y foco en navegador real.
 
 ## Controles Táctiles
 
@@ -224,7 +233,7 @@ Estado Fase 1.6 por código: se revisaron reglas responsive, `overflow-x: clip`,
 - [x] No se agregaron formularios públicos en esta fase.
 - [x] No se agregaron inputs/selects públicos en esta fase.
 - [x] No se agregaron mensajes de error públicos en esta fase.
-- [ ] Confirmar visualmente los CTAs en navegador real.
+- [x] Confirmar visualmente los CTAs en navegador real.
 
 ## Layout Y Texto
 
@@ -233,7 +242,7 @@ Estado Fase 1.6 por código: se revisaron reglas responsive, `overflow-x: clip`,
 - [x] Los bloques se apilan en móvil y pasan a grids en 768px.
 - [x] Se agregó wrapping en marca, links, botones y footer.
 - [x] El contenido importante aparece antes de detalles secundarios.
-- [ ] Confirmar visualmente que no existe scroll horizontal en cada viewport.
+- [x] Confirmar visualmente que no existe scroll horizontal en cada viewport.
 
 ## Imágenes Y Rendimiento
 
@@ -243,12 +252,12 @@ Estado Fase 1.6 por código: se revisaron reglas responsive, `overflow-x: clip`,
 
 ## Validación Antes De Presentar Al Cliente
 
-- [ ] Revisar en navegador con emulación móvil.
+- [x] Revisar en navegador con emulación móvil.
 - [ ] Revisar al menos un dispositivo físico si está disponible.
 - [x] Confirmar por dev server que el sitio público responde sin sesión.
-- [ ] Confirmar visualmente que `/app` redirige a `/login` sin sesión.
-- [ ] Confirmar visualmente que `/app/dashboard` redirige a `/login?returnUrl=/app/dashboard` sin sesión.
-- [ ] Confirmar visualmente que el login sigue funcionando después de cambios visuales.
+- [x] Confirmar visualmente que `/app` sigue privado.
+- [x] Confirmar visualmente que `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard` sin sesión o sesión cerrada.
+- [x] Confirmar visualmente que el login sigue funcionando después de cambios visuales.
 
 ## Alcance
 

@@ -12,6 +12,7 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase técnica 3: inventario y proveedores. Pendiente.
 - Fase técnica 4: reportes administrativos. Pendiente.
 - Fase técnica 5: automatizaciones y WhatsApp. Pendiente.
+- Fase sistema 2.1d: diagnóstico/corrección de loading de `/app/dashboard`. Completada y cerrada manualmente por el responsable del proyecto.
 - Backlog futuro: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; no pertenece a la fase actual y requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
@@ -20,14 +21,14 @@ Fuente funcional: `docs/01-product/public-website.md`.
 
 - Fase sitio 0: preparación documental y consolidación. Completada con Fase 0.2.
 - Fase sitio 1: primera versión mobile-first para `/`, `/servicios` y `/contacto`. Implementada.
-- Fase sitio 1.1: revisión responsive técnica ejecutada; revisión visual por viewport pendiente.
+- Fase sitio 1.1: revisión responsive técnica ejecutada; revisión visual por viewport cubierta posteriormente por Fase 1.6.
 - Fase sitio 1.2: contenido aprobado y reemplazo de placeholders. Parcial; faltan datos reales confirmados.
 - Fase sitio 1.3: catálogo público con precios e imágenes locales en `/catalogo`. Implementada.
-- Fase sitio 1.3.1: cierre técnico del catálogo, limpieza de assets `:Zone.Identifier`, documentación de placeholders y preparación para revisión visual del cliente. Implementada por código/documentación; revisión visual real pendiente.
-- Fase sitio 1.5: identidad visual LDT, logo, tokens de marca y datos de contacto del cartel/catálogo. Implementada; revisión visual real y aprobación comercial del cliente pendientes.
-- Fase sitio 1.6: pulido visual premium del sitio público con CSS/IntersectionObserver, reveal sutil, parallax ligero, microinteracciones y mejoras de composición en home, servicios, catálogo, contacto y login visual. Implementada; revisión visual real por viewport pendiente.
+- Fase sitio 1.3.1: cierre técnico del catálogo, limpieza de assets `:Zone.Identifier`, documentación de placeholders y preparación para revisión visual del cliente. Implementada por código/documentación; revisión visual real cubierta posteriormente por Fase 1.6.
+- Fase sitio 1.5: identidad visual LDT, logo, tokens de marca y datos de contacto del cartel/catálogo. Implementada; validación visual cubierta posteriormente por Fase 1.6 y aprobación comercial del cliente pendiente.
+- Fase sitio 1.6: pulido visual premium del sitio público con CSS/IntersectionObserver, reveal sutil, parallax ligero, microinteracciones y mejoras de composición en home, servicios, catálogo, contacto y login visual. Completada y validada visualmente por el responsable del proyecto.
 - Backlog relacionado: administración privada futura de catálogo, precios e imágenes. No modifica el catálogo público actual; `/catalogo` sigue usando data frontend hasta diseñar esa fase. Fuente: `docs/01-product/admin-catalog-management.md`.
-- Fase sitio/sistema 2.0: validación real del flujo de `/login`, sesión, `returnUrl` y acceso a `/app/dashboard`, sin rediseñar pantallas ni implementar módulos nuevos. Ejecutada por código/build/tests/curl; login real con Admin local queda pendiente por falta de API/base/credenciales configuradas.
+- Fase sitio/sistema 2.0: validación real del flujo de `/login`, sesión, `returnUrl` y acceso a `/app/dashboard`, sin rediseñar pantallas ni implementar módulos nuevos. Ejecutada por código/build/tests/curl; login real con Admin local y dashboard autenticado fueron cerrados posteriormente en Fase 2.1d.
 - Fase sitio 3: QA mobile-first completo y preparación de contenido final. Pendiente.
 - Fase sitio 4: publicación en `laboratoriodentaltlahuac.com` cuando deploy/DNS estén definidos. Pendiente.
 - Fase sitio 5: optimización, Lighthouse o revisión equivalente, y mejoras por feedback. Pendiente.
@@ -46,9 +47,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Completar validación manual de login real con API/base local y Admin configurado: `/login` -> login correcto -> `/app/dashboard` -> `GET /api/auth/me` -> logout -> `/app/dashboard` redirige de nuevo a `/login?returnUrl=%2Fapp%2Fdashboard`.
+Fase 2.2 - QA manual del sistema privado con Admin.
 
-Después, revisar visualmente Fase 1.6 del sitio público en 360px, 375px, 390px, 414px, 768px, 1024px y desktop, confirmar vigencia de precios 2026, aprobar condiciones comerciales antes de publicar, confirmar WhatsApp/dirección/horarios y completar imágenes `.webp` faltantes.
+Alcance sugerido: recorrer el sistema privado con Admin local, validar clientes, órdenes, pagos, saldos, dashboard, permisos visibles, logout y redirecciones privadas. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
 
 ## Regla De Actualización
 

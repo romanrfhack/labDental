@@ -200,7 +200,7 @@ Resultado de API/auth:
 - `GET /health` respondió saludable.
 - `GET /api/auth/csrf` respondió `204` y emitió cookies de CSRF.
 - `GET /api/auth/me` sin sesión respondió `401`.
-- Login real, `/api/auth/me` autenticado, logout y redirección posterior de `/app/dashboard` quedan pendientes hasta contar con base local accesible y Admin local configurado.
+- Login real, `/api/auth/me` autenticado, logout y redirección posterior de `/app/dashboard` quedaron pendientes en esa fase hasta contar con base local accesible y Admin local configurado; login real y dashboard autenticado se cerraron posteriormente por validación manual de Fase 2.1d.
 
 Resultado de permisos:
 
@@ -251,10 +251,10 @@ Resultado de Admin local:
 
 Resultado de login real:
 
-- Login real queda pendiente por falta de contenedor/base local dedicada y credenciales Admin locales.
-- `/api/auth/me` autenticado queda pendiente.
-- Logout queda pendiente.
-- Redirección visual de `/app/dashboard` sin sesión queda pendiente.
+- Login real quedó pendiente en esa fase por falta de contenedor/base local dedicada y credenciales Admin locales.
+- `/api/auth/me` autenticado quedó pendiente como evidencia independiente.
+- Logout quedó pendiente como evidencia independiente.
+- Redirección visual de `/app/dashboard` sin sesión quedó pendiente en esa fase y se validó posteriormente como redirección posterior a logout o sesión cerrada.
 - `/login` sigue documentado como ruta pública; `/app` y `/app/dashboard` siguen documentadas como rutas privadas; `/dashboard` sigue sin ser ruta privada real.
 
 ## Validación Fase 2.1c - 2026-05-23
@@ -288,7 +288,7 @@ Resultado de API/auth:
 - `GET /api/auth/csrf` respondió `204`.
 - `GET /api/auth/me` sin sesión respondió `401`.
 - Login real no se ejecutó porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex.
-- `/api/auth/me` autenticado, logout y `/api/auth/me` después de logout quedan pendientes hasta ejecutar la prueba con credenciales Admin disponibles en el proceso o desde navegador.
+- `/api/auth/me` autenticado, logout y `/api/auth/me` después de logout quedaron pendientes como evidencia independiente hasta ejecutar la prueba con credenciales Admin disponibles en el proceso o desde navegador.
 - No se ejecutó `dotnet user-secrets list`, no se imprimieron secretos y no se modificaron `appsettings` con contraseñas.
 
 ## Validación Manual Fase 2.1c - 2026-05-23
@@ -298,7 +298,7 @@ Resultado reportado desde navegador con Admin local creado por seed:
 - `/login` carga correctamente.
 - Login con Admin local: validado.
 - Redirección posterior al login a `/app/dashboard`: validada.
-- Dashboard: no validado; cargó una vez, pero al regresar a la página queda en `Cargando dashboard...`.
+- Dashboard: no validado en Fase 2.1c; cargó una vez, pero al regresar a la página queda en `Cargando dashboard...`. Este pendiente se cierra posteriormente en Fase 2.1d.
 - `GET /api/auth/me` autenticado: no confirmado porque el resultado manual no fue marcado como `sí`.
 - Logout: no confirmado como acción independiente porque el resultado manual no fue marcado.
 - Después de logout, `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
@@ -327,9 +327,9 @@ Resultado de endpoints revisados:
 - `GET /api/auth/csrf`: `204`.
 - `GET /api/auth/me` sin sesión: `401`.
 - `GET /api/dashboard/summary` sin sesión: `401`.
-- `GET /api/auth/me` autenticado: pendiente porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex.
-- `GET /api/dashboard/summary` autenticado: pendiente por la misma razón.
-- Logout autenticado por curl: pendiente por la misma razón.
+- `GET /api/auth/me` autenticado: pendiente como evidencia independiente porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex.
+- `GET /api/dashboard/summary` autenticado por curl: pendiente por la misma razón; queda validado indirectamente después por carga correcta del dashboard.
+- Logout autenticado por curl: pendiente como evidencia independiente por la misma razón.
 
 Causa probable del estado `Cargando dashboard...`:
 
@@ -347,3 +347,21 @@ Limitación de validación:
 
 - No hay navegador/headless disponible sin instalar dependencias.
 - Validación manual sugerida con DevTools: revisar `GET /api/auth/me`, `GET /api/dashboard/summary`, status code, respuesta y errores de consola después de login y al regresar a `/app/dashboard`.
+
+## Cierre Manual Fase 2.1d - 2026-05-27
+
+Resultado confirmado por el responsable del proyecto:
+
+- `/login` sigue siendo ruta pública.
+- `/app` y `/app/dashboard` siguen siendo rutas privadas.
+- `/app/dashboard` autenticado fue validado manualmente con Admin local.
+- `/app/dashboard` ya no queda indefinidamente en `Cargando dashboard...`.
+- `/app/dashboard` sin sesión o con sesión cerrada redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
+- `/dashboard` no es ruta privada real.
+
+Matices de evidencia:
+
+- Flujo autenticado validado manualmente; `GET /api/auth/me` autenticado no fue inspeccionado de forma independiente.
+- `GET /api/dashboard/summary` autenticado queda validado indirectamente por la carga correcta del dashboard; el endpoint no fue inspeccionado de forma independiente.
+- La redirección posterior a logout o sesión cerrada queda validada; logout como acción independiente no queda documentado como inspeccionado por separado.
+- No se modificaron `AuthService`, guards, cookies, CSRF/XSRF, endpoints, base de datos, migraciones ni deploy en este cierre documental.

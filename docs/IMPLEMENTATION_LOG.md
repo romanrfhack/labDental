@@ -6,6 +6,70 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-27 - Cierre Documental De Fase 1.6 Y Fase 2.1d
+
+### Cambio Realizado
+
+Se cerraron documentalmente dos etapas con base en la validación manual confirmada por el responsable del proyecto:
+
+- Fase 1.6 - Pulido visual premium del sitio público.
+- Fase 2.1d - Diagnóstico/corrección de loading del dashboard autenticado.
+
+No hubo cambios de código, estilos, frontend funcional, backend, `AuthService`, guards, cookies, XSRF, endpoints, base de datos, migraciones, deploy ni dependencias. No se instalaron paquetes y no se hicieron commits.
+
+### Resultado Manual Registrado
+
+- `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron revisados visualmente y aprobados.
+- Breakpoints aprobados: 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
+- El sitio público queda mobile-first, sin scroll horizontal y sin problemas visuales bloqueantes reportados.
+- El catálogo queda legible, con imágenes uniformes, precios correctos y placeholders intencionales.
+- El enfoque CSS + `IntersectionObserver` queda aceptado; no se usó GSAP ni dependencia nueva.
+- Reduced motion queda validado por implementación/código; no se reportaron hallazgos manuales bloqueantes.
+- Login con Admin local, redirección a `/app/dashboard` y dashboard autenticado quedan validados manualmente.
+- `/app/dashboard` ya no queda indefinidamente en `Cargando dashboard...`.
+- Flujo autenticado validado manualmente; `GET /api/auth/me` autenticado no fue inspeccionado de forma independiente.
+- `GET /api/dashboard/summary` autenticado queda validado indirectamente por la carga correcta del dashboard.
+- Redirección posterior a logout o sesión cerrada validada: `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`; logout como acción independiente queda para QA amplio si se requiere evidencia separada.
+
+### Archivos Modificados
+
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/public-website.md`
+- `docs/01-product/internal-system.md`
+- `docs/02-domain/brand-guidelines.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+
+### Validaciones Ejecutadas
+
+- `git status --short` antes de editar: sin salida; working tree limpio.
+- `git diff --stat` antes de editar: sin salida.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 90/90.
+- `git diff --check`: correcto.
+- `rg "/dashboard" .`: revisado; no muestra `/dashboard` como ruta privada real nueva.
+- `rg "/app/dashboard" .`: revisado; confirma que la ruta privada real se mantiene bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada pública y endpoints de auth existentes.
+- `rg "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada al patrón para no imprimir valores; solo se encontraron menciones del nombre de variable.
+- `rg "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada al patrón para no imprimir valores; solo se encontraron menciones del nombre de variable.
+- `rg "ConnectionStrings" src docs README.md`: ejecutado con salida limitada al patrón para no imprimir valores; solo se encontraron menciones de la clave de configuración.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; solo aparecen menciones documentales de que no se usó.
+
+### Confirmaciones
+
+- `/login` sigue público.
+- `/app` y `/app/dashboard` siguen privados.
+- `/dashboard` no es ruta privada real.
+- Fase 1.6 queda cerrada como validada visualmente.
+- Fase 2.1d queda cerrada como validada manualmente.
+- Siguiente fase recomendada: Fase 2.2 - QA manual del sistema privado con Admin.
+- No se ejecutó `dotnet user-secrets list`.
+- No se imprimieron secretos.
+- No se usó `codex-cobranza-sql`.
+
 ## 2026-05-27 - Cierre Documental Parcial De Validación Visual Fase 1.6
 
 ### Cambio Realizado
@@ -13,6 +77,8 @@
 Se actualizó documentación para registrar el reporte manual de revisión visual de Fase 1.6 del sitio público sin modificar código, instalar dependencias ni tocar backend/auth/guards/endpoints/base/deploy.
 
 El cierre queda como parcialmente validado visualmente porque el reporte recibido conserva marcadores sin selección final ni observaciones concretas por ruta o breakpoint.
+
+Nota posterior: este cierre parcial queda superado por el cierre documental completo registrado arriba el mismo 2026-05-27, basado en la confirmación manual final del responsable del proyecto.
 
 ### Resultado Manual Recibido
 
