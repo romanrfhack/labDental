@@ -13,6 +13,8 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase técnica 4: reportes administrativos. Pendiente.
 - Fase técnica 5: automatizaciones y WhatsApp. Pendiente.
 - Fase sistema 2.1d: diagnóstico/corrección de loading de `/app/dashboard`. Completada y cerrada manualmente por el responsable del proyecto.
+- Fase sistema 2.2: QA manual/técnico del sistema privado con Admin. Completada con reporte en `docs/08-qa/private-admin-qa.md`.
+- Fase sistema 2.3: corrección de hallazgos QA del sistema privado. Recomendada como siguiente fase.
 - Backlog futuro: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; no pertenece a la fase actual y requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
@@ -47,9 +49,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Fase 2.2 - QA manual del sistema privado con Admin.
+Fase 2.3 - Corrección de hallazgos QA del sistema privado.
 
-Alcance sugerido: recorrer el sistema privado con Admin local, validar clientes, órdenes, pagos, saldos, dashboard, permisos visibles, logout y redirecciones privadas. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
+Alcance sugerido: revisar zona horaria de negocio para métricas de dashboard, estado activo visual de la navegación privada y evidencia manual con usuario limitado para `/app/access-denied` si se decide cubrir permisos completos antes de staging. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
 
 ## Regla De Actualización
 

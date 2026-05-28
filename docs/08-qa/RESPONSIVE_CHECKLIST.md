@@ -119,6 +119,17 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - `GET /api/dashboard/summary` autenticado queda validado indirectamente por la carga correcta del dashboard; el endpoint no fue inspeccionado de forma independiente.
 - Redirección posterior a logout o sesión cerrada validada: `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`; logout como acción independiente queda para QA amplio si se requiere evidencia separada.
 
+## Estado Fase 2.2
+
+- QA manual/técnico del sistema privado con Admin ejecutado y documentado en `docs/08-qa/private-admin-qa.md`.
+- Rutas públicas `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` respondieron con shell Angular `200`; no se modificó el sitio público.
+- Rutas privadas reales bajo `/app` revisadas por `app.routes.ts`: dashboard, clientes, órdenes, pagos, inventario, proveedores, usuarios, roles y access-denied.
+- Flujo Admin por API validado: login `200`, `/api/auth/me` `200`, dashboard/clientes/órdenes/pagos `200`, logout `200` y `/api/auth/me` posterior `401`.
+- Se crearon datos QA locales para cliente, orden y pago; quedan documentados en el reporte de QA.
+- Hallazgo medio: la métrica "Para hoy" del dashboard requiere definición de zona horaria de negocio.
+- Hallazgo bajo: la navegación privada no muestra estado activo visual de ruta.
+- No hay navegador/headless local sin instalar dependencias, por lo que consola/Network y redirecciones visuales quedan pendientes para pase en navegador real si se requiere evidencia adicional.
+
 ## Verificado Por Código / Build
 
 - [x] Build frontend correcto con `npm run build`.
@@ -174,6 +185,10 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Cierre documental Fase 1.6 2026-05-27 confirma que no se detectaron valores reales de secretos en documentos tocados.
 - [x] Cierre documental Fase 1.6 y Fase 2.1d 2026-05-27 ejecuta `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias correctamente.
 - [x] Fase 1.6 queda cerrada como validada visualmente por el responsable del proyecto.
+- [x] Fase 2.2 ejecuta QA Admin por API local para login, `/api/auth/me`, dashboard, clientes, órdenes, pagos y logout.
+- [x] Fase 2.2 confirma por código que `/login` sigue público, `/app` y `/app/dashboard` siguen privados y `/dashboard` no es ruta privada real.
+- [x] Fase 2.2 documenta reporte nuevo en `docs/08-qa/private-admin-qa.md`.
+- [ ] Fase 2.2 deja pendiente pase visual en navegador real para consola/Network y redirecciones visuales si se requiere evidencia adicional.
 
 ## Hallazgos Manuales Recibidos
 
@@ -182,6 +197,8 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 | `/app/dashboard` | Sin sesión, al escribir la URL directa no redirigió a `/login` y quedó sin contenido visible. | Corregido; redirección posterior a logout o sesión cerrada validada manualmente. |
 | `/app/dashboard` | Después de login con Admin local redirige correctamente, pero al regresar a la página podía quedar en `Cargando dashboard...`. | Cerrado en Fase 2.1d; dashboard autenticado validado manualmente. |
 | `/app/dashboard` | Si `GET /api/dashboard/summary` queda pendiente, el componente no tenia timeout. | Corregido con timeout y error controlado; validado manualmente por carga correcta del dashboard. |
+| `/app/dashboard` | Métrica "Para hoy" requiere definir zona horaria de negocio; durante QA local una orden con entrega en la fecha local no incrementó `dueToday`. | Registrado para Fase 2.3. |
+| `/app/*` | Navegación privada sin estado activo visual de ruta. | Registrado como hallazgo bajo para Fase 2.3 si se prioriza UX. |
 | Sitio público Fase 1.6 | Rutas públicas, `/login`, viewports obligatorios, mobile-first, catálogo, contacto y ausencia de scroll horizontal revisados por el responsable. | Validado visualmente. |
 
 ## Verificado Visualmente
@@ -189,7 +206,9 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Confirmar en navegador real que después de logout `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
 - [x] Confirmar en navegador real login correcto desde `/login` hacia `/app/dashboard` con API/base local y Admin configurado.
 - [x] Confirmar que `/app/dashboard` deja de quedarse en `Cargando dashboard...` al regresar a la página.
-- [ ] Confirmar explícitamente `GET /api/auth/me` autenticado desde navegador/devtools o `curl` con sesión en Fase 2.2 si se requiere evidencia independiente.
+- [x] Confirmar explícitamente `GET /api/auth/me` autenticado desde navegador/devtools o `curl` con sesión en Fase 2.2 si se requiere evidencia independiente.
+- [x] Confirmar logout como acción independiente por HTTP con XSRF renovado.
+- [ ] Confirmar con usuario limitado real que `/app/access-denied` se muestra para sesión sin permiso.
 - [x] Registrar revisión visual manual Fase 1.6 recibida para rutas públicas, `/login` y viewports obligatorios.
 - [x] Cerrar Fase 1.6 como validación visual completa.
 - [x] Revisar visualmente `/catalogo` antes de aprobación del cliente.
@@ -197,8 +216,8 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 
 ## Pendiente QA Amplio / Cliente
 
-- Ejecutar Fase 2.2 - QA manual del sistema privado con Admin.
-- Inspeccionar de forma independiente `GET /api/auth/me`, `GET /api/dashboard/summary` y logout si se requiere evidencia de red.
+- Ejecutar Fase 2.3 - corrección de hallazgos QA del sistema privado.
+- Completar pase visual en navegador real para consola/Network y redirecciones visuales si se requiere evidencia adicional.
 - Confirmar dirección, horarios, WhatsApp real, aprobación final de precios 2026, `Anticipo 50%`, `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 - Para celular en la misma red local, levantar temporalmente Angular con `npm start -- --host 0.0.0.0 --port 4200`. No es despliegue productivo.
 

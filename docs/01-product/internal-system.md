@@ -136,6 +136,23 @@ Estado: corrección mínima aplicada y cerrada manualmente; el dashboard privado
 - `/login` sigue siendo público; `/app` y `/app/dashboard` siguen siendo privados; `/dashboard` no es ruta privada real.
 - Siguiente etapa: Fase 2.2 - QA manual más amplio del sistema privado con Admin.
 
+## Validación De Acceso Fase 2.2
+
+Estado: QA manual/técnico del sistema privado con Admin ejecutado y documentado en `docs/08-qa/private-admin-qa.md`.
+
+- Entorno usado: API local en `http://localhost:5277`, Angular en `http://localhost:4200`, SQL dedicado `ldt-labdental-sql`, puerto `14336`, base `LaboratorioTlahuac_Dev`.
+- No se usó `codex-cobranza-sql`.
+- `/login` sigue como entrada pública.
+- `/app` y `/app/dashboard` siguen bajo zona privada.
+- `/dashboard` no es ruta privada real.
+- Sin sesión, endpoints privados revisados responden `401`.
+- Con Admin, `POST /api/auth/login` respondió `200`, `GET /api/auth/me` respondió `200` con 19 permisos y `GET /api/dashboard/summary` respondió `200`.
+- Logout validado: `POST /api/auth/logout` respondió `200` y `/api/auth/me` posterior respondió `401`.
+- Se validaron clientes, órdenes y pagos con datos QA locales: alta/edición de cliente, alta/edición/cambio de estado de orden y registro de pago.
+- Inventario, proveedores, usuarios y roles siguen como páginas placeholder pendientes o futuras, sin flujo funcional completo.
+- Hallazgos registrados: definir zona horaria de negocio para métricas del dashboard y agregar estado activo visual en navegación privada si se prioriza UX.
+- Usuario autenticado sin permiso no se probó por falta de usuario limitado local; por código, `permissionGuard` conserva redirección a `/app/access-denied`.
+
 ## Permisos
 
 El sistema autoriza por permisos, no por nombre de rol. El rol Admin inicial recibe todos los permisos mediante seed.
@@ -161,3 +178,4 @@ La QA funcional del MVP administrativo está documentada en:
 - `docs/08-qa/mvp-qa-checklist.md`
 - `docs/08-qa/mvp-acceptance-checklist.md`
 - `docs/08-qa/known-issues.md`
+- `docs/08-qa/private-admin-qa.md`

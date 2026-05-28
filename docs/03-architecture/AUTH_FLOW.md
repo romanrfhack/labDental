@@ -291,6 +291,39 @@ Resultado de API/auth:
 - `/api/auth/me` autenticado, logout y `/api/auth/me` después de logout quedaron pendientes como evidencia independiente hasta ejecutar la prueba con credenciales Admin disponibles en el proceso o desde navegador.
 - No se ejecutó `dotnet user-secrets list`, no se imprimieron secretos y no se modificaron `appsettings` con contraseñas.
 
+## Validación Fase 2.2 - 2026-05-27
+
+Resultado de auth con Admin local:
+
+- `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` estuvieron disponibles como variables de entorno locales y se usaron sin imprimir valores.
+- `GET /api/auth/csrf` antes de login respondió `204`.
+- `POST /api/auth/login` respondió `200`.
+- `GET /api/auth/csrf` después de login respondió `204`.
+- `GET /api/auth/me` autenticado respondió `200` y reportó 19 permisos.
+- Permisos confirmados en Admin: `reports.view`, `orders.view`, `customers.view` y `payments.view`.
+- `POST /api/auth/logout` con XSRF renovado respondió `200`.
+- `GET /api/auth/me` posterior al logout respondió `401`.
+
+Resultado sin sesión:
+
+- `GET /api/auth/me` respondió `401`.
+- `GET /api/dashboard/summary` respondió `401`.
+- Endpoints privados revisados (`/api/customers`, `/api/work-orders`, `/api/payments` y `/api/dashboard/summary`) respondieron `401`.
+
+Resultado de rutas y `returnUrl`:
+
+- `/login` sigue siendo ruta pública.
+- `/app` y `/app/dashboard` siguen siendo rutas privadas.
+- `/dashboard` no es ruta privada real.
+- Por código, `authGuard` y `permissionGuard` construyen `/login?returnUrl=...` para usuario sin sesión o error al verificar sesión.
+- Por código, `permissionGuard` conserva la diferencia entre usuario sin sesión y usuario autenticado sin permiso; si hay sesión pero falta permiso, redirige a `/app/access-denied`.
+- Por código, `getSafePrivateReturnUrl()` conserva solo rutas internas seguras bajo `/app` y normaliza destinos externos o inválidos a `/app/dashboard`.
+
+Limitaciones:
+
+- No se probó usuario autenticado sin permiso por falta de usuario QA limitado local.
+- No se inspeccionó Network de navegador porque no hay navegador/headless local sin instalar dependencias.
+
 ## Validación Manual Fase 2.1c - 2026-05-23
 
 Resultado reportado desde navegador con Admin local creado por seed:

@@ -6,6 +6,81 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-27 - Fase 2.2 QA Manual/Técnico Del Sistema Privado Con Admin
+
+### Cambio Realizado
+
+Se ejecutó QA manual/técnico del sistema privado existente bajo `/app` con Admin local. No se implementaron funcionalidades nuevas, no se rediseñaron pantallas, no se modificó código frontend/backend, no se tocaron `AuthService`, guards, cookies, XSRF, endpoints, rutas privadas, migraciones, deploy ni dependencias, y no se hicieron commits.
+
+Se creó el reporte `docs/08-qa/private-admin-qa.md` y se actualizaron las fuentes canónicas afectadas.
+
+### Ambiente
+
+- SQL dedicado: `ldt-labdental-sql`.
+- Puerto SQL local: `14336 -> 1433/tcp`.
+- Base local: `LaboratorioTlahuac_Dev`.
+- API local: `http://localhost:5277`.
+- Angular local: `http://localhost:4200`.
+- `codex-cobranza-sql` no apareció activo y no se usó.
+- `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` se usaron desde variables de entorno sin imprimir valores.
+
+### Resultado QA
+
+- Rutas públicas `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` respondieron con shell Angular `200`.
+- Rutas privadas reales detectadas bajo `/app`: dashboard, clientes, órdenes, pagos, inventario, proveedores, usuarios, roles y access-denied.
+- `/dashboard` raíz no existe como ruta privada real; el wildcard del router sigue enviando a la home pública.
+- Sin sesión, endpoints privados respondieron `401`.
+- Con Admin: login `200`, `/api/auth/me` `200` con 19 permisos, dashboard `200`, clientes `200`, órdenes `200`, pagos `200`, logout `200` y `/api/auth/me` posterior a logout `401`.
+- `returnUrl` externo sigue bloqueado por código en `login-page.component.ts`; solo se aceptan rutas internas seguras bajo `/app`.
+- Usuario sin permiso no se probó con cuenta limitada porque no existe usuario QA limitado disponible; por código, `permissionGuard` redirige a `/app/access-denied`.
+
+### Datos De Prueba Creados
+
+Quedaron en la base local:
+
+- Cliente `Cliente QA LDT 20260527-210940 Editado`, id `fd5fe049-33e9-4732-80fa-790d140468f4`.
+- Orden `OT-20260528-201A16`, id `967c2750-cbb4-4aec-908c-14a04fd120fb`.
+- Pago `Pago QA LDT 20260527-210940`, id `561b6d36-6dff-4fe3-b08e-6705dc0947dd`.
+
+No se limpiaron datos de prueba.
+
+### Hallazgos
+
+- Medio: la métrica "Para hoy" del dashboard requiere definir zona horaria de negocio; durante QA local en `CST -0600`, una orden con entrega en la fecha local de QA no incrementó `dueToday`.
+- Bajo: la navegación privada no marca visualmente la ruta activa porque `PrivateLayoutComponent` no usa `routerLinkActive` ni clase equivalente.
+- Observación: no se probó usuario autenticado sin permiso por falta de usuario limitado local.
+- Observación: inventario, proveedores, usuarios y roles siguen como páginas placeholder documentadas.
+- Observación: no hay navegador/headless local sin instalar dependencias, por lo que consola/Network y redirecciones visuales quedaron cubiertas por código/API.
+
+### Archivos Modificados
+
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/internal-system.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+- `docs/08-qa/private-admin-qa.md`
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 90/90.
+- `git diff --check`: correcto.
+- `rg "/dashboard" .`: revisado; no se detectó `/dashboard` como ruta privada real nueva.
+- `rg "/app/dashboard" .`: revisado; confirma que la ruta privada real se mantiene bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada pública y endpoints de auth existentes.
+- `rg --files-with-matches "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "ConnectionStrings" src docs README.md`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; solo aparecen menciones documentales o históricas de no uso.
+
+### Siguiente Fase Recomendada
+
+Fase 2.3 - Corrección de hallazgos QA del sistema privado.
+
 ## 2026-05-27 - Cierre Documental De Fase 1.6 Y Fase 2.1d
 
 ### Cambio Realizado

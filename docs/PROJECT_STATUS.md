@@ -4,14 +4,14 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto y Fase 2.1d del sistema privado cerrada como validada manualmente para el dashboard autenticado. La siguiente fase recomendada es Fase 2.2 - QA manual del sistema privado con Admin.
+Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto y Fase 2.2 del sistema privado cerrada como QA manual/técnico con Admin. La siguiente fase recomendada es Fase 2.3 - Corrección de hallazgos QA del sistema privado.
 
 ## Estado Por Frente
 
-- Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto.
+- Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto y siguen respondiendo como rutas públicas durante Fase 2.2.
 - Catálogo: legible y aprobado visualmente; mantiene precios de referencia 2026, frames uniformes de imágenes, placeholders intencionales y condiciones comerciales con texto prudente.
 - Login/auth: `/login` sigue público; login con Admin local validado manualmente; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en este cierre documental.
-- Dashboard privado: `/app` y `/app/dashboard` siguen privados; `/app/dashboard` ya no queda indefinidamente en `Cargando dashboard...` y queda cerrado manualmente para Fase 2.1d.
+- Sistema privado: Fase 2.2 cerrada por QA manual/técnico con Admin; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real y el flujo Admin por API local validó login, `/api/auth/me`, dashboard, clientes, órdenes, pagos y logout.
 - Pendientes del cliente: dirección, horarios, WhatsApp real, aprobación final de precios 2026, aprobación de `Anticipo 50%`, aprobación de `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 
 ## Sistema Privado / MVP Administrativo
@@ -58,6 +58,11 @@ Estado: avanzado, con QA funcional y demo documentadas; Fase 2.1d queda cerrada 
 - `GET /api/dashboard/summary` autenticado queda validado indirectamente por la carga correcta del dashboard; el endpoint no fue inspeccionado de forma independiente.
 - Redirección posterior a logout o sesión cerrada validada: `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`; logout como acción independiente no queda documentado como inspeccionado por separado.
 - Cierre Fase 2.1d: validado manualmente por el responsable del proyecto sin modificar `AuthService`, guards, rutas, cookies, XSRF, backend, endpoints, base de datos, migraciones, deploy ni dependencias.
+- Validación Fase 2.2 2026-05-27: SQL dedicado `ldt-labdental-sql` activo en `14336`, base local `LaboratorioTlahuac_Dev`, API en `http://localhost:5277` y Angular en `http://localhost:4200`; no se usó `codex-cobranza-sql`.
+- Fase 2.2 validó por HTTP autenticado con Admin: `GET /api/auth/csrf` `204`, `POST /api/auth/login` `200`, `GET /api/auth/me` `200` con 19 permisos, `GET /api/dashboard/summary` `200`, listados de clientes/órdenes/pagos `200`, `POST /api/auth/logout` `200` y `/api/auth/me` posterior `401`.
+- Fase 2.2 creó datos locales de prueba claramente marcados: cliente `Cliente QA LDT 20260527-210940 Editado`, orden `OT-20260528-201A16` y pago `Pago QA LDT 20260527-210940`; no se limpiaron.
+- Fase 2.2 registró dos hallazgos principales: definir zona horaria de negocio para métricas de dashboard como "Para hoy" y agregar estado activo visual en navegación privada si se prioriza UX.
+- Limitación Fase 2.2: no hay navegador/headless local instalado sin agregar dependencias, por lo que redirecciones visuales, consola y Network se documentan por código/API y quedan pendientes para pase manual en navegador real si se requiere.
 
 La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
 
@@ -123,7 +128,7 @@ Estado: pendiente de definición productiva.
 
 ## QA
 
-- QA funcional del MVP administrativo: ejecutada y documentada.
+- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`.
 - QA responsive del sitio público: revisión por código/build ejecutada; Fase 1.6 cerrada como validada visualmente por el responsable del proyecto.
 - No existe runner frontend no interactivo; frontend se valida hoy con `npm run build` y revisión manual cuando aplique.
 - Validación Fase 1: `npm run build` ejecutado correctamente en `src/LaboratorioTlahuac.Web`.
@@ -161,7 +166,8 @@ Estado: pendiente de definición productiva.
 - Confirmación Fase 2.1d 2026-05-27: dashboard autenticado cerrado manualmente; `GET /api/auth/me` autenticado queda sin inspección independiente y `GET /api/dashboard/summary` autenticado queda validado indirectamente por carga del dashboard.
 - Confirmación de rutas 2026-05-27: `/login` sigue público; `/app` y `/app/dashboard` siguen privados por routing/guards; `/dashboard` no es ruta privada real.
 - Confirmación de secretos 2026-05-27: la búsqueda en documentos tocados solo encontró nombres de variables, placeholders, textos redactados o menciones de `user-secrets`; no se detectaron valores reales de contraseña, tokens, API keys ni llaves privadas.
-- Zona horaria formal de negocio sigue pendiente para métricas de "hoy", vencidas y próximos 7 días.
+- Validación Fase 2.2 2026-05-27: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias ejecutadas correctamente; búsquedas de patrones sensibles se ejecutaron con salida limitada a archivos para no imprimir valores.
+- Zona horaria formal de negocio sigue pendiente para métricas de "hoy", vencidas y próximos 7 días; Fase 2.2 la elevó como hallazgo medio al observar `dueToday=0` para una orden con entrega capturada en la fecha local de QA.
 
 ## Comercial
 
@@ -171,9 +177,9 @@ Estado: pendiente de definición productiva.
 
 ## Próxima Tarea Recomendada
 
-Fase 2.2 - QA manual del sistema privado con Admin.
+Fase 2.3 - Corrección de hallazgos QA del sistema privado.
 
-Alcance sugerido: recorrer clientes, órdenes, pagos, saldos, dashboard, permisos visibles, cierre de sesión y redirecciones privadas con sesión Admin real. Si se requiere evidencia de red, inspeccionar de forma independiente `GET /api/auth/me`, `GET /api/dashboard/summary` y logout.
+Alcance sugerido: definir zona horaria de negocio para métricas del dashboard, revisar estado activo visual de navegación privada y preparar un usuario QA limitado si se requiere validar `/app/access-denied` con evidencia manual completa.
 
 Mantener pendientes de cliente para el sitio público: confirmar vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
 

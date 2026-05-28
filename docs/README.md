@@ -19,6 +19,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 | Deploy y dominio | `docs/05-delivery/DEPLOYMENT.md` |
 | QA responsive | `docs/08-qa/RESPONSIVE_CHECKLIST.md` |
 | QA MVP administrativo | `docs/08-qa/mvp-qa-checklist.md` |
+| QA sistema privado con Admin | `docs/08-qa/private-admin-qa.md` |
 | Alcance comercial | `docs/09-commercial/` |
 
 ## Carpetas
