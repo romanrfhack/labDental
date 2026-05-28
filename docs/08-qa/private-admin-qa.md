@@ -10,6 +10,196 @@ Limitación de ejecución: no hay navegador/headless local instalado en este ent
 
 Seguimiento Fase 2.3: los dos hallazgos principales de este reporte quedaron corregidos por código y pruebas. El dashboard usa fecha operativa de negocio `America/Mexico_City` para `dueToday`, `overdue` y `upcomingDue`; la navegación privada marca la ruta activa con `routerLinkActive` y estilos accesibles.
 
+## Fase 2.4 - Pase visual/manual privado y permisos
+
+### Fecha
+
+- Ejecución local: 2026-05-27 22:15 CST, America/Mexico_City.
+- Sin commits.
+
+### Entorno
+
+- SQL dedicado: `ldt-labdental-sql`.
+- Puerto SQL local: `14336 -> 1433/tcp`.
+- Base local: `LaboratorioTlahuac_Dev`.
+- API local: `http://localhost:5277`.
+- Angular dev server: `http://localhost:4200`.
+- Contenedor excluido: `codex-cobranza-sql`; no apareció activo y no se usó.
+- Credenciales Admin: tomadas de variables de entorno locales, sin imprimir valores.
+- Navegador/headless: no disponible sin instalar dependencias; `chromium`, `google-chrome`, `firefox` y `node_modules/.bin/playwright` no existen en este entorno.
+
+### Validación De Navegación Activa
+
+Rutas objetivo:
+
+| Ruta | Resultado |
+| --- | --- |
+| `/app/dashboard` | Shell Angular `200`; validación visual pendiente por falta de navegador/headless. |
+| `/app/clientes` | Shell Angular `200`; validación visual pendiente por falta de navegador/headless. |
+| `/app/ordenes` | Shell Angular `200`; validación visual pendiente por falta de navegador/headless. |
+| `/app/pagos` | Shell Angular `200`; validación visual pendiente por falta de navegador/headless. |
+| `/app/inventario` | Shell Angular `200`; validación visual pendiente por falta de navegador/headless. |
+| `/app/proveedores` | Shell Angular `200`; validación visual pendiente por falta de navegador/headless. |
+| `/app/admin/usuarios` | Shell Angular `200`; validación visual pendiente por falta de navegador/headless. |
+| `/app/admin/roles` | Shell Angular `200`; validación visual pendiente por falta de navegador/headless. |
+
+Evidencia por código:
+
+- `PrivateLayoutComponent` importa y usa `RouterLinkActive`.
+- Todos los enlaces privados revisados tienen `routerLinkActive="is-active"` y `ariaCurrentWhenActive="page"`.
+- `/app/dashboard` usa `[routerLinkActiveOptions]="{ exact: true }"`.
+- Los estilos `.is-active`, `:hover` y `:focus-visible` existen en `private-layout.component.scss`.
+- No se detectó cambio de rutas privadas ni conversión de `/dashboard` en ruta privada real.
+
+Resultado: navegación activa validada por código/build y shell Angular. Queda pendiente pase visual humano en navegador real para confirmar foco visible, legibilidad y ausencia de regresión visual.
+
+### Validación De Dashboard Y Zona Horaria
+
+Resultado por código/pruebas:
+
+- `Dashboard:BusinessTimeZone` mantiene default `America/Mexico_City`.
+- `generatedAtUtc` se conserva en UTC; la API serializó `2026-05-28T04:15:10.3515775+00:00` y se parseó como UTC.
+- `dueToday`, `overdue` y `upcomingDue` usan la fecha operativa del laboratorio.
+- `DeliveryDate` no cambió de tipo ni significado; sigue siendo fecha de entrega capturada.
+- La prueba `OperationalSummaryUsesBusinessTimeZoneDateWhenUtcDateDiffers` cubre el caso donde UTC y America/Mexico_City caen en fechas distintas.
+
+Resultado manual por API local con Admin:
+
+| Métrica | Antes | Después de orden QA | Delta |
+| --- | ---: | ---: | ---: |
+| `dueToday` | 1 | 2 | +1 |
+| `upcomingDue` | 1 | 2 | +1 |
+| `overdue` | 0 | 0 | 0 |
+
+- Fecha operativa local usada para la orden QA: `2026-05-27`.
+- La orden QA tuvo `DeliveryDate=2026-05-27`.
+- Resultado esperado confirmado: una orden con entrega igual a la fecha operativa del laboratorio incrementa `dueToday`.
+
+### Validación De Usuario Limitado / Access-Denied
+
+No se creó usuario limitado local.
+
+Motivo:
+
+- El seed actual crea/asegura Admin; no provee un seed local configurable para usuario limitado.
+- Las páginas `/app/admin/usuarios` y `/app/admin/roles` siguen como placeholders, sin CRUD seguro para crear usuario QA.
+- Los endpoints de diagnóstico de seguridad en Development (`/api/security/permissions-check` y `/api/security/csrf-check`) no crean usuarios.
+- Los usuarios limitados existentes están solo en fixtures de pruebas automatizadas con SQLite en memoria; no son mecanismo seguro para la base local real.
+- No se autorizó crear usuario por SQL directo y no se alteraron permisos del Admin.
+
+Evidencia conservada:
+
+- Por código, `permissionGuard` redirige a `/app/access-denied` cuando `ensureSession()` confirma sesión pero falta el permiso requerido.
+- Por pruebas API, usuarios autenticados sin permiso reciben `403`, incluyendo `SummaryWithoutReportsPermissionReturnsForbidden` para `/api/dashboard/summary`.
+
+Resultado: validación manual de `/app/access-denied` queda pendiente hasta existir un mecanismo seguro de creación de usuario limitado o autorización explícita para preparar datos QA por SQL.
+
+### Validación De Login/Logout Y Rutas Privadas
+
+Resultado HTTP/API con Admin:
+
+- `GET /api/auth/csrf` antes de login: `204`.
+- `POST /api/auth/login`: `200`.
+- `GET /api/auth/csrf` después de login: `204`.
+- `GET /api/auth/me`: `200`, con 19 permisos.
+- `GET /api/dashboard/summary`: `200`.
+- `GET /api/customers`: `200`.
+- `GET /api/work-orders`: `200`.
+- `GET /api/payments`: `200`.
+- `POST /api/auth/logout`: `200`.
+- `GET /api/auth/me` después de logout: `401`.
+- `GET /api/dashboard/summary` después de logout: `401`.
+
+Confirmación por código:
+
+- `/login` sigue público.
+- `/app` sigue protegido por `authGuard`.
+- `/app/dashboard` sigue protegido por `permissionGuard` y requiere `reports.view`.
+- `/dashboard` no es ruta privada real; el wildcard conserva redirección a home pública.
+- Usuario sin sesión en `/app/dashboard` debe ir a `/login?returnUrl=%2Fapp%2Fdashboard` por `authGuard`/`permissionGuard`.
+- `returnUrl` externo o inválido sigue bloqueado por `getSafePrivateReturnUrl()`.
+
+Limitación: la redirección visual real sin sesión y post-logout no se ejecutó en navegador porque no hay navegador/headless disponible sin instalar dependencias.
+
+### Validación De Rutas Públicas
+
+Todas respondieron con shell Angular `200` desde Angular dev server:
+
+| Ruta | Resultado |
+| --- | --- |
+| `/` | `200` |
+| `/servicios` | `200` |
+| `/catalogo` | `200` |
+| `/contacto` | `200` |
+| `/login` | `200` |
+
+No se modificó el sitio público.
+
+### Datos QA Creados
+
+Quedan en la base local `LaboratorioTlahuac_Dev`.
+
+| Tipo | Identificador | Dato |
+| --- | --- | --- |
+| Cliente | `a5c48811-e171-450b-963e-f929a0d71084` | Nombre con prefijo `Cliente QA LDT F2.4`. |
+| Orden | `53a35d65-a3ff-4f7d-ab7c-b0b2d658df44` | `OT-20260528-82F6A6`, `DeliveryDate=2026-05-27`, paciente con prefijo `Paciente QA LDT F2.4`. |
+
+No se limpiaron datos QA.
+
+### Hallazgos
+
+#### Bloqueante
+
+Ninguno.
+
+#### Alto
+
+Ninguno.
+
+#### Medio
+
+Ninguno.
+
+#### Bajo
+
+| Ruta | Hallazgo | Evidencia | Recomendación |
+| --- | --- | --- | --- |
+| `/app/access-denied` | No se pudo probar usuario limitado real por falta de mecanismo seguro de creación local. | Seed solo Admin, usuarios/roles placeholders, fixtures limitados solo en pruebas. | Crear mecanismo QA seguro o autorizar preparación SQL local documentada antes de requerir evidencia visual completa. |
+
+#### Observación
+
+| Ruta | Observación | Evidencia | Recomendación |
+| --- | --- | --- | --- |
+| `/app/*` | Pase visual de navegación activa queda pendiente por falta de navegador/headless disponible sin instalar dependencias. | `command -v` sin Chromium/Chrome/Firefox y sin Playwright local. | Ejecutar revisión humana en navegador real para confirmar activo, foco visible y consola/Network. |
+| `/api/dashboard/summary` | `generatedAtUtc` se serializa con offset `+00:00`, no necesariamente con sufijo `Z`; sigue siendo UTC. | Respuesta local parseada a `2026-05-28T04:15:10.351Z`. | Mantener la validación por offset UTC, no por formato literal `Z`. |
+
+### Pendientes Restantes
+
+- Ejecutar pase visual humano en navegador real para navegación activa privada y foco visible.
+- Probar `/app/access-denied` con usuario QA limitado cuando exista mecanismo seguro o autorización explícita para crear datos locales de seguridad.
+- Revisar consola/Network en navegador real si se requiere evidencia visual adicional antes de staging.
+
+### Validaciones Técnicas De Cierre
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 91/91.
+- `git diff --check`: correcto.
+- `rg "/dashboard" .`: revisado; no se detectó `/dashboard` como ruta privada real nueva.
+- `rg "/app/dashboard" .`: revisado; confirma que el dashboard privado real se mantiene bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada pública y endpoints/rutas de auth existentes.
+- `rg "routerLinkActive" src/LaboratorioTlahuac.Web/src/app/admin/layout`: revisado; confirma `RouterLinkActive` en navegación privada.
+- `rg "America/Mexico_City" src docs tests README.md`: revisado; confirma zona horaria operativa.
+- `rg -F "Central Standard Time (Mexico)" src docs tests README.md`: revisado con búsqueda literal por paréntesis; confirma compatibilidad Windows documentada/codificada.
+- `rg --files-with-matches "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "ConnectionStrings" src docs README.md`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; las menciones corresponden a documentación de no uso o histórico.
+
+### Recomendación De Siguiente Fase
+
+Fase 2.5 - cierre visual humano del sistema privado y definición de un mecanismo seguro para usuario QA limitado, antes de preparar staging o deploy.
+
 ## Entorno Usado
 
 - Fecha de ejecución local: 2026-05-27, America/Mexico_City, `CST -0600`.
@@ -255,6 +445,6 @@ No se limpiaron datos de prueba.
 
 ## Recomendacion De Siguiente Fase
 
-Siguiente fase recomendada: Fase 2.4 - pase visual/manual privado y validación de permisos con usuario limitado si se requiere.
+Siguiente fase recomendada: Fase 2.5 - cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado.
 
-Motivo: los hallazgos principales de Fase 2.2 ya quedaron corregidos; queda pendiente evidencia visual/manual adicional y usuario limitado para `/app/access-denied` si se decide cubrir permisos completos antes de staging/deploy.
+Motivo: los hallazgos principales de Fase 2.2 ya quedaron corregidos y Fase 2.4 validó dashboard/auth por API; queda pendiente evidencia visual real de navegación activa y usuario limitado para `/app/access-denied` antes de staging/deploy si se requiere cobertura completa.

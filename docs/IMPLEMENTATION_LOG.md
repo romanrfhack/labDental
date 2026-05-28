@@ -6,6 +6,89 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-27 - Fase 2.4 Pase Visual/Manual Privado Y Permisos
+
+### Cambio Realizado
+
+Se ejecutó la Fase 2.4 como pase manual/técnico del sistema privado para validar los cambios de Fase 2.3 y no se implementaron funcionalidades nuevas.
+
+No se modificaron código frontend/backend, `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies, XSRF, endpoints, rutas privadas, migraciones, deploy ni dependencias. No se hicieron commits.
+
+### Entorno
+
+- SQL dedicado: `ldt-labdental-sql`.
+- Puerto SQL local: `14336 -> 1433/tcp`.
+- Base local: `LaboratorioTlahuac_Dev`.
+- API local: `http://localhost:5277`.
+- Angular dev server: `http://localhost:4200`.
+- `codex-cobranza-sql` no apareció activo y no se usó.
+- Credenciales Admin tomadas de variables de entorno locales sin imprimir valores.
+- No hay navegador/headless local disponible sin instalar dependencias.
+
+### Validación Ejecutada
+
+- Preflight Docker confirmó `ldt-labdental-sql` activo y puerto `14336`.
+- `/health` respondió `200`.
+- Rutas públicas `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` respondieron con shell Angular `200`.
+- Rutas privadas objetivo de navegación respondieron con shell Angular `200`; la ejecución real de guards/estado activo queda limitada por falta de navegador/headless.
+- Login Admin por API: CSRF `204`, login `200`, `/api/auth/me` `200` con 19 permisos.
+- Dashboard/listados con Admin: `/api/dashboard/summary`, `/api/customers`, `/api/work-orders` y `/api/payments` respondieron `200`.
+- Logout Admin: `POST /api/auth/logout` `200`, `/api/auth/me` posterior `401` y `/api/dashboard/summary` posterior `401`.
+- Dashboard zona horaria: una orden QA con `DeliveryDate=2026-05-27` incrementó `dueToday` de 1 a 2 y `upcomingDue` de 1 a 2 con fecha operativa `America/Mexico_City`.
+- `generatedAtUtc` se confirmó en UTC con offset `+00:00`; `DeliveryDate` conserva su significado de fecha capturada.
+- Navegación activa se validó por código: `RouterLinkActive`, `ariaCurrentWhenActive`, match exacto para `/app/dashboard` y estilos `.is-active`/`focus-visible`.
+- Usuario limitado no se creó porque no existe mecanismo seguro local fuera de fixtures de pruebas y no se autorizó SQL directo.
+
+### Datos QA Creados
+
+Quedaron en la base local:
+
+- Cliente `a5c48811-e171-450b-963e-f929a0d71084`, con nombre prefijado `Cliente QA LDT F2.4`.
+- Orden `OT-20260528-82F6A6`, id `53a35d65-a3ff-4f7d-ab7c-b0b2d658df44`, `DeliveryDate=2026-05-27`.
+
+No se limpiaron datos QA.
+
+### Hallazgos
+
+- Bloqueante: ninguno.
+- Alto: ninguno.
+- Medio: ninguno.
+- Bajo: no se pudo probar `/app/access-denied` con usuario limitado real por falta de mecanismo seguro de creación local.
+- Observación: el pase visual real de navegación activa queda pendiente por falta de navegador/headless disponible sin instalar dependencias.
+
+### Archivos Modificados
+
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `README.md`
+- `docs/README.md`
+- `docs/01-product/internal-system.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+- `docs/08-qa/private-admin-qa.md`
+
+### Validaciones De Cierre
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 91/91.
+- `git diff --check`: correcto.
+- `rg "/dashboard" .`: revisado; no se detectó `/dashboard` como ruta privada real nueva.
+- `rg "/app/dashboard" .`: revisado; confirma que el dashboard privado real se mantiene bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada pública y endpoints/rutas de auth existentes.
+- `rg "routerLinkActive" src/LaboratorioTlahuac.Web/src/app/admin/layout`: revisado; confirma navegación activa por `RouterLinkActive`.
+- `rg "America/Mexico_City" src docs tests README.md`: revisado; confirma configuración/código/documentación de zona horaria.
+- `rg -F "Central Standard Time (Mexico)" src docs tests README.md`: revisado con búsqueda literal por paréntesis; confirma compatibilidad Windows.
+- `rg --files-with-matches "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "ConnectionStrings" src docs README.md`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; solo aparecen menciones documentales o históricas de no uso.
+
+### Siguiente Fase Recomendada
+
+Fase 2.5 - cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado.
+
 ## 2026-05-27 - Fase 2.3 Corrección De Hallazgos QA Del Sistema Privado
 
 ### Cambio Realizado

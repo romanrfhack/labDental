@@ -4,14 +4,14 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto y Fase 2.3 del sistema privado cerrada como corrección de hallazgos QA. La siguiente fase recomendada es Fase 2.4 - pase visual/manual privado y validación de permisos con usuario limitado si se requiere.
+Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto y Fase 2.4 del sistema privado ejecutada como pase manual/técnico de navegación, dashboard y auth. La siguiente fase recomendada es Fase 2.5 - cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado.
 
 ## Estado Por Frente
 
-- Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto y no fueron modificados en Fase 2.3.
+- Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto y no fueron modificados en Fase 2.3 ni Fase 2.4.
 - Catálogo: legible y aprobado visualmente; mantiene precios de referencia 2026, frames uniformes de imágenes, placeholders intencionales y condiciones comerciales con texto prudente.
-- Login/auth: `/login` sigue público; login con Admin local validado manualmente; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3.
-- Sistema privado: Fase 2.3 cerrada por corrección mínima de hallazgos QA; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, el dashboard usa fecha operativa de negocio y la navegación privada marca ruta activa.
+- Login/auth: `/login` sigue público; login con Admin local validado manualmente; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3 ni Fase 2.4.
+- Sistema privado: Fase 2.4 ejecutada; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, el dashboard usa fecha operativa de negocio y la navegación privada queda validada por código/build porque no hay navegador/headless disponible sin instalar dependencias.
 - Pendientes del cliente: dirección, horarios, WhatsApp real, aprobación final de precios 2026, aprobación de `Anticipo 50%`, aprobación de `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 
 ## Sistema Privado / MVP Administrativo
@@ -69,6 +69,13 @@ Estado: avanzado, con QA funcional y demo documentadas; Fase 2.3 queda cerrada p
 - Prueba Fase 2.3 agregada: `OperationalSummaryUsesBusinessTimeZoneDateWhenUtcDateDiffers` cubre el caso donde UTC y Mexico City caen en fechas distintas y valida `dueToday`, `overdue` y `upcomingDue`.
 - Navegación privada Fase 2.3: `PrivateLayoutComponent` usa `routerLinkActive`, `ariaCurrentWhenActive` y `routerLinkActiveOptions` exacto para `/app/dashboard`; se agregaron estilos de activo, hover y focus visible sin cambiar permisos, rutas ni logout.
 - Fase 2.3 no modificó sitio público, `AuthService`, guards, cookies, XSRF, endpoints públicos, rutas privadas, migraciones, deploy ni dependencias.
+- Validación Fase 2.4 2026-05-27: SQL dedicado `ldt-labdental-sql` activo en `14336`, base `LaboratorioTlahuac_Dev`, API en `http://localhost:5277` y Angular en `http://localhost:4200`; `codex-cobranza-sql` no apareció activo ni se usó.
+- Fase 2.4 validó por HTTP/API con Admin: CSRF `204`, login `200`, `/api/auth/me` `200` con 19 permisos, dashboard/listados `200`, logout `200` y endpoints privados posteriores `401`.
+- Fase 2.4 creó datos locales QA: cliente `a5c48811-e171-450b-963e-f929a0d71084` con prefijo `Cliente QA LDT F2.4` y orden `OT-20260528-82F6A6` (`53a35d65-a3ff-4f7d-ab7c-b0b2d658df44`) con `DeliveryDate=2026-05-27`; no se limpiaron.
+- Dashboard Fase 2.4: con la orden QA en fecha operativa local `2026-05-27`, `dueToday` subió de 1 a 2 y `upcomingDue` de 1 a 2; `overdue` se mantuvo en 0 y `generatedAtUtc` se confirmó UTC con offset `+00:00`.
+- Navegación privada Fase 2.4: no hay navegador/headless disponible sin instalar dependencias, por lo que el estado activo se validó por código/build, shell Angular `200` y búsquedas; queda pendiente pase visual humano.
+- Usuario limitado Fase 2.4: no se creó porque no existe mecanismo seguro local fuera de fixtures de pruebas y no se autorizó SQL directo; por código, `permissionGuard` conserva `/app/access-denied` para sesión sin permiso.
+- Fase 2.4 no modificó código, `AuthService`, guards, cookies, XSRF, endpoints, rutas privadas, backend, migraciones, deploy ni dependencias.
 
 La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
 
@@ -134,7 +141,7 @@ Estado: pendiente de definición productiva.
 
 ## QA
 
-- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md` y Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa.
+- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, y Fase 2.4 agrega pase manual/técnico privado con Admin.
 - QA responsive del sitio público: revisión por código/build ejecutada; Fase 1.6 cerrada como validada visualmente por el responsable del proyecto.
 - No existe runner frontend no interactivo; frontend se valida hoy con `npm run build` y revisión manual cuando aplique.
 - Validación Fase 1: `npm run build` ejecutado correctamente en `src/LaboratorioTlahuac.Web`.
@@ -178,6 +185,11 @@ Estado: pendiente de definición productiva.
 - Validación Fase 2.3 2026-05-27: búsquedas obligatorias de rutas, `routerLinkActive`, `America/Mexico_City`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas; las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
 - Nota de validación Fase 2.3: la primera ejecución de `dotnet test` falló por tener dos constructores públicos en el fixture de pruebas; se corrigió dejando un solo constructor público y se repitió correctamente.
 - Zona horaria formal de negocio definida en Fase 2.3: `America/Mexico_City`; el hallazgo de `dueToday=0` por cálculo UTC queda corregido por código y prueba automatizada.
+- Validación Fase 2.4 2026-05-27: preflight Docker, API/Angular locales, rutas públicas, rutas privadas por shell Angular, login/logout Admin por API, dashboard con fecha operativa, revisión de navegación activa por código y revisión de mecanismo de usuario limitado ejecutados sin imprimir secretos.
+- Validación de cierre Fase 2.4 2026-05-27: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` ejecutados correctamente; `dotnet test` cerró con Domain 1/1, Application 1/1 y API 91/91.
+- Búsquedas obligatorias Fase 2.4: rutas, `routerLinkActive`, `America/Mexico_City`, compatibilidad Windows de zona horaria, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas; las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
+- Limitación Fase 2.4: no existe navegador/headless local sin instalar dependencias; la navegación activa queda pendiente de pase visual humano aunque el código y build validan `routerLinkActive`.
+- Limitación Fase 2.4: no existe mecanismo seguro de producto para crear usuario limitado local; `/app/access-denied` queda pendiente de validación manual con usuario real.
 
 ## Comercial
 
@@ -187,9 +199,9 @@ Estado: pendiente de definición productiva.
 
 ## Próxima Tarea Recomendada
 
-Fase 2.4 - Pase visual/manual privado y validación de permisos con usuario limitado si se requiere.
+Fase 2.5 - Cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado.
 
-Alcance sugerido: validar en navegador real el estado activo de navegación privada, consola/Network si se requiere evidencia visual adicional y preparar un usuario QA limitado para confirmar `/app/access-denied`.
+Alcance sugerido: revisar en navegador real el estado activo de navegación privada, foco visible, consola/Network y preparar un mecanismo seguro para validar `/app/access-denied` sin alterar permisos del Admin ni crear datos directos en SQL sin autorización.
 
 Mantener pendientes de cliente para el sitio público: confirmar vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
 

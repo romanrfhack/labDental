@@ -140,6 +140,19 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - No hay tests frontend existentes ni runner no interactivo para layout privado; validación frontend por código y `npm run build`.
 - Queda pendiente pase visual manual en navegador real si se requiere evidencia de consola/Network o captura visual de la navegación activa.
 
+## Estado Fase 2.4
+
+- Pase manual/técnico privado ejecutado con Admin local y SQL dedicado `ldt-labdental-sql` en `14336`.
+- API local `http://localhost:5277` y Angular `http://localhost:4200` levantaron correctamente para la validación.
+- Rutas públicas `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` respondieron con shell Angular `200`.
+- Rutas privadas objetivo `/app/dashboard`, `/app/clientes`, `/app/ordenes`, `/app/pagos`, `/app/inventario`, `/app/proveedores`, `/app/admin/usuarios` y `/app/admin/roles` respondieron con shell Angular `200`.
+- No hay navegador/headless local sin instalar dependencias; la navegación activa privada queda validada por código/build y pendiente de pase visual humano.
+- `PrivateLayoutComponent` mantiene `routerLinkActive`, `ariaCurrentWhenActive`, match exacto para `/app/dashboard` y estilos `.is-active`/`focus-visible`.
+- Login/logout con Admin validado por API: login `200`, `/api/auth/me` `200`, dashboard/listados `200`, logout `200` y endpoints privados posteriores `401`.
+- Dashboard zona horaria validado manualmente por API: una orden QA con `DeliveryDate=2026-05-27` incrementó `dueToday` y `upcomingDue` en +1 usando la fecha operativa `America/Mexico_City`.
+- Usuario limitado real no se probó porque no existe mecanismo seguro local fuera de fixtures de pruebas y no se autorizó SQL directo; `/app/access-denied` queda pendiente de pase con usuario real.
+- No se modificó el sitio público ni se tocaron rutas privadas, guards, `AuthService`, cookies, XSRF, endpoints, migraciones, deploy o dependencias.
+
 ## Verificado Por Código / Build
 
 - [x] Build frontend correcto con `npm run build`.
@@ -203,6 +216,13 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 2.3 agrega prueba automatizada para UTC y Mexico City en fechas distintas.
 - [x] Fase 2.3 corrige navegación privada con estado activo visual y focus visible.
 - [x] Fase 2.3 ejecuta `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctamente.
+- [x] Fase 2.4 ejecuta preflight de SQL dedicado y confirma no uso de `codex-cobranza-sql`.
+- [x] Fase 2.4 valida login/logout Admin por API sin imprimir credenciales.
+- [x] Fase 2.4 valida dashboard con fecha operativa local y datos QA.
+- [x] Fase 2.4 confirma por código que `/login` sigue público, `/app` y `/app/dashboard` siguen privados y `/dashboard` no es ruta privada real.
+- [x] Fase 2.4 ejecuta `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctamente.
+- [ ] Fase 2.4 deja pendiente pase visual humano de navegación activa por falta de navegador/headless local.
+- [ ] Fase 2.4 deja pendiente usuario limitado real para `/app/access-denied` por falta de mecanismo seguro local.
 
 ## Hallazgos Manuales Recibidos
 
@@ -212,7 +232,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 | `/app/dashboard` | Después de login con Admin local redirige correctamente, pero al regresar a la página podía quedar en `Cargando dashboard...`. | Cerrado en Fase 2.1d; dashboard autenticado validado manualmente. |
 | `/app/dashboard` | Si `GET /api/dashboard/summary` queda pendiente, el componente no tenia timeout. | Corregido con timeout y error controlado; validado manualmente por carga correcta del dashboard. |
 | `/app/dashboard` | Métrica "Para hoy" requiere definir zona horaria de negocio; durante QA local una orden con entrega en la fecha local no incrementó `dueToday`. | Corregido en Fase 2.3 por código y prueba automatizada. |
-| `/app/*` | Navegación privada sin estado activo visual de ruta. | Corregido en Fase 2.3 por código/build; pendiente pase visual manual si se requiere evidencia adicional. |
+| `/app/*` | Navegación privada sin estado activo visual de ruta. | Corregido en Fase 2.3 por código/build; Fase 2.4 lo revalidó por código y queda pendiente pase visual humano por falta de navegador/headless local. |
 | Sitio público Fase 1.6 | Rutas públicas, `/login`, viewports obligatorios, mobile-first, catálogo, contacto y ausencia de scroll horizontal revisados por el responsable. | Validado visualmente. |
 
 ## Verificado Visualmente
@@ -230,7 +250,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 
 ## Pendiente QA Amplio / Cliente
 
-- Ejecutar Fase 2.4 - pase visual/manual privado y validación de permisos con usuario limitado si se requiere.
+- Ejecutar Fase 2.5 - cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado.
 - Completar pase visual en navegador real para consola/Network y redirecciones visuales si se requiere evidencia adicional.
 - Confirmar dirección, horarios, WhatsApp real, aprobación final de precios 2026, `Anticipo 50%`, `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 - Para celular en la misma red local, levantar temporalmente Angular con `npm start -- --host 0.0.0.0 --port 4200`. No es despliegue productivo.

@@ -170,6 +170,25 @@ Estado: corrección mínima aplicada y validada por build/pruebas.
 - Validación ejecutada: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias.
 - No se cambiaron rutas, permisos, logout, `AuthService`, guards, cookies, XSRF, endpoints públicos, migraciones, deploy ni dependencias.
 
+## Validación De Acceso Fase 2.4
+
+Estado: pase manual/técnico privado ejecutado con Admin local; navegación activa validada por código/build y dashboard validado por API/datos QA. Pase visual humano y usuario limitado real quedan pendientes por limitaciones seguras del entorno.
+
+- Entorno usado: API local en `http://localhost:5277`, Angular en `http://localhost:4200`, SQL dedicado `ldt-labdental-sql`, puerto `14336`, base `LaboratorioTlahuac_Dev`.
+- No se usó `codex-cobranza-sql`.
+- `/login` sigue como entrada pública.
+- `/app` y `/app/dashboard` siguen bajo zona privada.
+- `/dashboard` no es ruta privada real.
+- Rutas públicas `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` respondieron con shell Angular `200`.
+- Rutas privadas objetivo bajo `/app` respondieron con shell Angular `200`; la ejecución visual de guards/estado activo no se pudo probar por falta de navegador/headless local sin instalar dependencias.
+- Con Admin, `POST /api/auth/login` respondió `200`, `GET /api/auth/me` respondió `200` con 19 permisos y `GET /api/dashboard/summary` respondió `200`.
+- Logout validado: `POST /api/auth/logout` respondió `200`; `/api/auth/me` y `/api/dashboard/summary` posteriores respondieron `401`.
+- Dashboard zona horaria validado con datos QA: una orden con `DeliveryDate=2026-05-27`, igual a la fecha operativa local, incrementó `dueToday` en +1 y `upcomingDue` en +1.
+- `generatedAtUtc` sigue siendo UTC, serializado con offset `+00:00`; `DeliveryDate` conserva significado de fecha capturada.
+- Datos QA locales creados: cliente con prefijo `Cliente QA LDT F2.4` (`a5c48811-e171-450b-963e-f929a0d71084`) y orden `OT-20260528-82F6A6` (`53a35d65-a3ff-4f7d-ab7c-b0b2d658df44`), no limpiados.
+- Usuario autenticado sin permiso no se probó con cuenta limitada porque no existe mecanismo seguro local fuera de fixtures de pruebas y no se autorizó SQL directo; por código, `permissionGuard` conserva redirección a `/app/access-denied`.
+- No se modificaron rutas, permisos, logout, `AuthService`, guards, cookies, XSRF, endpoints, migraciones, deploy ni dependencias.
+
 ## Permisos
 
 El sistema autoriza por permisos, no por nombre de rol. El rol Admin inicial recibe todos los permisos mediante seed.

@@ -398,3 +398,41 @@ Matices de evidencia:
 - `GET /api/dashboard/summary` autenticado queda validado indirectamente por la carga correcta del dashboard; el endpoint no fue inspeccionado de forma independiente.
 - La redirección posterior a logout o sesión cerrada queda validada; logout como acción independiente no queda documentado como inspeccionado por separado.
 - No se modificaron `AuthService`, guards, cookies, CSRF/XSRF, endpoints, base de datos, migraciones ni deploy en este cierre documental.
+
+## Validación Fase 2.4 - 2026-05-27
+
+Resultado de auth con Admin local:
+
+- Credenciales Admin disponibles como variables de entorno locales y usadas sin imprimir valores.
+- `GET /api/auth/csrf` antes de login respondió `204`.
+- `POST /api/auth/login` respondió `200`.
+- `GET /api/auth/csrf` después de login respondió `204`.
+- `GET /api/auth/me` autenticado respondió `200` y reportó 19 permisos.
+- `GET /api/dashboard/summary` autenticado respondió `200`.
+- `GET /api/customers`, `GET /api/work-orders` y `GET /api/payments` autenticados respondieron `200`.
+- `POST /api/auth/logout` respondió `200`.
+- `GET /api/auth/me` después de logout respondió `401`.
+- `GET /api/dashboard/summary` después de logout respondió `401`.
+
+Resultado de rutas y redirecciones:
+
+- `/login` sigue siendo ruta pública.
+- `/app` sigue protegido por `authGuard`.
+- `/app/dashboard` sigue protegido por `permissionGuard` y requiere `reports.view`.
+- `/dashboard` no es ruta privada real; no se cambió el router para convertirla en privada.
+- Por código, usuario sin sesión en `/app/*` sigue redirigiendo a `/login?returnUrl=...`.
+- Por código, `getSafePrivateReturnUrl()` conserva solo rutas internas seguras bajo `/app` y normaliza destinos externos o inválidos a `/app/dashboard`.
+- La redirección visual real en navegador no se pudo ejecutar porque no hay navegador/headless local disponible sin instalar dependencias.
+
+Resultado de permisos:
+
+- No se creó usuario limitado local.
+- El seed disponible asegura Admin; no provee usuario limitado configurable.
+- Los endpoints Development de seguridad son solo diagnósticos y no crean usuarios.
+- Las páginas de usuarios/roles siguen como placeholders sin CRUD seguro.
+- Los usuarios limitados existen solo en fixtures de pruebas automatizadas con SQLite en memoria.
+- No se autorizó creación directa por SQL y no se alteraron permisos del Admin.
+- Por código, `permissionGuard` conserva la diferencia entre falta de sesión y falta de permiso: sin sesión va a `/login?returnUrl=...`; sesión autenticada sin permiso va a `/app/access-denied`.
+- Por pruebas API, una sesión sin permiso recibe `403`, incluyendo `/api/dashboard/summary` sin `reports.view`.
+
+No se modificaron `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies, CSRF/XSRF, endpoints, rutas privadas, migraciones, deploy ni dependencias.

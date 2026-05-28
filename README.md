@@ -4,8 +4,8 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 
 ## Estado Actual
 
-- Sistema privado / MVP administrativo: avanzado, con QA funcional y demo documentadas.
-- Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios` y `/contacto`; QA responsive técnico ejecutado; revisión visual manual y contenido final pendientes.
+- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada y pase manual/técnico privado Fase 2.4 ejecutado.
+- Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; contenido final del cliente pendiente.
 - Deploy productivo: pendiente de plataforma, DNS, HTTPS, variables y base productiva.
 
 La Fase 1 / Etapa 7 corresponde al MVP administrativo. La Fase 0/Fase 1 del sitio público corresponde a un frente separado.
@@ -92,6 +92,6 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
 ## Próximos Pasos
 
-1. Ejecutar Fase 2.4: pase visual/manual privado y validación de permisos con usuario limitado si se requiere.
+1. Ejecutar Fase 2.5: cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado si se requiere.
 2. Confirmar contenido real pendiente del cliente: dirección, horarios, WhatsApp, precios y materiales visuales.
 3. Definir plataforma de despliegue y pendientes de DNS para `laboratoriodentaltlahuac.com`.
