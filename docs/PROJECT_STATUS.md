@@ -4,14 +4,14 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto y Fase 2.4 del sistema privado ejecutada como pase manual/técnico de navegación, dashboard y auth. La siguiente fase recomendada es Fase 2.5 - cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado.
+Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto y Fase 2.5 del sistema privado cerrada como pase visual humano privado completado. El mecanismo seguro recomendado para usuario QA limitado queda como backlog técnico inmediato.
 
 ## Estado Por Frente
 
-- Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto y no fueron modificados en Fase 2.3 ni Fase 2.4.
+- Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto. Fase 2.5 confirmó que no hubo regresión visible del sitio público.
 - Catálogo: legible y aprobado visualmente; mantiene precios de referencia 2026, frames uniformes de imágenes, placeholders intencionales y condiciones comerciales con texto prudente.
-- Login/auth: `/login` sigue público; login con Admin local validado manualmente; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3 ni Fase 2.4.
-- Sistema privado: Fase 2.4 ejecutada; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, el dashboard usa fecha operativa de negocio y la navegación privada queda validada por código/build porque no hay navegador/headless disponible sin instalar dependencias.
+- Login/auth: `/login` sigue público; login con Admin local validado manualmente; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3, Fase 2.4 ni Fase 2.5.
+- Sistema privado: Fase 2.5 cerrada como pase visual humano privado completado; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, el dashboard usa fecha operativa de negocio y la navegación privada fue confirmada visualmente en rutas principales.
 - Pendientes del cliente: dirección, horarios, WhatsApp real, aprobación final de precios 2026, aprobación de `Anticipo 50%`, aprobación de `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 
 ## Sistema Privado / MVP Administrativo
@@ -76,6 +76,13 @@ Estado: avanzado, con QA funcional y demo documentadas; Fase 2.3 queda cerrada p
 - Navegación privada Fase 2.4: no hay navegador/headless disponible sin instalar dependencias, por lo que el estado activo se validó por código/build, shell Angular `200` y búsquedas; queda pendiente pase visual humano.
 - Usuario limitado Fase 2.4: no se creó porque no existe mecanismo seguro local fuera de fixtures de pruebas y no se autorizó SQL directo; por código, `permissionGuard` conserva `/app/access-denied` para sesión sin permiso.
 - Fase 2.4 no modificó código, `AuthService`, guards, cookies, XSRF, endpoints, rutas privadas, backend, migraciones, deploy ni dependencias.
+- Fase 2.5 2026-05-28: pase visual/manual privado confirmado en navegador real por el responsable del proyecto.
+- Resultados visuales Fase 2.5: `/login`, login Admin, `/app/dashboard`, `/app/clientes`, `/app/ordenes`, `/app/pagos`, navegación activa en rutas principales, placeholders de inventario/proveedores/usuarios/roles, logout y redirección de `/app/dashboard` sin sesión a `/login?returnUrl=%2Fapp%2Fdashboard` quedaron OK.
+- Fase 2.5 confirma que el sitio público no tuvo regresión visible y no reportó bloqueantes visuales.
+- Fase 2.5 documenta que `/dashboard` raíz sigue sin ser ruta privada real por revisión técnica de `app.routes.ts`.
+- Fase 2.5 define como mecanismo recomendado para usuario QA limitado un seed solo Development, desactivado por default, controlado por user-secrets o variables de entorno, sin imprimir password, sin SQL manual, sin modificar Admin y sin activarse en producción.
+- Plan creado: `docs/08-qa/limited-user-qa-plan.md`.
+- Fase 2.5 no modificó código, backend, `AuthService`, guards, cookies, XSRF, endpoints, rutas privadas, base de datos, migraciones, deploy ni dependencias.
 
 La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
 
@@ -141,7 +148,7 @@ Estado: pendiente de definición productiva.
 
 ## QA
 
-- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, y Fase 2.4 agrega pase manual/técnico privado con Admin.
+- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, Fase 2.4 agrega pase manual/técnico privado con Admin y Fase 2.5 cierra el pase visual humano privado. El plan de usuario QA limitado queda vigente como backlog.
 - QA responsive del sitio público: revisión por código/build ejecutada; Fase 1.6 cerrada como validada visualmente por el responsable del proyecto.
 - No existe runner frontend no interactivo; frontend se valida hoy con `npm run build` y revisión manual cuando aplique.
 - Validación Fase 1: `npm run build` ejecutado correctamente en `src/LaboratorioTlahuac.Web`.
@@ -190,6 +197,9 @@ Estado: pendiente de definición productiva.
 - Búsquedas obligatorias Fase 2.4: rutas, `routerLinkActive`, `America/Mexico_City`, compatibilidad Windows de zona horaria, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas; las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
 - Limitación Fase 2.4: no existe navegador/headless local sin instalar dependencias; la navegación activa queda pendiente de pase visual humano aunque el código y build validan `routerLinkActive`.
 - Limitación Fase 2.4: no existe mecanismo seguro de producto para crear usuario limitado local; `/app/access-denied` queda pendiente de validación manual con usuario real.
+- Validación manual Fase 2.5 2026-05-28: resultados visuales humanos concretos recibidos y documentados; la fase queda completada para pase visual humano privado.
+- Usuario QA limitado Fase 2.5: se recomienda backlog técnico inmediato de seed solo Development documentado en `docs/08-qa/limited-user-qa-plan.md`; no se implementó.
+- Validación de cierre Fase 2.5 2026-05-28: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias ejecutadas correctamente; las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
 
 ## Comercial
 
@@ -199,9 +209,9 @@ Estado: pendiente de definición productiva.
 
 ## Próxima Tarea Recomendada
 
-Fase 2.5 - Cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado.
+Implementar, si se autoriza tocar backend mínimo, el mecanismo seguro de usuario QA limitado solo Development descrito en `docs/08-qa/limited-user-qa-plan.md`.
 
-Alcance sugerido: revisar en navegador real el estado activo de navegación privada, foco visible, consola/Network y preparar un mecanismo seguro para validar `/app/access-denied` sin alterar permisos del Admin ni crear datos directos en SQL sin autorización.
+Alcance sugerido: crear el usuario QA limitado solo en Development, sin secretos versionados, sin SQL manual y sin alterar Admin, para validar `/app/access-denied` con una sesión autenticada sin permisos suficientes.
 
 Mantener pendientes de cliente para el sitio público: confirmar vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
 

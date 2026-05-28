@@ -6,6 +6,97 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-28 - Fase 2.5 Cierre Visual Humano Privado Completado Y Usuario Limitado
+
+### Cambio Realizado
+
+Se cerró documentalmente Fase 2.5 como pase visual humano privado completado y se mantuvo el mecanismo seguro recomendado para usuario QA limitado como backlog técnico inmediato.
+
+No se modificó código frontend/backend, `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies, XSRF, endpoints, rutas privadas, base de datos, migraciones, deploy ni dependencias. No se hicieron commits.
+
+### Resultado Visual Humano
+
+El responsable del proyecto confirmó el pase visual/manual privado en navegador real.
+
+Estado registrado en `docs/08-qa/private-admin-qa.md`:
+
+- `/login`: OK.
+- Login Admin: OK.
+- `/app/dashboard`: OK.
+- Navegación activa en `/app/dashboard`: OK.
+- `/app/clientes`: OK.
+- Navegación activa en `/app/clientes`: OK.
+- `/app/ordenes`: OK.
+- Navegación activa en `/app/ordenes`: OK.
+- `/app/pagos`: OK.
+- Navegación activa en `/app/pagos`: OK.
+- `/app/inventario`: OK como placeholder.
+- `/app/proveedores`: OK como placeholder.
+- `/app/admin/usuarios`: OK como placeholder.
+- `/app/admin/roles`: OK como placeholder.
+- Logout: OK.
+- `/app/dashboard` sin sesión redirige a `/login?returnUrl=%2Fapp%2Fdashboard`: OK.
+- `/dashboard` raíz no es ruta privada real: OK.
+- Sitio público sin regresión visible: OK.
+- Observaciones visuales: sin bloqueantes visuales reportados.
+
+### Usuario QA Limitado
+
+Se evaluaron tres opciones:
+
+- Seed QA limitado solo Development.
+- Esperar módulo de usuarios/roles.
+- Script local de QA.
+
+Recomendación documentada: seed QA limitado solo Development, desactivado por default, controlado por user-secrets o variables de entorno, sin imprimir password, sin SQL manual, sin alterar Admin y sin activarse fuera de `Development`.
+
+Plan creado: `docs/08-qa/limited-user-qa-plan.md`.
+
+### Hallazgos
+
+- Bloqueante: ninguno.
+- Alto: ninguno.
+- Medio: ninguno.
+- Bajo: no se puede cerrar evidencia de `/app/access-denied` con usuario limitado real porque no existe mecanismo seguro local implementado.
+- Observación: pase visual humano privado completado sin bloqueantes visuales reportados.
+
+### Archivos Modificados
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/internal-system.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+- `docs/08-qa/private-admin-qa.md`
+
+### Archivos Creados
+
+- `docs/08-qa/limited-user-qa-plan.md`
+
+### Validaciones De Cierre
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 91/91.
+- `git diff --check`: correcto.
+- `rg "/dashboard" .`: revisado; no se detectó `/dashboard` como ruta privada real nueva.
+- `rg "/app/dashboard" .`: revisado; confirma que el dashboard privado real se mantiene bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada pública y endpoints/rutas de auth existentes.
+- `rg "routerLinkActive" src/LaboratorioTlahuac.Web/src/app/admin/layout`: revisado; confirma navegación activa por `RouterLinkActive`.
+- `rg "America/Mexico_City" src docs tests README.md`: revisado; confirma configuración/código/documentación de zona horaria.
+- `rg -F "Central Standard Time (Mexico)" src docs tests README.md`: revisado con búsqueda literal por paréntesis; confirma compatibilidad Windows.
+- `rg --files-with-matches "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "ConnectionStrings" src docs README.md`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; solo aparecen menciones documentales o históricas de no uso.
+
+### Siguiente Fase Recomendada
+
+Implementar, si se autoriza tocar backend mínimo, el mecanismo QA limitado solo Development documentado en `docs/08-qa/limited-user-qa-plan.md` para validar `/app/access-denied`.
+
 ## 2026-05-27 - Fase 2.4 Pase Visual/Manual Privado Y Permisos
 
 ### Cambio Realizado

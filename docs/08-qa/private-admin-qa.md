@@ -10,6 +10,164 @@ Limitación de ejecución: no hay navegador/headless local instalado en este ent
 
 Seguimiento Fase 2.3: los dos hallazgos principales de este reporte quedaron corregidos por código y pruebas. El dashboard usa fecha operativa de negocio `America/Mexico_City` para `dueToday`, `overdue` y `upcomingDue`; la navegación privada marca la ruta activa con `routerLinkActive` y estilos accesibles.
 
+## Fase 2.5 - Cierre visual humano privado y usuario limitado
+
+### Fecha
+
+- Documentación: 2026-05-28 07:26 CST, America/Mexico_City.
+- Cierre manual recibido: 2026-05-28 09:16 CST, America/Mexico_City.
+- Sin commits.
+- Sin cambios de código.
+
+### Entorno
+
+- Entorno objetivo documentado: Development local.
+- SQL dedicado esperado/validado en fase previa: `ldt-labdental-sql`.
+- Puerto SQL local: `14336`.
+- Base local: `LaboratorioTlahuac_Dev`.
+- No se usó `codex-cobranza-sql`.
+- No se ejecutó `dotnet user-secrets list`.
+- No se imprimieron secretos.
+- No se instalaron dependencias.
+- Pase visual/manual: navegador real del responsable del proyecto.
+
+### Resultado Visual Humano Por Ruta
+
+El responsable del proyecto confirmó el pase visual/manual privado en navegador real. Fase 2.5 queda cerrada como completada para el pase visual humano privado.
+
+| Punto | Resultado |
+| --- | --- |
+| `/login` | OK. |
+| Login Admin | OK. |
+| `/app/dashboard` | OK. |
+| Navegación activa en `/app/dashboard` | OK. |
+| `/app/clientes` | OK. |
+| Navegación activa en `/app/clientes` | OK. |
+| `/app/ordenes` | OK. |
+| Navegación activa en `/app/ordenes` | OK. |
+| `/app/pagos` | OK. |
+| Navegación activa en `/app/pagos` | OK. |
+| `/app/inventario` | OK como placeholder. |
+| `/app/proveedores` | OK como placeholder. |
+| `/app/admin/usuarios` | OK como placeholder. |
+| `/app/admin/roles` | OK como placeholder. |
+| Logout | OK. |
+| `/app/dashboard` sin sesión redirige a `/login?returnUrl=%2Fapp%2Fdashboard` | OK. |
+| `/dashboard` raíz no es ruta privada real | OK. |
+| Sitio público sin regresión visible | OK. |
+| Observaciones visuales | Sin bloqueantes visuales reportados. |
+
+### Navegación Activa
+
+Estado técnico conservado desde Fase 2.3/Fase 2.4:
+
+- `PrivateLayoutComponent` usa `RouterLinkActive`.
+- Los enlaces privados usan `routerLinkActive="is-active"` y `ariaCurrentWhenActive="page"`.
+- `/app/dashboard` usa `[routerLinkActiveOptions]="{ exact: true }"`.
+- Los estilos `.is-active`, `:hover` y `:focus-visible` existen en `private-layout.component.scss`.
+- El pase humano confirmó navegación activa en `/app/dashboard`, `/app/clientes`, `/app/ordenes` y `/app/pagos`.
+
+### Logout Y Redirecciones Sin Sesión
+
+Estado técnico/API conservado desde Fase 2.4:
+
+- Login Admin por API, `/api/auth/me` con 19 permisos, dashboard/listados y logout fueron validados.
+- Después de logout, `/api/auth/me` y `/api/dashboard/summary` respondieron `401`.
+- Por código, usuario sin sesión en `/app/*` redirige a `/login?returnUrl=...`.
+- Por código, usuario autenticado sin permiso redirige a `/app/access-denied`.
+- El pase humano confirmó logout y redirección de `/app/dashboard` sin sesión a `/login?returnUrl=%2Fapp%2Fdashboard`.
+
+### Estado De Usuario Limitado
+
+No existe todavía un mecanismo seguro de producto para crear usuario QA limitado en la base local real.
+
+Revisión técnica:
+
+- El seed actual asegura permisos y rol Admin; el Admin recibe todos los permisos de `Permissions.All`.
+- Los permisos se emiten como claims `permission`.
+- `Permissions.All` contiene 19 permisos.
+- Los usuarios limitados existentes están en fixtures de pruebas con SQLite en memoria, no en la base local real.
+- Las páginas `/app/admin/usuarios` y `/app/admin/roles` siguen como placeholders.
+- No se creó usuario por SQL manual.
+- No se alteró el Admin.
+- No se crearon migraciones.
+
+### Recomendación Sobre Mecanismo Seguro
+
+Recomendación: documentar como backlog técnico inmediato la Opción 1, seed QA limitado solo Development, sin implementarla en Fase 2.5.
+
+Condiciones mínimas recomendadas:
+
+- Desactivado por default.
+- Solo ejecutable con `Environment=Development`.
+- Habilitado explícitamente por `SecuritySeed:QaLimited:Enabled=true`.
+- Email, password y nombre tomados de user-secrets o variables de entorno, no de archivos versionados.
+- Password nunca impresa.
+- Usuario creado con servicios/entidades existentes y `PasswordHasher<User>`, no con SQL manual.
+- Permisos configurables por allowlist de `Permissions.All`; para validar `/app/access-denied` contra `/app/dashboard`, no incluir `reports.view`.
+
+Plan detallado: `docs/08-qa/limited-user-qa-plan.md`.
+
+### Hallazgos
+
+#### Bloqueante
+
+Ninguno.
+
+#### Alto
+
+Ninguno.
+
+#### Medio
+
+Ninguno.
+
+#### Bajo
+
+| Ruta | Hallazgo | Evidencia | Recomendación |
+| --- | --- | --- | --- |
+| `/app/access-denied` | No se puede cerrar evidencia con usuario limitado real porque no existe mecanismo seguro local implementado. | Seed actual solo cubre Admin; fixtures limitados solo existen en pruebas; usuarios/roles siguen como placeholders. | Implementar posteriormente el seed QA limitado solo Development si se autoriza tocar backend mínimo. |
+
+#### Observación
+
+| Ruta | Observación | Evidencia | Recomendación |
+| --- | --- | --- | --- |
+| `/app/*` | Sin bloqueantes visuales reportados en el pase humano privado. | Confirmación manual del responsable del proyecto. | Mantener monitoreo visual en la siguiente revisión amplia o staging. |
+
+### Estado De Fase 2.5
+
+Completada para el pase visual humano privado:
+
+- Registrados los resultados manuales concretos por ruta.
+- Navegación activa privada validada visualmente en rutas principales.
+- Logout y redirección sin sesión validados visualmente.
+- `/dashboard` raíz confirmado como no ruta privada real.
+- Sitio público confirmado sin regresión visible.
+- Mecanismo recomendado para usuario QA limitado documentado y pendiente de implementación.
+- Creado plan técnico documental para usuario limitado.
+- No se implementaron funcionalidades nuevas.
+
+### Validaciones Técnicas De Cierre Fase 2.5
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 91/91.
+- `git diff --check`: correcto.
+- `rg "/dashboard" .`: revisado; no se detectó `/dashboard` como ruta privada real nueva.
+- `rg "/app/dashboard" .`: revisado; confirma que el dashboard privado real se mantiene bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada pública y endpoints/rutas de auth existentes.
+- `rg "routerLinkActive" src/LaboratorioTlahuac.Web/src/app/admin/layout`: revisado; confirma navegación activa por `RouterLinkActive`.
+- `rg "America/Mexico_City" src docs tests README.md`: revisado; confirma configuración/código/documentación de zona horaria.
+- `rg -F "Central Standard Time (Mexico)" src docs tests README.md`: revisado con búsqueda literal por paréntesis; confirma compatibilidad Windows.
+- `rg --files-with-matches "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "ConnectionStrings" src docs README.md`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; las menciones corresponden a documentación de no uso o histórico.
+
+### Siguiente Fase Recomendada
+
+Implementar, si se autoriza tocar backend mínimo, el mecanismo Development-only para usuario QA limitado descrito en `docs/08-qa/limited-user-qa-plan.md` y validar `/app/access-denied` con una sesión real sin permisos suficientes.
+
 ## Fase 2.4 - Pase visual/manual privado y permisos
 
 ### Fecha

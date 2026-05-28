@@ -20,6 +20,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 | QA responsive | `docs/08-qa/RESPONSIVE_CHECKLIST.md` |
 | QA MVP administrativo | `docs/08-qa/mvp-qa-checklist.md` |
 | QA sistema privado con Admin | `docs/08-qa/private-admin-qa.md` |
+| Plan QA usuario limitado | `docs/08-qa/limited-user-qa-plan.md` |
 | Alcance comercial | `docs/09-commercial/` |
 
 ## Carpetas
@@ -37,7 +38,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 
 ## Separación De Frentes
 
-- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.4 ejecutada por API/código y pendiente de cierre visual humano.
+- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado y con mecanismo seguro de usuario limitado definido como backlog.
 - Sitio público institucional: vive en la app Angular existente bajo `src/LaboratorioTlahuac.Web/src/app/public`; la primera versión mobile-first está implementada y Fase 1.6 quedó validada visualmente por el responsable del proyecto.
 - Documentación comercial: describe alcance propuesto y fases comerciales, no necesariamente implementación técnica actual.
 

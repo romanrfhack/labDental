@@ -15,8 +15,8 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase sistema 2.1d: diagnóstico/corrección de loading de `/app/dashboard`. Completada y cerrada manualmente por el responsable del proyecto.
 - Fase sistema 2.2: QA manual/técnico del sistema privado con Admin. Completada con reporte en `docs/08-qa/private-admin-qa.md`.
 - Fase sistema 2.3: corrección de hallazgos QA del sistema privado. Completada; define zona horaria operativa `America/Mexico_City` para métricas del dashboard y agrega estado activo visual en navegación privada.
-- Fase sistema 2.4: pase manual/técnico privado y validación de permisos. Completada por API/código/build con Admin; navegación activa y `/app/access-denied` quedan pendientes de pase visual humano/usuario limitado real por falta de navegador/headless local y mecanismo seguro de usuario QA limitado.
-- Fase sistema 2.5: cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado. Recomendada como siguiente fase antes de staging/deploy.
+- Fase sistema 2.4: pase manual/técnico privado y validación de permisos. Completada por API/código/build con Admin; `/app/access-denied` queda pendiente de usuario limitado real por falta de mecanismo seguro de usuario QA limitado.
+- Fase sistema 2.5: cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado. Completada para pase visual humano privado el 2026-05-28; se recomienda seed QA limitado solo Development como backlog técnico inmediato, sin implementarlo todavía.
 - Backlog futuro: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; no pertenece a la fase actual y requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
@@ -51,9 +51,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Fase 2.5 - Cierre visual humano del sistema privado y definición de usuario QA limitado.
+Implementar usuario QA limitado seguro en Development.
 
-Alcance sugerido: revisar visualmente la navegación activa en `/app/*`, foco visible, consola/Network y crear/usar un mecanismo seguro de usuario QA limitado para validar `/app/access-denied` antes de staging. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
+Alcance sugerido: si se autoriza tocar backend mínimo, implementar el seed QA limitado solo Development descrito en `docs/08-qa/limited-user-qa-plan.md` para validar `/app/access-denied` con una sesión autenticada sin permisos suficientes. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
 
 ## Regla De Actualización
 

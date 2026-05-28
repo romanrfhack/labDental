@@ -189,6 +189,23 @@ Estado: pase manual/técnico privado ejecutado con Admin local; navegación acti
 - Usuario autenticado sin permiso no se probó con cuenta limitada porque no existe mecanismo seguro local fuera de fixtures de pruebas y no se autorizó SQL directo; por código, `permissionGuard` conserva redirección a `/app/access-denied`.
 - No se modificaron rutas, permisos, logout, `AuthService`, guards, cookies, XSRF, endpoints, migraciones, deploy ni dependencias.
 
+## Validación De Acceso Fase 2.5
+
+Estado: pase visual humano privado completado y definición documental de mecanismo seguro para usuario QA limitado.
+
+- El responsable del proyecto confirmó en navegador real `/login`, login Admin, `/app/dashboard`, `/app/clientes`, `/app/ordenes`, `/app/pagos`, navegación activa en rutas principales, placeholders de inventario/proveedores/usuarios/roles, logout y redirección de `/app/dashboard` sin sesión a `/login?returnUrl=%2Fapp%2Fdashboard`.
+- Fase 2.5 queda completada para pase visual humano privado y registrada en `docs/08-qa/private-admin-qa.md`.
+- `/login` sigue documentado como entrada pública.
+- `/app` y `/app/dashboard` siguen documentadas como zona privada.
+- `/dashboard` raíz no es ruta privada real; se conserva como confirmación por código/routing.
+- El sitio público no tuvo regresión visible reportada.
+- El Admin existente no se alteró y sigue definido por seed con todos los permisos de `Permissions.All`.
+- Los permisos actuales se emiten como claims `permission`.
+- El usuario autenticado sin permiso sigue debiendo ir a `/app/access-denied`, pero falta validarlo con usuario real limitado.
+- Mecanismo recomendado: seed QA limitado solo Development, desactivado por default y controlado por user-secrets o variables de entorno, documentado en `docs/08-qa/limited-user-qa-plan.md`.
+- No se implementó el mecanismo en esta fase.
+- No se modificaron rutas, permisos, logout, `AuthService`, guards, cookies, XSRF, endpoints, migraciones, deploy ni dependencias.
+
 ## Permisos
 
 El sistema autoriza por permisos, no por nombre de rol. El rol Admin inicial recibe todos los permisos mediante seed.

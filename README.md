@@ -4,7 +4,7 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 
 ## Estado Actual
 
-- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada y pase manual/técnico privado Fase 2.4 ejecutado.
+- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado y Fase 2.5 cerrada como pase visual humano privado completado.
 - Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; contenido final del cliente pendiente.
 - Deploy productivo: pendiente de plataforma, DNS, HTTPS, variables y base productiva.
 
@@ -88,10 +88,11 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 - Deploy: [docs/05-delivery/DEPLOYMENT.md](docs/05-delivery/DEPLOYMENT.md).
 - QA responsive: [docs/08-qa/RESPONSIVE_CHECKLIST.md](docs/08-qa/RESPONSIVE_CHECKLIST.md).
 - QA MVP administrativo: [docs/08-qa/mvp-qa-checklist.md](docs/08-qa/mvp-qa-checklist.md).
+- Plan QA usuario limitado: [docs/08-qa/limited-user-qa-plan.md](docs/08-qa/limited-user-qa-plan.md).
 - Documentación comercial: [docs/09-commercial/](docs/09-commercial/).
 
 ## Próximos Pasos
 
-1. Ejecutar Fase 2.5: cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado si se requiere.
+1. Implementar, si se autoriza tocar backend mínimo, el usuario QA limitado Development-only documentado en `docs/08-qa/limited-user-qa-plan.md`.
 2. Confirmar contenido real pendiente del cliente: dirección, horarios, WhatsApp, precios y materiales visuales.
 3. Definir plataforma de despliegue y pendientes de DNS para `laboratoriodentaltlahuac.com`.

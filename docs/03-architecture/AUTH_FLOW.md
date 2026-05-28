@@ -436,3 +436,44 @@ Resultado de permisos:
 - Por pruebas API, una sesión sin permiso recibe `403`, incluyendo `/api/dashboard/summary` sin `reports.view`.
 
 No se modificaron `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies, CSRF/XSRF, endpoints, rutas privadas, migraciones, deploy ni dependencias.
+
+## Fase 2.5 - Cierre Visual Y Usuario QA Limitado
+
+Estado: pase visual humano privado completado; usuario QA limitado no implementado.
+
+Resultado manual visual:
+
+- `/login` carga correctamente en navegador real.
+- Login Admin funciona correctamente.
+- `/app/dashboard`, `/app/clientes`, `/app/ordenes` y `/app/pagos` cargan correctamente.
+- La navegación activa se muestra correctamente en `/app/dashboard`, `/app/clientes`, `/app/ordenes` y `/app/pagos`.
+- `/app/inventario`, `/app/proveedores`, `/app/admin/usuarios` y `/app/admin/roles` se muestran correctamente como placeholders.
+- Logout funciona correctamente.
+- `/app/dashboard` sin sesión redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
+- `/dashboard` raíz no es ruta privada real.
+- No hubo regresión visible del sitio público ni bloqueantes visuales reportados.
+
+Resultado de revisión:
+
+- El flujo actual mantiene la diferencia entre falta de sesión y falta de permiso.
+- Usuario sin sesión en `/app/*` debe redirigir a `/login?returnUrl=...`.
+- Usuario autenticado sin permiso debe redirigir a `/app/access-denied`.
+- API sin sesión responde `401`.
+- API sin permiso responde `403`.
+- Admin conserva todos los permisos porque el seed asigna `Permissions.All` al rol Admin.
+- Los permisos se emiten como claims `permission`.
+- Las cuentas limitadas actuales existen solo en fixtures de pruebas automatizadas con SQLite en memoria.
+- No existe todavía mecanismo seguro de producto para crear usuario QA limitado en la base local real.
+
+Mecanismo recomendado para una fase posterior:
+
+- Extender el seed con una rama QA limitada solo para `Environment=Development`.
+- Mantenerla desactivada por default.
+- Requerir `SecuritySeed:QaLimited:Enabled=true`.
+- Tomar email/password/nombre desde user-secrets o variables de entorno, por ejemplo `LDT_QA_LIMITED_EMAIL`, `LDT_QA_LIMITED_PASSWORD` y `LDT_QA_LIMITED_FULL_NAME`.
+- No imprimir password ni valores sensibles.
+- No usar SQL manual.
+- No modificar el Admin existente.
+- Para validar `/app/access-denied` contra `/app/dashboard`, el usuario limitado no debe tener `reports.view`.
+
+Fuente detallada: `docs/08-qa/limited-user-qa-plan.md`.

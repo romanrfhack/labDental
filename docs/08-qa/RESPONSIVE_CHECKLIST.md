@@ -153,6 +153,19 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - Usuario limitado real no se probó porque no existe mecanismo seguro local fuera de fixtures de pruebas y no se autorizó SQL directo; `/app/access-denied` queda pendiente de pase con usuario real.
 - No se modificó el sitio público ni se tocaron rutas privadas, guards, `AuthService`, cookies, XSRF, endpoints, migraciones, deploy o dependencias.
 
+## Estado Fase 2.5
+
+- Pase visual humano privado completado el 2026-05-28.
+- Resultados manuales confirmados: `/login`, login Admin, `/app/dashboard`, `/app/clientes`, `/app/ordenes`, `/app/pagos`, navegación activa en rutas principales, placeholders privados, logout y redirección sin sesión.
+- Navegación activa privada confirmada visualmente y respaldada técnicamente por `routerLinkActive`, `ariaCurrentWhenActive`, match exacto de `/app/dashboard` y estilos `.is-active`/`focus-visible`.
+- `/dashboard` raíz sigue sin ser ruta privada real por revisión técnica de rutas.
+- Sitio público confirmado sin regresión visible.
+- `/app/access-denied` sigue pendiente de validación con usuario autenticado sin permiso real.
+- Mecanismo recomendado documentado: seed QA limitado solo Development, desactivado por default y controlado por user-secrets o variables de entorno.
+- Plan: `docs/08-qa/limited-user-qa-plan.md`.
+- Validación técnica de cierre: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias ejecutadas correctamente.
+- No se implementaron funcionalidades nuevas ni se tocaron rutas, guards, `AuthService`, cookies, XSRF, endpoints, migraciones, deploy o dependencias.
+
 ## Verificado Por Código / Build
 
 - [x] Build frontend correcto con `npm run build`.
@@ -223,6 +236,10 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 2.4 ejecuta `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctamente.
 - [ ] Fase 2.4 deja pendiente pase visual humano de navegación activa por falta de navegador/headless local.
 - [ ] Fase 2.4 deja pendiente usuario limitado real para `/app/access-denied` por falta de mecanismo seguro local.
+- [x] Fase 2.5 registra resultados visuales humanos concretos por ruta y cierra el pase visual privado.
+- [x] Fase 2.5 documenta mecanismo recomendado de usuario QA limitado solo Development.
+- [x] Fase 2.5 ejecuta `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias correctamente.
+- [ ] Fase 2.5 deja pendiente implementar, si se autoriza, el mecanismo seguro de usuario limitado para validar `/app/access-denied`.
 
 ## Hallazgos Manuales Recibidos
 
@@ -232,7 +249,8 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 | `/app/dashboard` | Después de login con Admin local redirige correctamente, pero al regresar a la página podía quedar en `Cargando dashboard...`. | Cerrado en Fase 2.1d; dashboard autenticado validado manualmente. |
 | `/app/dashboard` | Si `GET /api/dashboard/summary` queda pendiente, el componente no tenia timeout. | Corregido con timeout y error controlado; validado manualmente por carga correcta del dashboard. |
 | `/app/dashboard` | Métrica "Para hoy" requiere definir zona horaria de negocio; durante QA local una orden con entrega en la fecha local no incrementó `dueToday`. | Corregido en Fase 2.3 por código y prueba automatizada. |
-| `/app/*` | Navegación privada sin estado activo visual de ruta. | Corregido en Fase 2.3 por código/build; Fase 2.4 lo revalidó por código y queda pendiente pase visual humano por falta de navegador/headless local. |
+| `/app/*` | Navegación privada sin estado activo visual de ruta. | Corregido en Fase 2.3 por código/build; Fase 2.5 lo validó visualmente en navegador real. |
+| `/app/*` | Fase 2.5 recibió resultados visuales humanos concretos por ruta. | Cerrado para pase visual humano privado; sin bloqueantes visuales reportados. |
 | Sitio público Fase 1.6 | Rutas públicas, `/login`, viewports obligatorios, mobile-first, catálogo, contacto y ausencia de scroll horizontal revisados por el responsable. | Validado visualmente. |
 
 ## Verificado Visualmente
@@ -247,11 +265,12 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Cerrar Fase 1.6 como validación visual completa.
 - [x] Revisar visualmente `/catalogo` antes de aprobación del cliente.
 - [x] Revisar visualmente logo, header y navegación en 360px.
+- [x] Registrar resultados humanos concretos de Fase 2.5 para `/login`, login Admin, rutas privadas, navegación activa, logout y redirección sin sesión.
 
 ## Pendiente QA Amplio / Cliente
 
-- Ejecutar Fase 2.5 - cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado.
-- Completar pase visual en navegador real para consola/Network y redirecciones visuales si se requiere evidencia adicional.
+- Implementar solo con autorización posterior el mecanismo Development-only de usuario QA limitado documentado en `docs/08-qa/limited-user-qa-plan.md`.
+- Validar `/app/access-denied` con usuario autenticado sin permiso real cuando exista el mecanismo seguro.
 - Confirmar dirección, horarios, WhatsApp real, aprobación final de precios 2026, `Anticipo 50%`, `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 - Para celular en la misma red local, levantar temporalmente Angular con `npm start -- --host 0.0.0.0 --port 4200`. No es despliegue productivo.
 
