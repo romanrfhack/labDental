@@ -31,6 +31,9 @@ public static class DependencyInjection
         var databaseOptions = configuration
             .GetSection(DatabaseOptions.SectionName)
             .Get<DatabaseOptions>() ?? new DatabaseOptions();
+        var dashboardOptions = configuration
+            .GetSection(DashboardOptions.SectionName)
+            .Get<DashboardOptions>() ?? new DashboardOptions();
 
         var connectionString = configuration.GetConnectionString(databaseOptions.ConnectionStringName);
 
@@ -52,6 +55,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IPermissionChecker, ClaimsPermissionChecker>();
         services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton(dashboardOptions);
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IAuthSessionService, AuthSessionService>();
         services.AddScoped<ICustomerService, CustomerService>();

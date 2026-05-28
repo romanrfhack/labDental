@@ -63,6 +63,10 @@ Al diseñarla se deberá definir modelo de datos, endpoints, almacenamiento de i
 - Ruta: `/app/dashboard`.
 - API: `GET /api/dashboard/summary`.
 - Acceso: `reports.view`.
+- Zona horaria operativa: `America/Mexico_City`, configurable con `Dashboard:BusinessTimeZone`.
+- El "hoy" operativo se calcula convirtiendo `clock.UtcNow` a la zona horaria del laboratorio; no se calcula con fecha UTC pura.
+- Las métricas `dueToday`, `overdue` y `upcomingDue` usan la fecha operativa local del laboratorio.
+- `generatedAtUtc` sigue siendo UTC y `DeliveryDate` conserva su significado como fecha de entrega capturada.
 - Secciones internas condicionadas:
   - operación con `orders.view`;
   - cobranza con `payments.view`;
@@ -150,8 +154,21 @@ Estado: QA manual/técnico del sistema privado con Admin ejecutado y documentado
 - Logout validado: `POST /api/auth/logout` respondió `200` y `/api/auth/me` posterior respondió `401`.
 - Se validaron clientes, órdenes y pagos con datos QA locales: alta/edición de cliente, alta/edición/cambio de estado de orden y registro de pago.
 - Inventario, proveedores, usuarios y roles siguen como páginas placeholder pendientes o futuras, sin flujo funcional completo.
-- Hallazgos registrados: definir zona horaria de negocio para métricas del dashboard y agregar estado activo visual en navegación privada si se prioriza UX.
+- Hallazgos registrados en Fase 2.2: definir zona horaria de negocio para métricas del dashboard y agregar estado activo visual en navegación privada; ambos quedaron corregidos posteriormente en Fase 2.3.
 - Usuario autenticado sin permiso no se probó por falta de usuario limitado local; por código, `permissionGuard` conserva redirección a `/app/access-denied`.
+
+## Corrección De Hallazgos Fase 2.3
+
+Estado: corrección mínima aplicada y validada por build/pruebas.
+
+- Hallazgo medio corregido: el dashboard ya no usa fecha UTC pura para `dueToday`, `overdue` ni `upcomingDue`.
+- Zona horaria de negocio definida: `America/Mexico_City`.
+- Configuración técnica: `Dashboard:BusinessTimeZone`; default seguro en código y `appsettings.json`.
+- Compatibilidad de IDs: el ID canónico es IANA `America/Mexico_City`; el backend acepta `Central Standard Time (Mexico)` para entornos Windows cuando aplique.
+- Prueba agregada: `OperationalSummaryUsesBusinessTimeZoneDateWhenUtcDateDiffers`, con UTC y Mexico City en fechas distintas.
+- Hallazgo bajo corregido: la navegación privada usa `routerLinkActive`, `ariaCurrentWhenActive` y clase visual activa; `/app/dashboard` usa match exacto.
+- Validación ejecutada: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias.
+- No se cambiaron rutas, permisos, logout, `AuthService`, guards, cookies, XSRF, endpoints públicos, migraciones, deploy ni dependencias.
 
 ## Permisos
 

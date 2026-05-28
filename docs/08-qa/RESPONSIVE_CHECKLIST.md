@@ -130,6 +130,16 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - Hallazgo bajo: la navegación privada no muestra estado activo visual de ruta.
 - No hay navegador/headless local sin instalar dependencias, por lo que consola/Network y redirecciones visuales quedan pendientes para pase en navegador real si se requiere evidencia adicional.
 
+## Estado Fase 2.3
+
+- Corrección de hallazgos QA del sistema privado ejecutada sin tocar sitio público.
+- Dashboard: `dueToday`, `overdue` y `upcomingDue` usan fecha operativa del laboratorio desde `Dashboard:BusinessTimeZone`, default `America/Mexico_City`.
+- Prueba backend agregada para cubrir diferencia entre fecha UTC y fecha local de Mexico City.
+- Navegación privada: los enlaces bajo `/app` usan `routerLinkActive`, `ariaCurrentWhenActive` y estilos activos/focus visibles.
+- `/app/dashboard` usa match exacto para no marcar rutas equivocadas.
+- No hay tests frontend existentes ni runner no interactivo para layout privado; validación frontend por código y `npm run build`.
+- Queda pendiente pase visual manual en navegador real si se requiere evidencia de consola/Network o captura visual de la navegación activa.
+
 ## Verificado Por Código / Build
 
 - [x] Build frontend correcto con `npm run build`.
@@ -189,6 +199,10 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 2.2 confirma por código que `/login` sigue público, `/app` y `/app/dashboard` siguen privados y `/dashboard` no es ruta privada real.
 - [x] Fase 2.2 documenta reporte nuevo en `docs/08-qa/private-admin-qa.md`.
 - [ ] Fase 2.2 deja pendiente pase visual en navegador real para consola/Network y redirecciones visuales si se requiere evidencia adicional.
+- [x] Fase 2.3 define `America/Mexico_City` como zona horaria operativa del dashboard.
+- [x] Fase 2.3 agrega prueba automatizada para UTC y Mexico City en fechas distintas.
+- [x] Fase 2.3 corrige navegación privada con estado activo visual y focus visible.
+- [x] Fase 2.3 ejecuta `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctamente.
 
 ## Hallazgos Manuales Recibidos
 
@@ -197,8 +211,8 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 | `/app/dashboard` | Sin sesión, al escribir la URL directa no redirigió a `/login` y quedó sin contenido visible. | Corregido; redirección posterior a logout o sesión cerrada validada manualmente. |
 | `/app/dashboard` | Después de login con Admin local redirige correctamente, pero al regresar a la página podía quedar en `Cargando dashboard...`. | Cerrado en Fase 2.1d; dashboard autenticado validado manualmente. |
 | `/app/dashboard` | Si `GET /api/dashboard/summary` queda pendiente, el componente no tenia timeout. | Corregido con timeout y error controlado; validado manualmente por carga correcta del dashboard. |
-| `/app/dashboard` | Métrica "Para hoy" requiere definir zona horaria de negocio; durante QA local una orden con entrega en la fecha local no incrementó `dueToday`. | Registrado para Fase 2.3. |
-| `/app/*` | Navegación privada sin estado activo visual de ruta. | Registrado como hallazgo bajo para Fase 2.3 si se prioriza UX. |
+| `/app/dashboard` | Métrica "Para hoy" requiere definir zona horaria de negocio; durante QA local una orden con entrega en la fecha local no incrementó `dueToday`. | Corregido en Fase 2.3 por código y prueba automatizada. |
+| `/app/*` | Navegación privada sin estado activo visual de ruta. | Corregido en Fase 2.3 por código/build; pendiente pase visual manual si se requiere evidencia adicional. |
 | Sitio público Fase 1.6 | Rutas públicas, `/login`, viewports obligatorios, mobile-first, catálogo, contacto y ausencia de scroll horizontal revisados por el responsable. | Validado visualmente. |
 
 ## Verificado Visualmente
@@ -216,7 +230,7 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 
 ## Pendiente QA Amplio / Cliente
 
-- Ejecutar Fase 2.3 - corrección de hallazgos QA del sistema privado.
+- Ejecutar Fase 2.4 - pase visual/manual privado y validación de permisos con usuario limitado si se requiere.
 - Completar pase visual en navegador real para consola/Network y redirecciones visuales si se requiere evidencia adicional.
 - Confirmar dirección, horarios, WhatsApp real, aprobación final de precios 2026, `Anticipo 50%`, `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 - Para celular en la misma red local, levantar temporalmente Angular con `npm start -- --host 0.0.0.0 --port 4200`. No es despliegue productivo.

@@ -8,6 +8,8 @@ Resultado general: el flujo Admin por API local funciona. Login, `/api/auth/me`,
 
 Limitación de ejecución: no hay navegador/headless local instalado en este entorno, por lo que las redirecciones visuales de guards, consola del navegador y Network del navegador se validaron por código y por respuestas HTTP/API, no por inspección visual automatizada.
 
+Seguimiento Fase 2.3: los dos hallazgos principales de este reporte quedaron corregidos por código y pruebas. El dashboard usa fecha operativa de negocio `America/Mexico_City` para `dueToday`, `overdue` y `upcomingDue`; la navegación privada marca la ruta activa con `routerLinkActive` y estilos accesibles.
+
 ## Entorno Usado
 
 - Fecha de ejecución local: 2026-05-27, America/Mexico_City, `CST -0600`.
@@ -111,6 +113,9 @@ No se probo con usuario limitado porque no hay usuario de prueba sin permisos di
 - Ruta: `/app/dashboard`.
 - API: `GET /api/dashboard/summary`.
 - Resultado Admin: `200`.
+- Seguimiento Fase 2.3: el "hoy" operativo del dashboard se calcula con `Dashboard:BusinessTimeZone`, default `America/Mexico_City`, convirtiendo `clock.UtcNow` a la fecha local de negocio.
+- Métricas Fase 2.3 ajustadas: `dueToday`, `overdue` y `upcomingDue`.
+- `generatedAtUtc` sigue reportándose en UTC y `DeliveryDate` no cambia de significado.
 - Estado final despues de datos QA:
   - ordenes activas: 1.
   - ultimas ordenes: 1.
@@ -180,7 +185,7 @@ No se probo con usuario limitado porque no hay usuario de prueba sin permisos di
 - Los enlaces se muestran segun permisos del usuario autenticado.
 - Con Admin, `/api/auth/me` confirma permisos necesarios para dashboard, ordenes, clientes y pagos.
 - Logout por API validado correctamente.
-- No hay `routerLinkActive` visible en la navegacion privada actual; se registra como hallazgo bajo.
+- Seguimiento Fase 2.3: los enlaces privados usan `routerLinkActive`, `ariaCurrentWhenActive` y estilos activos/focus visibles; `/app/dashboard` usa match exacto para evitar marcar rutas equivocadas.
 
 ## Datos De Prueba Creados
 
@@ -200,13 +205,13 @@ No se limpiaron datos de prueba.
 
 | Ruta | Hallazgo | Pasos | Actual | Esperado | Evidencia | Recomendacion |
 | --- | --- | --- | --- | --- | --- | --- |
-| `/app/dashboard` | Metrica "Para hoy" requiere definicion de zona horaria de negocio. | En Mexico local `2026-05-27 21:xx CST`, crear orden QA con entrega `2026-05-27` y consultar dashboard. | `dueToday=0` aunque la fecha local capturada coincide con el dia local de QA. | Las metricas de "hoy", vencidas y proximos dias deben alinearse con la zona horaria operativa del laboratorio. | `GET /api/dashboard/summary` respondio `200` con `activeOrders=1` y `dueToday=0`. | Fase 2.3: definir zona horaria de negocio y ajustar/calibrar metricas de dashboard si aplica. |
+| `/app/dashboard` | Metrica "Para hoy" requiere definicion de zona horaria de negocio. | En Mexico local `2026-05-27 21:xx CST`, crear orden QA con entrega `2026-05-27` y consultar dashboard. | Corregido en Fase 2.3: "hoy" usa `Dashboard:BusinessTimeZone` (`America/Mexico_City`) en vez de fecha UTC pura. | Las metricas de "hoy", vencidas y proximos dias deben alinearse con la zona horaria operativa del laboratorio. | Prueba `OperationalSummaryUsesBusinessTimeZoneDateWhenUtcDateDiffers` cubre UTC y Mexico City en fechas distintas. | Cerrado por código/prueba; pendiente solo pase visual/API manual si se requiere evidencia adicional. |
 
 ### Bajo
 
 | Ruta | Hallazgo | Pasos | Actual | Esperado | Evidencia | Recomendacion |
 | --- | --- | --- | --- | --- | --- | --- |
-| `/app/*` | La navegacion privada no marca visualmente ruta activa. | Revisar `PrivateLayoutComponent`. | Los enlaces usan `routerLink`, pero no `routerLinkActive` ni clase activa. | El usuario debe identificar rapidamente la seccion actual. | Lectura de `private-layout.component.ts`. | Fase 2.3: agregar estado activo visual si se prioriza pulido de UX privado. |
+| `/app/*` | La navegacion privada no marca visualmente ruta activa. | Revisar `PrivateLayoutComponent`. | Corregido en Fase 2.3 con `routerLinkActive`, `ariaCurrentWhenActive`, match exacto para dashboard y estilos activos/focus visibles. | El usuario debe identificar rapidamente la seccion actual. | `private-layout.component.ts` y `private-layout.component.scss`; `npm run build` correcto. | Cerrado por código/build; pendiente validación visual manual en navegador real si se requiere evidencia adicional. |
 
 ### Observaciones
 
@@ -220,7 +225,7 @@ No se limpiaron datos de prueba.
 
 - Validar en navegador real la redireccion visual sin sesion a `/login?returnUrl=%2Fapp%2Fdashboard`.
 - Probar usuario autenticado sin permiso contra `/app/access-denied`.
-- Definir zona horaria formal de negocio para metricas del dashboard.
+- Validar visualmente en navegador real los estilos activos de navegación privada si se requiere evidencia adicional.
 - Decidir si los placeholders de inventario/proveedores/usuarios/roles deben ocultarse, quedarse como backlog visible o implementarse en fases posteriores.
 
 ## Validaciones Tecnicas De Cierre
@@ -237,8 +242,19 @@ No se limpiaron datos de prueba.
 - `rg --files-with-matches "ConnectionStrings" src docs README.md`: ejecutado con salida limitada a archivos para no imprimir valores.
 - `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; las menciones corresponden a documentación de no uso o histórico.
 
+## Validaciones Tecnicas De Seguimiento Fase 2.3
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 91/91.
+- `git diff --check`: correcto.
+- `docker ps --filter "name=ldt-labdental-sql"` y `docker port ldt-labdental-sql`: SQL dedicado confirmado en `14336`; `docker port` requirió permiso fuera del sandbox.
+- Búsquedas obligatorias de rutas, `routerLinkActive`, `America/Mexico_City`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`: ejecutadas. Las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
+- Prueba agregada: `OperationalSummaryUsesBusinessTimeZoneDateWhenUtcDateDiffers`.
+- Frontend: no existe runner no interactivo ni patrón `.spec.ts`; la validación de navegación activa queda por código/build y pase visual manual si se requiere.
+
 ## Recomendacion De Siguiente Fase
 
-Siguiente fase recomendada: Fase 2.3 - Correccion de hallazgos QA del sistema privado.
+Siguiente fase recomendada: Fase 2.4 - pase visual/manual privado y validación de permisos con usuario limitado si se requiere.
 
-Motivo: no hay bloqueantes, pero si hay hallazgos de zona horaria de dashboard y pulido de navegacion privada antes de preparar staging/deploy.
+Motivo: los hallazgos principales de Fase 2.2 ya quedaron corregidos; queda pendiente evidencia visual/manual adicional y usuario limitado para `/app/access-denied` si se decide cubrir permisos completos antes de staging/deploy.

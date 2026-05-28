@@ -59,6 +59,13 @@ curl http://localhost:5277/health
 
 No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
+## Configuración Relevante
+
+- Dashboard operativo: `Dashboard:BusinessTimeZone`.
+- Valor default: `America/Mexico_City`.
+- Esta zona define el "hoy" de negocio para `dueToday`, `overdue` y `upcomingDue`; `generatedAtUtc` sigue siendo UTC.
+- El ID canónico es IANA; el backend contempla `Central Standard Time (Mexico)` como equivalente Windows.
+
 ## Rutas Principales
 
 - Sitio público: `/`, `/catalogo`, `/servicios`, `/contacto`.
@@ -85,7 +92,6 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
 ## Próximos Pasos
 
-1. Completar revisión visual manual del sitio público en los breakpoints definidos.
-2. Ejecutar Fase 1.2 de contenido real del cliente: logo, servicios, ubicación, contacto, horarios y materiales visuales.
-3. Revisar `/login` como entrada visual al sistema sin cambiar auth.
-4. Definir plataforma de despliegue y pendientes de DNS para `laboratoriodentaltlahuac.com`.
+1. Ejecutar Fase 2.4: pase visual/manual privado y validación de permisos con usuario limitado si se requiere.
+2. Confirmar contenido real pendiente del cliente: dirección, horarios, WhatsApp, precios y materiales visuales.
+3. Definir plataforma de despliegue y pendientes de DNS para `laboratoriodentaltlahuac.com`.

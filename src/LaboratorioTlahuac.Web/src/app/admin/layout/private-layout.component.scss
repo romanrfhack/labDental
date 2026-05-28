@@ -24,9 +24,33 @@ nav {
 }
 
 nav a {
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  border-radius: 6px;
   color: #dbe4f0;
-  padding: 8px 0;
+  min-width: 0;
+  padding: 10px 12px;
   text-decoration: none;
+}
+
+nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.brand:focus-visible,
+nav a:focus-visible,
+.private-topbar button:focus-visible {
+  outline: 3px solid #67e8f9;
+  outline-offset: 2px;
+}
+
+nav a.is-active {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  border-left-color: #14b8a6;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 main {

@@ -444,7 +444,20 @@ public sealed class AuthIntegrationTests(TestApplicationFactory factory)
 
 public sealed class TestApplicationFactory : WebApplicationFactory<Program>
 {
+    private readonly DateTimeOffset utcNow;
+    private readonly string? dashboardBusinessTimeZone;
     private SqliteConnection? connection;
+
+    public TestApplicationFactory()
+        : this(new DateTimeOffset(2026, 5, 9, 12, 0, 0, TimeSpan.Zero))
+    {
+    }
+
+    internal TestApplicationFactory(DateTimeOffset utcNow, string? dashboardBusinessTimeZone = null)
+    {
+        this.utcNow = utcNow;
+        this.dashboardBusinessTimeZone = dashboardBusinessTimeZone;
+    }
 
     public HttpClient CreateClientWithoutRedirects()
     {
@@ -460,11 +473,18 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Development");
         builder.ConfigureAppConfiguration((_context, configuration) =>
         {
-            configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            var settings = new Dictionary<string, string?>
             {
                 ["ConnectionStrings:DefaultConnection"] = "Data Source=:memory:",
                 ["SecuritySeed:RunOnStartup"] = "false"
-            });
+            };
+
+            if (!string.IsNullOrWhiteSpace(dashboardBusinessTimeZone))
+            {
+                settings["Dashboard:BusinessTimeZone"] = dashboardBusinessTimeZone;
+            }
+
+            configuration.AddInMemoryCollection(settings);
         });
 
         builder.ConfigureServices(services =>
@@ -483,8 +503,7 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
             {
                 options.UseSqlite(serviceProvider.GetRequiredService<DbConnection>());
             });
-            services.AddSingleton<IClock>(
-                new TestClock(new DateTimeOffset(2026, 5, 9, 12, 0, 0, TimeSpan.Zero)));
+            services.AddSingleton<IClock>(new TestClock(utcNow));
 
             using var serviceProvider = services.BuildServiceProvider();
             using var scope = serviceProvider.CreateScope();

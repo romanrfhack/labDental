@@ -1,40 +1,49 @@
 import { Component } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-private-layout',
-  imports: [AsyncPipe, RouterLink, RouterOutlet],
+  imports: [AsyncPipe, RouterLink, RouterLinkActive, RouterOutlet],
   template: `
     <div class="private-shell">
       <aside>
         <a routerLink="/app/dashboard" class="brand">LDT Admin</a>
         <nav>
           @if (authService.hasPermission('reports.view')) {
-            <a routerLink="/app/dashboard">Dashboard</a>
+            <a
+              routerLink="/app/dashboard"
+              routerLinkActive="is-active"
+              [routerLinkActiveOptions]="{ exact: true }"
+              ariaCurrentWhenActive="page"
+            >
+              Dashboard
+            </a>
           }
           @if (authService.hasPermission('orders.view')) {
-            <a routerLink="/app/ordenes">Ordenes</a>
+            <a routerLink="/app/ordenes" routerLinkActive="is-active" ariaCurrentWhenActive="page">Ordenes</a>
           }
           @if (authService.hasPermission('customers.view')) {
-            <a routerLink="/app/clientes">Clientes</a>
+            <a routerLink="/app/clientes" routerLinkActive="is-active" ariaCurrentWhenActive="page">Clientes</a>
           }
           @if (authService.hasPermission('payments.view')) {
-            <a routerLink="/app/pagos">Pagos</a>
+            <a routerLink="/app/pagos" routerLinkActive="is-active" ariaCurrentWhenActive="page">Pagos</a>
           }
           @if (authService.hasPermission('inventory.view')) {
-            <a routerLink="/app/inventario">Inventario</a>
+            <a routerLink="/app/inventario" routerLinkActive="is-active" ariaCurrentWhenActive="page">Inventario</a>
           }
           @if (authService.hasPermission('suppliers.view')) {
-            <a routerLink="/app/proveedores">Proveedores</a>
+            <a routerLink="/app/proveedores" routerLinkActive="is-active" ariaCurrentWhenActive="page"
+              >Proveedores</a>
           }
           @if (authService.hasPermission('users.manage')) {
-            <a routerLink="/app/admin/usuarios">Usuarios</a>
+            <a routerLink="/app/admin/usuarios" routerLinkActive="is-active" ariaCurrentWhenActive="page"
+              >Usuarios</a>
           }
           @if (authService.hasPermission('roles.manage')) {
-            <a routerLink="/app/admin/roles">Roles</a>
+            <a routerLink="/app/admin/roles" routerLinkActive="is-active" ariaCurrentWhenActive="page">Roles</a>
           }
         </nav>
       </aside>

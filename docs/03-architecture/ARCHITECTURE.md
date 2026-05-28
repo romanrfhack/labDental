@@ -100,6 +100,22 @@ Módulos API principales:
 
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
 
+## Configuración Operativa
+
+Dashboard:
+
+- Clave: `Dashboard:BusinessTimeZone`.
+- Default: `America/Mexico_City`.
+- Uso actual: calcular la fecha operativa del laboratorio para métricas `dueToday`, `overdue` y `upcomingDue`.
+- `generatedAtUtc` se mantiene como fecha/hora UTC del resumen.
+- `DeliveryDate` sigue representando la fecha de entrega capturada; no se convierte ni cambia de tipo.
+
+Compatibilidad de zona horaria:
+
+- El ID canónico del proyecto es IANA: `America/Mexico_City`.
+- Para compatibilidad en Windows, el backend acepta el equivalente `Central Standard Time (Mexico)` si el sistema operativo no resuelve el ID IANA.
+- Si se configura un ID inválido o no disponible, el dashboard debe fallar de forma explícita en vez de calcular métricas con una zona incorrecta.
+
 ## Frontend Angular
 
 La app Angular vive en `src/LaboratorioTlahuac.Web`.

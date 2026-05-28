@@ -235,6 +235,25 @@ public sealed class DashboardIntegrationTests
     }
 
     [Fact]
+    public async Task OperationalSummaryUsesBusinessTimeZoneDateWhenUtcDateDiffers()
+    {
+        using var factory = new TestApplicationFactory(
+            new DateTimeOffset(2026, 5, 10, 4, 30, 0, TimeSpan.Zero));
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        await CreateWorkOrderWithCustomerAsync(client, xsrfToken, deliveryDate: Yesterday);
+        await CreateWorkOrderWithCustomerAsync(client, xsrfToken, deliveryDate: Today);
+        await CreateWorkOrderWithCustomerAsync(client, xsrfToken, deliveryDate: Tomorrow);
+
+        var payload = await GetDashboardSummaryAsync(client);
+        var operationalSummary = payload.GetProperty("operationalSummary");
+
+        Assert.Equal(1, operationalSummary.GetProperty("dueTodayCount").GetInt32());
+        Assert.Equal(1, operationalSummary.GetProperty("overdueCount").GetInt32());
+        Assert.Equal(2, operationalSummary.GetProperty("upcomingDueCount").GetInt32());
+    }
+
+    [Fact]
     public async Task ByStatusReturnsWorkOrderCounts()
     {
         using var factory = new TestApplicationFactory();

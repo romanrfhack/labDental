@@ -14,7 +14,8 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase técnica 5: automatizaciones y WhatsApp. Pendiente.
 - Fase sistema 2.1d: diagnóstico/corrección de loading de `/app/dashboard`. Completada y cerrada manualmente por el responsable del proyecto.
 - Fase sistema 2.2: QA manual/técnico del sistema privado con Admin. Completada con reporte en `docs/08-qa/private-admin-qa.md`.
-- Fase sistema 2.3: corrección de hallazgos QA del sistema privado. Recomendada como siguiente fase.
+- Fase sistema 2.3: corrección de hallazgos QA del sistema privado. Completada; define zona horaria operativa `America/Mexico_City` para métricas del dashboard y agrega estado activo visual en navegación privada.
+- Fase sistema 2.4: pase visual/manual privado y validación de permisos con usuario limitado si se requiere evidencia completa de `/app/access-denied`. Recomendada como siguiente fase.
 - Backlog futuro: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; no pertenece a la fase actual y requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
@@ -49,9 +50,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Fase 2.3 - Corrección de hallazgos QA del sistema privado.
+Fase 2.4 - Pase visual/manual privado y validación de permisos con usuario limitado.
 
-Alcance sugerido: revisar zona horaria de negocio para métricas de dashboard, estado activo visual de la navegación privada y evidencia manual con usuario limitado para `/app/access-denied` si se decide cubrir permisos completos antes de staging. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
+Alcance sugerido: revisar visualmente la navegación activa en `/app/*`, consola/Network si se requiere evidencia adicional y crear/usar un usuario QA limitado para validar `/app/access-denied` antes de staging. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
 
 ## Regla De Actualización
 

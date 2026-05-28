@@ -13,19 +13,22 @@ namespace LaboratorioTlahuac.Infrastructure.Dashboard;
 public sealed class DashboardService(
     LaboratorioTlahuacDbContext dbContext,
     IClock clock,
-    ICurrentUser currentUser)
+    ICurrentUser currentUser,
+    DashboardOptions dashboardOptions)
     : IDashboardService
 {
     private const int ShortListSize = 5;
 
     private static readonly WorkOrderStatus[] WorkOrderStatuses = Enum.GetValues<WorkOrderStatus>();
+    private readonly TimeZoneInfo businessTimeZone =
+        DashboardTimeZoneResolver.Resolve(dashboardOptions.BusinessTimeZone);
 
     public async Task<DashboardSummaryResponse> GetSummaryAsync(
         CancellationToken cancellationToken = default)
     {
         var generatedAtUtc = clock.UtcNow;
         var permissions = currentUser.Permissions.ToHashSet(StringComparer.Ordinal);
-        var today = DateOnly.FromDateTime(generatedAtUtc.UtcDateTime);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(generatedAtUtc, businessTimeZone).Date);
 
         var customerSummary = permissions.Contains(Permissions.CustomersView)
             ? await BuildCustomerSummaryAsync(cancellationToken)

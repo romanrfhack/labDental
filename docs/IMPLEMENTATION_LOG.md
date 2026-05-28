@@ -6,6 +6,83 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-27 - Fase 2.3 Corrección De Hallazgos QA Del Sistema Privado
+
+### Cambio Realizado
+
+Se corrigieron los dos hallazgos registrados en Fase 2.2 para el sistema privado:
+
+- Hallazgo medio: métricas operativas del dashboard calculaban "hoy" con fecha UTC pura.
+- Hallazgo bajo: la navegación privada no marcaba visualmente la ruta activa.
+
+No se modificaron sitio público, `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies, XSRF, endpoints públicos, rutas privadas, migraciones, deploy ni dependencias. No se hicieron commits.
+
+### Zona Horaria De Negocio
+
+- Se agregó configuración `Dashboard:BusinessTimeZone` con default `America/Mexico_City`.
+- `DashboardService` conserva `generatedAtUtc` en UTC, pero calcula el "hoy" operativo convirtiendo `clock.UtcNow` a la zona horaria de negocio.
+- `dueToday`, `overdue` y `upcomingDue` usan la fecha operativa del laboratorio.
+- `DeliveryDate` no cambió de significado ni de tipo.
+- El ID canónico documentado es IANA `America/Mexico_City`; para compatibilidad Windows se acepta `Central Standard Time (Mexico)`.
+
+### Navegación Privada
+
+- `PrivateLayoutComponent` incorpora `RouterLinkActive`.
+- `/app/dashboard` usa `routerLinkActiveOptions` con `exact: true`.
+- Los enlaces privados conservan visibilidad condicional por permisos.
+- Se agregaron estilos de activo, hover y `focus-visible` con contraste suficiente.
+- No se cambiaron rutas, permisos ni logout.
+
+### Pruebas
+
+- Se agregó `OperationalSummaryUsesBusinessTimeZoneDateWhenUtcDateDiffers` en `DashboardIntegrationTests`.
+- El caso fija `clock.UtcNow` en `2026-05-10T04:30:00Z`, cuando Mexico City sigue en fecha local `2026-05-09`.
+- La prueba valida que una orden con entrega igual al día local cuenta como `dueToday` y que `overdue` y `upcomingDue` conservan comportamiento esperado.
+- Frontend no tiene runner no interactivo ni patrón `.spec.ts`; la navegación privada se validó por código y `npm run build`.
+
+### Archivos Modificados
+
+- `README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/internal-system.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+- `docs/08-qa/private-admin-qa.md`
+- `src/LaboratorioTlahuac.Api/appsettings.json`
+- `src/LaboratorioTlahuac.Infrastructure/Dashboard/DashboardOptions.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Dashboard/DashboardService.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Dashboard/DashboardTimeZoneResolver.cs`
+- `src/LaboratorioTlahuac.Infrastructure/DependencyInjection.cs`
+- `src/LaboratorioTlahuac.Web/src/app/admin/layout/private-layout.component.scss`
+- `src/LaboratorioTlahuac.Web/src/app/admin/layout/private-layout.component.ts`
+- `tests/LaboratorioTlahuac.Api.Tests/AuthIntegrationTests.cs`
+- `tests/LaboratorioTlahuac.Api.Tests/DashboardIntegrationTests.cs`
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto tras corregir el fixture de pruebas; Domain 1/1, Application 1/1 y API 91/91.
+- La primera ejecución de `dotnet test` falló porque `TestApplicationFactory` tenía dos constructores públicos; se ajustó a un solo constructor público y se repitió correctamente.
+- `git diff --check`: correcto.
+- `docker ps --filter "name=ldt-labdental-sql"`: confirmó `ldt-labdental-sql` activo en `14336`.
+- `docker port ldt-labdental-sql`: confirmó `1433/tcp -> 0.0.0.0:14336` y `[::]:14336`; se requirió permiso fuera del sandbox.
+- `rg "/dashboard" .`: revisado; no se detectó `/dashboard` como ruta privada real nueva.
+- `rg "/app/dashboard" .`: revisado; confirma que el dashboard privado real se mantiene bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada pública y endpoints de auth existentes.
+- `rg "routerLinkActive" src/LaboratorioTlahuac.Web/src/app/admin/layout`: revisado; confirma estado activo en navegación privada.
+- `rg "America/Mexico_City" src docs tests README.md`: revisado; confirma configuración/código/documentación de zona horaria.
+- `rg --files-with-matches "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "ConnectionStrings" src docs README.md`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; solo aparecen menciones documentales o históricas de no uso.
+
+### Siguiente Fase Recomendada
+
+Fase 2.4 - pase visual/manual privado y validación de permisos con usuario limitado si se requiere.
+
 ## 2026-05-27 - Fase 2.2 QA Manual/Técnico Del Sistema Privado Con Admin
 
 ### Cambio Realizado
