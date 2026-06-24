@@ -26,7 +26,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        bool isDevelopment)
     {
         var databaseOptions = configuration
             .GetSection(DatabaseOptions.SectionName)
@@ -63,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddSingleton<IWorkOrderNumberGenerator, GuidWorkOrderNumberGenerator>();
+        services.AddSingleton(new SecuritySeedRuntimeOptions { IsDevelopment = isDevelopment });
         services.AddScoped<ISecuritySeeder, SecuritySeeder>();
 
         return services;

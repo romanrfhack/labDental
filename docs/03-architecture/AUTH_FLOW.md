@@ -25,6 +25,17 @@ Endpoints técnicos solo en Development:
 - `GET /api/security/permissions-check`
 - `POST /api/security/csrf-check`
 
+Seed tecnico solo en Development:
+
+- `SecuritySeed:LimitedQaUser:RunOnStartup`
+- `SecuritySeed:LimitedQaUser:Email`
+- `SecuritySeed:LimitedQaUser:Password`
+- `SecuritySeed:LimitedQaUser:FullName`
+- `SecuritySeed:LimitedQaUser:Permissions`
+- Variables sensibles equivalentes: `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME`
+
+Este seed no expone endpoint HTTP, no corre fuera de `Development`, esta desactivado por default y debe apagarse despues de sincronizar el usuario local.
+
 ## Cookie De Sesión
 
 - Provider: ASP.NET Core Cookie Authentication.
@@ -70,6 +81,7 @@ Exclusiones documentadas:
 La autorización es por permisos, no por nombre de rol.
 
 - Admin recibe todos los permisos mediante seed inicial.
+- Usuario QA limitado local puede recibir una allowlist explicita de permisos mediante `SecuritySeed:LimitedQaUser:Permissions`; para probar `/app/access-denied` no debe incluir `reports.view`.
 - Los permisos se emiten como claims `permission`.
 - El backend valida permisos con policies y `RequirePermission`.
 - El frontend usa permisos para navegación y visibilidad, pero no sustituye la autorización backend.
@@ -99,6 +111,8 @@ Permisos por ruta privada:
 - API sin sesión: responde `401`.
 - API sin permiso: responde `403`.
 - Endpoints `/api` no redirigen con `302` a `/login`.
+
+La Fase 2.6 valida por API automatizada esta diferencia: sin sesion `/api/dashboard/summary` responde `401`; con usuario QA limitado autenticado sin `reports.view` responde `403`.
 
 ## ReturnUrl Seguro
 

@@ -446,6 +446,9 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly DateTimeOffset utcNow;
     private readonly string? dashboardBusinessTimeZone;
+    private readonly IReadOnlyDictionary<string, string?> extraSettings;
+    private readonly string environmentName;
+    private readonly bool seedDatabase;
     private SqliteConnection? connection;
 
     public TestApplicationFactory()
@@ -453,10 +456,18 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
     {
     }
 
-    internal TestApplicationFactory(DateTimeOffset utcNow, string? dashboardBusinessTimeZone = null)
+    internal TestApplicationFactory(
+        DateTimeOffset utcNow,
+        string? dashboardBusinessTimeZone = null,
+        IReadOnlyDictionary<string, string?>? extraSettings = null,
+        string environmentName = "Development",
+        bool seedDatabase = true)
     {
         this.utcNow = utcNow;
         this.dashboardBusinessTimeZone = dashboardBusinessTimeZone;
+        this.extraSettings = extraSettings ?? new Dictionary<string, string?>();
+        this.environmentName = environmentName;
+        this.seedDatabase = seedDatabase;
     }
 
     public HttpClient CreateClientWithoutRedirects()
@@ -470,7 +481,7 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Development");
+        builder.UseEnvironment(environmentName);
         builder.ConfigureAppConfiguration((_context, configuration) =>
         {
             var settings = new Dictionary<string, string?>
@@ -482,6 +493,11 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
             if (!string.IsNullOrWhiteSpace(dashboardBusinessTimeZone))
             {
                 settings["Dashboard:BusinessTimeZone"] = dashboardBusinessTimeZone;
+            }
+
+            foreach (var setting in extraSettings)
+            {
+                settings[setting.Key] = setting.Value;
             }
 
             configuration.AddInMemoryCollection(settings);
@@ -511,7 +527,11 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
 
             dbContext.Database.EnsureDeleted();
             dbContext.Database.EnsureCreated();
-            SeedDatabase(dbContext);
+
+            if (seedDatabase)
+            {
+                SeedDatabase(dbContext);
+            }
         });
     }
 

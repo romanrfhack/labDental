@@ -10,6 +10,101 @@ Limitación de ejecución: no hay navegador/headless local instalado en este ent
 
 Seguimiento Fase 2.3: los dos hallazgos principales de este reporte quedaron corregidos por código y pruebas. El dashboard usa fecha operativa de negocio `America/Mexico_City` para `dueToday`, `overdue` y `upcomingDue`; la navegación privada marca la ruta activa con `routerLinkActive` y estilos accesibles.
 
+## Fase 2.6 - Usuario QA limitado Development-only
+
+### Fecha
+
+- Implementación y validación automatizada: 2026-05-28 CST, America/Mexico_City.
+- Sin commits.
+- Sin migraciones.
+- Sin dependencias nuevas.
+
+### Resultado
+
+Fase 2.6 implementa el mecanismo seguro Development-only para crear o sincronizar un usuario QA limitado local.
+
+Condiciones implementadas:
+
+- Solo corre en `Development`.
+- Desactivado por default.
+- Requiere `SecuritySeed:LimitedQaUser:RunOnStartup=true`.
+- Requiere email, password y nombre desde user-secrets o variables de entorno.
+- No guarda secretos en archivos versionados.
+- No imprime contrasenas.
+- No ejecuta SQL manual.
+- No altera Admin; si el email QA pertenece a un Admin, el seed QA se omite.
+- No crea migraciones.
+- No cambia rutas privadas.
+- No toca `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies, XSRF ni deploy.
+
+Configuracion documentada:
+
+- `SecuritySeed:LimitedQaUser:RunOnStartup`.
+- `SecuritySeed:LimitedQaUser:Email`.
+- `SecuritySeed:LimitedQaUser:Password`.
+- `SecuritySeed:LimitedQaUser:FullName`.
+- `SecuritySeed:LimitedQaUser:Permissions`.
+- `LT_QA_LIMITED_EMAIL`.
+- `LT_QA_LIMITED_PASSWORD`.
+- `LT_QA_LIMITED_FULL_NAME`.
+
+### Pruebas Automatizadas
+
+Se agregaron pruebas directas del seeder:
+
+- No crea usuario limitado fuera de `Development`.
+- No crea usuario limitado si `RunOnStartup` no esta activo.
+- No crea usuario limitado si falta email, password o nombre.
+- Crea usuario limitado en `Development` con configuracion completa.
+- No otorga `reports.view` cuando no se configura.
+- Otorga permisos explicitos como `customers.view`.
+- No altera Admin existente.
+
+Se agrego prueba API de integracion:
+
+- Login con usuario QA limitado creado por seed.
+- `/api/auth/me` responde `200` con permisos limitados y sin `passwordHash`.
+- `/api/customers` responde `200` con `customers.view`.
+- `/api/dashboard/summary` responde `403` con sesion limitada sin `reports.view`.
+- `/api/dashboard/summary` responde `401` sin sesion.
+
+### Validacion Local Real
+
+No se creo usuario QA limitado en `LaboratorioTlahuac_Dev` durante esta ejecucion.
+
+Motivo:
+
+- `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME` no estan disponibles en el proceso de Codex.
+- No se inventaron credenciales.
+- No se ejecuto `dotnet user-secrets list`.
+- No se guardaron secretos en archivos versionados.
+
+Datos QA creados: ninguno en la base local real por esta fase.
+
+### Estado De `/app/access-denied`
+
+Validado por automatizacion API como diferencia `401` vs `403` y por codigo de router/guard.
+
+Pendiente de validacion navegador real:
+
+- Login con usuario QA limitado real.
+- Entrar a `/app/dashboard`.
+- Confirmar redireccion a `/app/access-denied`.
+- Confirmar que `/app/clientes` carga si el usuario tiene `customers.view`.
+- Logout.
+- Confirmar que `/app/dashboard` sin sesion redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
+
+Motivo de pendiente: no hay navegador/headless local disponible sin instalar dependencias y no hay credenciales QA seguras disponibles en el proceso.
+
+### Hallazgos
+
+| Severidad | Hallazgo | Estado |
+| --- | --- | --- |
+| Bloqueante | Ninguno. | Cerrado. |
+| Alto | Ninguno. | Cerrado. |
+| Medio | Ninguno. | Cerrado. |
+| Bajo | Falta pase visual real de `/app/access-denied` con usuario QA limitado local. | Pendiente por credenciales/navegador. |
+
 ## Fase 2.5 - Cierre visual humano privado y usuario limitado
 
 ### Fecha

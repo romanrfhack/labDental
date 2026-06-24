@@ -1,118 +1,140 @@
 # Plan QA Usuario Limitado
 
-## Objetivo
+## Estado
 
-Definir un mecanismo seguro para validar `/app/access-denied` con una sesion autenticada sin permisos suficientes, sin alterar el Admin existente, sin SQL manual, sin migraciones y sin guardar contrasenas en archivos versionados.
+Fase 2.6 implementada.
 
-## Riesgos
+El repositorio ya tiene un mecanismo seguro para crear un usuario QA limitado local mediante el seed de seguridad existente. El mecanismo es solo para `Development`, esta desactivado por default, requiere habilitacion explicita y no guarda contrasenas en archivos versionados.
 
-- Crear usuarios reales de QA sin controles puede dejar credenciales activas fuera de Development.
-- Reutilizar el seed Admin para permisos limitados sin separacion clara puede reducir la confianza en el rol Admin.
-- Crear datos por SQL manual puede saltarse reglas de dominio, hashing de password, normalizacion de email y auditoria basica.
-- Versionar credenciales o imprimir secretos en consola filtraria acceso local.
-- Un usuario limitado mal definido podria tener permisos suficientes y no validar realmente `/app/access-denied`.
+Validacion automatizada cubierta: seed directo con SQLite en memoria, login API con usuario limitado, `/api/auth/me` con permisos limitados, `/api/customers` permitido con `customers.view` y `/api/dashboard/summary` rechazado con `403` por falta de `reports.view`.
 
-## Opciones Evaluadas
+Validacion local real pendiente: no existen `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` ni `LT_QA_LIMITED_FULL_NAME` en el proceso de Codex y no hay navegador/headless local disponible sin instalar dependencias.
 
-### Opcion 1 - Seed QA limitado solo Development
+## Mecanismo Implementado
 
-Resumen: extender en una fase futura el mecanismo de seed para crear un usuario QA limitado solo cuando el entorno sea `Development`, este explicitamente habilitado y existan credenciales en user-secrets o variables de entorno.
+- Clase principal: `SecuritySeeder`.
+- Configuracion: `SecuritySeed:LimitedQaUser`.
+- Activacion de arranque: `SecuritySeed:LimitedQaUser:RunOnStartup=true`.
+- Entorno permitido: solo `Development`.
+- Rol local creado/actualizado: `Limited QA`.
+- Usuario creado/actualizado: el email configurado para QA limitado.
+- Password: se toma de user-secrets o variable de entorno, se hashea con `PasswordHasher<User>` y nunca se imprime.
+- Permisos: se sincronizan exactamente contra una allowlist de claves existentes en `Permissions.All`.
+- Admin: no se modifica cuando solo corre el seed QA limitado; si el email configurado pertenece a un usuario con rol Admin, el seed QA se omite de forma segura.
+- Migraciones: no requiere migraciones.
+- SQL manual: no se usa.
 
-- Seguridad: alta si queda desactivado por default, revisa `Environment=Development`, no imprime password y no corre en produccion.
-- Esfuerzo: bajo a medio; reutiliza entidades, `PasswordHasher<User>`, permisos existentes y transaccion del seed.
-- Utilidad QA: alta; permite validar login, `/app/access-denied`, diferencia entre `401` y `403`, y navegacion privada con sesion limitada.
-- Riesgo residual: requiere tocar backend de forma controlada en una fase posterior y probar que no se activa fuera de Development.
+## Configuracion
 
-### Opcion 2 - Esperar modulo de usuarios/roles
+User-secrets recomendados desde la raiz del repo:
 
-Resumen: no crear mecanismo especial ahora; validar `/app/access-denied` cuando exista administracion real de usuarios y roles.
-
-- Seguridad: muy alta en el corto plazo porque evita codigo adicional y datos QA de seguridad.
-- Esfuerzo: nulo ahora.
-- Utilidad QA: baja para la fase actual; mantiene incompleta la evidencia manual de usuario sin permiso.
-- Riesgo residual: posterga una validacion importante hasta una fase mayor.
-
-### Opcion 3 - Script local de QA
-
-Resumen: crear un comando local controlado que use servicios/repositorios existentes para crear un usuario limitado sin SQL directo ni credenciales versionadas.
-
-- Seguridad: media a alta si usa servicios existentes, no imprime secretos y se limita al entorno local.
-- Esfuerzo: medio; requiere disenar comando, parametros, validaciones, documentacion y pruebas.
-- Utilidad QA: alta para entornos locales y repetibles.
-- Riesgo residual: puede duplicar logica del seed o quedar fuera del flujo normal si no se mantiene.
-
-## Opcion Recomendada
-
-Recomendada: Opcion 1, seed QA limitado solo Development, como backlog tecnico inmediato y sin implementacion en Fase 2.5.
-
-Motivo: es la opcion mas util para cerrar evidencia manual pronto y la mas alineada con el mecanismo existente de seed, siempre que se agreguen compuertas explicitas de entorno, habilitacion y credenciales externas. La Opcion 2 queda como fallback si se decide no tocar backend antes del modulo de usuarios/roles. La Opcion 3 solo conviene si se prefiere no ampliar el seed.
-
-## Diseno Propuesto
-
-- El usuario QA limitado solo puede crearse cuando `IWebHostEnvironment.IsDevelopment()` sea verdadero.
-- El flujo debe estar desactivado por default.
-- La habilitacion debe requerir una bandera explicita, por ejemplo `SecuritySeed:QaLimited:Enabled=true`.
-- Las credenciales deben venir de user-secrets o variables de entorno, nunca de `appsettings*.json` versionados.
-- La password nunca debe imprimirse, registrarse ni persistirse en texto plano.
-- El usuario debe crearse o actualizarse usando `User.Create(...)`, `PasswordHasher<User>` y relaciones `UserRole`/`RolePermission`, no SQL directo.
-- Para validar `/app/access-denied`, el perfil recomendado es un usuario activo sin permisos de producto, o con una allowlist minima que no incluya el permiso de la ruta a probar.
-- La prueba manual recomendada es iniciar sesion con el usuario limitado e intentar abrir `/app/dashboard`; si el usuario no tiene `reports.view`, debe terminar en `/app/access-denied`.
-
-## User-Secrets O Variables Propuestas
-
-Nombres propuestos para una fase posterior:
-
-```text
-SecuritySeed:QaLimited:Enabled=true
-LDT_QA_LIMITED_EMAIL=<email-local-qa>
-LDT_QA_LIMITED_PASSWORD=<password-local-seguro>
-LDT_QA_LIMITED_FULL_NAME=Usuario QA Limitado
-SecuritySeed:QaLimited:Permissions=
+```bash
+dotnet user-secrets set SecuritySeed:LimitedQaUser:RunOnStartup true --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set LT_QA_LIMITED_EMAIL "<email-local-qa>" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set LT_QA_LIMITED_PASSWORD "<password-local-seguro>" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set LT_QA_LIMITED_FULL_NAME "Usuario QA Limitado" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+dotnet user-secrets set SecuritySeed:LimitedQaUser:Permissions "customers.view" --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
 ```
 
-Equivalentes de entorno cuando aplique:
+Equivalentes por configuracion jerarquica:
 
 ```text
-SecuritySeed__QaLimited__Enabled=true
-LDT_QA_LIMITED_EMAIL=<email-local-qa>
-LDT_QA_LIMITED_PASSWORD=<password-local-seguro>
-LDT_QA_LIMITED_FULL_NAME=Usuario QA Limitado
-SecuritySeed__QaLimited__Permissions=
+SecuritySeed:LimitedQaUser:RunOnStartup=true
+SecuritySeed:LimitedQaUser:Email=<email-local-qa>
+SecuritySeed:LimitedQaUser:Password=<password-local-seguro>
+SecuritySeed:LimitedQaUser:FullName=Usuario QA Limitado
+SecuritySeed:LimitedQaUser:Permissions=customers.view
 ```
 
-`SecuritySeed:QaLimited:Permissions` debe ser opcional y aceptar solo una allowlist de claves existentes en `Permissions.All`. Para validar `/app/access-denied` contra `/app/dashboard`, debe quedar vacia o no incluir `reports.view`.
+Equivalentes por variables de entorno para email, password y nombre:
 
-## Restricciones De Seguridad
+```text
+LT_QA_LIMITED_EMAIL=<email-local-qa>
+LT_QA_LIMITED_PASSWORD=<password-local-seguro>
+LT_QA_LIMITED_FULL_NAME=Usuario QA Limitado
+SecuritySeed__LimitedQaUser__RunOnStartup=true
+SecuritySeed__LimitedQaUser__Permissions=customers.view
+```
 
-- No activar en Production, Staging ni entornos no Development.
-- No crear o modificar Admin.
-- No usar SQL manual.
-- No crear migraciones para este mecanismo.
-- No guardar contrasenas en `appsettings`, documentos, scripts versionados ni archivos de ejemplo con valores reales.
-- No ejecutar `dotnet user-secrets list` como evidencia.
-- No imprimir secretos ni payloads con contrasenas.
-- No usar `codex-cobranza-sql` ni bases de otros proyectos.
-- No exponer endpoint HTTP para crear usuarios QA.
-- No dejar la bandera activa despues de crear el usuario, salvo que se documente una razon local temporal.
+No ejecutar `dotnet user-secrets list` como evidencia. No imprimir valores reales.
 
-## Criterio De Aceptacion
+## Permisos Recomendados
 
-- Con `Environment=Development`, bandera habilitada y secretos locales presentes, el usuario QA limitado se crea o actualiza de forma idempotente.
-- Sin bandera o fuera de Development, no se crea ni modifica el usuario QA limitado.
-- El Admin existente conserva `Permissions.All` y no se altera.
-- El usuario limitado puede iniciar sesion desde `/login`.
-- `/api/auth/me` devuelve el usuario limitado sin password hash y con permisos esperados.
-- Al abrir una ruta sin permiso, por ejemplo `/app/dashboard` sin `reports.view`, el frontend redirige a `/app/access-denied`.
-- El endpoint backend correspondiente responde `403` si hay sesion sin permiso y `401` si no hay sesion.
-- `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` pasan.
-- La documentacion de QA registra que no se imprimieron secretos y que no se uso SQL manual.
+Para validar `/app/access-denied` contra `/app/dashboard`, usar:
+
+```text
+SecuritySeed:LimitedQaUser:Permissions=customers.view
+```
+
+El usuario QA limitado debe poder iniciar sesion y consultar clientes, pero no debe tener:
+
+```text
+reports.view
+```
+
+Si `SecuritySeed:LimitedQaUser:Permissions` queda vacio o no existe, el usuario se crea sin permisos. El seed ignora claves desconocidas y solo aplica permisos existentes en `Permissions.All`.
+
+## Validacion API
+
+Resultado esperado con usuario QA limitado:
+
+- `POST /api/auth/login`: `200`.
+- `GET /api/auth/me`: `200`, sin `passwordHash`, con permisos limitados.
+- `GET /api/customers`: `200` si se configuro `customers.view`.
+- `GET /api/dashboard/summary`: `403` si no tiene `reports.view`.
+- Sin sesion, `GET /api/dashboard/summary`: `401`.
+
+La prueba automatizada `LimitedQaUserCanLoginAndIsForbiddenFromDashboardSummary` cubre este flujo sin usar secretos reales.
+
+## Validacion Navegador
+
+Pasos manuales con navegador real:
+
+1. Confirmar que la API corre en `Development` y apunta a `ldt-labdental-sql` / `LaboratorioTlahuac_Dev`.
+2. Configurar user-secrets sin imprimir valores reales.
+3. Levantar la API para ejecutar el seed.
+4. Apagar `SecuritySeed:LimitedQaUser:RunOnStartup`.
+5. Entrar a `/login`.
+6. Iniciar sesion con el usuario QA limitado.
+7. Abrir `/app/dashboard`.
+8. Confirmar redireccion a `/app/access-denied`.
+9. Abrir `/app/clientes`.
+10. Confirmar que carga si el usuario tiene `customers.view`.
+11. Hacer logout.
+12. Abrir `/app/dashboard` sin sesion.
+13. Confirmar redireccion a `/login?returnUrl=%2Fapp%2Fdashboard`.
+
+## Como Apagar El Seed
+
+Despues de crear o sincronizar el usuario QA limitado local:
+
+```bash
+dotnet user-secrets set SecuritySeed:LimitedQaUser:RunOnStartup false --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+```
+
+Dejar el usuario limitado en la base local es aceptable para QA local si su password queda resguardada fuera de archivos versionados. No dejar la bandera encendida salvo que se este sincronizando de nuevo el usuario.
 
 ## Que NO Debe Hacerse
 
 - No crear el usuario directamente en SQL Server.
+- No usar `codex-cobranza-sql`.
 - No alterar permisos del Admin para simular un usuario limitado.
 - No versionar credenciales.
-- No imprimir valores de `LDT_QA_LIMITED_PASSWORD`, `LT_ADMIN_PASSWORD` ni `LDT_SQL_SA_PASSWORD`.
-- No crear migraciones o endpoints nuevos para esta validacion.
-- No usar fixtures de pruebas como mecanismo para la base local real.
+- No imprimir valores de `LT_QA_LIMITED_PASSWORD`, `LT_ADMIN_PASSWORD` ni `LDT_SQL_SA_PASSWORD`.
+- No ejecutar `dotnet user-secrets list` como evidencia.
+- No crear migraciones para este mecanismo.
+- No exponer endpoint HTTP para crear usuarios QA.
 - No convertir `/dashboard` en ruta privada real.
+- No tocar `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies o XSRF para esta validacion.
+
+## Criterio De Aceptacion
+
+- Con `Environment=Development`, bandera habilitada y secretos locales presentes, el usuario QA limitado se crea o actualiza de forma idempotente.
+- Sin bandera, fuera de `Development` o con configuracion requerida incompleta, no se crea usuario QA limitado.
+- El Admin existente no se altera.
+- El usuario limitado puede iniciar sesion desde `/login`.
+- `/api/auth/me` devuelve permisos esperados y no expone password hash.
+- `/api/dashboard/summary` responde `403` con sesion limitada sin `reports.view`.
+- `/api/dashboard/summary` responde `401` sin sesion.
+- En navegador, `/app/dashboard` con usuario limitado debe terminar en `/app/access-denied`.
+- `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` pasan.

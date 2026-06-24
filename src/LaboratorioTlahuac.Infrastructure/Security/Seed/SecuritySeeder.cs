@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using LaboratorioTlahuac.Domain.Security;
 using LaboratorioTlahuac.Domain.Security.Entities;
 using LaboratorioTlahuac.Infrastructure.Persistence;
@@ -10,25 +11,89 @@ namespace LaboratorioTlahuac.Infrastructure.Security.Seed;
 public sealed class SecuritySeeder(
     LaboratorioTlahuacDbContext dbContext,
     IPasswordHasher<User> passwordHasher,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    SecuritySeedRuntimeOptions runtimeOptions,
+    ILogger<SecuritySeeder> logger)
     : ISecuritySeeder
 {
+    private const string LimitedQaRoleName = "Limited QA";
+    private const string LimitedQaRoleDescription = "Usuario QA limitado local de Development.";
+    private static readonly char[] PermissionSeparators = [',', ';', ' ', '\n', '\r', '\t'];
+    private static readonly Action<ILogger, Exception?> LogLimitedQaSeedSkippedOutsideDevelopment =
+        LoggerMessage.Define(
+            LogLevel.Information,
+            new EventId(1, nameof(LogLimitedQaSeedSkippedOutsideDevelopment)),
+            "Limited QA user seed skipped because the current environment is not Development.");
+    private static readonly Action<ILogger, Exception?> LogLimitedQaSeedSkippedMissingConfiguration =
+        LoggerMessage.Define(
+            LogLevel.Warning,
+            new EventId(2, nameof(LogLimitedQaSeedSkippedMissingConfiguration)),
+            "Limited QA user seed skipped because email, password or full name configuration is missing.");
+    private static readonly Action<ILogger, string, Exception?> LogLimitedQaSeedIgnoredUnknownPermissions =
+        LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            new EventId(3, nameof(LogLimitedQaSeedIgnoredUnknownPermissions)),
+            "Limited QA user seed ignored unknown permission key(s): {PermissionKeys}.");
+    private static readonly Action<ILogger, Exception?> LogLimitedQaSeedSkippedAdminEmail =
+        LoggerMessage.Define(
+            LogLevel.Warning,
+            new EventId(4, nameof(LogLimitedQaSeedSkippedAdminEmail)),
+            "Limited QA user seed skipped because the configured email belongs to an Admin user.");
+
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        var options = configuration
-            .GetSection(SecuritySeedOptions.SectionName)
-            .Get<SecuritySeedOptions>() ?? new SecuritySeedOptions();
+        var adminSeedEnabled = configuration.GetValue<bool>($"{SecuritySeedOptions.SectionName}:RunOnStartup");
+        var limitedQaSeedEnabled = IsLimitedQaSeedEnabled();
+
+        if (!adminSeedEnabled && !limitedQaSeedEnabled)
+        {
+            return;
+        }
+
+        var options = adminSeedEnabled
+            ? configuration
+                .GetSection(SecuritySeedOptions.SectionName)
+                .Get<SecuritySeedOptions>() ?? new SecuritySeedOptions()
+            : new SecuritySeedOptions();
 
         var now = DateTimeOffset.UtcNow;
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var permissionsByKey = await EnsurePermissionsAsync(now, cancellationToken);
-        var adminRole = await EnsureAdminRoleAsync(options, now, cancellationToken);
-        await EnsureAdminPermissionsAsync(adminRole, permissionsByKey, cancellationToken);
-        await EnsureAdminUserAsync(options, adminRole, now, cancellationToken);
+
+        if (adminSeedEnabled)
+        {
+            var adminRole = await EnsureAdminRoleAsync(options, now, cancellationToken);
+            await EnsureAdminPermissionsAsync(adminRole, permissionsByKey, cancellationToken);
+            await EnsureAdminUserAsync(options, adminRole, now, cancellationToken);
+        }
+
+        if (limitedQaSeedEnabled)
+        {
+            await EnsureLimitedQaUserAsync(permissionsByKey, now, cancellationToken);
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    private bool IsLimitedQaSeedEnabled()
+    {
+        var runOnStartup = configuration.GetValue<bool>($"{LimitedQaUserSeedOptions.SectionName}:RunOnStartup");
+
+        if (!runOnStartup)
+        {
+            return false;
+        }
+
+        if (runtimeOptions.IsDevelopment)
+        {
+            return true;
+        }
+
+        LogLimitedQaSeedSkippedOutsideDevelopment(logger, null);
+
+        return false;
     }
 
     private async Task<Dictionary<string, Permission>> EnsurePermissionsAsync(
@@ -151,6 +216,205 @@ public sealed class SecuritySeeder(
         {
             dbContext.UserRoles.Add(new UserRole(adminUser.Id, adminRole.Id));
         }
+    }
+
+    private async Task EnsureLimitedQaUserAsync(
+        IReadOnlyDictionary<string, Permission> permissionsByKey,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var options = configuration
+            .GetSection(LimitedQaUserSeedOptions.SectionName)
+            .Get<LimitedQaUserSeedOptions>() ?? new LimitedQaUserSeedOptions();
+
+        var email = FirstNonWhiteSpace(
+            configuration["LT_QA_LIMITED_EMAIL"],
+            options.Email);
+        var password = FirstNonWhiteSpace(
+            configuration["LT_QA_LIMITED_PASSWORD"],
+            options.Password);
+        var fullName = FirstNonWhiteSpace(
+            configuration["LT_QA_LIMITED_FULL_NAME"],
+            options.FullName);
+
+        if (string.IsNullOrWhiteSpace(email)
+            || string.IsNullOrWhiteSpace(password)
+            || string.IsNullOrWhiteSpace(fullName))
+        {
+            LogLimitedQaSeedSkippedMissingConfiguration(logger, null);
+            return;
+        }
+
+        var limitedQaRole = await EnsureLimitedQaRoleAsync(now, cancellationToken);
+        var desiredPermissionKeys = ParsePermissionKeys(options.Permissions);
+        var desiredPermissions = GetKnownPermissions(desiredPermissionKeys, permissionsByKey);
+
+        await SynchronizeRolePermissionsAsync(limitedQaRole, desiredPermissions, cancellationToken);
+        await EnsureLimitedQaUserAsync(email, password, fullName, limitedQaRole, now, cancellationToken);
+    }
+
+    private async Task<Role> EnsureLimitedQaRoleAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var normalizedRoleName = SecurityTextNormalizer.NormalizeName(LimitedQaRoleName);
+        var role = await dbContext.Roles
+            .FirstOrDefaultAsync(
+                currentRole => currentRole.NormalizedName == normalizedRoleName,
+                cancellationToken);
+
+        if (role is not null)
+        {
+            return role;
+        }
+
+        role = Role.Create(LimitedQaRoleName, LimitedQaRoleDescription, isSystem: true, now);
+        dbContext.Roles.Add(role);
+
+        return role;
+    }
+
+    private List<Permission> GetKnownPermissions(
+        HashSet<string> desiredPermissionKeys,
+        IReadOnlyDictionary<string, Permission> permissionsByKey)
+    {
+        var selectedPermissions = new List<Permission>();
+        var unknownPermissionKeys = new List<string>();
+
+        foreach (var permissionKey in desiredPermissionKeys)
+        {
+            if (permissionsByKey.TryGetValue(permissionKey, out var permission))
+            {
+                selectedPermissions.Add(permission);
+                continue;
+            }
+
+            unknownPermissionKeys.Add(permissionKey);
+        }
+
+        if (unknownPermissionKeys.Count > 0)
+        {
+            LogLimitedQaSeedIgnoredUnknownPermissions(logger, string.Join(", ", unknownPermissionKeys), null);
+        }
+
+        return selectedPermissions;
+    }
+
+    private async Task SynchronizeRolePermissionsAsync(
+        Role role,
+        IReadOnlyCollection<Permission> desiredPermissions,
+        CancellationToken cancellationToken)
+    {
+        var desiredPermissionIds = desiredPermissions
+            .Select(permission => permission.Id)
+            .ToHashSet();
+        var existingRolePermissions = await dbContext.RolePermissions
+            .Where(rolePermission => rolePermission.RoleId == role.Id)
+            .ToListAsync(cancellationToken);
+        var existingPermissionIds = existingRolePermissions
+            .Select(rolePermission => rolePermission.PermissionId)
+            .ToHashSet();
+
+        dbContext.RolePermissions.RemoveRange(
+            existingRolePermissions.Where(rolePermission => !desiredPermissionIds.Contains(rolePermission.PermissionId)));
+
+        foreach (var desiredPermissionId in desiredPermissionIds)
+        {
+            if (existingPermissionIds.Contains(desiredPermissionId))
+            {
+                continue;
+            }
+
+            dbContext.RolePermissions.Add(new RolePermission(role.Id, desiredPermissionId));
+        }
+    }
+
+    private async Task EnsureLimitedQaUserAsync(
+        string email,
+        string password,
+        string fullName,
+        Role limitedQaRole,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var normalizedEmail = SecurityTextNormalizer.NormalizeEmail(email);
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(
+                currentUser => currentUser.NormalizedEmail == normalizedEmail,
+                cancellationToken);
+
+        if (user is not null && await HasAdminRoleAsync(user.Id, cancellationToken))
+        {
+            LogLimitedQaSeedSkippedAdminEmail(logger, null);
+            return;
+        }
+
+        if (user is null)
+        {
+            user = User.Create(email, fullName, "pending-password-hash", now);
+            dbContext.Users.Add(user);
+        }
+        else
+        {
+            user.Rename(fullName, now);
+            user.Activate(now);
+            user.ClearLockout(now);
+        }
+
+        user.SetPasswordHash(passwordHasher.HashPassword(user, password));
+
+        await SynchronizeUserRolesAsync(user, limitedQaRole, cancellationToken);
+    }
+
+    private async Task<bool> HasAdminRoleAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var adminRoleName = FirstNonWhiteSpace(
+            configuration[$"{SecuritySeedOptions.SectionName}:AdminRoleName"],
+            "Admin") ?? "Admin";
+        var normalizedAdminRoleName = SecurityTextNormalizer.NormalizeName(adminRoleName);
+
+        return await dbContext.UserRoles
+            .Where(userRole => userRole.UserId == userId)
+            .Join(
+                dbContext.Roles,
+                userRole => userRole.RoleId,
+                role => role.Id,
+                (_, role) => role.NormalizedName)
+            .AnyAsync(
+                normalizedRoleName => normalizedRoleName == normalizedAdminRoleName,
+                cancellationToken);
+    }
+
+    private async Task SynchronizeUserRolesAsync(
+        User user,
+        Role limitedQaRole,
+        CancellationToken cancellationToken)
+    {
+        var existingUserRoles = await dbContext.UserRoles
+            .Where(userRole => userRole.UserId == user.Id)
+            .ToListAsync(cancellationToken);
+        var hasLimitedQaRole = false;
+
+        foreach (var userRole in existingUserRoles)
+        {
+            if (userRole.RoleId == limitedQaRole.Id)
+            {
+                hasLimitedQaRole = true;
+                continue;
+            }
+
+            dbContext.UserRoles.Remove(userRole);
+        }
+
+        if (!hasLimitedQaRole)
+        {
+            dbContext.UserRoles.Add(new UserRole(user.Id, limitedQaRole.Id));
+        }
+    }
+
+    private static HashSet<string> ParsePermissionKeys(string? permissions)
+    {
+        return (permissions ?? string.Empty)
+            .Split(PermissionSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.Ordinal);
     }
 
     private static string? FirstNonWhiteSpace(params string?[] values)

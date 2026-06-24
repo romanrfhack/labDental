@@ -38,7 +38,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 
 ## Separación De Frentes
 
-- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado y con mecanismo seguro de usuario limitado definido como backlog.
+- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado y Fase 2.6 implementada para usuario QA limitado Development-only.
 - Sitio público institucional: vive en la app Angular existente bajo `src/LaboratorioTlahuac.Web/src/app/public`; la primera versión mobile-first está implementada y Fase 1.6 quedó validada visualmente por el responsable del proyecto.
 - Documentación comercial: describe alcance propuesto y fases comerciales, no necesariamente implementación técnica actual.
 

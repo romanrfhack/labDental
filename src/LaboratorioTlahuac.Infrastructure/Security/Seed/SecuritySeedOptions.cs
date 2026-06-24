@@ -21,3 +21,23 @@ public sealed class AdminSeedOptions
 
     public string? FullName { get; init; }
 }
+
+public sealed class LimitedQaUserSeedOptions
+{
+    public const string SectionName = $"{SecuritySeedOptions.SectionName}:LimitedQaUser";
+
+    public bool RunOnStartup { get; init; }
+
+    public string? Email { get; init; }
+
+    public string? Password { get; init; }
+
+    public string? FullName { get; init; }
+
+    public string? Permissions { get; init; }
+}
+
+public sealed class SecuritySeedRuntimeOptions
+{
+    public bool IsDevelopment { get; init; }
+}

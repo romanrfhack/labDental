@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 const string DevelopmentCorsPolicy = "DevelopmentAngular";
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment.IsDevelopment());
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 
@@ -122,7 +122,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Configuration.GetValue<bool>("SecuritySeed:RunOnStartup"))
+if (ShouldRunSecuritySeed(app))
 {
     await using var scope = app.Services.CreateAsyncScope();
     var seeder = scope.ServiceProvider.GetRequiredService<ISecuritySeeder>();
@@ -191,6 +191,17 @@ static bool RequiresAntiforgeryValidation(HttpRequest request)
         && !HttpMethods.IsHead(request.Method)
         && !HttpMethods.IsOptions(request.Method)
         && !HttpMethods.IsTrace(request.Method);
+}
+
+static bool ShouldRunSecuritySeed(WebApplication app)
+{
+    if (app.Configuration.GetValue<bool>("SecuritySeed:RunOnStartup"))
+    {
+        return true;
+    }
+
+    return app.Environment.IsDevelopment()
+        && app.Configuration.GetValue<bool>("SecuritySeed:LimitedQaUser:RunOnStartup");
 }
 
 public partial class Program;

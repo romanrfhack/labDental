@@ -15,6 +15,7 @@ Permitir que el laboratorio opere registros nuevos sin depender del Excel para e
 ## Módulos Actuales
 
 - Autenticación y sesión privada.
+- Usuario QA limitado local Development-only para validación de permisos.
 - Clientes, doctores, clínicas y doctores internos.
 - Órdenes de trabajo dental.
 - Estados e historial de órdenes.
@@ -97,6 +98,23 @@ Estado: preflight local ejecutado; login real quedó pendiente en esa fase por f
 - `GET /api/auth/csrf` respondió `204`; `GET /api/auth/me` sin sesión respondió `401`.
 - Login real, `/api/auth/me` autenticado, logout y redirección tras logout quedaron pendientes en esa fase; login real y dashboard autenticado se cerraron posteriormente por validación manual.
 - Admin recibirá `reports.view` cuando el seed pueda ejecutarse, porque el seed asigna todos los permisos a Admin y `/app/dashboard` requiere `reports.view`.
+
+## Validación De Acceso Fase 2.6
+
+Estado: mecanismo seguro Development-only implementado para crear o sincronizar un usuario QA limitado local.
+
+- Configuracion principal: `SecuritySeed:LimitedQaUser`.
+- Activacion: `SecuritySeed:LimitedQaUser:RunOnStartup=true`.
+- Datos sensibles: `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME`, o equivalentes bajo `SecuritySeed:LimitedQaUser`.
+- Permisos: `SecuritySeed:LimitedQaUser:Permissions`, sincronizado contra `Permissions.All`.
+- Permiso recomendado: `customers.view`.
+- Permiso excluido para validar `/app/access-denied` en dashboard: `reports.view`.
+- El usuario QA limitado puede iniciar sesion y conserva permisos limitados.
+- `/api/auth/me` devuelve permisos limitados sin `passwordHash`.
+- `/api/dashboard/summary` responde `403` con sesion limitada sin `reports.view`.
+- Sin sesion, `/api/dashboard/summary` responde `401`.
+- La validacion manual esperada en navegador es entrar a `/app/dashboard` con usuario limitado y confirmar redireccion a `/app/access-denied`.
+- No se cambiaron rutas privadas, `AuthService`, guards, cookies, XSRF, endpoints, migraciones ni deploy.
 
 ## Validación De Acceso Fase 2.1c
 

@@ -93,6 +93,12 @@ public sealed class User
         PasswordHash = passwordHash;
     }
 
+    public void Rename(string fullName, DateTimeOffset utcNow)
+    {
+        SetFullName(fullName);
+        UpdatedAtUtc = utcNow;
+    }
+
     public void Activate(DateTimeOffset utcNow)
     {
         IsActive = true;
@@ -113,6 +119,13 @@ public sealed class User
         }
 
         LockoutEndUtc = lockoutEndUtc;
+        UpdatedAtUtc = utcNow;
+    }
+
+    public void ClearLockout(DateTimeOffset utcNow)
+    {
+        AccessFailedCount = 0;
+        LockoutEndUtc = null;
         UpdatedAtUtc = utcNow;
     }
 

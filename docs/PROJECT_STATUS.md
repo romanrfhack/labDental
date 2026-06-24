@@ -4,14 +4,14 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto y Fase 2.5 del sistema privado cerrada como pase visual humano privado completado. El mecanismo seguro recomendado para usuario QA limitado queda como backlog técnico inmediato.
+Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto, Fase 2.5 del sistema privado cerrada como pase visual humano privado completado y Fase 2.6 implementada para usuario QA limitado Development-only.
 
 ## Estado Por Frente
 
 - Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto. Fase 2.5 confirmó que no hubo regresión visible del sitio público.
 - Catálogo: legible y aprobado visualmente; mantiene precios de referencia 2026, frames uniformes de imágenes, placeholders intencionales y condiciones comerciales con texto prudente.
 - Login/auth: `/login` sigue público; login con Admin local validado manualmente; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3, Fase 2.4 ni Fase 2.5.
-- Sistema privado: Fase 2.5 cerrada como pase visual humano privado completado; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, el dashboard usa fecha operativa de negocio y la navegación privada fue confirmada visualmente en rutas principales.
+- Sistema privado: Fase 2.6 implementada; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, el dashboard usa fecha operativa de negocio, la navegación privada fue confirmada visualmente en rutas principales y existe seed QA limitado Development-only para validar permisos sin alterar Admin.
 - Pendientes del cliente: dirección, horarios, WhatsApp real, aprobación final de precios 2026, aprobación de `Anticipo 50%`, aprobación de `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 
 ## Sistema Privado / MVP Administrativo
@@ -83,6 +83,16 @@ Estado: avanzado, con QA funcional y demo documentadas; Fase 2.3 queda cerrada p
 - Fase 2.5 define como mecanismo recomendado para usuario QA limitado un seed solo Development, desactivado por default, controlado por user-secrets o variables de entorno, sin imprimir password, sin SQL manual, sin modificar Admin y sin activarse en producción.
 - Plan creado: `docs/08-qa/limited-user-qa-plan.md`.
 - Fase 2.5 no modificó código, backend, `AuthService`, guards, cookies, XSRF, endpoints, rutas privadas, base de datos, migraciones, deploy ni dependencias.
+- Fase 2.6 implementa el seed QA limitado solo `Development` bajo `SecuritySeed:LimitedQaUser`.
+- El seed QA limitado queda desactivado por default y requiere `SecuritySeed:LimitedQaUser:RunOnStartup=true` mas email, password y nombre desde user-secrets o variables de entorno.
+- Variables soportadas para datos sensibles QA: `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME`.
+- Permisos QA limitados: `SecuritySeed:LimitedQaUser:Permissions`, sincronizados contra claves existentes en `Permissions.All`; para validar access-denied se recomienda `customers.view` sin `reports.view`.
+- El rol local `Limited QA` se crea o sincroniza solo en Development; si el email configurado pertenece a un Admin, el seed QA se omite para no alterar Admin.
+- Fase 2.6 no crea migraciones, no agrega endpoints, no usa SQL manual, no guarda secretos en archivos versionados, no imprime contrasenas y no modifica rutas privadas, `AuthService`, guards, cookies, XSRF ni deploy.
+- Pruebas Fase 2.6 agregadas: casos directos del seeder para no crear fuera de Development, no crear si esta desactivado, no crear si falta configuracion requerida, crear con configuracion completa, no otorgar `reports.view` cuando no se configura, otorgar `customers.view` explicito y no alterar Admin.
+- Prueba API Fase 2.6 agregada: login con usuario QA limitado por seed, `/api/auth/me` con permisos limitados, `/api/customers` `200` con `customers.view`, `/api/dashboard/summary` `403` sin `reports.view` y sin sesion `401`.
+- Validacion local real Fase 2.6: pendiente porque `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME` no estan disponibles en el proceso de Codex; no se inventaron credenciales.
+- Validacion navegador Fase 2.6 de `/app/access-denied`: pendiente porque no hay navegador/headless local disponible sin instalar dependencias; quedan pasos manuales exactos en `docs/08-qa/limited-user-qa-plan.md`.
 
 La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
 
@@ -148,7 +158,7 @@ Estado: pendiente de definición productiva.
 
 ## QA
 
-- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, Fase 2.4 agrega pase manual/técnico privado con Admin y Fase 2.5 cierra el pase visual humano privado. El plan de usuario QA limitado queda vigente como backlog.
+- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, Fase 2.4 agrega pase manual/técnico privado con Admin, Fase 2.5 cierra el pase visual humano privado y Fase 2.6 implementa/prueba por API el usuario QA limitado Development-only.
 - QA responsive del sitio público: revisión por código/build ejecutada; Fase 1.6 cerrada como validada visualmente por el responsable del proyecto.
 - No existe runner frontend no interactivo; frontend se valida hoy con `npm run build` y revisión manual cuando aplique.
 - Validación Fase 1: `npm run build` ejecutado correctamente en `src/LaboratorioTlahuac.Web`.
@@ -200,6 +210,13 @@ Estado: pendiente de definición productiva.
 - Validación manual Fase 2.5 2026-05-28: resultados visuales humanos concretos recibidos y documentados; la fase queda completada para pase visual humano privado.
 - Usuario QA limitado Fase 2.5: se recomienda backlog técnico inmediato de seed solo Development documentado en `docs/08-qa/limited-user-qa-plan.md`; no se implementó.
 - Validación de cierre Fase 2.5 2026-05-28: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias ejecutadas correctamente; las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
+- Validacion Fase 2.6 2026-05-28: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`.
+- Validacion Fase 2.6 2026-05-28: `dotnet build` correcto con 0 warnings y 0 errores.
+- Validacion Fase 2.6 2026-05-28: `dotnet test` correcto; Domain 1/1, Application 1/1 y API 101/101.
+- Validacion automatizada Fase 2.6: el usuario QA limitado creado por configuracion de tests puede iniciar sesion, `/api/auth/me` devuelve `customers.view` sin `reports.view`, `/api/customers` responde `200`, `/api/dashboard/summary` responde `403` con sesion limitada y `401` sin sesion.
+- Validacion local real Fase 2.6: no ejecutada porque no hay variables QA limitadas seguras en el proceso y no se ejecuta `dotnet user-secrets list`.
+- Validacion navegador Fase 2.6: no ejecutada porque no hay navegador/headless local disponible sin instalar dependencias.
+- Validacion de cierre Fase 2.6 2026-05-28: `git diff --check` correcto y busquedas obligatorias ejecutadas; busquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
 
 ## Comercial
 
@@ -209,9 +226,9 @@ Estado: pendiente de definición productiva.
 
 ## Próxima Tarea Recomendada
 
-Implementar, si se autoriza tocar backend mínimo, el mecanismo seguro de usuario QA limitado solo Development descrito en `docs/08-qa/limited-user-qa-plan.md`.
+Validar manualmente `/app/access-denied` con usuario QA limitado real cuando existan credenciales locales seguras y navegador disponible.
 
-Alcance sugerido: crear el usuario QA limitado solo en Development, sin secretos versionados, sin SQL manual y sin alterar Admin, para validar `/app/access-denied` con una sesión autenticada sin permisos suficientes.
+Alcance sugerido: configurar `SecuritySeed:LimitedQaUser:RunOnStartup=true`, `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD`, `LT_QA_LIMITED_FULL_NAME` y `SecuritySeed:LimitedQaUser:Permissions=customers.view`; levantar API en Development contra `ldt-labdental-sql`; apagar el seed; iniciar sesion en `/login`; confirmar que `/app/dashboard` termina en `/app/access-denied` y `/app/clientes` carga.
 
 Mantener pendientes de cliente para el sitio público: confirmar vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
 

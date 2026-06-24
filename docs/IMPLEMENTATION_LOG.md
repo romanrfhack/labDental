@@ -6,6 +6,127 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-05-28 - Fase 2.6 Usuario QA Limitado Development-only
+
+### Cambio Realizado
+
+Se implemento el mecanismo seguro Development-only para crear o sincronizar un usuario QA limitado local y validar permisos/access-denied sin alterar Admin.
+
+El mecanismo vive en el seed de seguridad existente:
+
+- `SecuritySeed:LimitedQaUser:RunOnStartup`.
+- `SecuritySeed:LimitedQaUser:Email`.
+- `SecuritySeed:LimitedQaUser:Password`.
+- `SecuritySeed:LimitedQaUser:FullName`.
+- `SecuritySeed:LimitedQaUser:Permissions`.
+- Variables sensibles soportadas: `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME`.
+
+Condiciones aplicadas:
+
+- Solo corre en `Development`.
+- Desactivado por default.
+- Requiere habilitacion explicita.
+- No guarda secretos en archivos versionados.
+- No imprime contrasenas.
+- No usa SQL manual.
+- No crea migraciones.
+- No expone endpoints nuevos.
+- No altera Admin; si el email configurado pertenece a un Admin, el seed QA se omite.
+- No modifica rutas privadas, `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies, XSRF ni deploy.
+
+### Implementacion Tecnica
+
+- `Program.cs` ejecuta el seeder si `SecuritySeed:RunOnStartup=true` o si el entorno es `Development` y `SecuritySeed:LimitedQaUser:RunOnStartup=true`.
+- `SecuritySeeder` separa el seed Admin del seed QA limitado para que activar solo QA no sincronice Admin.
+- El rol local `Limited QA` se crea o sincroniza con los permisos configurados.
+- Los permisos QA se parsean desde `SecuritySeed:LimitedQaUser:Permissions` y solo se aplican si existen en `Permissions.All`.
+- El usuario QA se crea o actualiza de forma idempotente, se activa, se desbloquea y queda asignado solo al rol `Limited QA`.
+- `User` agrega metodos de dominio para renombrar y limpiar lockout sin cambiar esquema.
+- `DependencyInjection` registra si el runtime esta en Development para que Infrastructure no dependa de hosting web.
+
+### Pruebas
+
+Se agregaron:
+
+- `SecuritySeederTests`.
+- `LimitedQaUserSeedIntegrationTests`.
+
+Cobertura nueva:
+
+- No crea usuario limitado fuera de Development.
+- No crea usuario limitado si `RunOnStartup` no esta activo.
+- No crea usuario limitado si falta configuracion requerida.
+- Crea usuario limitado en Development con configuracion completa.
+- Usuario limitado no tiene `reports.view` cuando no se configura.
+- Usuario limitado puede tener `customers.view`.
+- Admin existente no se altera.
+- Login API con usuario QA limitado.
+- `/api/auth/me` devuelve permisos limitados y no expone `passwordHash`.
+- `/api/customers` responde `200` con `customers.view`.
+- `/api/dashboard/summary` responde `403` con sesion limitada sin `reports.view`.
+- `/api/dashboard/summary` responde `401` sin sesion.
+
+### Validacion Local
+
+- SQL dedicado confirmado: `ldt-labdental-sql`.
+- Puerto confirmado: `14336 -> 1433/tcp`.
+- No se uso `codex-cobranza-sql`.
+- `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME` no estan disponibles en el proceso de Codex.
+- No se inventaron credenciales.
+- No se ejecuto `dotnet user-secrets list`.
+- No se creo usuario QA limitado en la base local real durante esta ejecucion.
+- No hay navegador/headless local disponible sin instalar dependencias, por lo que `/app/access-denied` queda pendiente de pase manual en navegador real.
+
+### Archivos Modificados
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/internal-system.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/08-qa/RESPONSIVE_CHECKLIST.md`
+- `docs/08-qa/limited-user-qa-plan.md`
+- `docs/08-qa/private-admin-qa.md`
+- `src/LaboratorioTlahuac.Api/Program.cs`
+- `src/LaboratorioTlahuac.Domain/Security/Entities/User.cs`
+- `src/LaboratorioTlahuac.Infrastructure/DependencyInjection.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Security/Seed/SecuritySeedOptions.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Security/Seed/SecuritySeeder.cs`
+- `tests/LaboratorioTlahuac.Api.Tests/AuthIntegrationTests.cs`
+
+### Archivos Creados
+
+- `tests/LaboratorioTlahuac.Api.Tests/SecuritySeederTests.cs`
+- `tests/LaboratorioTlahuac.Api.Tests/LimitedQaUserSeedIntegrationTests.cs`
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 warnings y 0 errores.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- `git diff --check`: correcto.
+- `docker ps --filter name=ldt-labdental-sql`: confirmo SQL dedicado activo.
+- `docker port ldt-labdental-sql`: confirmo `14336 -> 1433/tcp`.
+- `docker ps --filter name=codex-cobranza-sql`: sin contenedor activo.
+- `rg "/dashboard" .`: revisado; no se detecto `/dashboard` como ruta privada real nueva.
+- `rg "/app/dashboard" .`: revisado; confirma que el dashboard privado real se mantiene bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada publica y endpoints/rutas de auth existentes.
+- `rg "access-denied" src docs tests README.md`: revisado; confirma ruta/pagina y documentacion de pendiente manual.
+- `rg "LimitedQaUser" src docs tests README.md`: revisado; confirma configuracion y pruebas nuevas.
+- `rg "LT_QA_LIMITED" src docs tests README.md`: revisado; solo aparecen nombres de variables, placeholders y codigo de lectura de configuracion.
+- `rg --files-with-matches "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LT_QA_LIMITED_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg "ConnectionStrings" src docs README.md`: revisado; no se detectaron secretos reales.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; las menciones corresponden a documentacion de no uso o historico.
+
+### Siguiente Fase Recomendada
+
+Ejecutar pase manual con usuario QA limitado real: configurar user-secrets, levantar API en Development contra `ldt-labdental-sql`, apagar el seed, iniciar sesion en `/login`, abrir `/app/dashboard` y confirmar redireccion a `/app/access-denied`; luego confirmar `/app/clientes` y logout.
+
 ## 2026-05-28 - Fase 2.5 Cierre Visual Humano Privado Completado Y Usuario Limitado
 
 ### Cambio Realizado

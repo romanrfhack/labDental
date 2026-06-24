@@ -116,6 +116,16 @@ Compatibilidad de zona horaria:
 - Para compatibilidad en Windows, el backend acepta el equivalente `Central Standard Time (Mexico)` si el sistema operativo no resuelve el ID IANA.
 - Si se configura un ID inválido o no disponible, el dashboard debe fallar de forma explícita en vez de calcular métricas con una zona incorrecta.
 
+Seed QA limitado:
+
+- Clave: `SecuritySeed:LimitedQaUser`.
+- Bandera: `SecuritySeed:LimitedQaUser:RunOnStartup`.
+- Campos: `Email`, `Password`, `FullName` y `Permissions`.
+- Variables sensibles soportadas: `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME`.
+- Uso actual: crear o sincronizar un usuario QA limitado local solo en `Development`.
+- Permisos: allowlist contra `Permissions.All`; para validar access-denied se recomienda `customers.view` sin `reports.view`.
+- Seguridad: desactivado por default, no corre fuera de `Development`, no imprime password, no usa SQL manual, no crea migraciones y no expone endpoints.
+
 ## Frontend Angular
 
 La app Angular vive en `src/LaboratorioTlahuac.Web`.

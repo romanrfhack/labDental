@@ -166,6 +166,13 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - Validación técnica de cierre: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias ejecutadas correctamente.
 - No se implementaron funcionalidades nuevas ni se tocaron rutas, guards, `AuthService`, cookies, XSRF, endpoints, migraciones, deploy o dependencias.
 
+## Estado Fase 2.6
+
+- Seed QA limitado Development-only implementado para validar permisos sin alterar Admin.
+- La validacion automatizada cubre login API con usuario limitado, `/api/auth/me`, `customers.view`, falta de `reports.view`, `403` en `/api/dashboard/summary` y `401` sin sesion.
+- `/app/access-denied` queda pendiente de pase visual real con usuario QA limitado local porque no hay navegador/headless disponible ni variables QA seguras en el proceso de Codex.
+- No se tocaron rutas privadas, guards, `AuthService`, cookies, XSRF, estilos responsive, endpoints publicos, migraciones, deploy ni dependencias.
+
 ## Verificado Por Código / Build
 
 - [x] Build frontend correcto con `npm run build`.
@@ -235,11 +242,12 @@ Fuente canónica de QA responsive/mobile-first para el sitio público institucio
 - [x] Fase 2.4 confirma por código que `/login` sigue público, `/app` y `/app/dashboard` siguen privados y `/dashboard` no es ruta privada real.
 - [x] Fase 2.4 ejecuta `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctamente.
 - [ ] Fase 2.4 deja pendiente pase visual humano de navegación activa por falta de navegador/headless local.
-- [ ] Fase 2.4 deja pendiente usuario limitado real para `/app/access-denied` por falta de mecanismo seguro local.
+- [x] Fase 2.6 implementa mecanismo seguro Development-only para usuario QA limitado.
+- [x] Fase 2.6 valida por API la diferencia entre sin sesion `401` y autenticado sin permiso `403`.
 - [x] Fase 2.5 registra resultados visuales humanos concretos por ruta y cierra el pase visual privado.
 - [x] Fase 2.5 documenta mecanismo recomendado de usuario QA limitado solo Development.
 - [x] Fase 2.5 ejecuta `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias correctamente.
-- [ ] Fase 2.5 deja pendiente implementar, si se autoriza, el mecanismo seguro de usuario limitado para validar `/app/access-denied`.
+- [ ] Confirmar en navegador real que el usuario QA limitado local llega a `/app/access-denied`.
 
 ## Hallazgos Manuales Recibidos
 

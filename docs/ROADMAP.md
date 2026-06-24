@@ -17,6 +17,7 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase sistema 2.3: corrección de hallazgos QA del sistema privado. Completada; define zona horaria operativa `America/Mexico_City` para métricas del dashboard y agrega estado activo visual en navegación privada.
 - Fase sistema 2.4: pase manual/técnico privado y validación de permisos. Completada por API/código/build con Admin; `/app/access-denied` queda pendiente de usuario limitado real por falta de mecanismo seguro de usuario QA limitado.
 - Fase sistema 2.5: cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado. Completada para pase visual humano privado el 2026-05-28; se recomienda seed QA limitado solo Development como backlog técnico inmediato, sin implementarlo todavía.
+- Fase sistema 2.6: mecanismo seguro Development-only para usuario QA limitado. Implementada; seed desactivado por default, activado por configuracion explicita, probado por automatizacion API y pendiente de pase manual en navegador con credenciales locales reales.
 - Backlog futuro: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; no pertenece a la fase actual y requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
@@ -51,9 +52,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Implementar usuario QA limitado seguro en Development.
+Validar manualmente `/app/access-denied` con usuario QA limitado real cuando existan credenciales locales seguras y navegador disponible.
 
-Alcance sugerido: si se autoriza tocar backend mínimo, implementar el seed QA limitado solo Development descrito en `docs/08-qa/limited-user-qa-plan.md` para validar `/app/access-denied` con una sesión autenticada sin permisos suficientes. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
+Alcance sugerido: configurar el seed QA limitado solo Development descrito en `docs/08-qa/limited-user-qa-plan.md`, crear o sincronizar el usuario local, apagar la bandera de seed y confirmar en navegador que `/app/dashboard` termina en `/app/access-denied` mientras `/app/clientes` carga con `customers.view`. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
 
 ## Regla De Actualización
 
