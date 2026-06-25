@@ -1,0 +1,175 @@
+name: Deploy Laboratorio Tláhuac
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '22.x'
+  EF_VERSION: '10.0.7'
+  CONFIGURATION: Release
+  API_PROJECT: src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+  INFRA_PROJECT: src/LaboratorioTlahuac.Infrastructure/LaboratorioTlahuac.Infrastructure.csproj
+  WEB_DIR: src/LaboratorioTlahuac.Web
+  DB_CONTEXT: LaboratorioTlahuacDbContext
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+
+    if: ${{ github.ref_name == 'dev' || (github.ref_name == 'main' && vars.LDT_ENABLE_PROD_DEPLOY == 'true') }}
+
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
+      url: ${{ secrets.LDT_SITE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WEB_DIR }}/package-lock.json
+
+      - name: Restore backend
+        run: dotnet restore
+
+      - name: Build backend
+        run: dotnet build --configuration "$CONFIGURATION" --no-restore
+
+      - name: Test backend
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal
+
+      - name: Install frontend dependencies
+        run: npm --prefix "$WEB_DIR" ci
+
+      - name: Build frontend
+        run: npm --prefix "$WEB_DIR" run build
+
+      - name: Install dotnet-ef
+        run: |
+          dotnet tool install --global dotnet-ef --version "$EF_VERSION"
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - name: Generate EF idempotent migration script
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          DOTNET_ENVIRONMENT: Development
+        run: |
+          mkdir -p "$RUNNER_TEMP/release"
+
+          dotnet ef migrations script \
+            --idempotent \
+            --context "$DB_CONTEXT" \
+            --project "$INFRA_PROJECT" \
+            --startup-project "$API_PROJECT" \
+            --output "$RUNNER_TEMP/release/migrations.sql"
+
+          test -s "$RUNNER_TEMP/release/migrations.sql"
+
+      - name: Publish backend
+        run: |
+          mkdir -p "$RUNNER_TEMP/release/backend"
+
+          dotnet publish "$API_PROJECT" \
+            --configuration "$CONFIGURATION" \
+            --output "$RUNNER_TEMP/release/backend" \
+            --no-restore
+
+          test -f "$RUNNER_TEMP/release/backend/LaboratorioTlahuac.Api.dll"
+
+      - name: Prepare frontend artifact
+        run: |
+          mkdir -p "$RUNNER_TEMP/release/frontend"
+
+          FRONTEND_DIST="$WEB_DIR/dist/laboratorio-tlahuac-web/browser"
+
+          test -f "$FRONTEND_DIST/index.html"
+          cp -a "$FRONTEND_DIST/." "$RUNNER_TEMP/release/frontend/"
+
+          test -f "$RUNNER_TEMP/release/frontend/index.html"
+
+      - name: Package release
+        run: |
+          RELEASE_ID="${GITHUB_REF_NAME}-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}"
+          echo "RELEASE_ID=$RELEASE_ID" >> "$GITHUB_ENV"
+
+          cd "$RUNNER_TEMP/release"
+          tar -czf "$RUNNER_TEMP/labdental-${RELEASE_ID}.tar.gz" backend frontend migrations.sql
+
+          ls -lh "$RUNNER_TEMP/labdental-${RELEASE_ID}.tar.gz"
+
+      - name: Configure SSH
+        env:
+          LDT_SSH_PRIVATE_KEY: ${{ secrets.LDT_SSH_PRIVATE_KEY }}
+          LDT_SSH_HOST: ${{ secrets.LDT_SSH_HOST }}
+          LDT_SSH_PORT: ${{ secrets.LDT_SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$LDT_SSH_PRIVATE_KEY" > ~/.ssh/labdental_deploy_key
+          chmod 600 ~/.ssh/labdental_deploy_key
+
+          ssh-keyscan -p "$LDT_SSH_PORT" "$LDT_SSH_HOST" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload release to VPS
+        env:
+          LDT_SSH_HOST: ${{ secrets.LDT_SSH_HOST }}
+          LDT_SSH_PORT: ${{ secrets.LDT_SSH_PORT }}
+          LDT_SSH_USER: ${{ secrets.LDT_SSH_USER }}
+        run: |
+          scp \
+            -i ~/.ssh/labdental_deploy_key \
+            -P "$LDT_SSH_PORT" \
+            "$RUNNER_TEMP/labdental-${RELEASE_ID}.tar.gz" \
+            "$LDT_SSH_USER@$LDT_SSH_HOST:/tmp/labdental-${RELEASE_ID}.tar.gz"
+
+      - name: Deploy on VPS
+        env:
+          LDT_SSH_HOST: ${{ secrets.LDT_SSH_HOST }}
+          LDT_SSH_PORT: ${{ secrets.LDT_SSH_PORT }}
+          LDT_SSH_USER: ${{ secrets.LDT_SSH_USER }}
+          LDT_APP_ROOT: ${{ secrets.LDT_APP_ROOT }}
+          LDT_API_SERVICE: ${{ secrets.LDT_API_SERVICE }}
+          LDT_DB_NAME: ${{ secrets.LDT_DB_NAME }}
+          LDT_ENV_FILE: ${{ secrets.LDT_ENV_FILE }}
+          LDT_SITE_URL: ${{ secrets.LDT_SITE_URL }}
+          LDT_SQLCMD: ${{ secrets.LDT_SQLCMD }}
+        run: |
+          REMOTE_ENV="$(
+            printf "LDT_RELEASE_ID=%q " "$RELEASE_ID"
+            printf "LDT_APP_ROOT=%q " "$LDT_APP_ROOT"
+            printf "LDT_API_SERVICE=%q " "$LDT_API_SERVICE"
+            printf "LDT_DB_NAME=%q " "$LDT_DB_NAME"
+            printf "LDT_ENV_FILE=%q " "$LDT_ENV_FILE"
+            printf "LDT_SITE_URL=%q " "$LDT_SITE_URL"
+            printf "LDT_SQLCMD=%q " "$LDT_SQLCMD"
+          )"
+
+          ssh \
+            -i ~/.ssh/labdental_deploy_key \
+            -p "$LDT_SSH_PORT" \
+            "$LDT_SSH_USER@$LDT_SSH_HOST" \
+            "$REMOTE_ENV bash -s" < .github/scripts/deploy-lab.sh
