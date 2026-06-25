@@ -33,7 +33,7 @@ jobs:
 
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
-      url: ${{ secrets.LDT_SITE_URL }}
+      url: ${{ github.ref_name == 'main' && 'https://laboratoriodentaltlahuac.com' || 'https://dev.laboratoriodentaltlahuac.com' }}
 
     steps:
       - name: Checkout
