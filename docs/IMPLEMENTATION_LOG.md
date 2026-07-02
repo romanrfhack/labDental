@@ -6,6 +6,108 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-02 - Fase 3.2.1 QA Técnico De Etiquetas Y Preparación DEV
+
+### Cambio Realizado
+
+Se ejecutó QA técnico/documental de Fase 3.2.1 para el MVP de impresión de etiquetas desde órdenes existentes y se preparó la lista de validación para despliegue a VPS DEV desde rama `dev`.
+
+No se implementó funcionalidad nueva. No se agregaron QR/barcode, PDF, integración directa con driver/SDK de impresora, endpoints, migraciones ni dependencias.
+
+### Validación Técnica
+
+Confirmado por código y búsquedas:
+
+- `/app/ordenes/:id/etiqueta-trabajo` vive bajo `/app`, hereda `authGuard` y requiere `orders.view`.
+- `/app/ordenes/:id/etiqueta-entrega` vive bajo `/app`, hereda `authGuard` y requiere `orders.view`.
+- `/login` sigue público.
+- `/app` y `/app/dashboard` siguen privados.
+- `/dashboard` no es ruta privada real.
+- Las etiquetas usan `WorkOrderService.getById()` y el modelo existente `WorkOrderDetail`.
+- No se agregaron endpoints; el frontend sigue usando `/api/work-orders/{id}`.
+- No se agregaron migraciones; las migraciones existentes siguen siendo las históricas hasta `20260509053231_AddPayments`.
+- `package.json` no incluye dependencias nuevas para etiquetas.
+- Los botones `Imprimir` usan `window.print()`.
+- `@media print` oculta navegación, topbar, encabezado de pantalla y acciones.
+- Existe `@page` para 76 x 51 mm y 102 x 51 mm.
+- Las etiquetas usan texto negro, fondo blanco y bordes; no dependen de color para ser legibles.
+- Textos largos se compactan o restringen con `compact()`, `overflow`, `text-overflow` y `-webkit-line-clamp`.
+- Dirección/contacto faltantes usan textos seguros `Dirección pendiente` y `Contacto pendiente`; no se inventan datos.
+
+### Validación Visual
+
+No se ejecutó validación visual automatizada local porque no hay navegador/headless disponible sin instalar dependencias:
+
+- `chromium`: no disponible en `PATH`.
+- `google-chrome`: no disponible en `PATH`.
+- `chromium-browser`: no disponible en `PATH`.
+- El frontend no declara Playwright ni Puppeteer.
+
+Queda pendiente abrir las rutas en DEV con navegador real, probar `Imprimir` y confirmar etiqueta física con impresora térmica.
+
+### Checklist Físico Preparado
+
+Se actualizó `docs/08-qa/label-printing-qa.md` con:
+
+- Rutas validadas.
+- Tamaños 76 x 51 mm y 102 x 51 mm.
+- Datos incluidos por etiqueta.
+- Limitaciones conocidas.
+- Checklist manual con navegador.
+- Checklist de prueba física con impresora térmica.
+- Ajustes esperados de navegador/driver: escala 100%, sin encabezado/pie, tamaño de papel personalizado, orientación, calibración de offset, densidad/velocidad y rollo.
+- Resultado de build/test.
+- Pendiente explícito de prueba física en DEV.
+
+### Archivos Modificados
+
+- `docs/08-qa/label-printing-qa.md`
+- `docs/01-product/label-printing.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Validaciones Ejecutadas
+
+- `git status --short` antes de editar: sin salida.
+- `git diff --stat` antes de editar: sin salida.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 errores; reportó 2 warnings `NU1903` conocidos por vulnerabilidad de `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- `rg "/app/ordenes" src docs README.md`: ejecutado.
+- `rg "etiqueta" src docs README.md`: ejecutado.
+- `rg "@page" src/LaboratorioTlahuac.Web/src`: ejecutado.
+- `rg "window.print" src/LaboratorioTlahuac.Web/src`: ejecutado.
+- `rg "/dashboard" .`: ejecutado; no se convirtió `/dashboard` en ruta privada real.
+- `rg "/app/dashboard" .`: ejecutado; confirma que el dashboard privado real sigue bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: ejecutado; confirma `/login` como entrada pública.
+- `rg --files-with-matches "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LT_QA_LIMITED_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg --files-with-matches "ConnectionStrings" src docs README.md`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: ejecutado; solo hay menciones históricas/documentales de no uso.
+- `git diff --check`: correcto después de actualizar documentación.
+
+### Confirmaciones
+
+- No se instaló ninguna dependencia.
+- No se crearon migraciones.
+- No se agregaron endpoints.
+- No se modificó backend.
+- No se modificó `AuthService`.
+- No se modificaron guards.
+- No se tocaron cookies ni XSRF.
+- No se cambiaron rutas privadas.
+- No se convirtió `/dashboard` en ruta privada real.
+- No se imprimieron secretos.
+- No se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+- No se hicieron commits.
+
+### Resultado
+
+No hay hallazgos técnicos bloqueantes para recomendar commit/push a `dev` y despliegue a VPS DEV. La aceptación final de la fase debe cerrarse con prueba física de etiqueta interna 76 x 51 mm y etiqueta entrega 102 x 51 mm en impresora térmica real.
+
 ## 2026-07-02 - Fase 3.2 MVP Impresión De Etiquetas Desde Órdenes
 
 ### Cambio Realizado

@@ -85,6 +85,27 @@ Cada pantalla de etiqueta incluye:
 - Estados de carga, error, no encontrado y sin permiso.
 - CSS de impresión que oculta navegación, topbar y botones en `@media print`.
 
+## QA Técnico Fase 3.2.1
+
+Validado el 2026-07-02 como preparación de despliegue DEV desde rama `dev`.
+
+Resultado:
+
+- Las rutas de etiqueta siguen bajo `/app` y protegidas por sesión más `orders.view`.
+- Las etiquetas reutilizan `WorkOrderService.getById()` y el contrato existente de órdenes.
+- No se agregaron endpoints, migraciones, dependencias, QR/barcode, PDF ni integración directa con driver/SDK.
+- `window.print()` sigue siendo el mecanismo de impresión.
+- `@media print` oculta navegación, topbar, encabezados de pantalla y acciones.
+- `@page` existe para 76 x 51 mm y 102 x 51 mm.
+- El diseño es legible sin depender de color; usa texto negro, fondo blanco, bordes y jerarquía tipográfica.
+- Textos largos se compactan o restringen para no romper layout.
+- Dirección y contacto faltantes se muestran como textos seguros pendientes, no como datos inventados.
+- No hay hallazgos técnicos bloqueantes para desplegar a DEV.
+
+Limitación de ambiente local: no hay navegador/headless disponible sin instalar dependencias, por lo que la prueba visual automatizada y la impresión física quedan pendientes en DEV con navegador real e impresora térmica.
+
+Validaciones ejecutadas: `npm run build`, `dotnet build`, `dotnet test`, búsquedas obligatorias y `git diff --check` final documentado en `docs/08-qa/label-printing-qa.md`.
+
 ## Estrategia Inicial De Impresión
 
 La primera implementación debe usar impresión normal del navegador:

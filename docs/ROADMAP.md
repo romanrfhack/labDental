@@ -21,7 +21,8 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.0: cierre formal del despliegue DEV y baseline UAT. Completada el 2026-07-02 como fase documental/de validación; `https://dev.laboratoriodentaltlahuac.com` queda registrado como DEV publicado desde rama `dev`, con sitio público, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login` validados manualmente.
 - Fase 3.1: análisis operativo y plan de implementación para órdenes, etiquetas, reparto, usuarios/roles y catálogo. Documentada; no implementa código, migraciones, endpoints, auth, guards, deploy ni base de datos. Fuentes: `docs/01-product/operations-orders-delivery.md`, `docs/01-product/label-printing.md` y `docs/01-product/driver-mobile-workflow.md`.
 - Fase 3.2: MVP impresión de etiquetas desde órdenes existentes. Implementada el 2026-07-02; extiende `/app/ordenes/:id` con acciones de etiqueta interna y entrega, agrega rutas privadas bajo `/app` protegidas con `orders.view`, usa CSS/browser print con tamaños 76 x 51 mm y 102 x 51 mm, y no agrega dependencias, migraciones, endpoints ni PDF/QR/barcode.
-- Fase 3.3: validación real de etiquetas en DEV/impresora y entrega/repartidor mobile-first. Pendiente; requiere validar escala/márgenes con impresora térmica real y, para reparto, rol/permisos, modelo de entrega/asignación, endpoints privados y UI móvil.
+- Fase 3.2.1: QA técnico/visual de etiquetas y preparación de despliegue DEV. Completada el 2026-07-02 por revisión técnica local, build/test y checklist físico; no tuvo hallazgos bloqueantes. La prueba visual local quedó limitada por falta de navegador/headless sin instalar dependencias y la impresión física queda pendiente en DEV.
+- Fase 3.3: validación real de etiquetas en DEV/impresora y entrega/repartidor mobile-first. Pendiente; primero requiere commit/push a `dev`, despliegue VPS DEV y prueba física de escala/márgenes con impresora térmica real. Para reparto requerirá rol/permisos, modelo de entrega/asignación, endpoints privados y UI móvil.
 - Fase 3.4: administración de usuarios/roles. Pendiente; conviene validar primero seed/usuarios QA y luego CRUD administrativo seguro.
 - Fase 3.5: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
@@ -57,9 +58,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Fase 3.3 - validación real de etiquetas y entrega/repartidor mobile-first.
+Desplegar Fase 3.2.1 a DEV desde rama `dev`, validar etiquetas con impresora térmica real y después iniciar Fase 3.3 - entrega/repartidor mobile-first.
 
-Alcance sugerido inmediato: probar en DEV con la impresora térmica real los tamaños 76 x 51 mm y 102 x 51 mm, ajustar configuración de navegador/driver si hace falta y cerrar evidencia manual. El siguiente incremento funcional mayor sigue siendo entrega/repartidor mobile-first bajo `/app`, con diseño previo de permisos, modelo y endpoints.
+Alcance sugerido inmediato: commit/push a `dev`, desplegar VPS DEV, probar en DEV con la impresora térmica real los tamaños 76 x 51 mm y 102 x 51 mm, ajustar configuración de navegador/driver si hace falta y cerrar evidencia manual. El siguiente incremento funcional mayor sigue siendo entrega/repartidor mobile-first bajo `/app`, con diseño previo de permisos, modelo y endpoints.
 
 Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
