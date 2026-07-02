@@ -6,6 +6,52 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-02 - Corrección Admin Órdenes Nueva Orden En Angular Zoneless
+
+### Cambio Realizado
+
+Se corrigió el bug de Admin > Órdenes > Nueva orden donde el select `Cliente` no mostraba los clientes activos cargados inicialmente en `/app/ordenes/nueva` hasta que el usuario hacía clic en la pantalla y volvía a abrir el desplegable.
+
+La causa técnica documentada fue el mismo patrón observado en Clientes: estado async renderizado como propiedades mutables actualizado dentro de `subscribe()`/`finalize()` en Angular 21 sin `zone.js`, con `HttpClient` usando `withFetch()`. En ese modo, la respuesta HTTP puede actualizar el estado TypeScript sin invalidar inmediatamente la vista hasta un evento DOM posterior.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/components/work-order-form.component.ts`: `customers`, `internalDoctors`, `selectedCustomer`, `isLoadingCustomers`, `isLoadingDoctors` y `localErrorMessage` pasan a Angular signals; el template lee con `customers()`, `selectedCustomer()`, `internalDoctors()` y flags `signal()`. Se conserva la carga de clientes activos con `CustomerService.list({ isActive: true, pageSize: 100 })`, la selección, validaciones, doctores internos y el contrato de submit.
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-create-page.component.ts`: `isSubmitting` y `errorMessage` pasan a signals para que el estado renderizado del POST de creación sea reactivo en modo zoneless; se conserva `POST /api/work-orders` y la navegación al detalle.
+- `docs/PROJECT_STATUS.md` y `docs/IMPLEMENTATION_LOG.md`: se documenta corrección, causa técnica, alcance y validación.
+
+### Decisiones Técnicas
+
+- Se usaron Angular signals porque integran el estado async con el sistema reactivo de Angular zoneless y hacen que las lecturas de template invaliden la vista al recibir clientes activos.
+- No se movió la carga al padre ni se modificó `CustomerService` o `WorkOrderService`; los endpoints y DTOs ya eran correctos.
+- No se agregó `zone.js`, no se quitó `withFetch()` y no se usaron hacks de repintado como `setTimeout`, `window.location.reload()`, `ApplicationRef.tick()`, clicks simulados, eventos manuales ni `detectChanges()` indiscriminado.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 errores; reportó 2 warnings `NU1903` conocidos por vulnerabilidad de `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: primer intento en paralelo con `dotnet build` falló por bloqueo transitorio de archivos generados; repetido secuencialmente fue correcto con Domain 1/1, Application 1/1 y API 101/101.
+- `git diff --check`: correcto.
+- `git status --short`: solo quedan modificados los dos archivos frontend de Órdenes y los dos documentos obligatorios.
+- `git diff --stat`: 4 archivos modificados, 129 inserciones y 64 eliminaciones.
+- No existe script `test` en `src/LaboratorioTlahuac.Web/package.json`, por lo que no hay runner frontend no interactivo adicional que ejecutar.
+
+### Confirmaciones
+
+- No se modificó backend.
+- No se modificó base de datos.
+- No se crearon migraciones.
+- No se cambiaron contratos API ni endpoints.
+- No se modificaron `AuthService`, guards, cookies, sesiones, CSRF/XSRF ni permisos.
+- No se agregó `zone.js` ni se quitó `withFetch()`.
+- No se descartaron cambios previos del working tree.
+- No se hizo commit.
+
+### Pendientes
+
+- Ejecutar la prueba manual en navegador real: abrir `/app/ordenes/nueva`, abrir inmediatamente el select `Cliente`, confirmar `Selecciona un cliente`, `Cliente activo tipo Clínica` y `Cliente activo tipo Doctor`, recargar y repetir, seleccionar cliente, validar campos mínimos y revisar consola/Network.
+- Se detectan patrones similares de estado mutable async en otros módulos administrativos como órdenes listado/detalle/edición, dashboard y pagos; no se corrigieron en esta tarea para mantener el alcance solicitado.
+
 ## 2026-07-02 - Corrección Admin Clientes En Angular Zoneless
 
 ### Cambio Realizado

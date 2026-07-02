@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 
@@ -33,7 +33,7 @@ type WorkOrderControlName =
           <span>Cliente</span>
           <select formControlName="customerId">
             <option value="">Selecciona un cliente</option>
-            @for (customer of customers; track customer.id) {
+            @for (customer of customers(); track customer.id) {
               <option [value]="customer.id">{{ customer.displayName }} - {{ formatType(customer.type) }}</option>
             }
           </select>
@@ -42,12 +42,12 @@ type WorkOrderControlName =
           }
         </label>
 
-        @if (selectedCustomer?.type === 'Clinic') {
+        @if (selectedCustomer()?.type === 'Clinic') {
           <label class="form-field">
             <span>Doctor interno</span>
             <select formControlName="internalDoctorId">
               <option value="">Sin doctor interno</option>
-              @for (doctor of internalDoctors; track doctor.id) {
+              @for (doctor of internalDoctors(); track doctor.id) {
                 <option [value]="doctor.id">{{ doctor.fullName }}</option>
               }
             </select>
@@ -123,20 +123,20 @@ type WorkOrderControlName =
         </label>
       </div>
 
-      @if (isLoadingCustomers) {
+      @if (isLoadingCustomers()) {
         <p class="loading-state">Cargando clientes...</p>
       }
 
-      @if (isLoadingDoctors) {
+      @if (isLoadingDoctors()) {
         <p class="loading-state">Cargando doctores internos...</p>
       }
 
-      @if (localErrorMessage || errorMessage) {
-        <p class="alert-error" role="alert">{{ localErrorMessage || errorMessage }}</p>
+      @if (localErrorMessage() || errorMessage; as message) {
+        <p class="alert-error" role="alert">{{ message }}</p>
       }
 
       <div class="page-actions">
-        <button class="primary-button" type="submit" [disabled]="isSubmitting || isLoadingCustomers">
+        <button class="primary-button" type="submit" [disabled]="isSubmitting || isLoadingCustomers()">
           {{ isSubmitting ? 'Guardando...' : submitLabel }}
         </button>
         <button class="ghost-button" type="button" (click)="cancel.emit()">Cancelar</button>
@@ -148,16 +148,16 @@ export class WorkOrderFormComponent implements OnInit, OnChanges {
   @Input() order: WorkOrderDetail | null = null;
   @Input() submitLabel = 'Guardar';
   @Input() isSubmitting = false;
-  @Input() errorMessage = '';
+  @Input() errorMessage: string | null = null;
   @Output() readonly save = new EventEmitter<WorkOrderUpsertRequest>();
   @Output() readonly cancel = new EventEmitter<void>();
 
-  customers: CustomerListItem[] = [];
-  internalDoctors: InternalDoctor[] = [];
-  selectedCustomer: CustomerListItem | null = null;
-  isLoadingCustomers = false;
-  isLoadingDoctors = false;
-  localErrorMessage = '';
+  readonly customers = signal<CustomerListItem[]>([]);
+  readonly internalDoctors = signal<InternalDoctor[]>([]);
+  readonly selectedCustomer = signal<CustomerListItem | null>(null);
+  readonly isLoadingCustomers = signal(false);
+  readonly isLoadingDoctors = signal(false);
+  readonly localErrorMessage = signal('');
 
   readonly form = new FormGroup({
     customerId: new FormControl('', {
@@ -240,7 +240,7 @@ export class WorkOrderFormComponent implements OnInit, OnChanges {
   }
 
   submit(): void {
-    this.localErrorMessage = '';
+    this.localErrorMessage.set('');
     this.form.markAllAsTouched();
 
     if (!this.validateDates()) {
@@ -252,7 +252,8 @@ export class WorkOrderFormComponent implements OnInit, OnChanges {
     }
 
     const value = this.form.getRawValue();
-    const internalDoctorId = this.selectedCustomer?.type === 'Clinic'
+    const selectedCustomer = this.selectedCustomer();
+    const internalDoctorId = selectedCustomer?.type === 'Clinic'
       ? this.normalizeOptional(value.internalDoctorId)
       : null;
 
@@ -291,98 +292,111 @@ export class WorkOrderFormComponent implements OnInit, OnChanges {
   }
 
   private loadCustomers(): void {
-    this.isLoadingCustomers = true;
+    this.isLoadingCustomers.set(true);
+    this.localErrorMessage.set('');
 
     this.customerService
       .list({ isActive: true, pageSize: 100 })
-      .pipe(finalize(() => (this.isLoadingCustomers = false)))
+      .pipe(finalize(() => this.isLoadingCustomers.set(false)))
       .subscribe({
         next: (response) => {
-          this.customers = response.items;
+          this.customers.set(response.items);
           this.ensureOrderCustomerOption();
           this.onCustomerChanged(this.form.controls.customerId.value, false);
         },
         error: () => {
-          this.localErrorMessage = 'No fue posible cargar clientes activos.';
+          this.customers.set([]);
+          this.localErrorMessage.set('No fue posible cargar clientes activos.');
         }
       });
   }
 
   private onCustomerChanged(customerId: string, clearDoctor: boolean): void {
-    this.selectedCustomer = this.customers.find((customer) => customer.id === customerId) ?? null;
+    const selectedCustomer = this.customers().find((customer) => customer.id === customerId) ?? null;
+    this.selectedCustomer.set(selectedCustomer);
 
     if (clearDoctor) {
       this.form.controls.internalDoctorId.setValue('', { emitEvent: false });
     }
 
-    if (this.selectedCustomer?.type !== 'Clinic') {
-      this.internalDoctors = [];
+    if (selectedCustomer?.type !== 'Clinic') {
+      this.internalDoctors.set([]);
       this.form.controls.internalDoctorId.setValue('', { emitEvent: false });
       return;
     }
 
-    this.loadInternalDoctors(this.selectedCustomer.id);
+    this.loadInternalDoctors(selectedCustomer.id);
   }
 
   private loadInternalDoctors(customerId: string): void {
-    this.isLoadingDoctors = true;
+    this.isLoadingDoctors.set(true);
+    this.localErrorMessage.set('');
 
     this.customerService
       .listInternalDoctors(customerId, { isActive: true })
-      .pipe(finalize(() => (this.isLoadingDoctors = false)))
+      .pipe(finalize(() => this.isLoadingDoctors.set(false)))
       .subscribe({
         next: (doctors) => {
-          this.internalDoctors = doctors;
+          this.internalDoctors.set(doctors);
           this.ensureOrderInternalDoctorOption();
         },
         error: () => {
-          this.localErrorMessage = 'No fue posible cargar doctores internos.';
+          this.internalDoctors.set([]);
+          this.localErrorMessage.set('No fue posible cargar doctores internos.');
         }
       });
   }
 
   private ensureOrderCustomerOption(): void {
-    if (!this.order || this.customers.some((customer) => customer.id === this.order?.customerId)) {
+    const order = this.order;
+
+    if (!order || this.customers().some((customer) => customer.id === order.customerId)) {
       return;
     }
 
-    this.customers = [
-      ...this.customers,
+    this.customers.update((customers) => [
+      ...customers,
       {
-        id: this.order.customerId,
-        type: this.order.customerType,
-        displayName: this.order.customerDisplayName,
+        id: order.customerId,
+        type: order.customerType,
+        displayName: order.customerDisplayName,
         contactName: null,
         phone: null,
         whatsApp: null,
         email: null,
         isActive: true
       }
-    ].sort((left, right) => left.displayName.localeCompare(right.displayName));
+    ].sort((left, right) => left.displayName.localeCompare(right.displayName)));
   }
 
   private ensureOrderInternalDoctorOption(): void {
-    if (!this.order?.internalDoctorId
-        || !this.order.internalDoctorFullName
-        || this.internalDoctors.some((doctor) => doctor.id === this.order?.internalDoctorId)) {
+    const order = this.order;
+
+    if (!order
+        || !order.internalDoctorId
+        || !order.internalDoctorFullName
+        || this.internalDoctors().some((doctor) => doctor.id === order.internalDoctorId)) {
       return;
     }
 
-    this.internalDoctors = [
-      ...this.internalDoctors,
+    const internalDoctorId = order.internalDoctorId;
+    const internalDoctorFullName = order.internalDoctorFullName;
+
+    this.internalDoctors.update((doctors) => [
+      ...doctors,
       {
-        id: this.order.internalDoctorId,
-        customerId: this.order.customerId,
-        fullName: this.order.internalDoctorFullName,
+        id: internalDoctorId,
+        customerId: order.customerId,
+        fullName: internalDoctorFullName,
         phone: null,
         whatsApp: null,
         email: null,
         notes: null,
         isActive: true,
-        createdAtUtc: this.order.createdAtUtc,
-        updatedAtUtc: this.order.updatedAtUtc
+        createdAtUtc: order.createdAtUtc,
+        updatedAtUtc: order.updatedAtUtc
       }
-    ].sort((left, right) => left.fullName.localeCompare(right.fullName));
+    ].sort((left, right) => left.fullName.localeCompare(right.fullName)));
   }
 
   private validateDates(): boolean {
@@ -390,22 +404,22 @@ export class WorkOrderFormComponent implements OnInit, OnChanges {
     const receivedDate = value.receivedDate;
 
     if (value.firstTrialDate && value.firstTrialDate < receivedDate) {
-      this.localErrorMessage = 'La primera prueba no puede ser anterior a la recepcion.';
+      this.localErrorMessage.set('La primera prueba no puede ser anterior a la recepcion.');
       return false;
     }
 
     if (value.secondTrialDate && value.secondTrialDate < receivedDate) {
-      this.localErrorMessage = 'La segunda prueba no puede ser anterior a la recepcion.';
+      this.localErrorMessage.set('La segunda prueba no puede ser anterior a la recepcion.');
       return false;
     }
 
     if (value.firstTrialDate && value.secondTrialDate && value.secondTrialDate < value.firstTrialDate) {
-      this.localErrorMessage = 'La segunda prueba no puede ser anterior a la primera prueba.';
+      this.localErrorMessage.set('La segunda prueba no puede ser anterior a la primera prueba.');
       return false;
     }
 
     if (value.deliveryDate && value.deliveryDate < receivedDate) {
-      this.localErrorMessage = 'La fecha de entrega no puede ser anterior a la recepcion.';
+      this.localErrorMessage.set('La fecha de entrega no puede ser anterior a la recepcion.');
       return false;
     }
 

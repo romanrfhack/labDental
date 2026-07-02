@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -22,8 +22,8 @@ import { WorkOrderService } from '../work-order.service';
 
       <app-work-order-form
         submitLabel="Crear orden"
-        [isSubmitting]="isSubmitting"
-        [errorMessage]="errorMessage"
+        [isSubmitting]="isSubmitting()"
+        [errorMessage]="errorMessage()"
         (save)="create($event)"
         (cancel)="cancel()"
       />
@@ -31,8 +31,8 @@ import { WorkOrderService } from '../work-order.service';
   `
 })
 export class WorkOrderCreatePageComponent {
-  isSubmitting = false;
-  errorMessage = '';
+  readonly isSubmitting = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   constructor(
     private readonly workOrderService: WorkOrderService,
@@ -40,16 +40,20 @@ export class WorkOrderCreatePageComponent {
   ) {}
 
   create(request: WorkOrderUpsertRequest): void {
-    this.isSubmitting = true;
-    this.errorMessage = '';
+    if (this.isSubmitting()) {
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    this.errorMessage.set(null);
 
     this.workOrderService
       .create(request)
-      .pipe(finalize(() => (this.isSubmitting = false)))
+      .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: (order) => this.router.navigate(['/app/ordenes', order.id]),
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.toErrorMessage(error);
+          this.errorMessage.set(this.toErrorMessage(error));
         }
       });
   }
