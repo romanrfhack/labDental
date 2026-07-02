@@ -1,0 +1,175 @@
+:host {
+  display: block;
+}
+
+.label-print-page {
+  color: #111111;
+  display: grid;
+  gap: 20px;
+}
+
+.label-page-heading {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.label-page-heading h1 {
+  margin-bottom: 4px;
+}
+
+.label-screen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.label-stage {
+  background: #eef2f7;
+  border: 1px dashed #9ca3af;
+  justify-self: start;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 16px;
+}
+
+.thermal-label {
+  background: #ffffff;
+  border: 0.35mm solid #111111;
+  color: #111111;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
+}
+
+.delivery-label {
+  display: grid;
+  gap: 1.25mm;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 51mm;
+  padding: 3mm;
+  width: 102mm;
+}
+
+.label-top {
+  align-items: start;
+  border-bottom: 0.3mm solid #111111;
+  display: flex;
+  gap: 2mm;
+  justify-content: space-between;
+  min-width: 0;
+  padding-bottom: 1.2mm;
+}
+
+.brand-line {
+  align-items: center;
+  display: flex;
+  gap: 1.5mm;
+  min-width: 0;
+}
+
+.brand-mark {
+  border: 0.35mm solid #111111;
+  font-size: 11pt;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0.8mm 1mm;
+}
+
+.label-kind {
+  font-size: 7.2pt;
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.order-number {
+  font-size: 11pt;
+  line-height: 1.05;
+  max-width: 45mm;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.delivery-grid {
+  display: grid;
+  gap: 2.3mm;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 0;
+}
+
+.label-column {
+  display: grid;
+  gap: 0.9mm;
+  min-width: 0;
+}
+
+.label-row {
+  display: grid;
+  font-size: 7pt;
+  gap: 1.2mm;
+  grid-template-columns: 18mm minmax(0, 1fr);
+  line-height: 1.12;
+  min-width: 0;
+}
+
+.label-row strong {
+  font-weight: 800;
+}
+
+.label-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.long-row span {
+  display: -webkit-box;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.signature-area {
+  border-top: 0.3mm solid #111111;
+  display: grid;
+  font-size: 7.4pt;
+  font-weight: 800;
+  gap: 2mm;
+  grid-template-columns: 1fr 1fr;
+  line-height: 1.1;
+  padding-top: 1.3mm;
+}
+
+@page ldt-delivery-label {
+  margin: 0;
+  size: 102mm 51mm;
+}
+
+@media print {
+  :host {
+    display: block;
+  }
+
+  .label-print-page {
+    display: block;
+    margin: 0;
+  }
+
+  .label-stage {
+    background: #ffffff;
+    border: 0;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .delivery-label {
+    border: 0;
+    height: 51mm;
+    page: ldt-delivery-label;
+    width: 102mm;
+  }
+}

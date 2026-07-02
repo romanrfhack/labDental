@@ -1,6 +1,6 @@
 # Impresión De Etiquetas
 
-Fuente funcional para el MVP de etiquetas de Laboratorio Dental Tláhuac. Este documento define tamaños, datos mínimos y estrategia inicial de impresión. No implementa código ni integración con impresoras.
+Fuente funcional para el MVP de etiquetas de Laboratorio Dental Tláhuac. Fase 3.2 implementa impresión desde navegador/CSS para órdenes existentes; no implementa integración directa con impresoras, PDF, QR/barcode ni campos nuevos de entrega.
 
 ## Objetivo
 
@@ -64,19 +64,26 @@ Datos mínimos:
 
 Dato opcional si administración lo requiere: saldo o indicación de pago pendiente. Debe validarse con el cliente antes de mostrarlo en etiqueta para evitar exponer información sensible innecesaria.
 
-## MVP Mínimo Propuesto
+## MVP Fase 3.2 Implementado
 
-Agregar desde el detalle existente `/app/ordenes/:id`:
+Desde el detalle existente `/app/ordenes/:id`:
 
-- Botón `Imprimir etiqueta interna`.
-- Botón `Imprimir etiqueta de entrega`.
+- Acción `Etiqueta interna`.
+- Acción `Etiqueta entrega`.
 
-Rutas privadas de impresión sugeridas bajo `/app`:
+Rutas privadas implementadas bajo `/app`:
 
 - `/app/ordenes/:id/etiqueta-trabajo`
 - `/app/ordenes/:id/etiqueta-entrega`
 
-Estas rutas deben reutilizar la orden existente. No deben crear un panel paralelo de órdenes.
+Estas rutas reutilizan la orden existente con `WorkOrderService.getById()`. No crean panel paralelo de órdenes, no agregan endpoints y quedan protegidas por la zona privada `/app` más `permissionGuard` con `orders.view`.
+
+Cada pantalla de etiqueta incluye:
+
+- Botón `Imprimir`, que ejecuta `window.print()`.
+- Botón `Volver a la orden`.
+- Estados de carga, error, no encontrado y sin permiso.
+- CSS de impresión que oculta navegación, topbar y botones en `@media print`.
 
 ## Estrategia Inicial De Impresión
 
@@ -124,6 +131,55 @@ Datos disponibles de cliente:
 
 Limitación actual: el detalle de orden no incluye dirección/contacto completo. La etiqueta de entrega deberá obtener esos datos ampliando el contrato de orden, usando un DTO de impresión o consultando el cliente por `CustomerId`.
 
+## Datos Incluidos En Fase 3.2
+
+### Etiqueta Interna 76 x 51 mm
+
+Incluye:
+
+- Texto de marca `LDT`.
+- Texto claro `Etiqueta interna`.
+- Folio / número de orden.
+- Cliente.
+- Doctor interno si existe.
+- Paciente.
+- Fecha de recepción.
+- Fecha de entrega planeada.
+- Estado.
+- Color si existe.
+- Trabajo solicitado resumido.
+- Observaciones breves si existen.
+
+### Etiqueta Entrega 102 x 51 mm
+
+Incluye:
+
+- Texto de marca `LDT`.
+- Texto claro `Entrega`.
+- Folio / número de orden.
+- Cliente.
+- Paciente o referencia.
+- Trabajo solicitado resumido.
+- Fecha de entrega planeada.
+- Estado.
+- `Dirección pendiente`.
+- `Contacto pendiente`.
+- `Recibe: __________________`.
+- `Firma: __________________`.
+
+## Datos Faltantes
+
+La orden actual no expone en el detalle:
+
+- Dirección de entrega.
+- Contacto/teléfono/WhatsApp/email.
+- Repartidor asignado.
+- Salida a ruta.
+- Persona real que recibe.
+- Firma digital o evidencia.
+
+Decisión Fase 3.2: no consultar `GET /api/customers/{id}` desde la etiqueta de entrega para no convertir una ruta protegida por `orders.view` en una pantalla que pueda fallar por falta de `customers.view`. La fase futura debe resolverlo con un DTO mínimo de impresión/entrega o ampliación controlada del contrato de orden.
+
 ## Limitaciones Del Enfoque Browser/CSS
 
 - El navegador y el driver pueden agregar márgenes.
@@ -134,6 +190,23 @@ Limitación actual: el detalle de orden no incluye dirección/contacto completo.
 - No hay auditoría de impresión en el MVP si no se agrega registro explícito.
 - No hay corte automático garantizado.
 - No hay QR/barcode en el MVP si implica dependencia.
+- No se valida desde código que la impresora haya respetado el tamaño físico; debe probarse con el equipo real.
+
+## Cómo Probar Con Impresora Real
+
+1. Entrar a DEV o local con Admin o usuario con `orders.view`.
+2. Abrir `/app/ordenes`.
+3. Abrir una orden existente.
+4. Clic en `Etiqueta interna`.
+5. Confirmar que la vista previa muestra una etiqueta 76 x 51 mm.
+6. Clic en `Imprimir`.
+7. En el diálogo del navegador, seleccionar la impresora térmica y el tamaño de etiqueta equivalente 3 x 2 in / 76 x 51 mm.
+8. Usar escala 100% si el navegador lo permite y desactivar encabezados/pies del navegador.
+9. Confirmar que navegación, topbar y botones no aparecen en impresión.
+10. Volver a la orden.
+11. Clic en `Etiqueta entrega`.
+12. Repetir impresión con tamaño 4 x 2 in / 102 x 51 mm.
+13. Revisar legibilidad física, cortes, márgenes, orientación y calibración del rollo.
 
 ## Fases Posteriores
 
@@ -143,6 +216,8 @@ Limitación actual: el detalle de orden no incluye dirección/contacto completo.
 - Registro de impresiones.
 - Impresión directa mediante servicio local, solo después de validar modelo de impresora, sistema operativo, drivers y red local.
 - Integración con flujo de entrega para que la etiqueta de reparto incluya repartidor y salida.
+- Etiqueta chica 51 x 25 mm para folio/código.
+- Etiquetas de entrega con repartidor asignado, salida a ruta y datos reales de contacto/dirección.
 
 ## Criterio De Aceptación Para Fase 3.2
 

@@ -41,6 +41,12 @@ import { WorkOrderService } from '../work-order.service';
           </div>
           <div class="page-actions">
             <a class="ghost-button" routerLink="/app/ordenes">Volver</a>
+            <a class="secondary-button" [routerLink]="['/app/ordenes', order.id, 'etiqueta-trabajo']">
+              Etiqueta interna
+            </a>
+            <a class="secondary-button" [routerLink]="['/app/ordenes', order.id, 'etiqueta-entrega']">
+              Etiqueta entrega
+            </a>
             @if (canEdit && !order.isCancelled) {
               <a class="secondary-button" [routerLink]="['/app/ordenes', order.id, 'editar']">Editar</a>
             }

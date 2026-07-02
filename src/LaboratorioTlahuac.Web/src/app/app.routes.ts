@@ -10,8 +10,10 @@ import { LoginPageComponent } from './auth/pages/login/login-page.component';
 import { PrivateLayoutComponent } from './admin/layout/private-layout.component';
 import { DashboardPageComponent } from './features/dashboard/dashboard-page.component';
 import { WorkOrderCreatePageComponent } from './features/orders/pages/work-order-create-page.component';
+import { WorkOrderDeliveryLabelPageComponent } from './features/orders/pages/work-order-delivery-label-page.component';
 import { WorkOrderDetailPageComponent } from './features/orders/pages/work-order-detail-page.component';
 import { WorkOrderEditPageComponent } from './features/orders/pages/work-order-edit-page.component';
+import { WorkOrderJobLabelPageComponent } from './features/orders/pages/work-order-job-label-page.component';
 import { WorkOrderListPageComponent } from './features/orders/pages/work-order-list-page.component';
 import { CustomerCreatePageComponent } from './features/customers/pages/customer-create-page.component';
 import { CustomerDetailPageComponent } from './features/customers/pages/customer-detail-page.component';
@@ -70,6 +72,18 @@ export const routes: Routes = [
         component: WorkOrderEditPageComponent,
         canActivate: [permissionGuard],
         data: { permission: 'orders.edit' }
+      },
+      {
+        path: 'ordenes/:id/etiqueta-trabajo',
+        component: WorkOrderJobLabelPageComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'orders.view' }
+      },
+      {
+        path: 'ordenes/:id/etiqueta-entrega',
+        component: WorkOrderDeliveryLabelPageComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'orders.view' }
       },
       {
         path: 'ordenes/:id',

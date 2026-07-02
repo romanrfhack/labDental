@@ -23,11 +23,11 @@ Permitir que el laboratorio opere registros nuevos sin depender del Excel para e
 - Dashboard operativo y financiero básico.
 - Páginas iniciales de inventario, proveedores, usuarios y roles.
 
-## Análisis Operativo Fase 3.1
+## Órdenes, Etiquetas Y Entrega
 
-Estado: documentado, sin implementación de código.
+Estado: Fase 3.1 documentó el análisis operativo y Fase 3.2 implementó impresión MVP de etiquetas desde órdenes existentes.
 
-La Fase 3.1 define el siguiente frente operativo sobre órdenes existentes: etiquetas internas, etiquetas de entrega, flujo de salida a repartidor, captura de recibido y priorización futura de usuarios/roles y catálogo.
+La Fase 3.1 definió el siguiente frente operativo sobre órdenes existentes: etiquetas internas, etiquetas de entrega, flujo de salida a repartidor, captura de recibido y priorización futura de usuarios/roles y catálogo. La Fase 3.2 ya permite abrir e imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`.
 
 Fuentes funcionales:
 
@@ -35,24 +35,22 @@ Fuentes funcionales:
 - `docs/01-product/label-printing.md`
 - `docs/01-product/driver-mobile-workflow.md`
 
-Decisión principal: no crear un panel duplicado de órdenes. El flujo debe extender `/app/ordenes`, especialmente `/app/ordenes/:id`, porque ahí ya existen datos de orden, estado, historial y pagos.
-
-Siguiente fase recomendada: Fase 3.2 - MVP impresión de etiquetas desde órdenes existentes.
+Decisión principal: no crear un panel duplicado de órdenes. El flujo extiende `/app/ordenes`, especialmente `/app/ordenes/:id`, porque ahí ya existen datos de orden, estado, historial y pagos.
 
 ## Backlog Futuro
 
 ### Órdenes, Etiquetas Y Reparto
 
-Estado: análisis documentado en Fase 3.1.
+Estado: Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes; reparto sigue como análisis/backlog.
 
 Prioridad sugerida:
 
-1. Fase 3.2: imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`.
-2. Fase 3.3: entrega/repartidor mobile-first bajo `/app/entregas` o ruta equivalente.
+1. Fase 3.2: imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`. Implementada con rutas privadas `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`.
+2. Fase 3.3: validar impresión real con impresora térmica y entrega/repartidor mobile-first bajo `/app/entregas` o ruta equivalente.
 3. Fase 3.4: administración de usuarios/roles.
 4. Fase 3.5: administración de catálogo.
 
-Fase 3.2 puede implementarse sin migraciones si reutiliza datos existentes de orden/cliente y CSS de impresión. Fase 3.3 sí requerirá diseño de base para asignación, salida, entrega, receptor y trazabilidad.
+Fase 3.2 quedó implementada sin migraciones, sin dependencias, sin endpoints nuevos y sin tocar auth/guards. Reutiliza el detalle existente de orden y CSS de impresión; como el DTO actual no incluye dirección/contacto completos del cliente, la etiqueta de entrega muestra `Dirección pendiente` y `Contacto pendiente`. Fase 3.3 sí requerirá diseño de base para asignación, salida, entrega, receptor y trazabilidad.
 
 ### Administración De Catálogo, Precios E Imágenes
 
@@ -79,6 +77,10 @@ Al diseñarla se deberá definir modelo de datos, endpoints, almacenamiento de i
 - Estados principales: recibida, en proceso, pruebas, lista para entrega, entregada y cancelada.
 - Una orden cancelada es terminal en el MVP.
 - La autorización usa `orders.view`, `orders.create`, `orders.edit` y `orders.changeStatus`.
+- Fase 3.2 agrega impresión de etiquetas desde el detalle de orden:
+  - `/app/ordenes/:id/etiqueta-trabajo`: etiqueta interna 76 x 51 mm.
+  - `/app/ordenes/:id/etiqueta-entrega`: etiqueta de entrega 102 x 51 mm.
+  - Ambas rutas viven bajo `/app`, requieren sesión y usan permiso `orders.view`.
 
 ## Pagos
 

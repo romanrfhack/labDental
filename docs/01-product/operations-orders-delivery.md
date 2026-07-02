@@ -1,6 +1,6 @@
 # Operación De Órdenes, Etiquetas Y Entrega
 
-Fuente funcional para Fase 3.1. Este documento define el análisis operativo futuro sobre órdenes existentes, etiquetas y reparto. No implementa cambios de código, base de datos, endpoints ni rutas.
+Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones.
 
 ## Alcance De Fase 3.1
 
@@ -21,6 +21,8 @@ El sistema privado ya tiene módulo real de órdenes bajo `/app/ordenes`:
 - `/app/ordenes/nueva`: creación.
 - `/app/ordenes/:id`: detalle.
 - `/app/ordenes/:id/editar`: edición.
+- `/app/ordenes/:id/etiqueta-trabajo`: impresión privada de etiqueta interna.
+- `/app/ordenes/:id/etiqueta-entrega`: impresión privada de etiqueta de entrega.
 
 API existente:
 
@@ -31,7 +33,22 @@ API existente:
 - `PUT /api/work-orders/{id}`
 - `PATCH /api/work-orders/{id}/status`
 
-Decisión Fase 3.1: no crear un "panel de órdenes" paralelo. El enfoque correcto es extender `/app/ordenes`, especialmente el detalle `/app/ordenes/:id`, porque ahí ya convergen estado, datos operativos, historial y pagos.
+Decisión Fase 3.1 y ejecución Fase 3.2: no crear un "panel de órdenes" paralelo. El enfoque correcto es extender `/app/ordenes`, especialmente el detalle `/app/ordenes/:id`, porque ahí ya convergen estado, datos operativos, historial y pagos.
+
+### Implementación Fase 3.2
+
+El detalle de orden agrega acciones visibles:
+
+- `Etiqueta interna`
+- `Etiqueta entrega`
+
+Las rutas de impresión viven bajo `/app`, heredan autenticación de la zona privada y requieren `orders.view` mediante `permissionGuard`. Usan `GET /api/work-orders/{id}` desde el servicio frontend existente; no se agregaron endpoints.
+
+La etiqueta interna usa tamaño objetivo 76 x 51 mm y muestra LDT, folio, cliente, doctor interno si existe, paciente, recepción, entrega, estado, color si existe, trabajo y observaciones breves si existen.
+
+La etiqueta de entrega usa tamaño objetivo 102 x 51 mm y muestra LDT, folio, cliente, paciente/referencia, trabajo, entrega, estado, `Dirección pendiente`, `Contacto pendiente`, `Recibe: __________________` y `Firma: __________________`.
+
+Limitación vigente: el detalle actual de orden no incluye dirección, teléfono, WhatsApp ni email del cliente. Para no exigir `customers.view` en una ruta cuyo permiso de negocio es `orders.view`, la etiqueta de entrega imprime textos pendientes seguros hasta diseñar un DTO de impresión/entrega o ampliar el contrato de orden.
 
 ### Modelo Actual De Orden
 
@@ -257,7 +274,7 @@ Alternativa mínima para MVP: usar `ReadyForDelivery` y `Delivered` en `WorkOrde
 
 ## Campos Nuevos Posibles
 
-Para Fase 3.2 de etiquetas no se requieren campos nuevos si se imprimen datos existentes.
+Fase 3.2 de etiquetas quedó implementada sin campos nuevos al imprimir datos existentes y textos pendientes seguros para dirección/contacto.
 
 Para Fase 3.3 de reparto sí se requerirá diseño de base de datos. Campos o entidades posibles:
 
@@ -325,9 +342,9 @@ Fase 3.5 catálogo:
 
 ## Prioridad Recomendada
 
-1. Fase 3.2: MVP impresión de etiquetas desde órdenes existentes.
+1. Validar Fase 3.2 con impresora térmica real en DEV.
 2. Fase 3.3: entrega/repartidor mobile-first.
 3. Fase 3.4: administración de usuarios/roles.
 4. Fase 3.5: administración de catálogo, precios e imágenes.
 
-La siguiente fase implementable debe ser Fase 3.2 porque extiende `/app/ordenes` sin requerir base de datos nueva y ataca de inmediato la identificación física de trabajos.
+La siguiente fase implementable mayor es Fase 3.3, pero antes conviene cerrar prueba física de etiquetas para confirmar tamaño real, margen, escala del navegador y calibración de rollo.

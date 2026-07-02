@@ -4,15 +4,15 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto, Fase 2.5 del sistema privado cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.0 cerrada como despliegue DEV validado/baseline UAT inicial y Fase 3.1 documentada como análisis operativo para órdenes, etiquetas, reparto, usuarios/roles y catálogo.
+Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto, Fase 2.5 del sistema privado cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.0 cerrada como despliegue DEV validado/baseline UAT inicial, Fase 3.1 documentada como análisis operativo para órdenes, etiquetas, reparto, usuarios/roles y catálogo, y Fase 3.2 implementada como MVP de impresión de etiquetas desde órdenes existentes.
 
 ## Estado Por Frente
 
 - Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto. Fase 2.5 confirmó que no hubo regresión visible del sitio público.
 - Catálogo: legible y aprobado visualmente; mantiene precios de referencia 2026, frames uniformes de imágenes, placeholders intencionales y condiciones comerciales con texto prudente.
 - Deploy DEV: `https://dev.laboratoriodentaltlahuac.com` está publicado desde rama `dev` y queda validado como baseline UAT inicial en Fase 3.0.
-- Login/auth: `/login` sigue público; login con Admin local validado manualmente y login QA validado manualmente en DEV; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3, Fase 2.4, Fase 2.5, Fase 2.6 ni Fase 3.0.
-- Sistema privado: Fase 2.6 implementada, Fase 3.0 validada en DEV y Fase 3.1 documentada; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, `/app/ordenes` ya existe como módulo real de órdenes y el siguiente incremento recomendado es extender órdenes con etiquetas, no duplicar paneles.
+- Login/auth: `/login` sigue público; login con Admin local validado manualmente y login QA validado manualmente en DEV; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3, Fase 2.4, Fase 2.5, Fase 2.6, Fase 3.0 ni Fase 3.2.
+- Sistema privado: Fase 2.6 implementada, Fase 3.0 validada en DEV, Fase 3.1 documentada y Fase 3.2 implementada; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, `/app/ordenes` se extendió sin panel duplicado con impresión de etiqueta interna y etiqueta de entrega.
 - Pendientes del cliente: dirección, horarios, WhatsApp real, aprobación final de precios 2026, aprobación de `Anticipo 50%`, aprobación de `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 
 ## Sistema Privado / MVP Administrativo
@@ -101,6 +101,11 @@ Estado: avanzado, con QA funcional y demo documentadas; Fase 2.3 queda cerrada p
 - Documentos Fase 3.1 creados: `docs/01-product/operations-orders-delivery.md`, `docs/01-product/label-printing.md` y `docs/01-product/driver-mobile-workflow.md`.
 - Fase 3.1 confirma que la orden actual tiene folio, cliente, paciente, trabajo, color, fechas, estado, total, observaciones, historial y pagos; faltan datos de reparto como repartidor asignado, salida, receptor, fecha/hora real de entrega y evidencia.
 - Fase 3.1 recomienda Fase 3.2 como siguiente incremento: impresión de etiqueta interna y etiqueta de entrega desde órdenes existentes, con rutas privadas bajo `/app` y CSS de impresión en milímetros.
+- Fase 3.2 2026-07-02: implementado MVP de impresión desde navegador para órdenes existentes. El detalle `/app/ordenes/:id` agrega acciones `Etiqueta interna` y `Etiqueta entrega`; las rutas privadas nuevas son `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`, ambas bajo `/app` con `authGuard` heredado y `permissionGuard` usando `orders.view`.
+- Etiqueta interna Fase 3.2: tamaño objetivo 76 x 51 mm; muestra LDT, folio, cliente, doctor interno si existe, paciente, fecha de recepción, fecha de entrega, estado, color si existe, trabajo y observaciones breves si existen.
+- Etiqueta entrega Fase 3.2: tamaño objetivo 102 x 51 mm; muestra LDT, folio, cliente, paciente/referencia, trabajo, fecha de entrega, estado, `Dirección pendiente`, `Contacto pendiente`, `Recibe: __________________` y `Firma: __________________`.
+- Fase 3.2 usa `WorkOrderService.getById()` y no cambia contratos API, endpoints, backend, base de datos, migraciones, deploy ni dependencias; no se implementan todavía QR/barcode, PDF, impresión directa, repartidor asignado, evidencia, firma digital ni etiqueta chica 51 x 25 mm.
+- Limitación Fase 3.2: el detalle actual de orden no incluye dirección/contacto completo del cliente; por eso la etiqueta de entrega imprime textos pendientes seguros hasta diseñar DTO de impresión/entrega o ampliar contrato en fase futura.
 
 La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
 
@@ -168,7 +173,7 @@ Estado: DEV publicado y validado como baseline UAT inicial; producción pendient
 
 ## QA
 
-- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, Fase 2.4 agrega pase manual/técnico privado con Admin, Fase 2.5 cierra el pase visual humano privado, Fase 2.6 implementa/prueba por API el usuario QA limitado Development-only y Fase 3.0 registra DEV como baseline UAT inicial.
+- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, Fase 2.4 agrega pase manual/técnico privado con Admin, Fase 2.5 cierra el pase visual humano privado, Fase 2.6 implementa/prueba por API el usuario QA limitado Development-only, Fase 3.0 registra DEV como baseline UAT inicial y Fase 3.2 agrega `docs/08-qa/label-printing-qa.md`.
 - QA responsive del sitio público: revisión por código/build ejecutada; Fase 1.6 cerrada como validada visualmente por el responsable del proyecto.
 - No existe runner frontend no interactivo; frontend se valida hoy con `npm run build` y revisión manual cuando aplique.
 - Validación Fase 1: `npm run build` ejecutado correctamente en `src/LaboratorioTlahuac.Web`.
@@ -230,6 +235,7 @@ Estado: DEV publicado y validado como baseline UAT inicial; producción pendient
 - Validación Fase 3.0 2026-07-02: `curl` sin credenciales contra `https://dev.laboratoriodentaltlahuac.com`, `/servicios`, `/catalogo`, `/contacto`, `/login` y `/app/dashboard` respondió `200`; se documenta que en SPA Angular la ruta privada puede devolver shell `200` por `curl`, mientras la validación real de guards fue manual por navegador.
 - Validación técnica Fase 3.0 2026-07-02: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` por vulnerabilidad conocida de `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101.
 - Validación Fase 3.1 2026-07-02: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101; `git diff --check` correcto; búsquedas obligatorias de órdenes, `WorkOrder`, `Delivery`, repartidor, catálogo, `/dashboard`, `/app/dashboard` y `/login` ejecutadas.
+- Validación Fase 3.2 2026-07-02: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101; `git diff --check` correcto; búsquedas obligatorias de `/app/ordenes`, `etiqueta`, `@page`, `window.print`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas. Las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
 
 ## Comercial
 
@@ -239,9 +245,9 @@ Estado: DEV publicado y validado como baseline UAT inicial; producción pendient
 
 ## Próxima Tarea Recomendada
 
-Fase 3.2 - MVP impresión de etiquetas desde órdenes existentes.
+Validar Fase 3.2 con impresora térmica real en DEV y preparar Fase 3.3 - entrega/repartidor mobile-first.
 
-Alcance sugerido: agregar acciones desde `/app/ordenes/:id` para imprimir etiqueta interna y etiqueta de entrega, crear rutas privadas de impresión bajo `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`, usar CSS de impresión browser/CSS con tamaños en mm y evitar dependencias, migraciones, impresora directa, PDF obligatorio o QR/barcode en el MVP.
+Alcance sugerido inmediato: probar etiqueta interna 76 x 51 mm y etiqueta entrega 102 x 51 mm con impresora real, ajustar configuración de navegador/driver/rollo si hace falta y documentar evidencia manual. La siguiente fase funcional mayor debe diseñar entrega/repartidor mobile-first con permisos, modelo, endpoints y UI bajo `/app`.
 
 Mantener pendientes de cliente para el sitio público: confirmar vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
 

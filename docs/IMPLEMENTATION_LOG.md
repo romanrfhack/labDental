@@ -6,6 +6,147 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-02 - Fase 3.2 MVP Impresión De Etiquetas Desde Órdenes
+
+### Cambio Realizado
+
+Se implementó el MVP de impresión de etiquetas desde órdenes existentes bajo `/app/ordenes`, sin crear panel duplicado.
+
+Desde el detalle `/app/ordenes/:id` se agregaron acciones:
+
+- `Etiqueta interna`
+- `Etiqueta entrega`
+
+Rutas privadas nuevas:
+
+- `/app/ordenes/:id/etiqueta-trabajo`
+- `/app/ordenes/:id/etiqueta-entrega`
+
+Ambas rutas viven bajo `/app`, heredan autenticación de la zona privada y usan `permissionGuard` con `orders.view`.
+
+### Implementación Técnica
+
+- Se crearon páginas standalone dentro del feature de órdenes:
+  - `WorkOrderJobLabelPageComponent`
+  - `WorkOrderDeliveryLabelPageComponent`
+- Ambas reutilizan `WorkOrderService.getById()` y `GET /api/work-orders/{id}`.
+- Cada pantalla maneja carga, error, no encontrado y sin permiso.
+- Cada pantalla incluye botón `Imprimir` con `window.print()` y botón `Volver a la orden`.
+- El CSS usa `@media print`, `@page`, tamaños en milímetros, alto contraste y oculta navegación/topbar/botones al imprimir.
+- La etiqueta interna usa tamaño objetivo 76 x 51 mm.
+- La etiqueta de entrega usa tamaño objetivo 102 x 51 mm.
+
+### Datos Incluidos
+
+Etiqueta interna:
+
+- LDT.
+- Texto `Etiqueta interna`.
+- Folio / número de orden.
+- Cliente.
+- Doctor interno si existe.
+- Paciente.
+- Fecha de recepción.
+- Fecha de entrega.
+- Estado.
+- Color si existe.
+- Trabajo solicitado.
+- Observaciones breves si existen.
+
+Etiqueta entrega:
+
+- LDT.
+- Texto `Entrega`.
+- Folio / número de orden.
+- Cliente.
+- Paciente o referencia.
+- Trabajo solicitado.
+- Fecha de entrega.
+- Estado.
+- `Dirección pendiente`.
+- `Contacto pendiente`.
+- `Recibe: __________________`.
+- `Firma: __________________`.
+
+### Limitaciones Documentadas
+
+- El detalle actual de orden no incluye dirección/contacto completos del cliente.
+- No se consulta `GET /api/customers/{id}` desde la etiqueta para no exigir `customers.view` en rutas cuyo permiso es `orders.view`.
+- No se implementó QR/barcode.
+- No se implementó PDF.
+- No se implementó impresión directa por driver/SDK.
+- No se implementó etiqueta chica 51 x 25 mm.
+- No se implementó repartidor asignado, evidencia de entrega, firma digital ni foto.
+- La prueba física con impresora térmica real queda pendiente en DEV.
+
+### Archivos Creados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-job-label-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-job-label-page.component.scss`
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-delivery-label-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-delivery-label-page.component.scss`
+- `docs/08-qa/label-printing-qa.md`
+
+### Archivos Modificados
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/admin-catalog-management.md`
+- `docs/01-product/internal-system.md`
+- `docs/01-product/label-printing.md`
+- `docs/01-product/operations-orders-delivery.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/03-architecture/frontend-architecture.md`
+- `src/LaboratorioTlahuac.Web/src/app/app.routes.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-detail-page.component.ts`
+
+### Validaciones Ejecutadas
+
+- `git status --short` antes de editar: sin salida.
+- `git diff --stat` antes de editar: sin salida.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 errores; reportó 2 warnings `NU1903` conocidos por vulnerabilidad de `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- `git diff --check`: correcto.
+- `rg "/app/ordenes" src docs README.md`: ejecutado.
+- `rg "etiqueta" src docs README.md`: ejecutado.
+- `rg "@page" src/LaboratorioTlahuac.Web/src`: ejecutado.
+- `rg "window.print" src/LaboratorioTlahuac.Web/src`: ejecutado.
+- `rg "/dashboard" .`: ejecutado; no se creó `/dashboard` como ruta privada real.
+- `rg "/app/dashboard" .`: ejecutado; confirma que el dashboard privado real sigue bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: ejecutado; confirma `/login` como ruta pública/entrada.
+- `rg -l "LT_ADMIN_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg -l "LT_QA_LIMITED_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg -l "LDT_SQL_SA_PASSWORD" .`: ejecutado con salida limitada a archivos para no imprimir valores.
+- `rg "ConnectionStrings" src docs README.md`: ejecutado; solo se revisaron claves/menciones documentales o de configuración.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: ejecutado; solo hay menciones históricas/documentales de no uso.
+
+### Confirmaciones
+
+- No se instaló ninguna dependencia.
+- No se crearon migraciones.
+- No se agregaron endpoints.
+- No se modificó backend.
+- No se modificó `AuthService`.
+- No se modificaron `auth.guard.ts` ni `permission.guard.ts`.
+- No se tocaron cookies ni XSRF.
+- No se tocó deploy.
+- No se imprimieron secretos.
+- No se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+- No se hicieron commits.
+- `/login` sigue público.
+- `/app` y `/app/dashboard` siguen privados.
+- `/dashboard` no es ruta privada real.
+
+### Siguiente Fase Recomendada
+
+Validar Fase 3.2 en DEV con impresora térmica real, confirmar escala/márgenes/orientación en navegador y después avanzar Fase 3.3 de entrega/repartidor mobile-first.
+
 ## 2026-07-02 - Fase 3.1 Análisis Operativo De Órdenes, Etiquetas Y Reparto
 
 ### Cambio Realizado

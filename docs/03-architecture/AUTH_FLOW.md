@@ -93,6 +93,8 @@ Permisos por ruta privada:
 - `/app/ordenes/nueva`: `orders.create`
 - `/app/ordenes/:id`: `orders.view`
 - `/app/ordenes/:id/editar`: `orders.edit`
+- `/app/ordenes/:id/etiqueta-trabajo`: `orders.view`
+- `/app/ordenes/:id/etiqueta-entrega`: `orders.view`
 - `/app/clientes`: `customers.view`
 - `/app/clientes/nuevo`: `customers.create`
 - `/app/clientes/:id`: `customers.view`

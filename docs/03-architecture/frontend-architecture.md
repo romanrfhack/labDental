@@ -38,6 +38,8 @@ src/app/
 - `/app/ordenes/nueva`
 - `/app/ordenes/:id`
 - `/app/ordenes/:id/editar`
+- `/app/ordenes/:id/etiqueta-trabajo`
+- `/app/ordenes/:id/etiqueta-entrega`
 - `/app/clientes`
 - `/app/clientes/nuevo`
 - `/app/clientes/:id`
@@ -75,6 +77,8 @@ Se eligió SCSS como formato de estilos para Angular. El diseño actual es míni
 - `/app/ordenes/nueva`: `orders.create`
 - `/app/ordenes/:id`: `orders.view`
 - `/app/ordenes/:id/editar`: `orders.edit`
+- `/app/ordenes/:id/etiqueta-trabajo`: `orders.view`
+- `/app/ordenes/:id/etiqueta-entrega`: `orders.view`
 - `/app/clientes`: `customers.view`
 - `/app/clientes/nuevo`: `customers.create`
 - `/app/clientes/:id`: `customers.view`
@@ -121,6 +125,8 @@ Archivos principales:
 - `WorkOrderDetailPageComponent`: detalle completo, cambio de estado e historial.
 - `WorkOrderCreatePageComponent`: alta de orden.
 - `WorkOrderEditPageComponent`: edición de datos generales.
+- `WorkOrderJobLabelPageComponent`: impresión browser/CSS de etiqueta interna 76 x 51 mm.
+- `WorkOrderDeliveryLabelPageComponent`: impresión browser/CSS de etiqueta de entrega 102 x 51 mm.
 - `WorkOrderFormComponent`: formulario reutilizable.
 - `WorkOrderStatusBadgeComponent`: etiqueta visual de estado.
 - `WorkOrderStatusHistorySectionComponent`: historial de cambios.

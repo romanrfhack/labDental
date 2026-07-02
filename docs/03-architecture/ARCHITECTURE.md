@@ -72,6 +72,8 @@ Rutas existentes bajo `/app`:
 - `/app/ordenes/nueva`
 - `/app/ordenes/:id`
 - `/app/ordenes/:id/editar`
+- `/app/ordenes/:id/etiqueta-trabajo`
+- `/app/ordenes/:id/etiqueta-entrega`
 - `/app/clientes`
 - `/app/clientes/nuevo`
 - `/app/clientes/:id`

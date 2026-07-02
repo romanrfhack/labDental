@@ -8,7 +8,7 @@ No pertenece a la fase actual y no está implementado.
 
 Esta funcionalidad será una mejora futura de la app privada bajo `/app`. El catálogo público actual en `/catalogo` debe seguir funcionando con datos estructurados del frontend en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` hasta que se diseñe, apruebe e implemente esta fase.
 
-Actualización Fase 3.1: la administración de catálogo permanece como backlog. No debe bloquear el flujo operativo de órdenes, etiquetas y reparto. Antes de implementarla se debe cerrar primero el MVP de etiquetas desde órdenes existentes y, si el cliente lo prioriza, el flujo mobile-first de entrega/repartidor.
+Actualización Fase 3.2: la administración de catálogo permanece como backlog. No debe bloquear el flujo operativo de órdenes, etiquetas y reparto. El MVP de etiquetas desde órdenes existentes ya quedó implementado; antes del catálogo sigue conviniendo validar impresión real y, si el cliente lo prioriza, avanzar flujo mobile-first de entrega/repartidor.
 
 ## Propósito Futuro
 
@@ -85,9 +85,9 @@ Antes de implementar se debe definir:
 
 ## Prioridad Recomendada
 
-La secuencia sugerida después de Fase 3.1 es:
+La secuencia sugerida después de Fase 3.2 es:
 
-1. Fase 3.2: etiquetas desde órdenes existentes.
+1. Validación real de etiquetas con impresora térmica.
 2. Fase 3.3: entrega/repartidor mobile-first.
 3. Fase 3.4: usuarios/roles.
 4. Fase 3.5: administración de catálogo.
