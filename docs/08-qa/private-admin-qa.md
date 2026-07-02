@@ -10,6 +10,52 @@ Limitación de ejecución: no hay navegador/headless local instalado en este ent
 
 Seguimiento Fase 2.3: los dos hallazgos principales de este reporte quedaron corregidos por código y pruebas. El dashboard usa fecha operativa de negocio `America/Mexico_City` para `dueToday`, `overdue` y `upcomingDue`; la navegación privada marca la ruta activa con `routerLinkActive` y estilos accesibles.
 
+## Fase 3.0 - Baseline UAT DEV
+
+### Fecha
+
+- Validación DEV: 2026-07-02, America/Mexico_City.
+- URL: `https://dev.laboratoriodentaltlahuac.com`.
+- Rama desplegada: `dev`.
+- Sin commits.
+- Sin cambios de código.
+- Sin migraciones.
+- Sin dependencias nuevas.
+
+### Resultado Manual Confirmado
+
+El responsable del proyecto confirmó el baseline UAT inicial en DEV:
+
+| Punto | Resultado |
+| --- | --- |
+| `/` | OK. |
+| `/servicios` | OK. |
+| `/catalogo` | OK. |
+| `/contacto` | OK. |
+| `/login` | OK. |
+| Login QA | OK. |
+| `/app/dashboard` autenticado | OK. |
+| Rutas públicas sin sesión | OK. |
+| `/app/dashboard` sin sesión | Redirige a `/login`. |
+| `/dashboard` raíz | OK: no es ruta privada real. |
+| VPS DEV desplegado desde rama `dev` | OK. |
+
+### Validación `curl`
+
+`curl` sin credenciales devolvió `200` para `/`, `/servicios`, `/catalogo`, `/contacto`, `/login` y `/app/dashboard`.
+
+Como el frontend es una SPA Angular, el `200` de `/app/dashboard` por `curl` solo confirma que el servidor entrega el shell de Angular. La validación real de guards se conserva como evidencia manual por navegador: sin sesión, `/app/dashboard` redirige a `/login`.
+
+### Estado De Usuario Limitado
+
+El login QA validado en DEV tiene acceso a `/app/dashboard`, por lo que no cierra el caso de usuario QA limitado sin `reports.view`.
+
+Pendiente si aún no queda formalmente validado en DEV:
+
+- Iniciar sesión con cuenta limitada real.
+- Confirmar que `/app/dashboard` termina en `/app/access-denied`.
+- Confirmar `/app/clientes` si la cuenta tiene `customers.view`.
+
 ## Fase 2.6 - Usuario QA limitado Development-only
 
 ### Fecha

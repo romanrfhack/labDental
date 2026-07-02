@@ -6,6 +6,129 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-02 - Fase 3.0 Cierre Formal DEV Y Baseline UAT
+
+### Cambio Realizado
+
+Se cerró documentalmente Fase 3.0 como validación formal del despliegue DEV y baseline UAT inicial.
+
+DEV queda registrado como publicado en:
+
+- `https://dev.laboratoriodentaltlahuac.com`
+
+Rama desplegada:
+
+- `dev`
+
+No se implementó funcionalidad nueva. No se modificó código frontend/backend, `AuthService`, guards, cookies, XSRF, endpoints, rutas privadas, base de datos, migraciones, dependencias ni despliegue real. No se hicieron commits.
+
+### Resultado Manual Confirmado
+
+El responsable del proyecto confirmó:
+
+- `/` público: OK.
+- `/servicios`: OK.
+- `/catalogo`: OK.
+- `/contacto`: OK.
+- `/login`: OK.
+- Login QA: OK.
+- `/app/dashboard` autenticado: OK.
+- Usuario sin autenticar solo navega rutas públicas: OK.
+- Usuario sin autenticar al intentar `/app/dashboard` redirige a `/login`: OK.
+- `/dashboard` raíz no es ruta privada real: OK.
+- VPS DEV desplegado desde rama `dev`: OK.
+
+### Validación DEV Por `curl`
+
+`curl` sin credenciales respondió `200` para:
+
+- `https://dev.laboratoriodentaltlahuac.com/`
+- `https://dev.laboratoriodentaltlahuac.com/servicios`
+- `https://dev.laboratoriodentaltlahuac.com/catalogo`
+- `https://dev.laboratoriodentaltlahuac.com/contacto`
+- `https://dev.laboratoriodentaltlahuac.com/login`
+- `https://dev.laboratoriodentaltlahuac.com/app/dashboard`
+
+Se documenta la diferencia clave: en SPA Angular, `curl` puede recibir shell `200` para `/app/dashboard`; la evidencia real de guards/redirección privada proviene de la validación manual por navegador.
+
+### Estado De Base DEV Y VPS
+
+No se inspeccionó directamente la base DEV, no se ejecutaron migraciones, no se corrieron seeds y no se tocaron datos.
+
+Estado inferido por validación manual:
+
+- Login QA funciona.
+- `/app/dashboard` autenticado carga.
+- DEV queda operativo para baseline UAT inicial.
+
+Los nombres de servicios del VPS y detalles internos de reverse proxy no estaban documentados en el repositorio y no se inspeccionaron en esta fase.
+
+### Pendientes Conservados
+
+- Dirección real del laboratorio.
+- Horarios.
+- WhatsApp real.
+- Aprobación final de precios 2026.
+- Aprobación de `Anticipo 50%`.
+- Aprobación de `Trabajos urgentes +40%`.
+- Imágenes faltantes para `Servicios prostodónticos`.
+- Validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda cerrada formalmente con cuenta limitada sin `reports.view`.
+- Definición del siguiente incremento funcional.
+
+### Archivos Modificados
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/05-delivery/DEPLOYMENT.md`
+- `docs/08-qa/private-admin-qa.md`
+- `docs/08-qa/limited-user-qa-plan.md`
+
+### Archivos Creados
+
+- `docs/05-delivery/dev-deployment-validation.md`
+
+### Validaciones Ejecutadas
+
+- `git status --short` antes de editar: sin salida.
+- `git branch --show-current`: `dev`.
+- `git rev-parse --abbrev-ref --symbolic-full-name @{u}`: `origin/dev`.
+- `git diff --stat` antes de editar: sin salida.
+- `curl` sin credenciales contra rutas DEV solicitadas: `200` en todas.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 errores; reportó 2 warnings `NU1903` por vulnerabilidad conocida de `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- `git diff --check`: correcto.
+- `rg "/dashboard" .`: revisado.
+- `rg "/app/dashboard" .`: revisado.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado.
+- `rg "dev.laboratoriodentaltlahuac.com" docs README.md`: revisado.
+- `rg "LT_ADMIN_PASSWORD" .`: revisado; solo nombres de variables/placeholders documentales.
+- `rg "LT_QA_LIMITED_PASSWORD" .`: revisado; solo nombres de variables/placeholders documentales.
+- `rg "LDT_SQL_SA_PASSWORD" .`: revisado; solo nombres de variables/placeholders documentales.
+- `rg "ConnectionStrings" src docs README.md`: revisado; no se documentaron secretos reales.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: revisado; solo menciones históricas/documentales de no uso.
+
+### Confirmaciones
+
+- Solo documentación modificada.
+- No se modificó código.
+- No se instalaron dependencias.
+- No se crearon migraciones.
+- No se imprimieron secretos.
+- No se usó `codex-cobranza-sql`.
+- `/login` sigue público.
+- `/app` y `/app/dashboard` siguen privados.
+- `/dashboard` no es ruta privada real.
+- DEV queda registrado como baseline UAT inicial validado.
+
+### Siguiente Fase Recomendada
+
+Fase 3.1 - UAT DEV con usuario QA limitado real para cerrar `/app/access-denied` si aún no está formalmente validado; después definir el siguiente incremento funcional.
+
 ## 2026-05-28 - Fase 2.6 Usuario QA Limitado Development-only
 
 ### Cambio Realizado

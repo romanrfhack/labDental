@@ -6,6 +6,7 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 
 - Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado y Fase 2.6 implementada para usuario QA limitado Development-only.
 - Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; contenido final del cliente pendiente.
+- Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev` y validado como baseline UAT inicial en Fase 3.0 para sitio público, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login`.
 - Deploy productivo: pendiente de plataforma, DNS, HTTPS, variables y base productiva.
 
 La Fase 1 / Etapa 7 corresponde al MVP administrativo. La Fase 0/Fase 1 del sitio público corresponde a un frente separado.
@@ -88,6 +89,7 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 - Sitio público: [docs/01-product/public-website.md](docs/01-product/public-website.md).
 - Sistema privado: [docs/01-product/internal-system.md](docs/01-product/internal-system.md).
 - Deploy: [docs/05-delivery/DEPLOYMENT.md](docs/05-delivery/DEPLOYMENT.md).
+- Validación DEV: [docs/05-delivery/dev-deployment-validation.md](docs/05-delivery/dev-deployment-validation.md).
 - QA responsive: [docs/08-qa/RESPONSIVE_CHECKLIST.md](docs/08-qa/RESPONSIVE_CHECKLIST.md).
 - QA MVP administrativo: [docs/08-qa/mvp-qa-checklist.md](docs/08-qa/mvp-qa-checklist.md).
 - Plan QA usuario limitado: [docs/08-qa/limited-user-qa-plan.md](docs/08-qa/limited-user-qa-plan.md).
@@ -95,6 +97,6 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
 ## Próximos Pasos
 
-1. Validar manualmente `/app/access-denied` con usuario QA limitado real cuando existan credenciales locales seguras y navegador disponible.
+1. Cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real.
 2. Confirmar contenido real pendiente del cliente: dirección, horarios, WhatsApp, precios y materiales visuales.
-3. Definir plataforma de despliegue y pendientes de DNS para `laboratoriodentaltlahuac.com`.
+3. Definir el siguiente incremento funcional antes de preparar producción.

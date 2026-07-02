@@ -5,10 +5,11 @@ Fuente canónica de build, deploy, dominio, DNS, variables de entorno y publicac
 ## Dominio
 
 - Dominio principal: `laboratoriodentaltlahuac.com`.
-- Estado de despliegue: pendiente.
-- Plataforma de deploy: pendiente por definir.
-- HTTPS productivo: pendiente.
-- DNS: pendiente.
+- URL DEV: `https://dev.laboratoriodentaltlahuac.com`.
+- Estado de despliegue DEV: publicado en VPS y validado como baseline UAT inicial.
+- Rama DEV desplegada: `dev`.
+- Estado de despliegue productivo: pendiente.
+- Plataforma/DNS/HTTPS productivos: pendientes por definir.
 
 ## Estrategia Actual
 
@@ -18,6 +19,30 @@ Fuente canónica de build, deploy, dominio, DNS, variables de entorno y publicac
 - La API .NET debe quedar protegida detrás de HTTPS y reverse proxy cuando exista producción.
 - En producción, el frontend asume mismo origen con `apiBaseUrl: ''`, salvo decisión contraria.
 - En desarrollo, Angular consume la API en `http://localhost:5277`.
+- En DEV publicado, la validación funcional confirmada por navegador se documenta en `docs/05-delivery/dev-deployment-validation.md`.
+
+## Ambiente DEV Publicado
+
+- URL: `https://dev.laboratoriodentaltlahuac.com`.
+- Rama: `dev`.
+- Plataforma documentada: VPS.
+- Fecha de baseline UAT inicial: 2026-07-02.
+- Resultado: sitio público, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login` validados manualmente por el responsable del proyecto.
+
+Los nombres de servicios del VPS, rutas internas, usuario del sistema, configuración exacta de reverse proxy y comandos operativos del servidor no están documentados en este repositorio. Esta fase no inspeccionó ni modificó el VPS.
+
+Validación con `curl` sin credenciales:
+
+| URL | Resultado |
+| --- | --- |
+| `https://dev.laboratoriodentaltlahuac.com/` | `200` |
+| `https://dev.laboratoriodentaltlahuac.com/servicios` | `200` |
+| `https://dev.laboratoriodentaltlahuac.com/catalogo` | `200` |
+| `https://dev.laboratoriodentaltlahuac.com/contacto` | `200` |
+| `https://dev.laboratoriodentaltlahuac.com/login` | `200` |
+| `https://dev.laboratoriodentaltlahuac.com/app/dashboard` | `200` |
+
+Nota: como Angular se sirve como SPA, `curl` puede devolver shell `200` para rutas privadas. La protección real de `/app/dashboard` fue validada manualmente en navegador: sin sesión redirige a `/login`.
 
 ## Comandos De Build Y Validación
 
@@ -86,6 +111,11 @@ dotnet ef database update \
 
 ## Checklist Antes De Publicar
 
+- [x] DEV publicado en VPS.
+- [x] DEV validado como baseline UAT inicial.
+- [x] `/login` validado como público en DEV.
+- [x] `/app/dashboard` validado como privado en DEV por navegador.
+- [x] `/dashboard` confirmado como no ruta privada real.
 - [ ] Plataforma de deploy definida.
 - [ ] DNS configurado.
 - [ ] HTTPS activo.
@@ -107,3 +137,4 @@ dotnet ef database update \
 - Ambientes: `docs/06-operations/environments.md`.
 - Backup y restore: `docs/06-operations/backup-and-restore.md`.
 - Auth y seguridad: `docs/03-architecture/AUTH_FLOW.md`.
+- Validación DEV baseline UAT: `docs/05-delivery/dev-deployment-validation.md`.

@@ -114,6 +114,27 @@ Permisos por ruta privada:
 
 La Fase 2.6 valida por API automatizada esta diferencia: sin sesion `/api/dashboard/summary` responde `401`; con usuario QA limitado autenticado sin `reports.view` responde `403`.
 
+## Validación DEV Fase 3.0 - 2026-07-02
+
+Resultado manual confirmado en `https://dev.laboratoriodentaltlahuac.com`:
+
+- `/login` carga como ruta pública.
+- Usuario QA puede iniciar sesión.
+- Usuario QA autenticado puede entrar a `/app/dashboard`.
+- Usuario sin sesión puede navegar rutas públicas.
+- Usuario sin sesión al intentar `/app/dashboard` es redirigido a `/login`.
+- `/dashboard` raíz no es ruta privada real.
+
+Validación técnica complementaria:
+
+- `curl` sin credenciales contra `/app/dashboard` devuelve `200` porque recibe el shell HTML de Angular.
+- Ese `200` no sustituye la ejecución de guards en navegador.
+- La evidencia de protección privada para `/app/dashboard` queda basada en la validación manual por navegador.
+
+Fase 3.0 no modificó `AuthService`, guards, cookies, XSRF, endpoints, permisos, rutas privadas, base de datos ni migraciones.
+
+El usuario QA validado en DEV tiene acceso a dashboard; por lo tanto, esta evidencia no cierra la validación formal de usuario QA limitado sin `reports.view` ni la redirección a `/app/access-denied`.
+
 ## ReturnUrl Seguro
 
 `returnUrl` se usa solo para regresar a una ruta privada interna después de login correcto.

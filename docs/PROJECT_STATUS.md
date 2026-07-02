@@ -4,14 +4,15 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto, Fase 2.5 del sistema privado cerrada como pase visual humano privado completado y Fase 2.6 implementada para usuario QA limitado Development-only.
+Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto, Fase 2.5 del sistema privado cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only y Fase 3.0 cerrada como despliegue DEV validado/baseline UAT inicial.
 
 ## Estado Por Frente
 
 - Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto. Fase 2.5 confirmó que no hubo regresión visible del sitio público.
 - Catálogo: legible y aprobado visualmente; mantiene precios de referencia 2026, frames uniformes de imágenes, placeholders intencionales y condiciones comerciales con texto prudente.
-- Login/auth: `/login` sigue público; login con Admin local validado manualmente; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3, Fase 2.4 ni Fase 2.5.
-- Sistema privado: Fase 2.6 implementada; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, el dashboard usa fecha operativa de negocio, la navegación privada fue confirmada visualmente en rutas principales y existe seed QA limitado Development-only para validar permisos sin alterar Admin.
+- Deploy DEV: `https://dev.laboratoriodentaltlahuac.com` está publicado desde rama `dev` y queda validado como baseline UAT inicial en Fase 3.0.
+- Login/auth: `/login` sigue público; login con Admin local validado manualmente y login QA validado manualmente en DEV; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3, Fase 2.4, Fase 2.5, Fase 2.6 ni Fase 3.0.
+- Sistema privado: Fase 2.6 implementada y Fase 3.0 validada en DEV; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, el dashboard usa fecha operativa de negocio, la navegación privada fue confirmada visualmente en rutas principales y existe seed QA limitado Development-only para validar permisos sin alterar Admin.
 - Pendientes del cliente: dirección, horarios, WhatsApp real, aprobación final de precios 2026, aprobación de `Anticipo 50%`, aprobación de `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 
 ## Sistema Privado / MVP Administrativo
@@ -93,6 +94,9 @@ Estado: avanzado, con QA funcional y demo documentadas; Fase 2.3 queda cerrada p
 - Prueba API Fase 2.6 agregada: login con usuario QA limitado por seed, `/api/auth/me` con permisos limitados, `/api/customers` `200` con `customers.view`, `/api/dashboard/summary` `403` sin `reports.view` y sin sesion `401`.
 - Validacion local real Fase 2.6: pendiente porque `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME` no estan disponibles en el proceso de Codex; no se inventaron credenciales.
 - Validacion navegador Fase 2.6 de `/app/access-denied`: pendiente porque no hay navegador/headless local disponible sin instalar dependencias; quedan pasos manuales exactos en `docs/08-qa/limited-user-qa-plan.md`.
+- Validación DEV Fase 3.0 2026-07-02: `https://dev.laboratoriodentaltlahuac.com` queda registrado como baseline UAT inicial desde rama `dev`; rutas públicas, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login` fueron confirmados manualmente por el responsable del proyecto.
+- Validación `curl` DEV Fase 3.0: `/`, `/servicios`, `/catalogo`, `/contacto`, `/login` y `/app/dashboard` respondieron `200` sin credenciales; para `/app/dashboard`, ese `200` solo confirma el shell SPA y no reemplaza la validación navegador de guards.
+- Usuario QA limitado/access-denied en DEV: sigue pendiente de cierre formal si aún no se prueba con cuenta limitada real sin `reports.view`; el login QA validado en DEV sí tiene acceso al dashboard y no prueba el caso `403`/`/app/access-denied`.
 
 La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
 
@@ -148,17 +152,19 @@ La Fase 0/Fase 1 del sitio público corresponde a este frente nuevo. No contradi
 
 ## Dominio Y Deploy
 
-Estado: pendiente de definición productiva.
+Estado: DEV publicado y validado como baseline UAT inicial; producción pendiente de definición final.
 
 - Dominio principal: `laboratoriodentaltlahuac.com`.
-- Plataforma de deploy: pendiente.
-- DNS: pendiente.
-- HTTPS productivo: pendiente.
+- URL DEV: `https://dev.laboratoriodentaltlahuac.com`.
+- Rama DEV desplegada: `dev`.
+- Plataforma DEV: VPS.
+- Plataforma/DNS/HTTPS productivos: pendientes.
 - Fuente canónica de deploy: `docs/05-delivery/DEPLOYMENT.md`.
+- Validación DEV canónica: `docs/05-delivery/dev-deployment-validation.md`.
 
 ## QA
 
-- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, Fase 2.4 agrega pase manual/técnico privado con Admin, Fase 2.5 cierra el pase visual humano privado y Fase 2.6 implementa/prueba por API el usuario QA limitado Development-only.
+- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, Fase 2.4 agrega pase manual/técnico privado con Admin, Fase 2.5 cierra el pase visual humano privado, Fase 2.6 implementa/prueba por API el usuario QA limitado Development-only y Fase 3.0 registra DEV como baseline UAT inicial.
 - QA responsive del sitio público: revisión por código/build ejecutada; Fase 1.6 cerrada como validada visualmente por el responsable del proyecto.
 - No existe runner frontend no interactivo; frontend se valida hoy con `npm run build` y revisión manual cuando aplique.
 - Validación Fase 1: `npm run build` ejecutado correctamente en `src/LaboratorioTlahuac.Web`.
@@ -217,6 +223,8 @@ Estado: pendiente de definición productiva.
 - Validacion local real Fase 2.6: no ejecutada porque no hay variables QA limitadas seguras en el proceso y no se ejecuta `dotnet user-secrets list`.
 - Validacion navegador Fase 2.6: no ejecutada porque no hay navegador/headless local disponible sin instalar dependencias.
 - Validacion de cierre Fase 2.6 2026-05-28: `git diff --check` correcto y busquedas obligatorias ejecutadas; busquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
+- Validación Fase 3.0 2026-07-02: `curl` sin credenciales contra `https://dev.laboratoriodentaltlahuac.com`, `/servicios`, `/catalogo`, `/contacto`, `/login` y `/app/dashboard` respondió `200`; se documenta que en SPA Angular la ruta privada puede devolver shell `200` por `curl`, mientras la validación real de guards fue manual por navegador.
+- Validación técnica Fase 3.0 2026-07-02: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` por vulnerabilidad conocida de `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101.
 
 ## Comercial
 
@@ -226,10 +234,10 @@ Estado: pendiente de definición productiva.
 
 ## Próxima Tarea Recomendada
 
-Validar manualmente `/app/access-denied` con usuario QA limitado real cuando existan credenciales locales seguras y navegador disponible.
+Cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
-Alcance sugerido: configurar `SecuritySeed:LimitedQaUser:RunOnStartup=true`, `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD`, `LT_QA_LIMITED_FULL_NAME` y `SecuritySeed:LimitedQaUser:Permissions=customers.view`; levantar API en Development contra `ldt-labdental-sql`; apagar el seed; iniciar sesion en `/login`; confirmar que `/app/dashboard` termina en `/app/access-denied` y `/app/clientes` carga.
+Alcance sugerido: usar credenciales seguras para una cuenta QA limitada en DEV, confirmar que no tenga `reports.view`, iniciar sesión en `/login`, abrir `/app/dashboard` y confirmar `/app/access-denied`; luego confirmar `/app/clientes` si tiene `customers.view` y logout.
 
 Mantener pendientes de cliente para el sitio público: confirmar vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
 
-Backlog futuro separado: evaluar la fase de administración de catálogo, precios e imágenes en la app privada solo después de definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes, reglas de publicación y aprobación del cliente para precios públicos.
+Backlog futuro separado: definir el siguiente incremento funcional y evaluar la fase de administración de catálogo, precios e imágenes en la app privada solo después de definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes, reglas de publicación y aprobación del cliente para precios públicos.

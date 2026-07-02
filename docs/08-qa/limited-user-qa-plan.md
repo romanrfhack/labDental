@@ -10,6 +10,8 @@ Validacion automatizada cubierta: seed directo con SQLite en memoria, login API 
 
 Validacion local real pendiente: no existen `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` ni `LT_QA_LIMITED_FULL_NAME` en el proceso de Codex y no hay navegador/headless local disponible sin instalar dependencias.
 
+Estado DEV Fase 3.0: el baseline UAT inicial en `https://dev.laboratoriodentaltlahuac.com` confirmó login QA y acceso autenticado a `/app/dashboard`, pero ese usuario tiene permisos suficientes para dashboard. Por lo tanto, la validación formal de usuario QA limitado y `/app/access-denied` en DEV sigue pendiente si aún no se prueba con una cuenta limitada real sin `reports.view`.
+
 ## Mecanismo Implementado
 
 - Clase principal: `SecuritySeeder`.

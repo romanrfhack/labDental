@@ -18,6 +18,7 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase sistema 2.4: pase manual/técnico privado y validación de permisos. Completada por API/código/build con Admin; `/app/access-denied` queda pendiente de usuario limitado real por falta de mecanismo seguro de usuario QA limitado.
 - Fase sistema 2.5: cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado. Completada para pase visual humano privado el 2026-05-28; se recomienda seed QA limitado solo Development como backlog técnico inmediato, sin implementarlo todavía.
 - Fase sistema 2.6: mecanismo seguro Development-only para usuario QA limitado. Implementada; seed desactivado por default, activado por configuracion explicita, probado por automatizacion API y pendiente de pase manual en navegador con credenciales locales reales.
+- Fase 3.0: cierre formal del despliegue DEV y baseline UAT. Completada el 2026-07-02 como fase documental/de validación; `https://dev.laboratoriodentaltlahuac.com` queda registrado como DEV publicado desde rama `dev`, con sitio público, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login` validados manualmente.
 - Backlog futuro: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; no pertenece a la fase actual y requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
@@ -35,7 +36,7 @@ Fuente funcional: `docs/01-product/public-website.md`.
 - Backlog relacionado: administración privada futura de catálogo, precios e imágenes. No modifica el catálogo público actual; `/catalogo` sigue usando data frontend hasta diseñar esa fase. Fuente: `docs/01-product/admin-catalog-management.md`.
 - Fase sitio/sistema 2.0: validación real del flujo de `/login`, sesión, `returnUrl` y acceso a `/app/dashboard`, sin rediseñar pantallas ni implementar módulos nuevos. Ejecutada por código/build/tests/curl; login real con Admin local y dashboard autenticado fueron cerrados posteriormente en Fase 2.1d.
 - Fase sitio 3: QA mobile-first completo y preparación de contenido final. Pendiente.
-- Fase sitio 4: publicación en `laboratoriodentaltlahuac.com` cuando deploy/DNS estén definidos. Pendiente.
+- Fase sitio 4: publicación productiva en `laboratoriodentaltlahuac.com` cuando deploy/DNS estén definidos. Pendiente; DEV ya está publicado en `https://dev.laboratoriodentaltlahuac.com` como baseline UAT inicial.
 - Fase sitio 5: optimización, Lighthouse o revisión equivalente, y mejoras por feedback. Pendiente.
 
 ## Roadmap Comercial
@@ -52,9 +53,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Validar manualmente `/app/access-denied` con usuario QA limitado real cuando existan credenciales locales seguras y navegador disponible.
+Cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
-Alcance sugerido: configurar el seed QA limitado solo Development descrito en `docs/08-qa/limited-user-qa-plan.md`, crear o sincronizar el usuario local, apagar la bandera de seed y confirmar en navegador que `/app/dashboard` termina en `/app/access-denied` mientras `/app/clientes` carga con `customers.view`. La administración de catálogo, precios e imágenes permanece como backlog futuro, no como fase actual.
+Alcance sugerido: usar una cuenta QA limitada real en DEV, confirmar que no tenga `reports.view`, iniciar sesión en `/login`, abrir `/app/dashboard` y confirmar `/app/access-denied`; luego confirmar `/app/clientes` si tiene `customers.view`. Después, definir el siguiente incremento funcional. La administración de catálogo, precios e imágenes permanece como backlog futuro hasta aprobar alcance y reglas de publicación.
 
 ## Regla De Actualización
 
