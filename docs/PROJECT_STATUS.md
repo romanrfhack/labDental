@@ -4,7 +4,7 @@
 
 Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
 
-Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto, Fase 2.5 del sistema privado cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.0 cerrada como despliegue DEV validado/baseline UAT inicial, Fase 3.1 documentada como análisis operativo para órdenes, etiquetas, reparto, usuarios/roles y catálogo, Fase 3.2 implementada como MVP de impresión de etiquetas desde órdenes existentes y Fase 3.2.1 cerrada como QA técnico/preparación DEV sin hallazgos bloqueantes.
+Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto, Fase 2.5 del sistema privado cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.0 cerrada como despliegue DEV validado/baseline UAT inicial, Fase 3.1 documentada como análisis operativo para órdenes, etiquetas, reparto, usuarios/roles y catálogo, Fase 3.2 implementada como MVP de impresión de etiquetas desde órdenes existentes, Fase 3.2.1 cerrada como QA técnico/preparación DEV sin hallazgos bloqueantes y corrección puntual de Clientes en Angular zoneless implementada.
 
 ## Estado Por Frente
 
@@ -12,7 +12,7 @@ Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada com
 - Catálogo: legible y aprobado visualmente; mantiene precios de referencia 2026, frames uniformes de imágenes, placeholders intencionales y condiciones comerciales con texto prudente.
 - Deploy DEV: `https://dev.laboratoriodentaltlahuac.com` está publicado desde rama `dev` y queda validado como baseline UAT inicial en Fase 3.0.
 - Login/auth: `/login` sigue público; login con Admin local validado manualmente y login QA validado manualmente en DEV; `AuthService`, guards, cookies, XSRF y `returnUrl` no fueron modificados en Fase 2.3, Fase 2.4, Fase 2.5, Fase 2.6, Fase 3.0, Fase 3.2 ni Fase 3.2.1.
-- Sistema privado: Fase 2.6 implementada, Fase 3.0 validada en DEV, Fase 3.1 documentada, Fase 3.2 implementada y Fase 3.2.1 validada técnicamente; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, `/app/ordenes` se extendió sin panel duplicado con impresión de etiqueta interna y etiqueta de entrega.
+- Sistema privado: Fase 2.6 implementada, Fase 3.0 validada en DEV, Fase 3.1 documentada, Fase 3.2 implementada, Fase 3.2.1 validada técnicamente y bug de repintado en Admin > Clientes corregido con signals; `/app` y `/app/dashboard` siguen privados, `/dashboard` no es ruta privada real, `/app/ordenes` se extendió sin panel duplicado con impresión de etiqueta interna y etiqueta de entrega.
 - Pendientes del cliente: dirección, horarios, WhatsApp real, aprobación final de precios 2026, aprobación de `Anticipo 50%`, aprobación de `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
 
 ## Sistema Privado / MVP Administrativo
@@ -25,6 +25,9 @@ Estado: avanzado, con QA funcional y demo documentadas; Fase 2.3 queda cerrada p
 - Backend .NET 10 y frontend Angular 21 implementados.
 - Auth por cookie HttpOnly, CSRF/XSRF y permisos por claims.
 - Módulos implementados: clientes, doctores, clínicas, doctores internos, órdenes de trabajo, estados, pagos, saldos calculados y dashboard básico.
+- Corrección Clientes 2026-07-02: `/app/clientes` y `/app/clientes/:id` migran su estado async renderizado a Angular signals para evitar que, en modo zoneless con `HttpClient` y `withFetch()`, la vista quede en `Cargando cliente...` o no repinte hasta un clic DOM después de crear un cliente.
+- Flujo crear cliente 2026-07-02: `POST /api/customers` se mantiene sin cambios; al crear correctamente se navega a `/app/clientes/{id}` con `NavigationExtras.info` transitorio para `successMessage`, y el detalle lo lee desde `Router.currentNavigation()?.extras.info` para que la alerta no persista al recargar la URL.
+- Corrección Clientes 2026-07-02 no modificó backend, contratos API, base de datos, migraciones, `AuthService`, guards, cookies, XSRF, deploy ni dependencias; no se agregó `zone.js` ni se quitó `withFetch()`.
 - QA funcional documentada en `docs/08-qa/`.
 - Demo administrativa documentada en `docs/08-qa/demo-script.md`.
 - Validación Fase 2.0 por código: `/login` sigue público; `/app` está protegido por `authGuard`; `/app/dashboard` está protegido por `permissionGuard` y requiere `reports.view`; `/dashboard` no existe como ruta privada real.
@@ -178,6 +181,8 @@ Estado: DEV publicado y validado como baseline UAT inicial; producción pendient
 - QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, Fase 2.4 agrega pase manual/técnico privado con Admin, Fase 2.5 cierra el pase visual humano privado, Fase 2.6 implementa/prueba por API el usuario QA limitado Development-only, Fase 3.0 registra DEV como baseline UAT inicial, Fase 3.2 agrega `docs/08-qa/label-printing-qa.md` y Fase 3.2.1 amplía ese QA con preparación de prueba física.
 - QA responsive del sitio público: revisión por código/build ejecutada; Fase 1.6 cerrada como validada visualmente por el responsable del proyecto.
 - No existe runner frontend no interactivo; frontend se valida hoy con `npm run build` y revisión manual cuando aplique.
+- Validación corrección Clientes 2026-07-02: `git diff --check` correcto; `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101.
+- Validación manual sugerida para Clientes queda pendiente de navegador real: `/app/clientes` debe pintar sin clic, crear cliente debe mostrar `Cliente creado correctamente.`, navegar a `/app/clientes/{id}`, pintar el detalle sin clic, recargar por URL directa y confirmar listado/búsqueda/filtros/paginación sin errores de consola ni requests anormales.
 - Validación Fase 1: `npm run build` ejecutado correctamente en `src/LaboratorioTlahuac.Web`.
 - Validación Fase 1.1: `npm run build`, `git diff --check`, rutas por `curl` y búsquedas de `/login`, `/app/dashboard` y `/dashboard` ejecutadas.
 - Validación 2026-05-13: `npm run build` correcto después del ajuste de guards.

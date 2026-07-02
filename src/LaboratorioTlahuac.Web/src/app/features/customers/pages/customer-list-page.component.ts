@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -49,13 +49,13 @@ type ActiveFilter = 'active' | 'inactive';
         <button class="secondary-button" type="submit">Filtrar</button>
       </form>
 
-      @if (errorMessage) {
+      @if (errorMessage(); as errorMessage) {
         <p class="alert-error" role="alert">{{ errorMessage }}</p>
       }
 
-      @if (isLoading) {
+      @if (isLoading()) {
         <p class="loading-state">Cargando clientes...</p>
-      } @else if (items.length === 0) {
+      } @else if (items().length === 0) {
         <p class="empty-state">No hay clientes con los filtros actuales.</p>
       } @else {
         <table class="data-table">
@@ -70,7 +70,7 @@ type ActiveFilter = 'active' | 'inactive';
             </tr>
           </thead>
           <tbody>
-            @for (customer of items; track customer.id) {
+            @for (customer of items(); track customer.id) {
               <tr>
                 <td>
                   <a [routerLink]="['/app/clientes', customer.id]">{{ customer.displayName }}</a>
@@ -108,15 +108,20 @@ type ActiveFilter = 'active' | 'inactive';
       }
 
       <div class="page-actions">
-        <button class="ghost-button" type="button" [disabled]="page <= 1 || isLoading" (click)="changePage(page - 1)">
-          Anterior
-        </button>
-        <span>Pagina {{ page }} de {{ totalPages }}</span>
         <button
           class="ghost-button"
           type="button"
-          [disabled]="page >= totalPages || isLoading"
-          (click)="changePage(page + 1)"
+          [disabled]="page() <= 1 || isLoading()"
+          (click)="changePage(page() - 1)"
+        >
+          Anterior
+        </button>
+        <span>Pagina {{ page() }} de {{ totalPages() }}</span>
+        <button
+          class="ghost-button"
+          type="button"
+          [disabled]="page() >= totalPages() || isLoading()"
+          (click)="changePage(page() + 1)"
         >
           Siguiente
         </button>
@@ -125,15 +130,16 @@ type ActiveFilter = 'active' | 'inactive';
   `
 })
 export class CustomerListPageComponent implements OnInit {
-  items: CustomerListItem[] = [];
+  readonly items = signal<CustomerListItem[]>([]);
   search = '';
   type: CustomerType | '' = '';
   activeFilter: ActiveFilter = 'active';
-  page = 1;
-  pageSize = 20;
-  totalCount = 0;
-  isLoading = false;
-  errorMessage = '';
+  readonly page = signal(1);
+  readonly pageSize = signal(20);
+  readonly totalCount = signal(0);
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize())));
 
   constructor(
     private readonly customerService: CustomerService,
@@ -148,25 +154,21 @@ export class CustomerListPageComponent implements OnInit {
     return this.authService.hasPermission('customers.edit');
   }
 
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
-  }
-
   ngOnInit(): void {
     this.load();
   }
 
   applyFilters(): void {
-    this.page = 1;
+    this.page.set(1);
     this.load();
   }
 
   changePage(page: number): void {
-    if (page < 1 || page > this.totalPages || page === this.page) {
+    if (page < 1 || page > this.totalPages() || page === this.page()) {
       return;
     }
 
-    this.page = page;
+    this.page.set(page);
     this.load();
   }
 
@@ -178,7 +180,7 @@ export class CustomerListPageComponent implements OnInit {
     this.customerService.updateStatus(customer.id, !customer.isActive).subscribe({
       next: () => this.load(),
       error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.toErrorMessage(error);
+        this.errorMessage.set(this.toErrorMessage(error));
       }
     });
   }
@@ -196,27 +198,27 @@ export class CustomerListPageComponent implements OnInit {
   }
 
   private load(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
     this.customerService
       .list({
         search: this.search.trim() || undefined,
         type: this.type || undefined,
         isActive: this.activeFilter === 'active',
-        page: this.page,
-        pageSize: this.pageSize
+        page: this.page(),
+        pageSize: this.pageSize()
       })
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response) => {
-          this.items = response.items;
-          this.page = response.page;
-          this.pageSize = response.pageSize;
-          this.totalCount = response.totalCount;
+          this.items.set(response.items);
+          this.page.set(response.page);
+          this.pageSize.set(response.pageSize);
+          this.totalCount.set(response.totalCount);
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.toErrorMessage(error);
+          this.errorMessage.set(this.toErrorMessage(error));
         }
       });
   }

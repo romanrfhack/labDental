@@ -6,6 +6,52 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-02 - Corrección Admin Clientes En Angular Zoneless
+
+### Cambio Realizado
+
+Se corrigió el bug de Admin > Clientes donde, después de crear un cliente, la UI podía quedar en `Cargando cliente...` y solo repintar después de un clic del usuario.
+
+La causa técnica documentada fue estado mutable no reactivo actualizado dentro de `subscribe()`/`finalize()` en una app Angular 21 operando sin `zone.js`, con `HttpClient` usando `withFetch()`. En ese modo, mutar propiedades normales desde callbacks async puede no disparar el repintado hasta un evento DOM posterior.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/customers/pages/customer-create-page.component.ts`: `isSubmitting` y `errorMessage` pasan a signals; el submit conserva `POST /api/customers` y navega al detalle con `NavigationExtras.info` transitorio para `successMessage`.
+- `src/LaboratorioTlahuac.Web/src/app/features/customers/pages/customer-detail-page.component.ts`: `customer`, `isLoading`, `errorMessage` y `successMessage` pasan a signals; el template lee con sintaxis `signal()`, la carga directa por URL conserva `GET /api/customers/{id}` y el mensaje de éxito solo se lee desde `Router.currentNavigation()?.extras.info`.
+- `src/LaboratorioTlahuac.Web/src/app/features/customers/pages/customer-list-page.component.ts`: listado, carga, error, paginación y totales renderizados pasan a signals/computed; búsqueda, filtros y paginación conservan el contrato existente.
+- `src/LaboratorioTlahuac.Web/src/app/features/customers/components/customer-form.component.ts`: el input `errorMessage` acepta `string | null` para recibir signals sin romper type-checking.
+- `src/LaboratorioTlahuac.Web/src/styles.scss`: se agrega `.alert-success` para una confirmación visible y sobria.
+- `docs/PROJECT_STATUS.md` y `docs/IMPLEMENTATION_LOG.md`: se documenta corrección, causa, alcance y validación.
+
+### Decisiones Técnicas
+
+- Se usaron Angular signals porque integran el estado async con el sistema reactivo de Angular zoneless y hacen que las lecturas de template (`customer()`, `isLoading()`, `errorMessage()`) invaliden la vista correctamente.
+- El mensaje `Cliente creado correctamente.` usa `NavigationExtras.info` en vez de `state` para que sea información transitoria de la navegación inmediata y no persista en `history.state` tras recargar `/app/clientes/{id}`.
+- No se agregó `zone.js`, no se quitó `withFetch()` y no se usaron hacks de repintado como `setTimeout`, `window.location.reload()`, `ApplicationRef.tick()`, clicks simulados, eventos manuales ni `detectChanges()` indiscriminado.
+- No se modificó `CustomerService` porque los contratos HTTP y endpoints ya eran correctos; el problema estaba en el estado del frontend.
+
+### Validaciones Ejecutadas
+
+- `git diff --check`: correcto.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 errores; reportó 2 warnings `NU1903` conocidos por vulnerabilidad de `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- No existe script `test` en `src/LaboratorioTlahuac.Web/package.json`, por lo que no hay runner frontend no interactivo adicional que ejecutar.
+
+### Confirmaciones
+
+- No se modificó backend.
+- No se modificó base de datos.
+- No se crearon migraciones.
+- No se cambiaron contratos API ni endpoints.
+- No se modificaron `AuthService`, guards, cookies, sesiones, CSRF/XSRF ni permisos.
+- No se hizo commit.
+
+### Pendientes
+
+- Ejecutar la prueba manual en navegador real: abrir `/app/clientes`, confirmar listado sin clic, crear cliente de prueba, confirmar `POST /api/customers`, ver navegación a `/app/clientes/{id}`, confirmar `Cliente creado correctamente.`, recargar el detalle por URL directa, volver al listado, revisar consola y Network.
+- Se detectan patrones similares de estado mutable async fuera de Clientes en otros módulos administrativos; no se corrigieron en esta tarea para mantener el alcance solicitado.
+
 ## 2026-07-02 - Fase 3.2.1 QA Técnico De Etiquetas Y Preparación DEV
 
 ### Cambio Realizado

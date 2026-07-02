@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -22,8 +22,8 @@ import { CustomerService } from '../customer.service';
 
       <app-customer-form
         submitLabel="Crear cliente"
-        [isSubmitting]="isSubmitting"
-        [errorMessage]="errorMessage"
+        [isSubmitting]="isSubmitting()"
+        [errorMessage]="errorMessage()"
         (save)="create($event)"
         (cancel)="cancel()"
       />
@@ -31,8 +31,8 @@ import { CustomerService } from '../customer.service';
   `
 })
 export class CustomerCreatePageComponent {
-  isSubmitting = false;
-  errorMessage = '';
+  readonly isSubmitting = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   constructor(
     private readonly customerService: CustomerService,
@@ -40,16 +40,23 @@ export class CustomerCreatePageComponent {
   ) {}
 
   create(request: CustomerUpsertRequest): void {
-    this.isSubmitting = true;
-    this.errorMessage = '';
+    if (this.isSubmitting()) {
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    this.errorMessage.set(null);
 
     this.customerService
       .create(request)
-      .pipe(finalize(() => (this.isSubmitting = false)))
+      .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
-        next: (customer) => this.router.navigate(['/app/clientes', customer.id]),
+        next: (customer) =>
+          this.router.navigate(['/app/clientes', customer.id], {
+            info: { successMessage: 'Cliente creado correctamente.' }
+          }),
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.toErrorMessage(error);
+          this.errorMessage.set(this.toErrorMessage(error));
         }
       });
   }

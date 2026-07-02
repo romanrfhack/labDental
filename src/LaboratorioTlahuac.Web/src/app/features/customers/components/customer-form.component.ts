@@ -96,7 +96,7 @@ export class CustomerFormComponent implements OnChanges {
   @Input() customer: CustomerDetail | null = null;
   @Input() submitLabel = 'Guardar';
   @Input() isSubmitting = false;
-  @Input() errorMessage = '';
+  @Input() errorMessage: string | null = '';
   @Output() readonly save = new EventEmitter<CustomerUpsertRequest>();
   @Output() readonly cancel = new EventEmitter<void>();
 

@@ -1,23 +1,36 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { InternalDoctorsSectionComponent } from '../components/internal-doctors-section.component';
 import { CustomerDetail, CustomerType } from '../customer.models';
 import { CustomerService } from '../customer.service';
 
+type CustomerDetailNavigationInfo = {
+  successMessage?: unknown;
+};
+
+function isCustomerDetailNavigationInfo(value: unknown): value is CustomerDetailNavigationInfo {
+  return typeof value === 'object' && value !== null && 'successMessage' in value;
+}
+
 @Component({
   selector: 'app-customer-detail-page',
   imports: [DatePipe, InternalDoctorsSectionComponent, RouterLink],
   template: `
     <section class="feature-page">
-      @if (isLoading) {
+      @if (successMessage(); as successMessage) {
+        <p class="alert-success" role="status">{{ successMessage }}</p>
+      }
+
+      @if (isLoading()) {
         <p class="loading-state">Cargando cliente...</p>
-      } @else if (errorMessage) {
+      } @else if (errorMessage(); as errorMessage) {
         <p class="alert-error" role="alert">{{ errorMessage }}</p>
-      } @else if (customer) {
+      } @else if (customer(); as customer) {
         <header class="page-header">
           <div>
             <h1>{{ customer.displayName }}</h1>
@@ -92,16 +105,19 @@ import { CustomerService } from '../customer.service';
   `
 })
 export class CustomerDetailPageComponent implements OnInit {
-  customer: CustomerDetail | null = null;
-  isLoading = false;
-  errorMessage = '';
+  readonly customer = signal<CustomerDetail | null>(null);
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal<string | null>(null);
 
   constructor(
     private readonly customerService: CustomerService,
     private readonly authService: AuthService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
-  ) {}
+  ) {
+    this.readSuccessMessageFromNavigationInfo();
+  }
 
   get canEdit(): boolean {
     return this.authService.hasPermission('customers.edit');
@@ -112,20 +128,22 @@ export class CustomerDetailPageComponent implements OnInit {
   }
 
   toggleStatus(): void {
-    if (!this.customer) {
+    const currentCustomer = this.customer();
+
+    if (!currentCustomer) {
       return;
     }
 
-    if (this.customer.isActive && !window.confirm(`Desactivar a ${this.customer.displayName}?`)) {
+    if (currentCustomer.isActive && !window.confirm(`Desactivar a ${currentCustomer.displayName}?`)) {
       return;
     }
 
-    this.customerService.updateStatus(this.customer.id, !this.customer.isActive).subscribe({
+    this.customerService.updateStatus(currentCustomer.id, !currentCustomer.isActive).subscribe({
       next: (customer) => {
-        this.customer = customer;
+        this.customer.set(customer);
       },
       error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.toErrorMessage(error);
+        this.errorMessage.set(this.toErrorMessage(error));
       }
     });
   }
@@ -150,19 +168,33 @@ export class CustomerDetailPageComponent implements OnInit {
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
-    this.customerService.getById(id).subscribe({
-      next: (customer) => {
-        this.customer = customer;
-        this.isLoading = false;
-      },
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.toErrorMessage(error);
-        this.isLoading = false;
-      }
-    });
+    this.customerService
+      .getById(id)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (customer) => {
+          this.customer.set(customer);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage.set(this.toErrorMessage(error));
+          this.customer.set(null);
+        }
+      });
+  }
+
+  private readSuccessMessageFromNavigationInfo(): void {
+    const info = this.router.currentNavigation()?.extras.info;
+
+    if (
+      isCustomerDetailNavigationInfo(info) &&
+      typeof info.successMessage === 'string' &&
+      info.successMessage.trim().length > 0
+    ) {
+      this.successMessage.set(info.successMessage);
+    }
   }
 
   private toErrorMessage(error: HttpErrorResponse): string {
