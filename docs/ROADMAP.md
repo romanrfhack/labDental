@@ -19,7 +19,11 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase sistema 2.5: cierre visual humano del sistema privado y definición de mecanismo seguro para usuario QA limitado. Completada para pase visual humano privado el 2026-05-28; se recomienda seed QA limitado solo Development como backlog técnico inmediato, sin implementarlo todavía.
 - Fase sistema 2.6: mecanismo seguro Development-only para usuario QA limitado. Implementada; seed desactivado por default, activado por configuracion explicita, probado por automatizacion API y pendiente de pase manual en navegador con credenciales locales reales.
 - Fase 3.0: cierre formal del despliegue DEV y baseline UAT. Completada el 2026-07-02 como fase documental/de validación; `https://dev.laboratoriodentaltlahuac.com` queda registrado como DEV publicado desde rama `dev`, con sitio público, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login` validados manualmente.
-- Backlog futuro: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; no pertenece a la fase actual y requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
+- Fase 3.1: análisis operativo y plan de implementación para órdenes, etiquetas, reparto, usuarios/roles y catálogo. Documentada; no implementa código, migraciones, endpoints, auth, guards, deploy ni base de datos. Fuentes: `docs/01-product/operations-orders-delivery.md`, `docs/01-product/label-printing.md` y `docs/01-product/driver-mobile-workflow.md`.
+- Fase 3.2: MVP impresión de etiquetas desde órdenes existentes. Recomendada como siguiente fase implementable; debe extender `/app/ordenes` sin crear panel duplicado, usando rutas privadas bajo `/app` y CSS de impresión.
+- Fase 3.3: entrega/repartidor mobile-first. Pendiente; requiere rol/permisos de reparto, modelo de entrega/asignación, endpoints privados y UI móvil.
+- Fase 3.4: administración de usuarios/roles. Pendiente; conviene validar primero seed/usuarios QA y luego CRUD administrativo seguro.
+- Fase 3.5: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
 
@@ -53,9 +57,11 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
+Fase 3.2 - MVP impresión de etiquetas desde órdenes existentes.
 
-Alcance sugerido: usar una cuenta QA limitada real en DEV, confirmar que no tenga `reports.view`, iniciar sesión en `/login`, abrir `/app/dashboard` y confirmar `/app/access-denied`; luego confirmar `/app/clientes` si tiene `customers.view`. Después, definir el siguiente incremento funcional. La administración de catálogo, precios e imágenes permanece como backlog futuro hasta aprobar alcance y reglas de publicación.
+Alcance sugerido: extender `/app/ordenes/:id` con acciones para imprimir etiqueta interna y etiqueta de entrega, agregar rutas privadas de impresión bajo `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`, y usar CSS de impresión en milímetros sin migraciones, sin dependencias nuevas, sin impresora directa y sin PDF obligatorio.
+
+Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
 ## Regla De Actualización
 

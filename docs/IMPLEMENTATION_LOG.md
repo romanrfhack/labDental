@@ -6,6 +6,132 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-02 - Fase 3.1 Análisis Operativo De Órdenes, Etiquetas Y Reparto
+
+### Cambio Realizado
+
+Se ejecutó Fase 3.1 como análisis/documentación para el siguiente frente operativo de Laboratorio Dental Tláhuac:
+
+- Seguimiento de órdenes/pedidos de clientes.
+- Impresión de etiquetas para trabajos recibidos.
+- Impresión de etiquetas para entrega/repartidor.
+- Reducción de errores de entrega.
+- Trazabilidad futura de quién entregó, cuándo, a qué cliente y quién recibió.
+- Priorización futura de usuarios/roles y catálogo.
+
+No se implementó código. No se modificó frontend funcional, backend, `AuthService`, guards, cookies, XSRF, endpoints, base de datos, migraciones, dependencias ni deploy. No se hicieron commits.
+
+### Hallazgos Documentados
+
+- `/app/ordenes` ya existe como módulo real de órdenes y no debe duplicarse con otro panel.
+- Las rutas reales actuales son `/app/ordenes`, `/app/ordenes/nueva`, `/app/ordenes/:id` y `/app/ordenes/:id/editar`.
+- El modelo actual de orden cubre folio, cliente, doctor interno, paciente, trabajo, color, fechas, estado, total, observaciones, historial y pagos.
+- `DeliveryDate` es fecha planeada/capturada de entrega; no es fecha/hora real de entrega ni evidencia.
+- Faltan datos de reparto: repartidor asignado, salida a ruta, receptor, fecha/hora real de entrega, intento fallido, motivo, observaciones de entrega y evidencia.
+- Los datos completos de cliente existen en clientes, pero el detalle actual de orden no incluye dirección/contacto completos.
+- La administración de usuarios/roles sigue como placeholder; existe modelo y permisos, pero no CRUD funcional.
+- El catálogo público sigue en `catalog-data.ts`; administración privada de catálogo permanece como backlog.
+
+### Diseño Operativo
+
+Se documentó el flujo futuro:
+
+1. Recepción de trabajo y creación de orden.
+2. Impresión de etiqueta interna y pegado al trabajo físico.
+3. Seguimiento interno por estado, fechas, observaciones y pagos/saldos.
+4. Salida a repartidor con etiqueta de entrega.
+5. Entrega mobile-first con captura de `Recibió` y fecha/hora de servidor.
+
+### Etiquetas
+
+Tamaños documentados:
+
+- 51 x 25 mm: etiqueta chica para folio/código.
+- 76 x 51 mm / 3 x 2: etiqueta interna de trabajo.
+- 102 x 51 mm / 4 x 2: etiqueta de entrega/repartidor.
+
+Estrategia inicial:
+
+- Impresión desde navegador con CSS de impresión y tamaños en mm.
+- Sin impresora directa.
+- Sin PDF obligatorio.
+- Sin QR/barcode en MVP si requiere dependencia.
+
+### Repartidor
+
+Se propuso MVP mobile-first:
+
+- Rol futuro `Repartidor`.
+- Permisos sugeridos `delivery.view` y `delivery.update`.
+- Ruta privada recomendada `/app/entregas`.
+- Listado de entregas asignadas.
+- Detalle con cliente, dirección, contacto, indicaciones y trabajos.
+- Acción `Marcar como entregado`.
+- Captura de `Recibió`.
+- Fecha/hora registrada por servidor.
+
+### Usuarios/Roles Y Catálogo
+
+- Usuarios/roles: no implementar todavía si no es prioritario; conviene validar primero seed/usuarios QA y después CRUD admin seguro.
+- Catálogo: mantener como backlog; requiere modelo de datos, endpoints, almacenamiento de imágenes, permisos y reglas de publicación.
+- El catálogo no debe bloquear el flujo operativo de órdenes/entregas.
+
+### Archivos Modificados
+
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/internal-system.md`
+- `docs/01-product/admin-catalog-management.md`
+
+### Archivos Creados
+
+- `docs/01-product/operations-orders-delivery.md`
+- `docs/01-product/label-printing.md`
+- `docs/01-product/driver-mobile-workflow.md`
+
+### Validaciones Ejecutadas
+
+- `git status --short` antes de editar: sin salida.
+- `git diff --stat` antes de editar: sin salida.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto, 0 errores; reportó 2 warnings `NU1903` por vulnerabilidad conocida de `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- `git diff --check`: correcto.
+- `rg "/app/ordenes" src docs README.md`: revisado; confirma módulo real de órdenes y nuevas menciones documentales de etiquetas.
+- `rg "WorkOrder" src tests docs`: revisado; salida extensa por entidades, tests, servicios y documentación.
+- `rg "Delivery" src tests docs`: revisado; confirma que lo existente funcional se limita a `DeliveryDate`/`ReadyForDelivery` y que las nuevas referencias de reparto son documentales.
+- `rg "repartidor" docs src`: revisado; referencias existentes comerciales y nuevas fuentes producto; no hay código funcional de repartidor.
+- `rg "catalog" src docs README.md`: revisado; confirma catálogo público actual y backlog privado.
+- `rg "/dashboard" .`: revisado; no se creó `/dashboard` como ruta privada real.
+- `rg "/app/dashboard" .`: revisado; confirma que el dashboard privado real sigue bajo `/app/dashboard`.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: revisado; confirma `/login` como entrada pública y endpoints/rutas de auth existentes.
+
+### Confirmaciones
+
+- Solo documentación modificada.
+- No se modificó código.
+- No se crearon migraciones.
+- No se tocó base de datos.
+- No se tocaron backend/frontend funcionales.
+- No se tocó `AuthService`.
+- No se tocaron guards.
+- No se tocaron cookies ni XSRF.
+- No se tocaron endpoints.
+- No se instalaron dependencias.
+- No se tocó deploy.
+- No se imprimieron secretos.
+- No se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+- No se hicieron commits.
+
+### Siguiente Fase Recomendada
+
+Fase 3.2 - MVP impresión de etiquetas desde órdenes existentes.
+
+Alcance recomendado: extender `/app/ordenes/:id` con acciones para imprimir etiqueta interna y etiqueta de entrega; crear rutas privadas bajo `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`; usar CSS de impresión en mm; no agregar dependencias, migraciones, impresora directa, PDF obligatorio ni QR/barcode en el MVP.
+
 ## 2026-07-02 - Fase 3.0 Cierre Formal DEV Y Baseline UAT
 
 ### Cambio Realizado

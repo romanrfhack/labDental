@@ -23,7 +23,36 @@ Permitir que el laboratorio opere registros nuevos sin depender del Excel para e
 - Dashboard operativo y financiero básico.
 - Páginas iniciales de inventario, proveedores, usuarios y roles.
 
+## Análisis Operativo Fase 3.1
+
+Estado: documentado, sin implementación de código.
+
+La Fase 3.1 define el siguiente frente operativo sobre órdenes existentes: etiquetas internas, etiquetas de entrega, flujo de salida a repartidor, captura de recibido y priorización futura de usuarios/roles y catálogo.
+
+Fuentes funcionales:
+
+- `docs/01-product/operations-orders-delivery.md`
+- `docs/01-product/label-printing.md`
+- `docs/01-product/driver-mobile-workflow.md`
+
+Decisión principal: no crear un panel duplicado de órdenes. El flujo debe extender `/app/ordenes`, especialmente `/app/ordenes/:id`, porque ahí ya existen datos de orden, estado, historial y pagos.
+
+Siguiente fase recomendada: Fase 3.2 - MVP impresión de etiquetas desde órdenes existentes.
+
 ## Backlog Futuro
+
+### Órdenes, Etiquetas Y Reparto
+
+Estado: análisis documentado en Fase 3.1.
+
+Prioridad sugerida:
+
+1. Fase 3.2: imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`.
+2. Fase 3.3: entrega/repartidor mobile-first bajo `/app/entregas` o ruta equivalente.
+3. Fase 3.4: administración de usuarios/roles.
+4. Fase 3.5: administración de catálogo.
+
+Fase 3.2 puede implementarse sin migraciones si reutiliza datos existentes de orden/cliente y CSS de impresión. Fase 3.3 sí requerirá diseño de base para asignación, salida, entrega, receptor y trazabilidad.
 
 ### Administración De Catálogo, Precios E Imágenes
 

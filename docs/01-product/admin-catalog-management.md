@@ -8,6 +8,8 @@ No pertenece a la fase actual y no está implementado.
 
 Esta funcionalidad será una mejora futura de la app privada bajo `/app`. El catálogo público actual en `/catalogo` debe seguir funcionando con datos estructurados del frontend en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` hasta que se diseñe, apruebe e implemente esta fase.
 
+Actualización Fase 3.1: la administración de catálogo permanece como backlog. No debe bloquear el flujo operativo de órdenes, etiquetas y reparto. Antes de implementarla se debe cerrar primero el MVP de etiquetas desde órdenes existentes y, si el cliente lo prioriza, el flujo mobile-first de entrega/repartidor.
+
 ## Propósito Futuro
 
 Permitir que usuarios autorizados administren secciones, productos, precios e imágenes del catálogo desde la app privada, sin exponer edición en el sitio público.
@@ -80,3 +82,14 @@ Antes de implementar se debe definir:
 - No se instalan dependencias.
 - No se cambia deploy.
 - No se modifica el catálogo público actual.
+
+## Prioridad Recomendada
+
+La secuencia sugerida después de Fase 3.1 es:
+
+1. Fase 3.2: etiquetas desde órdenes existentes.
+2. Fase 3.3: entrega/repartidor mobile-first.
+3. Fase 3.4: usuarios/roles.
+4. Fase 3.5: administración de catálogo.
+
+El catálogo requiere modelo de datos, endpoints, almacenamiento de imágenes, permisos y reglas de publicación; por eso no conviene mezclarlo con el MVP operativo de entrega.
