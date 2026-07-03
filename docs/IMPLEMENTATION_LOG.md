@@ -6,6 +6,60 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-02 - Corrección Admin Dashboard En Angular Zoneless
+
+### Cambio Realizado
+
+Se corrigió el bug de Admin > Dashboard donde `/app/dashboard` podía quedar mostrando `Cargando dashboard...` aunque el componente ya tuviera `finalize()` para apagar el estado de carga.
+
+La causa técnica encontrada fue estado async renderizado como propiedades mutables (`summary`, `isLoading`, `errorMessage`) actualizado dentro de `subscribe()`/`finalize()` en Angular 21 sin `zone.js`, con `HttpClient` usando `withFetch()`. En ese modo, la respuesta HTTP o el error pueden actualizar el estado TypeScript sin invalidar inmediatamente la vista.
+
+### Flujo Auditado
+
+- Ruta frontend: `/app/dashboard`.
+- Componente: `DashboardPageComponent`.
+- Servicio frontend: `DashboardService.getSummary()`.
+- Endpoint consumido: `GET /api/dashboard/summary`.
+- Endpoint backend: `DashboardEndpoints.MapDashboardEndpoints()`.
+- Servicio backend: `IDashboardService.GetSummaryAsync()` implementado por `DashboardService` en infraestructura.
+- Permiso requerido en frontend/backend: `reports.view`.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/dashboard/dashboard-page.component.ts`: `summary`, `isLoading` y `errorMessage` pasan a Angular signals; el template lee con `summary()`, `isLoading()` y `errorMessage()`. La carga conserva `timeout(15000)`, muestra error controlado y apaga loading en `finalize()` para success y error.
+- `docs/PROJECT_STATUS.md` y `docs/IMPLEMENTATION_LOG.md`: se documenta corrección, causa real, alcance, validación y pendientes.
+
+### Decisiones Técnicas
+
+- Se mantuvo `GET /api/dashboard/summary` y el contrato `DashboardSummary` sin cambios porque el modelo TypeScript coincide con los records C#.
+- No se modificó backend en esta tarea: la auditoría encontró oportunidades de performance por listas materializadas antes de ordenar/tomar resultados, pero no evidencia de contrato incompatible, endpoint no autorizado o error backend como causa directa del loader infinito.
+- No se agregó `zone.js`, no se quitó `withFetch()` y no se usaron hacks de repintado como `setTimeout`, `window.location.reload()`, `ApplicationRef.tick()`, clicks simulados, eventos manuales ni `detectChanges()` indiscriminado.
+
+### Validaciones Ejecutadas
+
+- `git diff --check`: correcto.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto; se mantienen warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en proyectos de prueba.
+- `dotnet test`: correcto.
+- `git status --short`: deja modificados solo el componente de Dashboard y los dos documentos obligatorios.
+- `git diff --stat`: ejecutado.
+- No existe script frontend `test` en `src/LaboratorioTlahuac.Web/package.json`; solo existen `ng`, `start`, `build` y `watch`.
+
+### Confirmaciones
+
+- No se modificó backend.
+- No se modificó base de datos.
+- No se crearon migraciones.
+- No se cambiaron contratos API ni endpoints.
+- No se modificaron `AuthService`, guards, cookies, sesiones, CSRF/XSRF ni permisos.
+- No se hizo commit.
+
+### Pendientes
+
+- Validar manualmente en navegador real: abrir `/app/dashboard`, confirmar que sale de `Cargando dashboard...`, pinta métricas/resumen sin clic, recargar y revisar consola/Network.
+- Revisar en una fase posterior las oportunidades de performance en `DashboardService`: ordenar/tomar en base de datos para `latestWorkOrders`, `dueSoonWorkOrders` y `latestPayments`, y evaluar agregados financieros sin materializar todas las órdenes/pagos cuando crezca el volumen.
+- Continúan existiendo patrones de estado mutable async en otros módulos administrativos como pagos y órdenes listado/detalle/edición; no se corrigieron en esta tarea para mantener el alcance.
+
 ## 2026-07-02 - Corrección Admin Órdenes Nueva Orden En Angular Zoneless
 
 ### Cambio Realizado

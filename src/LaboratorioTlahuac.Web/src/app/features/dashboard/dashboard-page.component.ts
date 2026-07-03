@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { finalize, TimeoutError, timeout } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
@@ -31,20 +31,20 @@ import { DashboardService } from './dashboard.service';
           <h1>Dashboard</h1>
           <p>Resumen operativo básico del laboratorio.</p>
         </div>
-        @if (summary) {
+        @if (summary(); as summary) {
           <span class="generated-at">
             Actualizado {{ summary.generatedAtUtc | date: 'short':'UTC' }}
           </span>
         }
       </header>
 
-      @if (errorMessage) {
+      @if (errorMessage(); as errorMessage) {
         <p class="alert-error" role="alert">{{ errorMessage }}</p>
       }
 
-      @if (isLoading) {
+      @if (isLoading()) {
         <p class="loading-state">Cargando dashboard...</p>
-      } @else if (summary) {
+      } @else if (summary(); as summary) {
         <section class="dashboard-section">
           <header class="section-header">
             <h2>Operacion</h2>
@@ -200,9 +200,9 @@ import { DashboardService } from './dashboard.service';
 export class DashboardPageComponent implements OnInit {
   private static readonly SummaryTimeoutMs = 15000;
 
-  summary: DashboardSummary | null = null;
-  isLoading = false;
-  errorMessage = '';
+  readonly summary = signal<DashboardSummary | null>(null);
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   constructor(
     private readonly dashboardService: DashboardService,
@@ -218,21 +218,23 @@ export class DashboardPageComponent implements OnInit {
   }
 
   private load(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    this.summary.set(null);
 
     this.dashboardService
       .getSummary()
       .pipe(
         timeout(DashboardPageComponent.SummaryTimeoutMs),
-        finalize(() => (this.isLoading = false))
+        finalize(() => this.isLoading.set(false))
       )
       .subscribe({
         next: (summary) => {
-          this.summary = summary;
+          this.summary.set(summary);
         },
         error: (error: unknown) => {
-          this.errorMessage = this.toErrorMessage(error);
+          this.summary.set(null);
+          this.errorMessage.set(this.toErrorMessage(error));
         }
       });
   }
