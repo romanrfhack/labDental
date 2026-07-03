@@ -6,6 +6,70 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-03 - Redirección A Login Por Sesión Expirada
+
+### Cambio Realizado
+
+Se implementó una redirección frontend centralizada a `/login` cuando cualquier request HTTP de Angular recibe `401 Unauthorized`, cubriendo el caso de sesión expirada mientras el usuario ya está dentro del layout privado.
+
+El Dashboard conserva su mensaje local `Inicia sesion para consultar el dashboard.` como fallback, pero la UX principal ante sesión expirada pasa a ser navegación Angular a `/login` con `replaceUrl: true`.
+
+### Auditoría
+
+- No existía un interceptor HTTP registrado antes de esta tarea.
+- `provideHttpClient` se configura en `src/LaboratorioTlahuac.Web/src/app/app.config.ts`.
+- La app usa `withFetch()` y también `withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' })`.
+- `AuthService.me()` y `AuthService.logout()` manejan `401` localmente para limpiar/normalizar sesión, pero no navegaban cuando una sesión expiraba dentro de una pantalla privada ya montada.
+- `authGuard` y `permissionGuard` redirigen a `/login?returnUrl=...` cuando `ensureSession()` indica que no hay sesión o falla durante navegación a `/app/*`.
+- `permissionGuard` redirige a `/app/access-denied` cuando hay sesión pero falta permiso.
+- Cuando la sesión expiraba después de que el usuario ya estaba dentro del layout admin, el guard no volvía a ejecutarse necesariamente; el componente que hacía la llamada recibía el error y mostraba su mensaje local.
+- Dashboard hacía `GET /api/dashboard/summary` y convertía `401` en `Inicia sesion para consultar el dashboard.` dentro de `DashboardPageComponent.toErrorMessage()`.
+- Otros módulos administrativos tienen manejo local de `HttpErrorResponse` y mensajes para `403` o errores genéricos: clientes, órdenes, etiquetas y pagos. Esos mensajes quedan como fallback/local UX; el redirect de `401` queda centralizado.
+- El punto mínimo y seguro para centralizar el redirect fue un `HttpInterceptorFn` registrado en `provideHttpClient`, preservando `withFetch()` y XSRF.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/core/interceptors/auth-expired.interceptor.ts`: nuevo interceptor funcional; detecta `HttpErrorResponse` con `status === 401`, evita navegar si ya está en `/login`, evita redirects simultáneos con una bandera local y ejecuta `router.navigate(['/login'], { replaceUrl: true })`.
+- `src/LaboratorioTlahuac.Web/src/app/app.config.ts`: registra `withInterceptors([authExpiredInterceptor])` sin remover `withFetch()` ni `withXsrfConfiguration()`.
+- `docs/PROJECT_STATUS.md` y `docs/IMPLEMENTATION_LOG.md`: documentan alcance, decisión técnica, validación y restricciones respetadas.
+
+### Decisiones Técnicas
+
+- Se usó interceptor funcional porque la app ya configura `provideHttpClient` en `app.config.ts` y Angular 21 soporta `HttpInterceptorFn`.
+- No se implementó `returnUrl` en el interceptor porque el requerimiento explícito fue redirigir solo a `/login`; el patrón existente de `returnUrl` se mantiene en guards para navegación inicial a rutas privadas.
+- No se trata `403` como sesión expirada; los componentes y guards mantienen los mensajes o redirecciones de no autorizado.
+- No se cambió Dashboard porque su `401` local queda como fallback si la navegación no alcanza a completarse.
+- No se usó `window.location.href`, `setTimeout`, reloads, eventos simulados ni cambios de backend.
+
+### Validaciones Ejecutadas
+
+- `git diff --check`: correcto.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; reporta warning de presupuesto inicial excedido por 2.39 kB.
+- `dotnet build`: correcto; se mantienen 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- `git status --short`: ejecutado.
+- `git diff --stat`: ejecutado.
+- No existe script frontend `test` en `src/LaboratorioTlahuac.Web/package.json`; solo existen `ng`, `start`, `build` y `watch`.
+
+### Confirmaciones
+
+- No se modificó backend.
+- No se modificó base de datos.
+- No se crearon migraciones.
+- No se cambiaron contratos API ni endpoints.
+- No se modificaron cookies, sesiones, CSRF/XSRF ni configuración de seguridad backend.
+- No se modificaron `AuthService`, guards ni `returnUrl` existente.
+- No se quitó `withFetch()`.
+- No se desplegó.
+- No se hizo commit.
+
+### Pendientes
+
+- Validar manualmente en navegador real: iniciar sesión, abrir `/app/dashboard`, expirar o eliminar cookie de sesión desde DevTools, provocar un request protegido con `401`, confirmar URL final `/login`, confirmar que no hay loop y que `/login` carga correctamente.
+- Validar regresión en navegador real: login, logout, Dashboard, Clientes y Órdenes.
+- Validar con usuario autenticado sin permiso que un `403` sigue mostrando no autorizado o `/app/access-denied` y no redirige a login.
+- En una fase posterior se pueden revisar mensajes locales redundantes de `401` en componentes si se quiere limpiar fallback visual, pero no es necesario para la UX principal.
+
 ## 2026-07-03 - Corrección Admin Órdenes Detalle Y Formato MXN
 
 ### Cambio Realizado
