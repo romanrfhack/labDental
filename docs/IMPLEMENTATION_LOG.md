@@ -6,6 +6,91 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-03 - Corrección Admin Órdenes Detalle Y Formato MXN
+
+### Cambio Realizado
+
+Se corrigieron dos problemas en Admin > Órdenes:
+
+- Después de crear una orden desde `/app/ordenes/nueva`, la navegación a `/app/ordenes/{id}` podía quedar mostrando `Cargando orden...` aunque el detalle ya hubiera sido recibido por el frontend.
+- El campo `Costo total` del formulario de nueva/edición de orden dejó de mostrarse como número plano y ahora usa formato moneda MXN en la UI sin cambiar el valor numérico enviado al backend.
+
+### Causa Técnica
+
+Para `Cargando orden...`, la auditoría encontró el mismo patrón zoneless ya corregido en Clientes, Nueva orden y Dashboard: `WorkOrderDetailPageComponent` pintaba `order`, `isLoading`, `errorMessage`, `statuses`, `isChangingStatus` y `statusErrorMessage` desde propiedades mutables actualizadas dentro de `subscribe()`/`finalize()`. En Angular 21 sin `zone.js`, con `HttpClient` usando `withFetch()`, esas mutaciones pueden no invalidar inmediatamente la vista.
+
+Para `Costo total`, el formulario usaba `<input type="number" formControlName="totalAmount">`, por lo que la UI no tenía formato de moneda. El contrato ya era correcto: TypeScript `totalAmount?: number | null` y backend `decimal? TotalAmount`.
+
+### Flujo Auditado
+
+- Ruta de nueva orden: `/app/ordenes/nueva`.
+- Componente de creación: `WorkOrderCreatePageComponent`.
+- Formulario: `WorkOrderFormComponent`.
+- Submit: `WorkOrderUpsertRequest` se arma desde `this.form.getRawValue()`; `totalAmount` sale de `value.totalAmount`.
+- Servicio frontend: `WorkOrderService.create()` hace `POST /api/work-orders`; `WorkOrderService.getById()` hace `GET /api/work-orders/{id}`.
+- Navegación post-create: después del POST exitoso se navega a `/app/ordenes/{id}`.
+- Ruta de detalle: `/app/ordenes/:id`.
+- Componente de detalle: `WorkOrderDetailPageComponent`, que renderiza `Cargando orden...`.
+- Endpoint backend: `WorkOrderEndpoints.MapWorkOrderEndpoints()` expone `POST /api/work-orders` y `GET /api/work-orders/{id}`.
+- Servicio backend: `WorkOrderService.CreateAsync()` y `GetByIdAsync()` devuelven `WorkOrderDetailResponse` usando `MapDetail()`.
+
+### Respuestas De Auditoría
+
+- El texto `Cargando orden...` lo renderiza `WorkOrderDetailPageComponent`.
+- Después del POST de creación, la app navega a `/app/ordenes/{id}`.
+- Por código, el GET de detalle se ejecuta en `ngOnInit()` mediante `WorkOrderService.getById(id)`.
+- Backend responde el mismo DTO de detalle para create y get-by-id; no se encontró mismatch de contrato como causa.
+- El detalle usaba propiedades mutables actualizadas dentro de `subscribe()`/`finalize()`.
+- `isLoading` se apagaba en `finalize()` para success y error, pero al ser propiedad mutable podía no repintar en zoneless.
+- Sí existía `errorMessage` visible para 404, 403 y error genérico.
+- No se encontró mismatch entre `WorkOrderDetailResponse.TotalAmount decimal?` y `WorkOrderDetail.totalAmount number | null`.
+- El formulario usa Reactive Forms con `FormGroup`/`FormControl`; no usa `ngModel`.
+- `WorkOrderUpsertRequest` se construye en `WorkOrderFormComponent.submit()` desde `getRawValue()`.
+- El campo `Costo total` corresponde a `totalAmount` en frontend y `TotalAmount` en backend.
+- Actualmente se envía como `number | null`, no como string.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-detail-page.component.ts`: `order`, `statuses`, `isLoading`, `errorMessage`, `successMessage`, `isChangingStatus` y `statusErrorMessage` pasan a Angular signals; el template lee con `signal()`. Carga y cambio de estado mantienen `finalize()` para apagar loading/submitting y errores controlados.
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-create-page.component.ts`: la navegación post-create usa `NavigationExtras.info` con `Orden creada correctamente.` para mensaje flash transitorio, sin usar `history.state`.
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/components/work-order-form.component.ts`: el campo `Costo total` usa display local con formato MXN al blur y valor editable simple al focus; el `FormControl` real conserva `number | null`.
+- `docs/PROJECT_STATUS.md` y `docs/IMPLEMENTATION_LOG.md`: se documenta la causa raíz, alcance, archivos modificados, validación y confirmaciones.
+
+### Decisiones Técnicas
+
+- No se modificó `WorkOrderService` porque los endpoints, rutas y DTOs ya coincidían.
+- No se cambió backend porque `POST /api/work-orders` ya devuelve `WorkOrderDetailResponse` y `GET /api/work-orders/{id}` usa el mismo mapeo.
+- No se agregó una librería de currency mask; se implementaron helpers locales con `Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })`.
+- No se guarda el string formateado en el `FormControl`; el submit conserva `totalAmount` como número o `null`.
+- No se usaron hacks de repintado como `setTimeout`, `window.location.reload()`, `ApplicationRef.tick()`, clicks simulados, eventos manuales ni `detectChanges()` indiscriminado.
+
+### Validaciones Ejecutadas
+
+- `git diff --check`: correcto.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; reporta warning de presupuesto inicial excedido por 1.99 kB.
+- `dotnet build`: correcto; se mantienen 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- `git status --short`: ejecutado.
+- `git diff --stat`: ejecutado.
+- No existe script frontend `test` en `src/LaboratorioTlahuac.Web/package.json`; solo existen `ng`, `start`, `build` y `watch`.
+
+### Confirmaciones
+
+- No se modificó backend.
+- No se modificó base de datos.
+- No se crearon migraciones.
+- No se cambiaron contratos API ni DTOs backend.
+- No se modificaron `AuthService`, guards, cookies, sesiones, CSRF/XSRF ni permisos.
+- No se agregó `zone.js` ni se quitó `withFetch()`.
+- No se desplegó.
+- No se hizo commit.
+
+### Pendientes
+
+- Validar manualmente en navegador real: crear orden desde `/app/ordenes/nueva`, confirmar POST exitoso, navegación a `/app/ordenes/{id}`, detalle pintado sin clic manual, refresh correcto, mensaje flash sin reaparecer tras refresh, consola sin errores y Network sin retries inesperados.
+- Validar regresión rápida en navegador real: `/app/clientes`, `/app/dashboard` y `/app/ordenes/nueva`.
+- Continúan existiendo patrones de estado mutable async en otros módulos administrativos como órdenes listado/edición, etiquetas y pagos; no se corrigieron en esta tarea para mantener el alcance.
+
 ## 2026-07-02 - Corrección Admin Dashboard En Angular Zoneless
 
 ### Cambio Realizado

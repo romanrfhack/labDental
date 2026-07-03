@@ -111,7 +111,15 @@ type WorkOrderControlName =
 
         <label class="form-field">
           <span>Costo total</span>
-          <input type="number" min="0" step="0.01" formControlName="totalAmount" />
+          <input
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            [value]="totalAmountDisplay()"
+            (focus)="onCostTotalFocus()"
+            (input)="onCostTotalInput($event)"
+            (blur)="onCostTotalBlur()"
+          />
           @if (hasError('totalAmount', 'min')) {
             <small class="validation-error">El costo no puede ser negativo.</small>
           }
@@ -158,6 +166,7 @@ export class WorkOrderFormComponent implements OnInit, OnChanges {
   readonly isLoadingCustomers = signal(false);
   readonly isLoadingDoctors = signal(false);
   readonly localErrorMessage = signal('');
+  readonly totalAmountDisplay = signal('');
 
   readonly form = new FormGroup({
     customerId: new FormControl('', {
@@ -236,6 +245,7 @@ export class WorkOrderFormComponent implements OnInit, OnChanges {
         notes: this.order.notes ?? ''
       },
       { emitEvent: false });
+    this.syncTotalAmountDisplay(false);
     this.onCustomerChanged(this.order.customerId, false);
   }
 
@@ -289,6 +299,32 @@ export class WorkOrderFormComponent implements OnInit, OnChanges {
     }
 
     return 'Doctor';
+  }
+
+  onCostTotalFocus(): void {
+    this.syncTotalAmountDisplay(true);
+  }
+
+  onCostTotalInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const normalizedDisplay = this.normalizeCurrencyInput(input.value);
+    const parsedValue = this.parseCurrencyInput(normalizedDisplay);
+
+    if (input.value !== normalizedDisplay) {
+      input.value = normalizedDisplay;
+    }
+
+    this.totalAmountDisplay.set(normalizedDisplay);
+    this.form.controls.totalAmount.setValue(parsedValue);
+    this.form.controls.totalAmount.markAsDirty();
+  }
+
+  onCostTotalBlur(): void {
+    const parsedValue = this.parseCurrencyInput(this.totalAmountDisplay());
+
+    this.form.controls.totalAmount.setValue(parsedValue);
+    this.form.controls.totalAmount.markAsTouched();
+    this.totalAmountDisplay.set(this.formatCurrency(parsedValue));
   }
 
   private loadCustomers(): void {
@@ -430,6 +466,83 @@ export class WorkOrderFormComponent implements OnInit, OnChanges {
     const trimmed = value.trim();
 
     return trimmed.length > 0 ? trimmed : null;
+  }
+
+  private parseCurrencyInput(value: string): number | null {
+    const normalizedValue = this.normalizeCurrencyInput(value);
+
+    if (!/\d/.test(normalizedValue)) {
+      return null;
+    }
+
+    const parsedValue = Number(normalizedValue);
+
+    return Number.isFinite(parsedValue) ? parsedValue : null;
+  }
+
+  private formatCurrency(value: number | null): string {
+    if (value === null) {
+      return '';
+    }
+
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN'
+    }).format(value);
+  }
+
+  private formatEditableCurrency(value: number | null): string {
+    return value === null ? '' : String(value);
+  }
+
+  private syncTotalAmountDisplay(editable: boolean): void {
+    const value = this.form.controls.totalAmount.value;
+
+    this.totalAmountDisplay.set(editable ? this.formatEditableCurrency(value) : this.formatCurrency(value));
+  }
+
+  private normalizeCurrencyInput(value: string): string {
+    const trimmedValue = value.trim();
+    const sign = trimmedValue.startsWith('-') ? '-' : '';
+    const currencyValue = trimmedValue.replace(/[^\d.,]/g, '');
+
+    if (!/\d/.test(currencyValue)) {
+      return sign;
+    }
+
+    const decimalSeparatorIndex = this.getDecimalSeparatorIndex(currencyValue);
+
+    if (decimalSeparatorIndex === -1) {
+      return `${sign}${currencyValue.replace(/\D/g, '')}`;
+    }
+
+    const integerPart = currencyValue.slice(0, decimalSeparatorIndex).replace(/\D/g, '');
+    const decimalPart = currencyValue.slice(decimalSeparatorIndex + 1).replace(/\D/g, '').slice(0, 2);
+
+    return `${sign}${integerPart || '0'}.${decimalPart}`;
+  }
+
+  private getDecimalSeparatorIndex(value: string): number {
+    const lastDotIndex = value.lastIndexOf('.');
+    const lastCommaIndex = value.lastIndexOf(',');
+
+    if (lastDotIndex === -1 && lastCommaIndex === -1) {
+      return -1;
+    }
+
+    if (lastDotIndex !== -1 && lastCommaIndex !== -1) {
+      return Math.max(lastDotIndex, lastCommaIndex);
+    }
+
+    if (lastCommaIndex !== -1) {
+      const parts = value.split(',');
+
+      if (parts.length > 1 && parts.slice(1).every((part) => part.length === 3)) {
+        return -1;
+      }
+    }
+
+    return Math.max(lastDotIndex, lastCommaIndex);
   }
 
   private today(): string {

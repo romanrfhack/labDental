@@ -1,5 +1,5 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -29,11 +29,15 @@ import { WorkOrderService } from '../work-order.service';
   ],
   template: `
     <section class="feature-page">
-      @if (isLoading) {
+      @if (isLoading()) {
         <p class="loading-state">Cargando orden...</p>
-      } @else if (errorMessage) {
-        <p class="alert-error" role="alert">{{ errorMessage }}</p>
-      } @else if (order) {
+      } @else if (errorMessage(); as message) {
+        <p class="alert-error" role="alert">{{ message }}</p>
+      } @else if (order(); as order) {
+        @if (successMessage(); as message) {
+          <p class="alert-success" role="status">{{ message }}</p>
+        }
+
         <header class="page-header">
           <div>
             <h1>{{ order.orderNumber }}</h1>
@@ -117,10 +121,10 @@ import { WorkOrderService } from '../work-order.service';
             <h2>Cambiar estado</h2>
             <app-work-order-status-change
               [currentStatus]="order.status"
-              [statuses]="statuses"
+              [statuses]="statuses()"
               [isCancelled]="order.isCancelled"
-              [isSubmitting]="isChangingStatus"
-              [errorMessage]="statusErrorMessage"
+              [isSubmitting]="isChangingStatus()"
+              [errorMessage]="statusErrorMessage() ?? ''"
               (changeStatus)="changeStatus($event)"
             />
           </section>
@@ -140,19 +144,26 @@ import { WorkOrderService } from '../work-order.service';
   `
 })
 export class WorkOrderDetailPageComponent implements OnInit {
-  order: WorkOrderDetail | null = null;
-  statuses: WorkOrderStatusOption[] = [];
-  isLoading = false;
-  isChangingStatus = false;
-  errorMessage = '';
-  statusErrorMessage = '';
+  readonly order = signal<WorkOrderDetail | null>(null);
+  readonly statuses = signal<WorkOrderStatusOption[]>([]);
+  readonly isLoading = signal(false);
+  readonly isChangingStatus = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal<string | null>(null);
+  readonly statusErrorMessage = signal<string | null>(null);
 
   constructor(
     private readonly workOrderService: WorkOrderService,
     private readonly authService: AuthService,
     private readonly route: ActivatedRoute,
     private readonly router: Router
-  ) {}
+  ) {
+    const info = this.router.currentNavigation()?.extras.info;
+
+    if (this.isSuccessNavigationInfo(info)) {
+      this.successMessage.set(info.successMessage);
+    }
+  }
 
   get canEdit(): boolean {
     return this.authService.hasPermission('orders.edit');
@@ -172,22 +183,24 @@ export class WorkOrderDetailPageComponent implements OnInit {
   }
 
   changeStatus(request: WorkOrderChangeStatusRequest): void {
-    if (!this.order) {
+    const currentOrder = this.order();
+
+    if (!currentOrder) {
       return;
     }
 
-    this.isChangingStatus = true;
-    this.statusErrorMessage = '';
+    this.isChangingStatus.set(true);
+    this.statusErrorMessage.set(null);
 
     this.workOrderService
-      .changeStatus(this.order.id, request)
-      .pipe(finalize(() => (this.isChangingStatus = false)))
+      .changeStatus(currentOrder.id, request)
+      .pipe(finalize(() => this.isChangingStatus.set(false)))
       .subscribe({
         next: (order) => {
-          this.order = order;
+          this.order.set(order);
         },
         error: (error: HttpErrorResponse) => {
-          this.statusErrorMessage = this.toStatusErrorMessage(error);
+          this.statusErrorMessage.set(this.toStatusErrorMessage(error));
         }
       });
   }
@@ -210,18 +223,20 @@ export class WorkOrderDetailPageComponent implements OnInit {
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    this.order.set(null);
 
     this.workOrderService
       .getById(id)
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (order) => {
-          this.order = order;
+          this.order.set(order);
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.toLoadErrorMessage(error);
+          this.errorMessage.set(this.toLoadErrorMessage(error));
+          this.order.set(null);
         }
       });
   }
@@ -229,9 +244,17 @@ export class WorkOrderDetailPageComponent implements OnInit {
   private loadStatuses(): void {
     this.workOrderService.getStatuses().subscribe({
       next: (statuses) => {
-        this.statuses = statuses;
+        this.statuses.set(statuses);
       }
     });
+  }
+
+  private isSuccessNavigationInfo(value: unknown): value is { successMessage: string } {
+    return typeof value === 'object'
+      && value !== null
+      && 'successMessage' in value
+      && typeof value.successMessage === 'string'
+      && value.successMessage.length > 0;
   }
 
   private toLoadErrorMessage(error: HttpErrorResponse): string {

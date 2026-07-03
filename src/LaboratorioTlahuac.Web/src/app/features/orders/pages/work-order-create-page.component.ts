@@ -51,7 +51,9 @@ export class WorkOrderCreatePageComponent {
       .create(request)
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
-        next: (order) => this.router.navigate(['/app/ordenes', order.id]),
+        next: (order) => this.router.navigate(['/app/ordenes', order.id], {
+          info: { successMessage: 'Orden creada correctamente.' }
+        }),
         error: (error: HttpErrorResponse) => {
           this.errorMessage.set(this.toErrorMessage(error));
         }
