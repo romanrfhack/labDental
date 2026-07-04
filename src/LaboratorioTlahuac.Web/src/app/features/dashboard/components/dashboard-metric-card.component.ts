@@ -13,40 +13,23 @@ import { Component, Input } from '@angular/core';
   `,
   styles: [
     `
-      .metric-card {
-        background: #ffffff;
-        border: 1px solid #d8dee4;
-        border-left: 4px solid #0f766e;
-        border-radius: 6px;
-        display: grid;
-        gap: 6px;
-        min-height: 104px;
-        padding: 14px;
-      }
-
-      .metric-card.warning {
-        border-left-color: #b45309;
-      }
-
-      .metric-card.danger {
-        border-left-color: #b91c1c;
-      }
-
       span {
-        color: #4b5563;
-        font-size: 0.86rem;
-        font-weight: 700;
+        color: var(--color-neutral-500);
+        font-size: 0.84rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        text-transform: uppercase;
       }
 
       strong {
-        color: #111827;
-        font-size: 1.6rem;
-        line-height: 1.1;
+        color: var(--color-neutral-900);
+        font-size: clamp(1.8rem, 1.4rem + 0.6vw, 2.2rem);
+        line-height: 1.05;
       }
 
       small {
-        color: #6b7280;
-        line-height: 1.35;
+        color: var(--color-neutral-400);
+        line-height: 1.4;
       }
     `
   ]

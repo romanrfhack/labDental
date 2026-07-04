@@ -9,9 +9,12 @@ import { AuthService } from '../../core/auth/auth.service';
   imports: [AsyncPipe, RouterLink, RouterLinkActive, RouterOutlet],
   template: `
     <div class="private-shell">
-      <aside>
-        <a routerLink="/app/dashboard" class="brand">LDT Admin</a>
-        <nav>
+      <aside class="private-sidebar">
+        <div class="sidebar-brand-block">
+          <a routerLink="/app/dashboard" class="brand">LDT Admin</a>
+          <p class="brand-caption">Operacion interna del laboratorio</p>
+        </div>
+        <nav class="private-nav">
           @if (authService.hasPermission('reports.view')) {
             <a
               routerLink="/app/dashboard"
@@ -35,24 +38,28 @@ import { AuthService } from '../../core/auth/auth.service';
             <a routerLink="/app/inventario" routerLinkActive="is-active" ariaCurrentWhenActive="page">Inventario</a>
           }
           @if (authService.hasPermission('suppliers.view')) {
-            <a routerLink="/app/proveedores" routerLinkActive="is-active" ariaCurrentWhenActive="page"
-              >Proveedores</a>
+            <a routerLink="/app/proveedores" routerLinkActive="is-active" ariaCurrentWhenActive="page">Proveedores</a>
           }
           @if (authService.hasPermission('users.manage')) {
-            <a routerLink="/app/admin/usuarios" routerLinkActive="is-active" ariaCurrentWhenActive="page"
-              >Usuarios</a>
+            <a routerLink="/app/admin/usuarios" routerLinkActive="is-active" ariaCurrentWhenActive="page">Usuarios</a>
           }
           @if (authService.hasPermission('roles.manage')) {
             <a routerLink="/app/admin/roles" routerLinkActive="is-active" ariaCurrentWhenActive="page">Roles</a>
           }
         </nav>
       </aside>
-      <main>
+      <main class="private-main">
         <header class="private-topbar">
-          @if (authService.currentUser$ | async; as user) {
-            <span>{{ user.fullName || user.email }}</span>
-          }
-          <button type="button" (click)="logout()">Salir</button>
+          <div class="topbar-copy">
+            <strong>Panel administrativo</strong>
+            <span>Control operativo de Laboratorio Dental Tlahuac</span>
+          </div>
+          <div class="topbar-actions">
+            @if (authService.currentUser$ | async; as user) {
+              <span class="user-chip">{{ user.fullName || user.email }}</span>
+            }
+            <button type="button" class="ghost-button" (click)="logout()">Salir</button>
+          </div>
         </header>
         <section class="private-content">
           <router-outlet />

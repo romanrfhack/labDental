@@ -19,33 +19,29 @@ import { WorkOrderStatusSummary } from '../dashboard.models';
   `,
   styles: [
     `
-      .dashboard-panel {
-        background: #ffffff;
-        border: 1px solid #d8dee4;
-        border-radius: 6px;
-        padding: 16px;
-      }
-
       h3 {
-        font-size: 1rem;
-        margin: 0 0 12px;
+        margin: 0;
       }
 
       .status-grid {
         display: grid;
-        gap: 10px;
+        gap: var(--space-3);
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .status-row {
         align-items: center;
+        background: rgba(243, 248, 252, 0.78);
+        border: 1px solid rgba(215, 227, 239, 0.88);
+        border-radius: var(--radius-sm);
         display: flex;
-        gap: 10px;
+        gap: var(--space-3);
         justify-content: space-between;
+        padding: 10px 12px;
       }
 
       strong {
-        color: #111827;
+        color: var(--color-neutral-900);
       }
 
       @media (max-width: 700px) {

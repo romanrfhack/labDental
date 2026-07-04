@@ -1,0 +1,55 @@
+.primary-button,
+.secondary-button,
+.ghost-button,
+button[type='submit'] {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 800;
+  gap: var(--space-2);
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.primary-button,
+button[type='submit'] {
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-500));
+  box-shadow: 0 14px 28px rgba(3, 158, 247, 0.18);
+  color: var(--color-neutral-0);
+}
+
+.secondary-button {
+  background: var(--color-neutral-0);
+  border-color: var(--color-sky-300);
+  color: var(--color-navy-700);
+}
+
+.ghost-button {
+  background: rgba(233, 247, 255, 0.72);
+  border-color: rgba(166, 223, 247, 0.9);
+  color: var(--color-primary-600);
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.ghost-button:hover,
+button[type='submit']:hover {
+  transform: translateY(-1px);
+}
+
+button:disabled,
+button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}

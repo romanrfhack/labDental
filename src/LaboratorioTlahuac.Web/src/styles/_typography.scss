@@ -1,0 +1,39 @@
+body {
+  color: var(--color-neutral-700);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-neutral-900);
+  line-height: 1.15;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(2rem, 1.7rem + 1vw, 2.75rem);
+}
+
+h2 {
+  font-size: clamp(1.4rem, 1.2rem + 0.5vw, 1.8rem);
+}
+
+h3 {
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-primary-600);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}

@@ -1,113 +1,175 @@
 .private-shell {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 280px minmax(0, 1fr);
   min-height: 100vh;
 }
 
-aside {
-  background: #172033;
-  color: #ffffff;
-  padding: 20px;
+.private-sidebar {
+  background:
+    radial-gradient(circle at top, rgba(46, 178, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, #081c45 0%, #061632 100%);
+  color: var(--color-neutral-0);
+  display: grid;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-6);
+}
+
+.sidebar-brand-block {
+  display: grid;
+  gap: var(--space-2);
 }
 
 .brand {
-  color: #ffffff;
+  color: var(--color-neutral-0);
   display: block;
-  font-weight: 700;
-  margin-bottom: 24px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   text-decoration: none;
 }
 
-nav {
+.brand-caption {
+  color: rgba(215, 236, 255, 0.76);
+  font-size: 0.92rem;
+}
+
+.private-nav {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
-nav a {
+.private-nav a {
   border: 1px solid transparent;
-  border-left: 3px solid transparent;
-  border-radius: 6px;
-  color: #dbe4f0;
+  border-radius: var(--radius-sm);
+  color: rgba(232, 243, 252, 0.88);
   min-width: 0;
-  padding: 10px 12px;
+  padding: 12px 14px;
   text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 
-nav a:hover {
+.private-nav a:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  color: var(--color-neutral-0);
+  transform: translateX(1px);
 }
 
-.brand:focus-visible,
-nav a:focus-visible,
-.private-topbar button:focus-visible {
-  outline: 3px solid #67e8f9;
-  outline-offset: 2px;
+.private-nav a.is-active {
+  background: linear-gradient(135deg, rgba(233, 247, 255, 0.96), rgba(213, 239, 255, 0.92));
+  border-color: rgba(166, 223, 247, 0.78);
+  box-shadow: 0 14px 28px rgba(2, 15, 37, 0.18);
+  color: var(--color-navy-800);
+  font-weight: 800;
 }
 
-nav a.is-active {
-  background: #e0f2fe;
-  border-color: #7dd3fc;
-  border-left-color: #14b8a6;
-  color: #0f172a;
-  font-weight: 700;
-}
-
-main {
-  background: #f6f8fa;
+.private-main {
+  background: linear-gradient(180deg, #f8fbfe 0%, #f2f7fb 100%);
   min-width: 0;
 }
 
 .private-topbar {
   align-items: center;
-  background: #ffffff;
-  border-bottom: 1px solid #d8dee4;
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.86);
+  border-bottom: 1px solid rgba(215, 227, 239, 0.9);
   display: flex;
-  gap: 16px;
+  gap: var(--space-4);
+  justify-content: space-between;
+  min-height: 80px;
+  padding: 0 var(--space-8);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.topbar-copy strong {
+  color: var(--color-neutral-900);
+  font-size: 1rem;
+}
+
+.topbar-copy span {
+  color: var(--color-neutral-400);
+  font-size: 0.9rem;
+}
+
+.topbar-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
   justify-content: flex-end;
-  min-height: 64px;
-  padding: 0 32px;
 }
 
-.private-topbar span {
-  color: #374151;
-  font-weight: 600;
-}
-
-.private-topbar button {
-  background: #0f766e;
-  border: 0;
-  border-radius: 6px;
-  color: #ffffff;
-  cursor: pointer;
-  font: inherit;
+.user-chip {
+  background: rgba(233, 247, 255, 0.95);
+  border: 1px solid rgba(166, 223, 247, 0.8);
+  border-radius: var(--radius-pill);
+  color: var(--color-navy-700);
+  display: inline-flex;
+  font-size: 0.9rem;
   font-weight: 700;
-  padding: 9px 12px;
+  min-height: 40px;
+  padding: 0 14px;
+  align-items: center;
 }
 
 .private-content {
-  padding: 32px;
+  margin: 0 auto;
+  max-width: var(--app-max-width);
+  padding: var(--space-8);
+  width: 100%;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 980px) {
   .private-shell {
     grid-template-columns: 1fr;
   }
 
-  aside {
-    padding: 16px;
+  .private-sidebar {
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-4);
   }
 
-  nav {
+  .private-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .private-topbar {
-    justify-content: space-between;
-    padding: 0 16px;
+    padding: var(--space-4);
   }
 
   .private-content {
-    padding: 24px 16px;
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
+@media (max-width: 640px) {
+  .private-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .private-topbar {
+    align-items: start;
+    flex-direction: column;
+    min-height: auto;
+    padding-bottom: var(--space-4);
+    padding-top: var(--space-4);
+  }
+
+  .topbar-actions {
+    width: 100%;
+  }
+
+  .topbar-actions > * {
+    width: 100%;
   }
 }

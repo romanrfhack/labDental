@@ -1,0 +1,13 @@
+.text-muted {
+  color: var(--color-neutral-400);
+}
+
+.stack-sm {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.stack-md {
+  display: grid;
+  gap: var(--space-4);
+}

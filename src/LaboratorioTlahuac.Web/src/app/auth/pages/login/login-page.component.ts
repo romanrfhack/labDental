@@ -46,25 +46,30 @@ export function getSafePrivateReturnUrl(returnUrl: string | null) {
           width="809"
           height="545"
         />
-        <p class="login-brand">Precisión • Estética • Confianza</p>
-        <h1>Acceso privado</h1>
+        <div class="login-copy">
+          <p class="login-brand">Precisión • Estética • Confianza</p>
+          <h1>Acceso privado</h1>
+          <p>Ingresa para administrar clientes, órdenes, pagos y operación interna del laboratorio.</p>
+        </div>
         <form [formGroup]="form" (ngSubmit)="submit()">
           <label>
             Email
-            <input type="email" formControlName="email" autocomplete="username" />
+            <input type="email" formControlName="email" autocomplete="username" placeholder="tu@correo.com" />
           </label>
           <label>
             Contrasena
-            <input type="password" formControlName="password" autocomplete="current-password" />
+            <input type="password" formControlName="password" autocomplete="current-password" placeholder="••••••••" />
           </label>
-          @if (errorMessage) {
-            <p class="error" role="alert">{{ errorMessage }}</p>
-          }
-          <button type="submit" [disabled]="form.invalid || isSubmitting">
-            {{ isSubmitting ? 'Entrando...' : 'Entrar' }}
-          </button>
+          <div class="login-actions">
+            @if (errorMessage) {
+              <p class="error" role="alert">{{ errorMessage }}</p>
+            }
+            <button type="submit" [disabled]="form.invalid || isSubmitting">
+              {{ isSubmitting ? 'Entrando...' : 'Entrar' }}
+            </button>
+          </div>
         </form>
-        <a routerLink="/">Volver al sitio publico</a>
+        <a class="login-footer-link" routerLink="/">Volver al sitio publico</a>
       </section>
     </main>
   `,

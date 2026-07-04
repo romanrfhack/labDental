@@ -143,42 +143,31 @@ import { DashboardService } from './dashboard.service';
   styles: [
     `
       .dashboard-page {
-        gap: 24px;
+        gap: var(--space-8);
       }
 
       .generated-at {
         align-self: center;
-        color: #4b5563;
-        font-size: 0.9rem;
+        color: var(--color-neutral-400);
+        font-size: 0.92rem;
         font-weight: 700;
       }
 
       .dashboard-section {
         display: grid;
-        gap: 16px;
-      }
-
-      .section-header {
-        align-items: center;
-        display: flex;
-        justify-content: space-between;
-      }
-
-      h2 {
-        font-size: 1.25rem;
-        margin: 0;
+        gap: var(--space-5);
       }
 
       .dashboard-metrics {
         display: grid;
-        gap: 14px;
+        gap: var(--space-4);
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .dashboard-grid {
         display: grid;
-        gap: 16px;
-        grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr);
+        gap: var(--space-4);
+        grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr);
       }
 
       @media (max-width: 1100px) {

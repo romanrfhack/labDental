@@ -49,17 +49,8 @@ import { DashboardPayment } from '../dashboard.models';
   `,
   styles: [
     `
-      .dashboard-panel {
-        background: #ffffff;
-        border: 1px solid #d8dee4;
-        border-radius: 6px;
-        overflow-x: auto;
-        padding: 16px;
-      }
-
       h3 {
-        font-size: 1rem;
-        margin: 0 0 12px;
+        margin: 0;
       }
 
       .compact-table {

@@ -42,14 +42,12 @@ import { FinancialSummary } from '../dashboard.models';
   styles: [
     `
       .section-toolbar {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 12px;
+        margin-bottom: var(--space-4);
       }
 
       .dashboard-metrics {
         display: grid;
-        gap: 14px;
+        gap: var(--space-4);
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 

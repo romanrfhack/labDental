@@ -1,0 +1,14 @@
+body {
+  background: linear-gradient(180deg, #f7fbff 0%, #f2f7fb 100%);
+  color: var(--color-neutral-700);
+  overflow-x: clip;
+}
+
+:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: 2px solid transparent;
+}
+
+::selection {
+  background: rgba(3, 158, 247, 0.18);
+}
