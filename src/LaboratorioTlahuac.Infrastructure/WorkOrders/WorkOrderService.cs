@@ -4,6 +4,7 @@ using LaboratorioTlahuac.Application.Abstractions.Time;
 using LaboratorioTlahuac.Application.WorkOrders;
 using LaboratorioTlahuac.Domain.Customers;
 using LaboratorioTlahuac.Domain.Customers.Entities;
+using LaboratorioTlahuac.Domain.Deliveries;
 using LaboratorioTlahuac.Domain.WorkOrders;
 using LaboratorioTlahuac.Domain.WorkOrders.Entities;
 using LaboratorioTlahuac.Infrastructure.Persistence;
@@ -146,13 +147,13 @@ public sealed class WorkOrderService(
         }
 
         var totalCount = await ordersQuery.CountAsync(cancellationToken);
-        var items = await ordersQuery
+        var rows = await ordersQuery
             .OrderBy(order => order.DeliveryDate == null)
             .ThenBy(order => order.DeliveryDate)
             .ThenByDescending(order => order.ReceivedDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(order => new WorkOrderListItemResponse(
+            .Select(order => new WorkOrderListItemProjection(
                 order.Id,
                 order.OrderNumber,
                 order.CustomerId,
@@ -167,8 +168,45 @@ public sealed class WorkOrderService(
                 order.Status.ToString(),
                 GetStatusLabel(order.Status),
                 order.TotalAmount,
-                order.Status == WorkOrderStatus.Cancelled))
+                order.Status == WorkOrderStatus.Cancelled,
+                dbContext.WorkOrderDeliveries
+                    .Where(delivery => delivery.WorkOrderId == order.Id)
+                    .Select(delivery => new WorkOrderDeliverySummaryProjection(
+                        delivery.Id,
+                        delivery.Status,
+                        delivery.AssignedToUser != null ? delivery.AssignedToUser.FullName : null,
+                        delivery.DeliveredAtUtc,
+                        delivery.FailedAtUtc))
+                    .FirstOrDefault()))
             .ToListAsync(cancellationToken);
+
+        var items = rows
+            .Select(row => new WorkOrderListItemResponse(
+                row.Id,
+                row.OrderNumber,
+                row.CustomerId,
+                row.CustomerDisplayName,
+                row.InternalDoctorId,
+                row.InternalDoctorFullName,
+                row.PatientName,
+                row.WorkDescription,
+                row.DentalColor,
+                row.ReceivedDate,
+                row.DeliveryDate,
+                row.Status,
+                row.StatusLabel,
+                row.TotalAmount,
+                row.IsCancelled,
+                row.Delivery is null
+                    ? null
+                    : new WorkOrderDeliverySummaryResponse(
+                        row.Delivery.DeliveryId,
+                        row.Delivery.DeliveryStatus.ToString(),
+                        GetDeliveryStatusLabel(row.Delivery.DeliveryStatus),
+                        row.Delivery.AssignedToUserName,
+                        row.Delivery.DeliveredAtUtc,
+                        row.Delivery.FailedAtUtc)))
+            .ToArray();
 
         return WorkOrderServiceResult.Success(
             new WorkOrderPagedResponse<WorkOrderListItemResponse>(items, page, pageSize, totalCount));
@@ -620,6 +658,19 @@ public sealed class WorkOrderService(
         };
     }
 
+    private static string GetDeliveryStatusLabel(DeliveryStatus status)
+    {
+        return status switch
+        {
+            DeliveryStatus.PendingAssignment => "Pendiente de asignar",
+            DeliveryStatus.Assigned => "Asignada",
+            DeliveryStatus.OutForDelivery => "En ruta",
+            DeliveryStatus.Delivered => "Entregada",
+            DeliveryStatus.FailedDelivery => "No entregada",
+            _ => status.ToString()
+        };
+    }
+
     private static string? NormalizeRequired(
         IDictionary<string, string[]> errors,
         string fieldName,
@@ -708,6 +759,31 @@ public sealed class WorkOrderService(
                 message);
         }
     }
+
+    private sealed record WorkOrderListItemProjection(
+        Guid Id,
+        string OrderNumber,
+        Guid CustomerId,
+        string CustomerDisplayName,
+        Guid? InternalDoctorId,
+        string? InternalDoctorFullName,
+        string PatientName,
+        string WorkDescription,
+        string? DentalColor,
+        DateOnly ReceivedDate,
+        DateOnly? DeliveryDate,
+        string Status,
+        string StatusLabel,
+        decimal? TotalAmount,
+        bool IsCancelled,
+        WorkOrderDeliverySummaryProjection? Delivery);
+
+    private sealed record WorkOrderDeliverySummaryProjection(
+        Guid DeliveryId,
+        DeliveryStatus DeliveryStatus,
+        string? AssignedToUserName,
+        DateTimeOffset? DeliveredAtUtc,
+        DateTimeOffset? FailedAtUtc);
 
     private sealed record ValidationResult<T>(
         IReadOnlyDictionary<string, string[]> Errors,

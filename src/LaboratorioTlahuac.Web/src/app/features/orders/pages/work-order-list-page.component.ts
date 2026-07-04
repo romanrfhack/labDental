@@ -8,6 +8,7 @@ import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CustomerListItem } from '../../customers/customer.models';
 import { CustomerService } from '../../customers/customer.service';
+import { WorkOrderDeliveryStatusBadgeComponent } from '../components/work-order-delivery-status-badge.component';
 import { WorkOrderStatusBadgeComponent } from '../components/work-order-status-badge.component';
 import {
   WorkOrderListItem,
@@ -18,7 +19,13 @@ import { WorkOrderService } from '../work-order.service';
 
 @Component({
   selector: 'app-work-order-list-page',
-  imports: [CurrencyPipe, FormsModule, RouterLink, WorkOrderStatusBadgeComponent],
+  imports: [
+    CurrencyPipe,
+    FormsModule,
+    RouterLink,
+    WorkOrderDeliveryStatusBadgeComponent,
+    WorkOrderStatusBadgeComponent
+  ],
   template: `
     <section class="feature-page">
       <header class="page-header">
@@ -101,8 +108,9 @@ import { WorkOrderService } from '../work-order.service';
                 <th>Cliente</th>
                 <th>Paciente</th>
                 <th>Trabajo</th>
-                <th>Entrega</th>
+                <th>Fecha entrega</th>
                 <th>Estado</th>
+                <th>Entrega</th>
                 <th>Total</th>
                 <th>Acciones</th>
               </tr>
@@ -124,6 +132,17 @@ import { WorkOrderService } from '../work-order.service';
                   <td>{{ formatDateOnly(order.deliveryDate) }}</td>
                   <td>
                     <app-work-order-status-badge [status]="order.status" [label]="order.statusLabel" />
+                  </td>
+                  <td>
+                    <div class="status-stack">
+                      <app-work-order-delivery-status-badge
+                        [status]="order.delivery?.deliveryStatus ?? null"
+                        [label]="order.delivery?.deliveryStatusLabel ?? 'Sin entrega'"
+                      />
+                      @if (order.delivery?.assignedToUserName; as assignedToUserName) {
+                        <small class="muted-block">{{ assignedToUserName }}</small>
+                      }
+                    </div>
                   </td>
                   <td>{{ order.totalAmount === null ? '-' : (order.totalAmount | currency: 'MXN':'symbol-narrow') }}</td>
                   <td>
@@ -148,7 +167,13 @@ import { WorkOrderService } from '../work-order.service';
                   <a [routerLink]="['/app/ordenes', order.id]">{{ order.orderNumber }}</a>
                   <strong>{{ order.patientName }}</strong>
                 </div>
-                <app-work-order-status-badge [status]="order.status" [label]="order.statusLabel" />
+                <div class="order-card-statuses">
+                  <app-work-order-status-badge [status]="order.status" [label]="order.statusLabel" />
+                  <app-work-order-delivery-status-badge
+                    [status]="order.delivery?.deliveryStatus ?? null"
+                    [label]="order.delivery?.deliveryStatusLabel ?? 'Sin entrega'"
+                  />
+                </div>
               </header>
 
               <dl>
@@ -166,8 +191,22 @@ import { WorkOrderService } from '../work-order.service';
                   <dd>{{ order.workDescription }}</dd>
                 </div>
                 <div>
-                  <dt>Entrega</dt>
+                  <dt>Fecha entrega</dt>
                   <dd>{{ formatDateOnly(order.deliveryDate) }}</dd>
+                </div>
+                <div>
+                  <dt>Entrega</dt>
+                  <dd>
+                    <div class="status-stack">
+                      <app-work-order-delivery-status-badge
+                        [status]="order.delivery?.deliveryStatus ?? null"
+                        [label]="order.delivery?.deliveryStatusLabel ?? 'Sin entrega'"
+                      />
+                      @if (order.delivery?.assignedToUserName; as assignedToUserName) {
+                        <small class="muted-block">{{ assignedToUserName }}</small>
+                      }
+                    </div>
+                  </dd>
                 </div>
                 <div>
                   <dt>Total</dt>

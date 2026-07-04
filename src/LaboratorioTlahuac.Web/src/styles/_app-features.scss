@@ -46,6 +46,20 @@
   gap: var(--space-3);
 }
 
+.status-stack {
+  align-items: flex-start;
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.order-card-statuses {
+  align-items: flex-end;
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+
 .pagination-actions {
   justify-content: space-between;
 }
@@ -260,6 +274,11 @@
   .admin-mobile-list {
     display: grid;
     gap: var(--space-4);
+  }
+
+  .order-card-statuses {
+    align-items: flex-start;
+    justify-items: start;
   }
 }
 

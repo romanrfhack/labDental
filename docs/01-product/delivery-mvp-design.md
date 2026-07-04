@@ -8,6 +8,8 @@ Actualización Fase 3.4.1.1, 2026-07-04: QA técnico real aplicó la migración 
 
 Actualización Fase 3.4.2, 2026-07-04: UI admin de entregas quedó implementada dentro de `/app/ordenes/:id`. Permite crear entrega, asignar repartidor, marcar salida, cerrar como entregada con `recipientName`, cerrar como no entregada con `failedReason`, ver timestamps y manejar errores controlados. La UI mobile-first de repartidor queda pendiente para Fase 3.4.3.
 
+Actualización Fase 3.4.2.1, 2026-07-04: `/app/ordenes` muestra estado operativo de orden y estado logístico de entrega en columnas/badges separados. `No entregada` corresponde a `DeliveryStatus.FailedDelivery`; no se cambia `WorkOrder.Status` al registrar una no entrega.
+
 ## Objetivo
 
 Habilitar en la siguiente fase un flujo mobile-first para que el repartidor entre desde celular, vea entregas asignadas, consulte a dónde ir y a quién entregar, y registre la entrega con nombre de quien recibió y fecha/hora tomada del servidor.
@@ -462,6 +464,18 @@ Decisión 3.4.1: no se implementa estado `Cancelled` para entrega en este MVP. S
 - Muestra acciones solo por permisos `deliveries.assign`, `deliveries.update` y `deliveries.complete`.
 - Muestra errores controlados para `400`, `403`, `404` y `409`.
 - No crea `/app/entregas`, no implementa la pantalla mobile-first del repartidor y no cambia etiquetas de impresión.
+
+### Fase 3.4.2.1 - Estado De Entrega En Listado De Órdenes
+
+- Estado: implementada el 2026-07-04.
+- Amplía `GET /api/work-orders` con un resumen opcional `delivery` en cada item del listado.
+- Campos del resumen: `deliveryId`, `deliveryStatus`, `deliveryStatusLabel`, `assignedToUserName`, `deliveredAtUtc` y `failedAtUtc`.
+- `/app/ordenes` conserva `Estado` como `WorkOrder.Status`.
+- `/app/ordenes` muestra badge `Entrega` con `Sin entrega`, `Pendiente de asignar`, `Asignada`, `En ruta`, `Entregada` o `No entregada`.
+- Una orden sin entrega muestra `Sin entrega`.
+- Una entrega `FailedDelivery` muestra `No entregada`.
+- `WorkOrder.Status` no se modifica cuando una entrega se marca como `FailedDelivery`.
+- No crea migraciones, endpoints nuevos, rutas nuevas, panel duplicado de órdenes ni cambios de auth, guards, cookies, XSRF o deploy.
 
 ### Fase 3.4.3 - UI Repartidor Mobile-First
 

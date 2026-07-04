@@ -1,7 +1,45 @@
 .status-pill {
+  align-items: center;
   border-radius: var(--radius-pill);
   display: inline-flex;
   font-size: 0.78rem;
   font-weight: 800;
+  line-height: 1.15;
   padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.status-pill.active,
+.status-pill.work-status.Delivered,
+.status-pill.delivery-status.Delivered {
+  background: var(--color-success-100);
+  color: var(--color-success-700);
+}
+
+.status-pill.inactive,
+.status-pill.work-status.Cancelled,
+.status-pill.delivery-status.FailedDelivery {
+  background: var(--color-danger-100);
+  color: var(--color-danger-700);
+}
+
+.status-pill.work-status.ReadyForDelivery,
+.status-pill.delivery-status.Assigned,
+.status-pill.delivery-status.OutForDelivery {
+  background: var(--color-warning-100);
+  color: var(--color-warning-700);
+}
+
+.status-pill.work-status.Received,
+.status-pill.work-status.InProcess,
+.status-pill.work-status.FirstTrial,
+.status-pill.work-status.SecondTrial,
+.status-pill.delivery-status.PendingAssignment {
+  background: var(--color-info-100);
+  color: var(--color-info-700);
+}
+
+.status-pill.delivery-status.NoDelivery {
+  background: var(--color-neutral-50);
+  color: var(--color-neutral-500);
 }

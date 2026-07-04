@@ -9,6 +9,13 @@ export type WorkOrderStatus =
   | 'Delivered'
   | 'Cancelled';
 
+export type WorkOrderDeliveryStatus =
+  | 'PendingAssignment'
+  | 'Assigned'
+  | 'OutForDelivery'
+  | 'Delivered'
+  | 'FailedDelivery';
+
 export interface WorkOrderListParams {
   search?: string;
   customerId?: string;
@@ -46,6 +53,16 @@ export interface WorkOrderListItem {
   statusLabel: string;
   totalAmount: number | null;
   isCancelled: boolean;
+  delivery: WorkOrderDeliverySummary | null;
+}
+
+export interface WorkOrderDeliverySummary {
+  deliveryId: string;
+  deliveryStatus: WorkOrderDeliveryStatus;
+  deliveryStatusLabel: string;
+  assignedToUserName: string | null;
+  deliveredAtUtc: string | null;
+  failedAtUtc: string | null;
 }
 
 export interface WorkOrderDetail {

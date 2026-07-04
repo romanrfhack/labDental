@@ -6,6 +6,88 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-04 - Fase 3.4.2.1 Estado De Entrega En Listado De Órdenes
+
+### Cambio Realizado
+
+Se agregó estado logístico de entrega al listado existente `/app/ordenes`, sin cambiar la semántica de `WorkOrder.Status`.
+
+### Backend
+
+- `GET /api/work-orders` conserva el endpoint existente y agrega un resumen opcional `delivery` por item de listado.
+- Campos agregados en el resumen:
+  - `deliveryId`
+  - `deliveryStatus`
+  - `deliveryStatusLabel`
+  - `assignedToUserName`
+  - `deliveredAtUtc`
+  - `failedAtUtc`
+- La consulta pagina órdenes y proyecta la entrega asociada desde `WorkOrderDeliveries` sin crear endpoint nuevo.
+- Orden sin entrega regresa `delivery: null`.
+- `FailedDelivery` se etiqueta como `No entregada`.
+- `WorkOrder.Status` no se cambia al marcar entrega fallida; `No entregada` es `DeliveryStatus`, no `WorkOrderStatus`.
+
+### Frontend
+
+- `WorkOrderListItem` agrega `delivery` opcional.
+- `/app/ordenes` conserva `Estado` como estado operativo de orden.
+- La fecha planeada se renombra visualmente a `Fecha entrega`.
+- Se agrega badge/columna `Entrega` en tabla y cards móviles.
+- Orden sin entrega muestra `Sin entrega`.
+- Entrega fallida muestra badge claro `No entregada`.
+- Se mantienen acciones `Ver` y `Editar`.
+
+### Pruebas
+
+- Se agregaron pruebas API para:
+  - listado con entrega asociada;
+  - `deliveryStatus = FailedDelivery` en listado;
+  - preservación de `WorkOrder.Status` cuando falla la entrega;
+  - orden sin entrega con `delivery: null`;
+  - filtro de listado por `status=Received` con resumen de entrega.
+
+### Exclusiones Confirmadas
+
+- No se modificaron estados existentes de `WorkOrderStatus`.
+- No se crearon migraciones.
+- No se crearon endpoints nuevos.
+- No se creó otro panel de órdenes.
+- No se tocaron `/login`, `/app/dashboard`, `/dashboard`, `AuthService`, guards, cookies, XSRF ni deploy.
+- No se instalaron dependencias.
+- No se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 124/124.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `305.34 kB`, sin warning de budget.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias ejecutadas: `deliveryStatus`, `deliveryStatusLabel`, `No entregada`, `WorkOrderStatus`, `FailedDelivery`, `/app/ordenes`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`.
+- Las búsquedas de `LT_ADMIN_PASSWORD`, `LT_QA_LIMITED_PASSWORD`, `LDT_SQL_SA_PASSWORD` y `ConnectionStrings` se ejecutaron con salida limitada a archivos para no imprimir valores.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Application/WorkOrders/WorkOrderContracts.cs`
+- `src/LaboratorioTlahuac.Infrastructure/WorkOrders/WorkOrderService.cs`
+- `tests/LaboratorioTlahuac.Api.Tests/WorkOrderIntegrationTests.cs`
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/work-order.models.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/components/work-order-delivery-status-badge.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-list-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/styles/_badges.scss`
+- `src/LaboratorioTlahuac.Web/src/styles/_app-features.scss`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/operations-orders-delivery.md`
+- `docs/01-product/delivery-mvp-design.md`
+- `docs/08-qa/delivery-admin-ui-qa.md`
+
+### Siguiente Fase Recomendada
+
+Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`.
+
 ## 2026-07-04 - Cierre Operativo DEV Fase 3.4.2
 
 ### Cambio Realizado

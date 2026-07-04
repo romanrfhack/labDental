@@ -1,8 +1,28 @@
-# QA UI Admin Entregas - Fase 3.4.2
+# QA UI Admin Entregas - Fase 3.4.2 y 3.4.2.1
 
 ## Alcance
 
-Fase 3.4.2 agrega UI administrativa de entregas dentro del detalle de orden existente. No crea la pantalla mobile-first del repartidor, no agrega rutas nuevas, no modifica backend, no crea migraciones, no cambia auth, guards, cookies, XSRF ni deploy.
+Fase 3.4.2 agrega UI administrativa de entregas dentro del detalle de orden existente. Fase 3.4.2.1 agrega estado de entrega al listado `/app/ordenes`.
+
+No crea la pantalla mobile-first del repartidor, no agrega rutas nuevas, no crea migraciones, no cambia auth, guards, cookies, XSRF ni deploy.
+
+## Alcance Fase 3.4.2.1
+
+El listado/grid de `/app/ordenes` debe mostrar ambos estados:
+
+- `Estado`: estado operativo de la orden (`WorkOrder.Status`).
+- `Entrega`: estado logístico (`WorkOrderDelivery.Status`) cuando la entrega existe.
+
+Reglas esperadas:
+
+- Orden sin entrega: mostrar `Sin entrega`.
+- `PendingAssignment`: mostrar `Pendiente de asignar`.
+- `Assigned`: mostrar `Asignada`.
+- `OutForDelivery`: mostrar `En ruta`.
+- `Delivered`: mostrar `Entregada`.
+- `FailedDelivery`: mostrar `No entregada`.
+
+`No entregada` pertenece a `DeliveryStatus.FailedDelivery`, no a `WorkOrderStatus`. Marcar una entrega como fallida no debe cambiar `WorkOrder.Status`.
 
 ## Cierre Operativo DEV 2026-07-04
 
@@ -79,24 +99,32 @@ Si el usuario no puede listar roles o usuarios, la UI muestra error controlado y
 
 1. Iniciar sesión como Admin.
 2. Abrir `/app/ordenes`.
-3. Abrir una orden en `/app/ordenes/:id`.
-4. Confirmar que aparece la sección `Entrega`.
-5. En una orden sin entrega, confirmar estado vacío claro.
-6. Crear entrega.
-7. Confirmar estado `Pendiente de asignación`.
-8. Asignar usuario con rol `Repartidor`.
-9. Confirmar estado `Asignada`, repartidor y timestamp de asignación.
-10. Marcar salida.
-11. Confirmar estado `En reparto` y timestamp de salida.
-12. Intentar marcar entregada con `Recibió` vacío y confirmar error controlado.
-13. Marcar entregada con un nombre en `Recibió`.
-14. Confirmar estado `Entregada`, timestamp de entrega y nombre de quien recibió.
-15. Repetir en otra orden: crear entrega, asignar repartidor y marcar no entregada con motivo.
-16. Confirmar estado `No entregada`, timestamp de falla y motivo.
-17. Confirmar que pagos, historial, etiquetas y datos de orden siguen cargando.
-18. Confirmar que `/login` sigue público.
-19. Confirmar que `/app` y `/app/dashboard` siguen privados.
-20. Confirmar que `/dashboard` no se usa como ruta privada real.
+3. Confirmar que el grid muestra columna/badge `Estado` y columna/badge `Entrega`.
+4. Confirmar que una orden sin entrega muestra `Sin entrega`.
+5. Abrir una orden en `/app/ordenes/:id`.
+6. Confirmar que aparece la sección `Entrega`.
+7. En una orden sin entrega, confirmar estado vacío claro.
+8. Crear entrega.
+9. Confirmar estado `Pendiente de asignar`.
+10. Volver a `/app/ordenes` y confirmar `Entrega = Pendiente de asignar`.
+11. Asignar usuario con rol `Repartidor`.
+12. Confirmar estado `Asignada`, repartidor y timestamp de asignación.
+13. Volver a `/app/ordenes` y confirmar `Entrega = Asignada`.
+14. Marcar salida.
+15. Confirmar estado `En ruta` y timestamp de salida.
+16. Volver a `/app/ordenes` y confirmar `Entrega = En ruta`.
+17. Intentar marcar entregada con `Recibió` vacío y confirmar error controlado.
+18. Marcar entregada con un nombre en `Recibió`.
+19. Confirmar estado `Entregada`, timestamp de entrega y nombre de quien recibió.
+20. Volver a `/app/ordenes` y confirmar `Entrega = Entregada`.
+21. Repetir en otra orden: crear entrega, asignar repartidor y marcar no entregada con motivo.
+22. Confirmar estado `No entregada`, timestamp de falla y motivo.
+23. Volver a `/app/ordenes` y confirmar `Entrega = No entregada`.
+24. Confirmar que la columna `Estado` conserva `WorkOrder.Status`; si la orden estaba `Recibida`, debe seguir mostrando `Recibida`.
+25. Confirmar que pagos, historial, etiquetas y datos de orden siguen cargando.
+26. Confirmar que `/login` sigue público.
+27. Confirmar que `/app` y `/app/dashboard` siguen privados.
+28. Confirmar que `/dashboard` no se usa como ruta privada real.
 
 ## Errores Esperados
 
@@ -115,7 +143,7 @@ Si el usuario no puede listar roles o usuarios, la UI muestra error controlado y
 
 ## Pendientes Para Fase 3.4.3
 
-- Completar primero QA manual DEV de Fase 3.4.2 con Admin.
+- Completar primero validación DEV del grid `/app/ordenes` con estado de entrega.
 - Crear `/app/entregas`.
 - Crear `/app/entregas/:id`.
 - Diseñar listado mobile-first para repartidor.

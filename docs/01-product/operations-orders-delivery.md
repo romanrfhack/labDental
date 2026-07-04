@@ -1,6 +1,6 @@
 # Operación De Órdenes, Etiquetas Y Entrega
 
-Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI y Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id`.
+Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI, Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id` y Fase 3.4.2.1 agregó estado de entrega al listado `/app/ordenes`.
 
 Diseño técnico Fase 3.4.0: `docs/01-product/delivery-mvp-design.md`.
 
@@ -85,6 +85,43 @@ Exclusiones:
 - No se implementa UI mobile-first de repartidor.
 - No se cambian etiquetas de impresión.
 - No se agregan endpoints, migraciones ni cambios de backend.
+
+### Implementación Fase 3.4.2.1
+
+El listado `/app/ordenes` muestra ahora dos estados separados:
+
+- `Estado`: estado operativo de la orden, tomado de `WorkOrder.Status`.
+- `Entrega`: estado logístico de entrega, tomado de `WorkOrderDelivery.Status` cuando existe.
+
+El contrato existente `GET /api/work-orders` agrega un resumen opcional `delivery` por item de listado:
+
+- `deliveryId`
+- `deliveryStatus`
+- `deliveryStatusLabel`
+- `assignedToUserName`
+- `deliveredAtUtc`
+- `failedAtUtc`
+
+Si una orden no tiene entrega, `delivery` regresa `null` y la UI muestra `Sin entrega`. Si la entrega está fallida, `deliveryStatus` es `FailedDelivery` y la UI muestra el badge `No entregada`.
+
+Decisión funcional: marcar una entrega como `No entregada` no cambia `WorkOrder.Status`. `No entregada` es `DeliveryStatus`, no `WorkOrderStatus`. Esto evita mezclar producción/operación de laboratorio con logística de reparto. La orden puede seguir apareciendo como `Recibida`, `En proceso` u otro estado operativo mientras el intento logístico queda registrado aparte.
+
+Exclusiones:
+
+- No se crea otro panel de órdenes.
+- No se crea endpoint nuevo; se amplía el listado actual.
+- No se crea migración.
+- No se cambian estados existentes de `WorkOrderStatus`.
+- No se toca `/login`, `/app/dashboard`, auth, guards, cookies, XSRF ni deploy.
+
+Validación DEV sugerida:
+
+1. Abrir `/app/ordenes`.
+2. Confirmar que la tabla/cards muestran `Estado` y `Entrega`.
+3. En una orden sin entrega, confirmar badge `Sin entrega`.
+4. Crear o ubicar una entrega marcada como `FailedDelivery`.
+5. Confirmar que `/app/ordenes` muestra `No entregada` en `Entrega`.
+6. Confirmar que `Estado` conserva el valor operativo de `WorkOrder.Status` y no cambia a `No entregada`.
 
 ### Modelo Actual De Orden
 
@@ -420,8 +457,9 @@ Fase 3.5 catálogo:
 3. Fase 3.4.0: análisis técnico previo de entrega/repartidor mobile-first. Documentado.
 4. Fase 3.4.1: backend delivery MVP + permisos. Implementada.
 5. Fase 3.4.2: UI admin desde órdenes. Implementada.
-6. Fase 3.4.3: UI repartidor mobile-first. Siguiente recomendada.
-7. Fase 3.4.4: QA DEV y ajustes.
-8. Fase 3.5: administración de catálogo, precios e imágenes.
+6. Fase 3.4.2.1: estado de entrega en listado `/app/ordenes`. Implementada.
+7. Fase 3.4.3: UI repartidor mobile-first. Siguiente recomendada.
+8. Fase 3.4.4: QA DEV y ajustes.
+9. Fase 3.5: administración de catálogo, precios e imágenes.
 
 La siguiente fase implementable mayor es Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.

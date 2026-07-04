@@ -392,6 +392,103 @@ public sealed class WorkOrderIntegrationTests(TestApplicationFactory factory)
     }
 
     [Fact]
+    public async Task WorkOrderListIncludesDeliverySummaryWhenDeliveryExists()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var admin = await GetCurrentUserAsync(client);
+        var customer = await CreateCustomerAsync(client, xsrfToken, "Doctor", UniqueName("Dr Lista Entrega"));
+        var patientName = UniqueName("Paciente Lista Entrega");
+        var created = await CreateWorkOrderAsync(
+            client,
+            xsrfToken,
+            CreateWorkOrderRequest(customer.GetProperty("id").GetGuid(), patientName: patientName));
+        var delivery = await CreateDeliveryAsync(client, xsrfToken, created.GetProperty("id").GetGuid());
+        var deliveryId = delivery.GetProperty("id").GetGuid();
+
+        await AssignDeliveryAsync(
+            client,
+            xsrfToken,
+            deliveryId,
+            admin.GetProperty("id").GetGuid());
+
+        var response = await client.GetAsync(
+            $"/api/work-orders?status=Received&search={Uri.EscapeDataString(patientName)}");
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var items = payload.GetProperty("items").EnumerateArray().ToArray();
+        var item = Assert.Single(items);
+        var deliverySummary = item.GetProperty("delivery");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("Received", item.GetProperty("status").GetString());
+        Assert.Equal(deliveryId, deliverySummary.GetProperty("deliveryId").GetGuid());
+        Assert.Equal("Assigned", deliverySummary.GetProperty("deliveryStatus").GetString());
+        Assert.Equal("Asignada", deliverySummary.GetProperty("deliveryStatusLabel").GetString());
+        Assert.Equal(admin.GetProperty("fullName").GetString(), deliverySummary.GetProperty("assignedToUserName").GetString());
+    }
+
+    [Fact]
+    public async Task WorkOrderListShowsFailedDeliveryAndKeepsWorkOrderStatus()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var admin = await GetCurrentUserAsync(client);
+        var customer = await CreateCustomerAsync(client, xsrfToken, "Doctor", UniqueName("Dr Lista No Entregada"));
+        var patientName = UniqueName("Paciente Lista No Entregada");
+        var created = await CreateWorkOrderAsync(
+            client,
+            xsrfToken,
+            CreateWorkOrderRequest(customer.GetProperty("id").GetGuid(), patientName: patientName));
+        var delivery = await CreateDeliveryAsync(client, xsrfToken, created.GetProperty("id").GetGuid());
+        var deliveryId = delivery.GetProperty("id").GetGuid();
+
+        await AssignDeliveryAsync(
+            client,
+            xsrfToken,
+            deliveryId,
+            admin.GetProperty("id").GetGuid());
+
+        var failedResponse = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{deliveryId}/failed",
+            xsrfToken,
+            new { failedReason = "Cliente no disponible" });
+        failedResponse.EnsureSuccessStatusCode();
+
+        var response = await client.GetAsync($"/api/work-orders?search={Uri.EscapeDataString(patientName)}");
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var item = Assert.Single(payload.GetProperty("items").EnumerateArray().ToArray());
+        var deliverySummary = item.GetProperty("delivery");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("Received", item.GetProperty("status").GetString());
+        Assert.Equal("Recibida", item.GetProperty("statusLabel").GetString());
+        Assert.Equal("FailedDelivery", deliverySummary.GetProperty("deliveryStatus").GetString());
+        Assert.Equal("No entregada", deliverySummary.GetProperty("deliveryStatusLabel").GetString());
+        Assert.Equal(JsonValueKind.String, deliverySummary.GetProperty("failedAtUtc").ValueKind);
+    }
+
+    [Fact]
+    public async Task WorkOrderListReturnsNullDeliveryWhenOrderHasNoDelivery()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var customer = await CreateCustomerAsync(client, xsrfToken, "Doctor", UniqueName("Dr Sin Entrega"));
+        var patientName = UniqueName("Paciente Sin Entrega");
+
+        await CreateWorkOrderAsync(
+            client,
+            xsrfToken,
+            CreateWorkOrderRequest(customer.GetProperty("id").GetGuid(), patientName: patientName));
+
+        var response = await client.GetAsync($"/api/work-orders?search={Uri.EscapeDataString(patientName)}");
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var item = Assert.Single(payload.GetProperty("items").EnumerateArray().ToArray());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(JsonValueKind.Null, item.GetProperty("delivery").ValueKind);
+    }
+
+    [Fact]
     public async Task WorkOrderStatusesReturnsSpanishLabels()
     {
         var client = factory.CreateClientWithoutRedirects();
@@ -455,6 +552,46 @@ public sealed class WorkOrderIntegrationTests(TestApplicationFactory factory)
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         return payload;
+    }
+
+    private static async Task<JsonElement> GetCurrentUserAsync(HttpClient client)
+    {
+        var response = await client.GetAsync("/api/auth/me");
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        return payload;
+    }
+
+    private static async Task<JsonElement> CreateDeliveryAsync(
+        HttpClient client,
+        string xsrfToken,
+        Guid workOrderId)
+    {
+        var response = await client.PostAsJsonWithXsrfAsync(
+            $"/api/work-orders/{workOrderId}/delivery",
+            xsrfToken,
+            new { deliveryNotes = "Entrega en listado" });
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        return payload;
+    }
+
+    private static async Task AssignDeliveryAsync(
+        HttpClient client,
+        string xsrfToken,
+        Guid deliveryId,
+        Guid assignedToUserId)
+    {
+        var response = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{deliveryId}/assign",
+            xsrfToken,
+            new { assignedToUserId, deliveryNotes = "Asignada para listado" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     private static async Task<JsonElement> CreateCustomerAsync(

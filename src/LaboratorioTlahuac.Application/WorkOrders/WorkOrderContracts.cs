@@ -52,7 +52,16 @@ public sealed record WorkOrderListItemResponse(
     string Status,
     string StatusLabel,
     decimal? TotalAmount,
-    bool IsCancelled);
+    bool IsCancelled,
+    WorkOrderDeliverySummaryResponse? Delivery);
+
+public sealed record WorkOrderDeliverySummaryResponse(
+    Guid DeliveryId,
+    string DeliveryStatus,
+    string DeliveryStatusLabel,
+    string? AssignedToUserName,
+    DateTimeOffset? DeliveredAtUtc,
+    DateTimeOffset? FailedAtUtc);
 
 public sealed record WorkOrderDetailResponse(
     Guid Id,
