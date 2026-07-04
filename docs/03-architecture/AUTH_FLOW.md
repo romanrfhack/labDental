@@ -37,6 +37,17 @@ Endpoints administrativos Fase 3.3:
 - `GET /api/admin/roles`
 - `GET /api/admin/roles/{id}`
 
+Endpoints delivery Fase 3.4.1:
+
+- `GET /api/deliveries`
+- `GET /api/deliveries/{id}`
+- `GET /api/work-orders/{workOrderId}/delivery`
+- `POST /api/work-orders/{workOrderId}/delivery`
+- `PATCH /api/deliveries/{id}/assign`
+- `PATCH /api/deliveries/{id}/out-for-delivery`
+- `PATCH /api/deliveries/{id}/complete`
+- `PATCH /api/deliveries/{id}/failed`
+
 Seed tecnico solo en Development:
 
 - `SecuritySeed:EnsureBaselineOnStartup`
@@ -47,7 +58,7 @@ Seed tecnico solo en Development:
 - `SecuritySeed:LimitedQaUser:Permissions`
 - Variables sensibles equivalentes: `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME`
 
-`SecuritySeed:EnsureBaselineOnStartup` queda activo en `Development` para asegurar el catálogo de permisos existentes y el rol `Repartidor`. Ese baseline no lee ni escribe contraseñas y crea `Repartidor` sin permisos activos.
+`SecuritySeed:EnsureBaselineOnStartup` queda activo en `Development` para asegurar el catálogo de permisos existentes, sincronizar permisos faltantes del rol `Admin` existente y asegurar el rol `Repartidor`. Ese baseline no lee ni escribe contraseñas y sincroniza `Repartidor` con `deliveries.view` y `deliveries.complete`.
 
 El seed QA limitado no expone endpoint HTTP, no corre fuera de `Development`, esta desactivado por default y debe apagarse despues de sincronizar el usuario local.
 
@@ -125,6 +136,16 @@ Permisos por endpoints administrativos:
 - `/api/admin/users*`: `users.manage`
 - `/api/admin/roles*`: `roles.manage`
 
+Permisos por endpoints delivery:
+
+- `GET /api/deliveries*`: `deliveries.view`
+- `GET /api/work-orders/{workOrderId}/delivery`: `deliveries.view`
+- `POST /api/work-orders/{workOrderId}/delivery`: `deliveries.assign`
+- `PATCH /api/deliveries/{id}/assign`: `deliveries.assign`
+- `PATCH /api/deliveries/{id}/out-for-delivery`: `deliveries.update`
+- `PATCH /api/deliveries/{id}/complete`: `deliveries.complete`
+- `PATCH /api/deliveries/{id}/failed`: `deliveries.complete`
+
 Validación Fase 3.3.1:
 
 - Los nueve endpoints administrativos usan `RequireAuthorization` con policy de permiso.
@@ -136,9 +157,11 @@ Validación Fase 3.3.1:
 
 Rol `Repartidor`:
 
-- Se prepara en Fase 3.3 como rol existente sin permisos.
+- Se prepara en Fase 3.3 como rol existente sin permisos y se activa en Fase 3.4.1 con permisos mínimos.
 - No recibe `orders.view`, `orders.edit` ni acceso amplio a órdenes completas.
-- Permisos futuros sugeridos para el módulo de entregas: `deliveries.view` y `deliveries.update`; no existen todavía en `Permissions.All`.
+- Permisos implementados: `deliveries.view` y `deliveries.complete`.
+- No recibe `deliveries.assign`, `deliveries.update`, `customers.view`, `payments.view`, `users.manage` ni `roles.manage`.
+- El backend filtra detalles/listas para que un usuario sin permiso administrativo solo vea entregas asignadas a su usuario.
 
 ## Redirecciones
 

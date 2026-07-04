@@ -117,6 +117,70 @@ public sealed class SecuritySeederTests
         Assert.DoesNotContain("Limited QA", await GetUserRoleNamesAsync(harness.DbContext, adminSnapshot.Email));
     }
 
+    [Fact]
+    public async Task BaselineSeedCreatesDeliveryPermissionsAndDriverRolePermissions()
+    {
+        await using var harness = await SecuritySeederHarness.CreateAsync(
+            new Dictionary<string, string?>
+            {
+                ["SecuritySeed:EnsureBaselineOnStartup"] = "true",
+                ["SecuritySeed:RunOnStartup"] = "false",
+                ["SecuritySeed:LimitedQaUser:RunOnStartup"] = "false"
+            });
+
+        await harness.RunSeederAsync();
+
+        var permissionKeys = await harness.DbContext.Permissions
+            .AsNoTracking()
+            .Select(permission => permission.Key)
+            .ToListAsync();
+        var driverPermissionKeys = await GetRolePermissionKeysAsync(harness.DbContext, "Repartidor");
+
+        Assert.Contains(Permissions.DeliveriesView, permissionKeys);
+        Assert.Contains(Permissions.DeliveriesAssign, permissionKeys);
+        Assert.Contains(Permissions.DeliveriesUpdate, permissionKeys);
+        Assert.Contains(Permissions.DeliveriesComplete, permissionKeys);
+        Assert.Equal(
+            [Permissions.DeliveriesComplete, Permissions.DeliveriesView],
+            driverPermissionKeys);
+        Assert.DoesNotContain(Permissions.UsersManage, driverPermissionKeys);
+        Assert.DoesNotContain(Permissions.RolesManage, driverPermissionKeys);
+        Assert.DoesNotContain(Permissions.OrdersView, driverPermissionKeys);
+    }
+
+    [Fact]
+    public async Task BaselineSeedAddsMissingPermissionsToExistingAdminRole()
+    {
+        await using var harness = await SecuritySeederHarness.CreateAsync(
+            new Dictionary<string, string?>
+            {
+                ["SecuritySeed:EnsureBaselineOnStartup"] = "true",
+                ["SecuritySeed:RunOnStartup"] = "false",
+                ["SecuritySeed:LimitedQaUser:RunOnStartup"] = "false"
+            });
+        var now = DateTimeOffset.UtcNow;
+        var existingPermission = Permission.Create(
+            Permissions.OrdersView,
+            Permissions.Descriptions[Permissions.OrdersView],
+            now);
+        var adminRole = Role.Create("Admin", "Administrador del sistema.", isSystem: true, now);
+
+        harness.DbContext.Permissions.Add(existingPermission);
+        harness.DbContext.Roles.Add(adminRole);
+        harness.DbContext.RolePermissions.Add(new RolePermission(adminRole.Id, existingPermission.Id));
+        await harness.DbContext.SaveChangesAsync();
+
+        await harness.RunSeederAsync();
+
+        var adminPermissionKeys = await GetRolePermissionKeysAsync(harness.DbContext, "Admin");
+
+        Assert.Equal(Permissions.All.Count, adminPermissionKeys.Count);
+        Assert.Contains(Permissions.DeliveriesView, adminPermissionKeys);
+        Assert.Contains(Permissions.DeliveriesAssign, adminPermissionKeys);
+        Assert.Contains(Permissions.DeliveriesUpdate, adminPermissionKeys);
+        Assert.Contains(Permissions.DeliveriesComplete, adminPermissionKeys);
+    }
+
     private static Dictionary<string, string?> CompleteLimitedQaSettings()
     {
         return new Dictionary<string, string?>
@@ -180,6 +244,25 @@ public sealed class SecuritySeederTests
             .Where(role => role is not null)
             .Select(role => role!.Name)
             .OrderBy(role => role, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static async Task<IReadOnlyList<string>> GetRolePermissionKeysAsync(
+        LaboratorioTlahuacDbContext dbContext,
+        string roleName)
+    {
+        var normalizedRoleName = SecurityTextNormalizer.NormalizeName(roleName);
+        var role = await dbContext.Roles
+            .Include(currentRole => currentRole.RolePermissions)
+                .ThenInclude(rolePermission => rolePermission.Permission)
+            .AsNoTracking()
+            .SingleAsync(currentRole => currentRole.NormalizedName == normalizedRoleName);
+
+        return role.RolePermissions
+            .Select(rolePermission => rolePermission.Permission)
+            .Where(permission => permission is not null)
+            .Select(permission => permission!.Key)
+            .OrderBy(permission => permission, StringComparer.Ordinal)
             .ToArray();
     }
 

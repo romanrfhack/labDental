@@ -22,11 +22,12 @@ Permitir que el laboratorio opere registros nuevos sin depender del Excel para e
 - Pagos, abonos, cancelación de pagos y saldos calculados.
 - Dashboard operativo y financiero básico.
 - Administración MVP de usuarios y roles.
+- Backend/API de entregas de órdenes.
 - Páginas iniciales de inventario y proveedores.
 
 ## Órdenes, Etiquetas Y Entrega
 
-Estado: Fase 3.1 documentó el análisis operativo, Fase 3.2 implementó impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 preparó administración de usuarios/roles como habilitador operativo previo a reparto y Fase 3.4.0 documentó el diseño técnico recomendado para entregas/repartidor.
+Estado: Fase 3.1 documentó el análisis operativo, Fase 3.2 implementó impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 preparó administración de usuarios/roles como habilitador operativo previo a reparto, Fase 3.4.0 documentó el diseño técnico recomendado para entregas/repartidor y Fase 3.4.1 implementó backend/API de entregas sin UI.
 
 La Fase 3.1 definió el siguiente frente operativo sobre órdenes existentes: etiquetas internas, etiquetas de entrega, flujo de salida a repartidor, captura de recibido y priorización futura de usuarios/roles y catálogo. La Fase 3.2 ya permite abrir e imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`.
 
@@ -43,22 +44,22 @@ Decisión principal: no crear un panel duplicado de órdenes. El flujo extiende 
 
 ### Órdenes, Etiquetas Y Reparto
 
-Estado: Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes; reparto queda diseñado en Fase 3.4.0 y pendiente de implementación.
+Estado: Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes; reparto queda diseñado en Fase 3.4.0 y backend/API implementado en Fase 3.4.1. UI admin y UI repartidor siguen pendientes.
 
 Prioridad sugerida:
 
 1. Fase 3.2: imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`. Implementada con rutas privadas `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`.
 2. Fase 3.3: administración de usuarios/roles MVP para DEV/UAT. Implementada.
 3. Fase 3.4.0: análisis técnico previo de entrega/repartidor mobile-first. Documentado.
-4. Fase 3.4.1: backend delivery MVP + permisos.
-5. Fase 3.4.2: UI admin desde órdenes.
+4. Fase 3.4.1: backend delivery MVP + permisos. Implementada.
+5. Fase 3.4.2: UI admin desde órdenes. Siguiente recomendada.
 6. Fase 3.4.3: UI repartidor mobile-first.
 7. Fase 3.4.4: QA DEV y ajustes.
 8. Fase 3.5: administración de catálogo.
 
-Fase 3.2 quedó implementada sin migraciones, sin dependencias, sin endpoints nuevos y sin tocar auth/guards. Reutiliza el detalle existente de orden y CSS de impresión; como el DTO actual no incluye dirección/contacto completos del cliente, la etiqueta de entrega muestra `Dirección pendiente` y `Contacto pendiente`. Fase 3.4 sí requerirá diseño de base para asignación, salida, entrega, receptor y trazabilidad.
+Fase 3.2 quedó implementada sin migraciones, sin dependencias, sin endpoints nuevos y sin tocar auth/guards. Reutiliza el detalle existente de orden y CSS de impresión; como el DTO actual no incluye dirección/contacto completos del cliente, la etiqueta de entrega muestra `Dirección pendiente` y `Contacto pendiente`. Fase 3.4.1 ya agrega base/API para asignación, salida, entrega, receptor y trazabilidad.
 
-Fase 3.3 quedó implementada sin migraciones y sin modificar `AuthService`, guards, cookies ni XSRF. Prepara el rol `Repartidor` sin permisos activos ni acceso amplio a órdenes completas. Fase 3.4.0 recomienda crear entidad separada `WorkOrderDelivery`, estados logísticos `PendingAssignment`, `Assigned`, `OutForDelivery`, `Delivered`, `FailedDelivery` y `Cancelled`, ruta `/app/entregas`, y permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`.
+Fase 3.3 quedó implementada sin migraciones y sin modificar `AuthService`, guards, cookies ni XSRF. Fase 3.4.1 agrega permisos reales de entregas, entidad separada `WorkOrderDelivery`, estados logísticos `PendingAssignment`, `Assigned`, `OutForDelivery`, `Delivered` y `FailedDelivery`, endpoints `/api/deliveries` y `/api/work-orders/{workOrderId}/delivery`, y mantiene pendiente la ruta UI `/app/entregas`. `Repartidor` queda con `deliveries.view` y `deliveries.complete`, sin acceso amplio a órdenes/clientes/pagos.
 
 ## Usuarios Y Roles
 
@@ -102,11 +103,14 @@ Estado: Fase 3.3 implementada como MVP operativo para DEV/UAT y Fase 3.3.1 valid
   - usuario sin permisos admin recibe `403` por pruebas API;
   - Admin puede operar por pruebas API;
   - la contraseña temporal no aparece en listados ni respuestas y no se registra en logs;
-  - el rol `Repartidor` existe como rol base sin permisos activos.
+  - el rol `Repartidor` existía como rol base sin permisos activos en ese cierre.
+- Actualización Fase 3.4.1:
+  - el rol `Repartidor` queda con `deliveries.view` y `deliveries.complete`;
+  - no recibe permisos amplios de administración, órdenes, clientes ni pagos.
 - Limitaciones:
   - no hay force-change password en el siguiente login;
   - la edición de permisos/roles queda fuera del MVP;
-  - `Repartidor` queda preparado sin permisos de entregas hasta diseñar el módulo de entregas.
+  - la edición de permisos/roles sigue fuera del MVP.
 
 ### Administración De Catálogo, Precios E Imágenes
 
@@ -133,6 +137,7 @@ Al diseñarla se deberá definir modelo de datos, endpoints, almacenamiento de i
 - Estados principales: recibida, en proceso, pruebas, lista para entrega, entregada y cancelada.
 - Una orden cancelada es terminal en el MVP.
 - La autorización usa `orders.view`, `orders.create`, `orders.edit` y `orders.changeStatus`.
+- Fase 3.4.1 agrega entrega logística asociada mediante `WorkOrderDelivery` sin cambiar `DeliveryDate`; al completar entrega correctamente, el backend sincroniza `WorkOrder.Status` a `Delivered` para conservar tableros actuales.
 - Fase 3.2 agrega impresión de etiquetas desde el detalle de orden:
   - `/app/ordenes/:id/etiqueta-trabajo`: etiqueta interna 76 x 51 mm.
   - `/app/ordenes/:id/etiqueta-entrega`: etiqueta de entrega 102 x 51 mm.

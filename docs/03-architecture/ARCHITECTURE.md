@@ -94,7 +94,7 @@ Rutas privadas futuras documentadas para Fase 3.4, no implementadas todavía:
 - `/app/entregas`
 - `/app/entregas/:id`
 
-Estas rutas se recomiendan para el flujo mobile-first de repartidor y deben requerir permisos `deliveries.*` cuando se implementen. No deben dar al rol `Repartidor` acceso amplio a `/app/ordenes`, `/app/clientes` ni `/app/pagos`.
+Estas rutas se recomiendan para el flujo mobile-first de repartidor y deben requerir permisos `deliveries.*` cuando se implementen. No deben dar al rol `Repartidor` acceso amplio a `/app/ordenes`, `/app/clientes` ni `/app/pagos`. Fase 3.4.1 implementa solo backend/API; no agrega estas rutas frontend.
 
 ## Backend / API
 
@@ -110,14 +110,21 @@ Módulos API principales:
 - `/api/dashboard/summary`
 - `/api/admin/users`
 - `/api/admin/roles`
-
-API futura documentada para Fase 3.4, no implementada todavía:
-
-- `/api/deliveries/mine`
-- `/api/deliveries/{id}`
+- `/api/deliveries`
 - `/api/work-orders/{workOrderId}/delivery`
 
-La recomendación Fase 3.4.0 es crear una entidad separada `WorkOrderDelivery` con `DeliveryStatus` propio, en lugar de mezclar asignación, salida, entrega real y receptor dentro de `WorkOrder`. Fuente: `docs/01-product/delivery-mvp-design.md`.
+API de entregas implementada en Fase 3.4.1:
+
+- `GET /api/deliveries`
+- `GET /api/deliveries/{id}`
+- `GET /api/work-orders/{workOrderId}/delivery`
+- `POST /api/work-orders/{workOrderId}/delivery`
+- `PATCH /api/deliveries/{id}/assign`
+- `PATCH /api/deliveries/{id}/out-for-delivery`
+- `PATCH /api/deliveries/{id}/complete`
+- `PATCH /api/deliveries/{id}/failed`
+
+Fase 3.4.1 crea una entidad separada `WorkOrderDelivery` con `DeliveryStatus` propio, en lugar de mezclar asignación, salida, entrega real y receptor dentro de `WorkOrder`. Fuente: `docs/01-product/delivery-mvp-design.md`.
 
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
 
@@ -140,8 +147,8 @@ Compatibilidad de zona horaria:
 Seed QA limitado:
 
 - Clave baseline: `SecuritySeed:EnsureBaselineOnStartup`.
-- Uso baseline Fase 3.3: asegurar catálogo de permisos existentes y rol `Repartidor` en `Development`.
-- Rol `Repartidor`: rol de sistema sin permisos activos; no otorga acceso amplio a órdenes completas.
+- Uso baseline Fase 3.4.1.1: asegurar catálogo de permisos existentes, sincronizar permisos faltantes al rol `Admin` existente y asegurar rol `Repartidor` en `Development`.
+- Rol `Repartidor`: rol de sistema con `deliveries.view` y `deliveries.complete`; no otorga acceso amplio a órdenes completas, clientes, pagos, usuarios ni roles.
 - Validación Fase 3.3.1: `appsettings.json` conserva baseline apagado por default general, `appsettings.Development.json` lo activa solo para Development, y no se guardan passwords reales en appsettings.
 - Clave: `SecuritySeed:LimitedQaUser`.
 - Bandera: `SecuritySeed:LimitedQaUser:RunOnStartup`.
@@ -193,7 +200,8 @@ Detalle frontend: `docs/03-architecture/frontend-architecture.md`.
 - Proveedor objetivo: SQL Server.
 - ORM: Entity Framework Core.
 - DbContext: `LaboratorioTlahuacDbContext`.
-- Migraciones existentes: `InitialSecurityModel`, `AddCustomersAndInternalDoctors`, `AddWorkOrders`, `AddPayments`.
+- Migraciones existentes: `InitialSecurityModel`, `AddCustomersAndInternalDoctors`, `AddWorkOrders`, `AddPayments`, `AddWorkOrderDeliveries`.
+- Validación local Fase 3.4.1.1: `AddWorkOrderDeliveries` aplica correctamente en SQL Server local `LaboratorioTlahuac_Dev`, creando tabla `WorkOrderDeliveries` con FK requerida a `WorkOrders`, FK opcional a `Security.Users`, índice único por `WorkOrderId` e índices por asignado, estado y creación.
 - No hay auto-migración al iniciar la aplicación.
 
 Detalle de base de datos: `docs/03-architecture/database-design.md`.
@@ -205,6 +213,7 @@ Detalle de base de datos: `docs/03-architecture/database-design.md`.
 - Frontend no tiene runner no interactivo configurado como script npm; se valida con `npm run build` y revisión manual cuando aplique.
 - QA responsive del sitio público: `docs/08-qa/RESPONSIVE_CHECKLIST.md`.
 - QA usuarios/roles Fase 3.3.1: `docs/08-qa/users-roles-qa.md` registra endpoints, permisos, matriz `401` sin sesión, cobertura `403` por pruebas API, riesgos de contraseña temporal y preparación DEV.
+- QA API entregas Fase 3.4.1: `docs/08-qa/delivery-api-qa.md` registra endpoints, permisos, transiciones, migración y validación técnica.
 
 ## Supuestos Técnicos
 

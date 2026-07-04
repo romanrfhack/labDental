@@ -6,6 +6,8 @@ Fase 3.3.1 ejecutada como QA de seguridad, validacion tecnica y preparacion de d
 
 Resultado: sin hallazgos bloqueantes por codigo, pruebas, build ni HTTP local sin sesion. Queda pendiente la validacion visual/operativa completa en DEV con credenciales reales de Admin y usuario limitado.
 
+Actualización Fase 3.4.1: el rol `Repartidor` ya no debe aparecer sin permisos activos. Ahora debe mostrar solo `deliveries.view` y `deliveries.complete`.
+
 ## Alcance Revisado
 
 Rutas privadas:
@@ -68,7 +70,7 @@ Endpoints revisados:
 - `Repartidor` queda preparado por baseline de seguridad en `Development`.
 - En Fase 3.3.1 fue validado como rol base sin permisos activos en pruebas API.
 - No recibe `orders.view`, `orders.edit` ni acceso amplio a ordenes completas.
-- Los permisos reales de entregas se definiran en Fase 3.4. Sugeridos: `deliveries.view` y `deliveries.update`, todavia no implementados.
+- Desde Fase 3.4.1 recibe `deliveries.view` y `deliveries.complete`, sin `deliveries.assign` ni `deliveries.update`.
 
 ## QA Funcional DEV
 
@@ -86,7 +88,7 @@ Checklist para ejecutar en DEV despues de desplegar rama `dev`:
 10. Abrir `/app/admin/roles`.
 11. Confirmar que roles carga en modo solo lectura y comunica `Solo lectura`.
 12. Confirmar que cada rol muestra permisos.
-13. Confirmar que `Repartidor` aparece sin permisos activos.
+13. Confirmar que `Repartidor` aparece solo con `deliveries.view` y `deliveries.complete`.
 14. Iniciar sesion con usuario sin `users.manage`/`roles.manage`.
 15. Confirmar que `/app/admin/usuarios` y `/app/admin/roles` terminan en `/app/access-denied`.
 16. Cerrar sesion y confirmar que entrar a `/app/admin/usuarios` sin sesion redirige a `/login?returnUrl=...`.
@@ -121,7 +123,7 @@ Nota: el `200` de rutas privadas por `curl` solo confirma entrega del shell SPA.
 - Implementar force-change password antes de produccion.
 - Definir si roles/permisos editables seran necesarios y bajo que reglas de seguridad.
 - Resolver o ajustar el warning de budget inicial en una fase de optimizacion frontend; no bloquea DEV porque esta por debajo del `maximumError` de `1MB`.
-- Disenar Fase 3.4 de entregas/repartidor con modelo, endpoints, permisos y UI mobile-first.
+- Fase 3.4.1 ya implemento modelo, endpoints y permisos de entregas; queda pendiente UI mobile-first y validacion DEV tras migracion.
 
 ## Preparacion DEV
 
@@ -129,6 +131,6 @@ Si no aparecen bloqueantes en la validacion humana:
 
 1. Hacer commit de Fase 3.3 + Fase 3.3.1.
 2. Push a `dev`.
-3. Desplegar DEV sin migraciones nuevas.
+3. Para Fase 3.4.1, aplicar migracion `AddWorkOrderDeliveries` en DEV antes de validar entregas.
 4. Validar los pasos del checklist QA funcional DEV.
-5. Registrar evidencia de Admin, usuario limitado, rol `Repartidor` y password temporal antes de iniciar Fase 3.4.
+5. Registrar evidencia de Admin, usuario limitado, rol `Repartidor` y password temporal antes de validar UI de entregas.

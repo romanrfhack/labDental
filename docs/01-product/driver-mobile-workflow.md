@@ -1,8 +1,10 @@
 # Flujo Mobile-First Para Repartidor
 
-Fuente funcional para la futura Fase 3.4. Este documento define el MVP de repartidor desde navegador móvil. No implementa código, permisos, base de datos ni endpoints.
+Fuente funcional para la Fase 3.4 de entregas/repartidor. Este documento define el MVP de repartidor desde navegador móvil.
 
 Actualización Fase 3.4.0: el análisis técnico previo queda documentado en `docs/01-product/delivery-mvp-design.md`. La recomendación es crear una entidad separada `WorkOrderDelivery` para trazabilidad real, en lugar de extender `WorkOrder` salvo que se decida un MVP extremadamente rápido.
+
+Actualización Fase 3.4.1: backend/API implementado sin UI. Ya existen `WorkOrderDelivery`, permisos `deliveries.*`, migración `AddWorkOrderDeliveries` y endpoints privados de entregas. La pantalla mobile-first de repartidor bajo `/app/entregas` sigue pendiente para Fase 3.4.3.
 
 ## Objetivo
 
@@ -12,20 +14,19 @@ Permitir que el repartidor consulte entregas asignadas desde celular, confirme l
 
 Rol futuro sugerido: `Repartidor`.
 
-Permisos sugeridos:
+Permisos implementados para `Repartidor` en Fase 3.4.1:
 
 - `deliveries.view`: ver entregas asignadas.
-- `deliveries.update`: actualizar salida a ruta o no entrega.
-- `deliveries.complete`: registrar entrega completada y recibido.
+- `deliveries.complete`: registrar entrega completada o no entregada.
 
 Permisos administrativos opcionales:
 
 - `deliveries.assign`: asignar repartidor y registrar salida.
 - `deliveries.viewAll`: ver todas las entregas, si se separa de `deliveries.view`.
 
-El sistema actual todavía no tiene estos permisos ni módulo de entregas. Fase 3.3 ya preparó administración MVP de usuarios/roles y rol `Repartidor` sin permisos activos.
+El backend actual ya tiene estos permisos y módulo API de entregas. Fase 3.3 preparó administración MVP de usuarios/roles y Fase 3.4.1 activó el rol `Repartidor` con permisos mínimos.
 
-Para el rol `Repartidor`, la combinación recomendada en MVP es `deliveries.view`, `deliveries.update` y `deliveries.complete`, sin `orders.view`, `customers.view`, `payments.view`, `users.manage` ni `roles.manage`.
+Para el rol `Repartidor`, la combinación implementada en MVP es `deliveries.view` y `deliveries.complete`, sin `deliveries.assign`, `deliveries.update`, `orders.view`, `customers.view`, `payments.view`, `users.manage` ni `roles.manage`. La salida a ruta queda para Admin/operación con `deliveries.update` hasta que se defina si el repartidor debe registrar esa transición desde móvil.
 
 ## Ruta Recomendada
 
@@ -89,16 +90,17 @@ No mostrar información financiera al repartidor salvo decisión explícita del 
 
 ## Acciones
 
-MVP:
+Backend MVP implementado:
 
 - Ver detalle.
 - Marcar como entregado.
 - Capturar `Recibió`.
+- Marcar no entregado con motivo.
 - Guardar entrega.
 
-Acciones posteriores:
+Acciones posteriores de UI:
 
-- Marcar en ruta.
+- Marcar en ruta desde móvil si se otorga `deliveries.update` al rol.
 - Marcar no entregado.
 - Capturar motivo de no entrega.
 - Llamar/abrir WhatsApp desde contacto.
@@ -142,18 +144,17 @@ Campos mínimos:
 - `OutForDeliveryByUserId`.
 - `DeliveredAtUtc`.
 - `DeliveredByUserId`.
-- `ReceivedByName`.
+- `RecipientName`.
 - `DeliveryNotes`.
-- `FailureReason`.
+- `FailedReason`.
 
-Estados recomendados:
+Estados implementados en backend:
 
 - `PendingAssignment`.
 - `Assigned`.
 - `OutForDelivery`.
 - `Delivered`.
 - `FailedDelivery`.
-- `Cancelled`.
 
 El detalle completo de comparación contra extender `WorkOrder` queda en `docs/01-product/delivery-mvp-design.md`.
 

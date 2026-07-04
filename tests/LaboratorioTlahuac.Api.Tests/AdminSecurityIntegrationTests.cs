@@ -146,14 +146,27 @@ public sealed class AdminSecurityIntegrationTests(TestApplicationFactory factory
             .Single(role => role.GetProperty("name").GetString() == "Repartidor");
 
         Assert.Equal(HttpStatusCode.OK, rolesResponse.StatusCode);
-        Assert.Equal(0, driverRole.GetProperty("permissionCount").GetInt32());
+        Assert.Equal(2, driverRole.GetProperty("permissionCount").GetInt32());
+        Assert.Equal(
+            new[] { Permissions.DeliveriesComplete, Permissions.DeliveriesView },
+            driverRole.GetProperty("permissions")
+                .EnumerateArray()
+                .Select(permission => permission.GetProperty("key").GetString())
+                .OrderBy(permission => permission, StringComparer.Ordinal)
+                .ToArray());
 
         var detailResponse = await client.GetAsync($"/api/admin/roles/{driverRole.GetProperty("id").GetGuid()}");
         var detail = await detailResponse.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.Equal(HttpStatusCode.OK, detailResponse.StatusCode);
         Assert.Equal("Repartidor", detail.GetProperty("name").GetString());
-        Assert.Empty(detail.GetProperty("permissions").EnumerateArray());
+        Assert.Equal(
+            new[] { Permissions.DeliveriesComplete, Permissions.DeliveriesView },
+            detail.GetProperty("permissions")
+                .EnumerateArray()
+                .Select(permission => permission.GetProperty("key").GetString())
+                .OrderBy(permission => permission, StringComparer.Ordinal)
+                .ToArray());
     }
 
     [Fact]
@@ -172,6 +185,15 @@ public sealed class AdminSecurityIntegrationTests(TestApplicationFactory factory
         Assert.Contains(
             me.GetProperty("permissions").EnumerateArray(),
             permission => permission.GetString() == Permissions.RolesManage);
+        Assert.Contains(
+            me.GetProperty("permissions").EnumerateArray(),
+            permission => permission.GetString() == Permissions.DeliveriesAssign);
+        Assert.Contains(
+            me.GetProperty("permissions").EnumerateArray(),
+            permission => permission.GetString() == Permissions.DeliveriesUpdate);
+        Assert.Contains(
+            me.GetProperty("permissions").EnumerateArray(),
+            permission => permission.GetString() == Permissions.DeliveriesComplete);
         Assert.Contains(
             me.GetProperty("roles").EnumerateArray(),
             role => role.GetString() == "Admin");

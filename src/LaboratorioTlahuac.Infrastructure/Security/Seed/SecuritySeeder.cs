@@ -17,9 +17,14 @@ public sealed class SecuritySeeder(
     : ISecuritySeeder
 {
     private const string DriverRoleName = "Repartidor";
-    private const string DriverRoleDescription = "Rol operativo para futuras entregas; sin permisos activos en Fase 3.3.";
+    private const string DriverRoleDescription = "Rol operativo para entregas asignadas.";
     private const string LimitedQaRoleName = "Limited QA";
     private const string LimitedQaRoleDescription = "Usuario QA limitado local de Development.";
+    private static readonly HashSet<string> DriverPermissionKeys =
+    [
+        Permissions.DeliveriesView,
+        Permissions.DeliveriesComplete
+    ];
     private static readonly char[] PermissionSeparators = [',', ';', ' ', '\n', '\r', '\t'];
     private static readonly Action<ILogger, Exception?> LogLimitedQaSeedSkippedOutsideDevelopment =
         LoggerMessage.Define(
@@ -64,13 +69,21 @@ public sealed class SecuritySeeder(
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var permissionsByKey = await EnsurePermissionsAsync(now, cancellationToken);
-        await EnsureDriverRoleAsync(now, cancellationToken);
+        var driverRole = await EnsureDriverRoleAsync(now, cancellationToken);
+        await SynchronizeRolePermissionsAsync(
+            driverRole,
+            GetKnownPermissions(DriverPermissionKeys, permissionsByKey),
+            cancellationToken);
 
         if (adminSeedEnabled)
         {
             var adminRole = await EnsureAdminRoleAsync(options, now, cancellationToken);
             await EnsureAdminPermissionsAsync(adminRole, permissionsByKey, cancellationToken);
             await EnsureAdminUserAsync(options, adminRole, now, cancellationToken);
+        }
+        else if (baselineSeedEnabled)
+        {
+            await EnsureExistingAdminRolePermissionsAsync(permissionsByKey, cancellationToken);
         }
 
         if (limitedQaSeedEnabled)
@@ -194,6 +207,27 @@ public sealed class SecuritySeeder(
 
             dbContext.RolePermissions.Add(new RolePermission(adminRole.Id, permission.Id));
         }
+    }
+
+    private async Task EnsureExistingAdminRolePermissionsAsync(
+        IReadOnlyDictionary<string, Permission> permissionsByKey,
+        CancellationToken cancellationToken)
+    {
+        var adminRoleName = FirstNonWhiteSpace(
+            configuration[$"{SecuritySeedOptions.SectionName}:AdminRoleName"],
+            "Admin") ?? "Admin";
+        var normalizedAdminRoleName = SecurityTextNormalizer.NormalizeName(adminRoleName);
+        var adminRole = await dbContext.Roles
+            .FirstOrDefaultAsync(
+                role => role.NormalizedName == normalizedAdminRoleName,
+                cancellationToken);
+
+        if (adminRole is null)
+        {
+            return;
+        }
+
+        await EnsureAdminPermissionsAsync(adminRole, permissionsByKey, cancellationToken);
     }
 
     private async Task EnsureAdminUserAsync(

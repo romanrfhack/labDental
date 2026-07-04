@@ -11,7 +11,11 @@ public class PermissionsTests
         Assert.Contains(Permissions.PaymentsCreate, Permissions.All);
         Assert.Contains(Permissions.CustomersEdit, Permissions.All);
         Assert.Contains(Permissions.RolesManage, Permissions.All);
+        Assert.Contains(Permissions.DeliveriesView, Permissions.All);
+        Assert.Contains(Permissions.DeliveriesAssign, Permissions.All);
+        Assert.Contains(Permissions.DeliveriesUpdate, Permissions.All);
+        Assert.Contains(Permissions.DeliveriesComplete, Permissions.All);
 
-        Assert.Equal(19, Permissions.All.Count);
+        Assert.Equal(23, Permissions.All.Count);
     }
 }

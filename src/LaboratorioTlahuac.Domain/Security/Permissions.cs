@@ -21,6 +21,10 @@ public static class Permissions
     public const string UsersManage = "users.manage";
     public const string RolesManage = "roles.manage";
     public const string ReportsView = "reports.view";
+    public const string DeliveriesView = "deliveries.view";
+    public const string DeliveriesAssign = "deliveries.assign";
+    public const string DeliveriesUpdate = "deliveries.update";
+    public const string DeliveriesComplete = "deliveries.complete";
 
     public static IReadOnlyDictionary<string, string> Descriptions { get; } =
         new Dictionary<string, string>(StringComparer.Ordinal)
@@ -43,7 +47,11 @@ public static class Permissions
             [SuppliersCreate] = "Crear proveedores.",
             [UsersManage] = "Administrar usuarios.",
             [RolesManage] = "Administrar roles y permisos.",
-            [ReportsView] = "Ver reportes y dashboard."
+            [ReportsView] = "Ver reportes y dashboard.",
+            [DeliveriesView] = "Ver entregas.",
+            [DeliveriesAssign] = "Asignar repartidores a entregas.",
+            [DeliveriesUpdate] = "Actualizar salida y notas de entregas.",
+            [DeliveriesComplete] = "Marcar entregas como entregadas o no entregadas."
         };
 
     public static IReadOnlySet<string> All { get; } = new HashSet<string>(StringComparer.Ordinal)
@@ -66,6 +74,10 @@ public static class Permissions
         SuppliersCreate,
         UsersManage,
         RolesManage,
-        ReportsView
+        ReportsView,
+        DeliveriesView,
+        DeliveriesAssign,
+        DeliveriesUpdate,
+        DeliveriesComplete
     };
 }

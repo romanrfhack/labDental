@@ -1,6 +1,10 @@
 # Diseño MVP De Entregas Y Repartidor - Fase 3.4.0
 
-Fase 3.4.0 es análisis técnico/documental. No implementa código, migraciones, endpoints, permisos reales, rutas frontend, auth, guards, cookies, XSRF, deploy ni dependencias.
+Fase 3.4.0 fue análisis técnico/documental. No implementó código, migraciones, endpoints, permisos reales, rutas frontend, auth, guards, cookies, XSRF, deploy ni dependencias.
+
+Actualización Fase 3.4.1, 2026-07-04: backend delivery MVP + permisos quedó implementado sin UI. La implementación crea `WorkOrderDelivery`, `DeliveryStatus`, migración `AddWorkOrderDeliveries`, endpoints API mínimos y permisos `deliveries.*`. La UI admin y la UI mobile-first de repartidor quedan pendientes para Fase 3.4.2 y Fase 3.4.3.
+
+Actualización Fase 3.4.1.1, 2026-07-04: QA técnico real aplicó la migración en SQL local `LaboratorioTlahuac_Dev`, validó endpoints delivery con Admin y Repartidor QA local, y corrigió el seed baseline para sincronizar permisos nuevos al rol `Admin` existente sin leer ni escribir contraseñas.
 
 ## Objetivo
 
@@ -118,9 +122,9 @@ Agregar campos directamente a `WorkOrder`, por ejemplo:
 - `OutForDeliveryByUserId`
 - `DeliveredAtUtc`
 - `DeliveredByUserId`
-- `ReceivedByName`
+- `RecipientName`
 - `DeliveryNotes`
-- `FailureReason`
+- `FailedReason`
 
 Ventajas:
 
@@ -152,9 +156,9 @@ Campos mínimos sugeridos:
 - `OutForDeliveryByUserId`
 - `DeliveredAtUtc`
 - `DeliveredByUserId`
-- `ReceivedByName`
+- `RecipientName`
 - `DeliveryNotes`
-- `FailureReason`
+- `FailedReason`
 - `CreatedAtUtc`
 - `CreatedByUserId`
 - `UpdatedAtUtc`
@@ -234,10 +238,9 @@ Permisos recomendados para `Permissions.All` en Fase 3.4.1:
 - `deliveries.update`: marcar salida o no entregada según reglas.
 - `deliveries.complete`: marcar entregada y capturar recibido.
 
-Permisos del rol `Repartidor`:
+Permisos del rol `Repartidor` implementados en Fase 3.4.1:
 
 - `deliveries.view`
-- `deliveries.update`
 - `deliveries.complete`
 
 El rol `Repartidor` no debe recibir en MVP:
@@ -249,6 +252,8 @@ El rol `Repartidor` no debe recibir en MVP:
 - `payments.view`
 - `users.manage`
 - `roles.manage`
+- `deliveries.assign`
+- `deliveries.update`
 
 Permisos de administración/operación:
 
@@ -286,11 +291,13 @@ La UI puede mostrar en navegación el texto `Entregas` para Admin/operación y `
 
 ## Endpoints MVP Recomendados
 
-Mínimo para Fase 3.4.1:
+Implementado para Fase 3.4.1:
 
-- `GET /api/deliveries/mine`
-  - Lista mobile-first de entregas asignadas al usuario actual.
+- `GET /api/deliveries`
+  - Lista entregas.
+  - Filtros opcionales: `status`, `assignedToMe`, `page`, `pageSize`.
   - Requiere `deliveries.view`.
+  - Admin/operación con permiso amplio puede ver todas; `Repartidor` queda limitado a sus asignadas.
 - `GET /api/deliveries/{id}`
   - Detalle de entrega.
   - Requiere `deliveries.view`.
@@ -299,20 +306,22 @@ Mínimo para Fase 3.4.1:
   - Seguimiento de entrega desde detalle de orden.
   - Requiere `orders.view` y `deliveries.view` o regla equivalente.
 - `POST /api/work-orders/{workOrderId}/delivery`
-  - Crea entrega o asigna repartidor inicial.
+  - Crea entrega `PendingAssignment` si no existe.
   - Requiere `deliveries.assign`.
-- `PATCH /api/deliveries/{id}/assignment`
+- `PATCH /api/deliveries/{id}/assign`
   - Cambia repartidor asignado.
   - Requiere `deliveries.assign`.
 - `PATCH /api/deliveries/{id}/out-for-delivery`
   - Marca salida a ruta con timestamp de servidor.
   - Requiere `deliveries.update`.
-- `PATCH /api/deliveries/{id}/delivered`
-  - Marca entregado, requiere `receivedByName`.
+- `PATCH /api/deliveries/{id}/complete`
+  - Marca entregado, requiere `recipientName`.
   - Requiere `deliveries.complete`.
 - `PATCH /api/deliveries/{id}/failed`
-  - Marca no entregada, requiere `failureReason`.
-  - Requiere `deliveries.update`.
+  - Marca no entregada, requiere `failedReason`.
+  - Requiere `deliveries.complete`.
+
+No se implementó `GET /api/deliveries/mine`; el equivalente MVP es `GET /api/deliveries?assignedToMe=true`.
 
 DTO mínimo de lista:
 
@@ -343,9 +352,9 @@ DTO mínimo de detalle:
 - `assignedAtUtc`
 - `outForDeliveryAtUtc`
 - `deliveredAtUtc`
-- `receivedByName`
+- `recipientName`
 - `deliveryNotes`
-- `failureReason`
+- `failedReason`
 
 No incluir información financiera para repartidor en el MVP.
 
@@ -409,8 +418,8 @@ Detalle móvil:
 - El repartidor solo ve entregas asignadas a su usuario.
 - Admin/operación puede ver/asignar según permisos explícitos.
 - La fecha/hora de salida y entrega la toma el servidor.
-- `ReceivedByName` es obligatorio para `Delivered`.
-- `FailureReason` es obligatorio para `FailedDelivery`.
+- `RecipientName` es obligatorio para `Delivered`.
+- `FailedReason` es obligatorio para `FailedDelivery`.
 - Una orden `Cancelled` no puede salir ni completarse.
 - Una entrega `Delivered` no se modifica en MVP.
 - El repartidor no ve pagos, saldos ni datos financieros.
@@ -420,20 +429,22 @@ Detalle móvil:
 
 ### Fase 3.4.1 - Backend Delivery MVP + Permisos
 
-- Agregar permisos `deliveries.*`.
-- Definir enum `DeliveryStatus`.
-- Crear entidad `WorkOrderDelivery`.
-- Agregar configuración EF y migración.
-- Crear contratos y servicio de aplicación.
-- Crear endpoints mínimos.
-- Agregar pruebas de autorización:
+- Estado: implementada el 2026-07-04.
+- Agrega permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`.
+- Define enum `DeliveryStatus` con `PendingAssignment`, `Assigned`, `OutForDelivery`, `Delivered` y `FailedDelivery`.
+- Crea entidad `WorkOrderDelivery`.
+- Agrega configuración EF y migración `20260704053734_AddWorkOrderDeliveries`.
+- Crea contratos, servicio y endpoints mínimos.
+- Agrega pruebas de autorización:
   - sin sesión `401`;
   - sin permiso `403`;
   - repartidor solo ve asignadas;
   - Admin asigna;
-  - entrega requiere `receivedByName`;
+  - entrega requiere `recipientName`;
   - timestamp de servidor;
-  - orden cancelada no se entrega.
+  - transiciones inválidas devuelven `400`.
+
+Decisión 3.4.1: no se implementa estado `Cancelled` para entrega en este MVP. Si se requiere cancelar entrega como acción administrativa, debe diseñarse en una fase posterior.
 
 ### Fase 3.4.2 - UI Admin Desde Órdenes
 
@@ -477,4 +488,5 @@ Detalle móvil:
 - Sin endpoints nuevos.
 - Sin dependencias.
 - Sin cambios de auth, guards, cookies, XSRF ni deploy.
-- Siguiente fase implementable: Fase 3.4.1 - backend delivery MVP + permisos.
+- Fase siguiente implementada posteriormente: Fase 3.4.1 - backend delivery MVP + permisos.
+- Siguiente fase recomendada actual: Fase 3.4.2 - UI admin de entregas desde órdenes.

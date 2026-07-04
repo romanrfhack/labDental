@@ -169,6 +169,7 @@ app.MapHealthEndpoints();
 app.MapAuthEndpoints();
 app.MapCustomerEndpoints();
 app.MapWorkOrderEndpoints();
+app.MapDeliveryEndpoints();
 app.MapPaymentEndpoints();
 app.MapDashboardEndpoints();
 app.MapAdminSecurityEndpoints();

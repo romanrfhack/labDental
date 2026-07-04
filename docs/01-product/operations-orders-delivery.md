@@ -1,6 +1,6 @@
 # Operación De Órdenes, Etiquetas Y Entrega
 
-Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documenta el análisis técnico previo del flujo de entregas/repartidor sin implementar código.
+Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor y Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI.
 
 Diseño técnico Fase 3.4.0: `docs/01-product/delivery-mvp-design.md`.
 
@@ -178,12 +178,12 @@ Permisos actuales relevantes:
 - `roles.manage`
 - `reports.view`
 
-No existen permisos de reparto en el código actual. Permisos sugeridos para fases futuras:
+Permisos de reparto implementados en Fase 3.4.1:
 
 - `deliveries.view`: ver entregas asignadas o panel de entregas.
-- `deliveries.update`: marcar salida o no entrega.
-- `deliveries.complete`: registrar entrega completada y recibido.
-- `deliveries.assign`: asignar repartidor y registrar salida, si se separa de administración.
+- `deliveries.assign`: crear/asignar entrega desde administración.
+- `deliveries.update`: marcar salida a ruta y actualizar notas.
+- `deliveries.complete`: registrar entrega completada o no entregada.
 - `labels.print`: imprimir etiquetas, si se decide separar de `orders.view`.
 
 Para el MVP de etiquetas desde detalle de orden puede bastar inicialmente con `orders.view`, pero si imprimir etiquetas se considera acción sensible conviene agregar permiso explícito en una fase posterior.
@@ -195,9 +195,9 @@ Existe modelo de usuarios, roles, permisos y seed:
 - Rol `Admin` con todos los permisos.
 - Seed QA limitado solo `Development`, desactivado por default.
 - Fase 3.3 implementa `/app/admin/usuarios` y `/app/admin/roles`.
-- Rol `Repartidor` preparado sin permisos activos.
+- Rol `Repartidor` preparado con permisos mínimos de entregas (`deliveries.view` y `deliveries.complete`).
 
-Usuarios ya permite CRUD administrativo mínimo y asignación de roles existentes; Roles queda readonly para ver permisos. Para el flujo repartidor falta definir permisos `deliveries.*`, modelo de entregas y endpoints antes de otorgar acceso operativo.
+Usuarios ya permite CRUD administrativo mínimo y asignación de roles existentes; Roles queda readonly para ver permisos. Para el flujo repartidor ya existen permisos `deliveries.*`, modelo de entregas y endpoints. Falta implementar UI bajo `/app/entregas` y panel admin desde `/app/ordenes/:id`.
 
 ### Catálogo Público Y Backlog
 
@@ -284,26 +284,29 @@ Recomendación Fase 3.4.0: usar `DeliveryStatus` separado con los nombres anteri
 
 Fase 3.2 de etiquetas quedó implementada sin campos nuevos al imprimir datos existentes y textos pendientes seguros para dirección/contacto.
 
-Para Fase 3.4 de reparto sí se requerirá diseño de base de datos. Fase 3.4.0 compara dos alternativas:
+Fase 3.4.1 implementa base de datos para reparto. Fase 3.4.0 comparó dos alternativas:
 
 - Extender `WorkOrder` con campos de entrega.
 - Crear entidad `Delivery` o `WorkOrderDelivery`.
 
-La recomendación es crear `WorkOrderDelivery` para trazabilidad real y crecimiento futuro. Campos mínimos sugeridos:
+Se implementa `WorkOrderDelivery` para trazabilidad real y crecimiento futuro. Campos mínimos implementados:
 
-- Entidad `Delivery` o `DeliveryAssignment`.
+- Entidad `WorkOrderDelivery`.
 - `WorkOrderId`.
-- `AssignedDriverUserId`.
-- `AssignedAtUtc`.
-- `AssignedByUserId`.
-- `OutForDeliveryAtUtc`.
-- `OutForDeliveryByUserId`.
-- `DeliveredAtUtc`.
-- `DeliveredByUserId`.
-- `ReceivedByName`.
+- `AssignedToUserId`.
+- `Status`.
+- `RecipientName`.
 - `DeliveryNotes`.
-- `FailureReason`.
-- `DeliveryStatus`.
+- `FailedReason`.
+- `AssignedAtUtc`.
+- `OutForDeliveryAtUtc`.
+- `DeliveredAtUtc`.
+- `FailedAtUtc`.
+- `CreatedAtUtc`.
+- `UpdatedAtUtc`.
+
+Campo no implementado en 3.4.1:
+
 - Snapshot opcional: `CustomerDisplayName`, `DeliveryAddress`, `ContactPhone`, `ContactWhatsApp`.
 
 Evidencia futura:
@@ -321,31 +324,31 @@ MVP etiquetas:
 - `orders.view` para ver detalle e imprimir datos de la orden.
 - Evaluar `labels.print` si se quiere auditar o restringir impresión.
 
-MVP reparto:
+MVP reparto implementado:
 
 - `deliveries.view`: ver entregas.
-- `deliveries.update`: marcar salida o no entregada según rol.
-- `deliveries.complete`: marcar entregada y registrar recibido.
-- `deliveries.assign`: asignar repartidor, recomendado para administración.
+- `deliveries.assign`: crear/asignar entrega desde administración.
+- `deliveries.update`: marcar salida a ruta y actualizar notas.
+- `deliveries.complete`: marcar entregada o no entregada.
 - `orders.view`: consultar datos esenciales de orden.
 - `customers.view`: solo si la ruta de entrega consulta datos completos del cliente; preferir DTO mínimo de entrega para no exponer de más al repartidor.
 
-Rol `Repartidor` recomendado: `deliveries.view`, `deliveries.update` y `deliveries.complete`, sin `orders.view`, `customers.view` ni `payments.view`.
+Rol `Repartidor` implementado: `deliveries.view` y `deliveries.complete`, sin `deliveries.assign`, `deliveries.update`, `orders.view`, `customers.view` ni `payments.view`.
 
 Administración/operación recomendada: `orders.view`, `orders.changeStatus`, `deliveries.view`, `deliveries.assign` y, si operará correcciones/cierres, `deliveries.update` y `deliveries.complete`.
 
 ## Endpoints Sugeridos Fase 3.4.1
 
-MVP recomendado:
+MVP implementado:
 
-- `GET /api/deliveries/mine`: entregas asignadas al usuario actual.
+- `GET /api/deliveries`: lista entregas; soporta `status`, `assignedToMe`, `page` y `pageSize`.
 - `GET /api/deliveries/{id}`: detalle de entrega, filtrado por usuario asignado salvo permiso administrativo.
 - `GET /api/work-orders/{workOrderId}/delivery`: seguimiento desde detalle de orden.
-- `POST /api/work-orders/{workOrderId}/delivery`: crear/asignar entrega inicial.
-- `PATCH /api/deliveries/{id}/assignment`: reasignar repartidor.
+- `POST /api/work-orders/{workOrderId}/delivery`: crear entrega inicial `PendingAssignment`.
+- `PATCH /api/deliveries/{id}/assign`: asignar repartidor.
 - `PATCH /api/deliveries/{id}/out-for-delivery`: registrar salida.
-- `PATCH /api/deliveries/{id}/delivered`: registrar entrega, `ReceivedByName` obligatorio.
-- `PATCH /api/deliveries/{id}/failed`: registrar no entrega, `FailureReason` obligatorio.
+- `PATCH /api/deliveries/{id}/complete`: registrar entrega, `RecipientName` obligatorio.
+- `PATCH /api/deliveries/{id}/failed`: registrar no entrega, `FailedReason` obligatorio.
 
 El endpoint de repartidor debe devolver un DTO mínimo de entrega con cliente, dirección/contacto necesarios, folio, paciente/referencia, trabajo e indicaciones, sin información financiera en MVP.
 
@@ -356,19 +359,21 @@ Fase 3.2 etiquetas:
 - Sin cambios de base si las etiquetas usan datos existentes.
 - Sin migraciones si solo se agregan rutas privadas de impresión y CSS.
 
-Fase 3.4 reparto:
+Fase 3.4.1 reparto:
 
-- Probable migración nueva para entidad de entregas/asignaciones.
-- Probable relación con `Users` para repartidor.
-- Posible relación con `WorkOrders`.
-- Posibles índices por repartidor, estado y fecha.
-- Definir si dirección/contacto se lee vivo desde cliente o se guarda snapshot.
-- Recomendación Fase 3.4.0: una entrega activa por orden en MVP, con posibilidad posterior de historial de intentos.
+- Migración nueva `20260704053734_AddWorkOrderDeliveries`.
+- Tabla nueva `WorkOrderDeliveries`.
+- Relación requerida con `WorkOrders`.
+- Relación opcional con `Security.Users` para `AssignedToUser`.
+- Índices por `WorkOrderId` único, `AssignedToUserId`, `Status` y `CreatedAtUtc`.
+- Dirección/contacto se lee vivo desde `Customer` en el DTO de entrega; no se guarda snapshot todavía.
+- Una entrega por orden en MVP, con posibilidad posterior de historial de intentos.
 
 Fase 3.3 usuarios/roles:
 
 - Implementada con tablas existentes, endpoints privados, pantallas y reglas de seguridad.
-- Prepara rol `Repartidor` sin permisos activos ni acceso amplio a órdenes completas.
+- Preparó rol `Repartidor` sin permisos activos ni acceso amplio a órdenes completas.
+- Fase 3.4.1 sincroniza `Repartidor` con `deliveries.view` y `deliveries.complete`.
 
 Fase 3.5 catálogo:
 
@@ -379,10 +384,10 @@ Fase 3.5 catálogo:
 1. Validar Fase 3.2 con impresora térmica real en DEV.
 2. Fase 3.3: administración de usuarios/roles MVP. Implementada y subida a `origin/dev`.
 3. Fase 3.4.0: análisis técnico previo de entrega/repartidor mobile-first. Documentado.
-4. Fase 3.4.1: backend delivery MVP + permisos.
-5. Fase 3.4.2: UI admin desde órdenes.
+4. Fase 3.4.1: backend delivery MVP + permisos. Implementada.
+5. Fase 3.4.2: UI admin desde órdenes. Siguiente recomendada.
 6. Fase 3.4.3: UI repartidor mobile-first.
 7. Fase 3.4.4: QA DEV y ajustes.
 8. Fase 3.5: administración de catálogo, precios e imágenes.
 
-La siguiente fase implementable mayor es Fase 3.4.1 - backend delivery MVP + permisos. La prueba física de etiquetas puede seguir en paralelo porque no bloquea el diseño de permisos/modelo de entregas.
+La siguiente fase implementable mayor es Fase 3.4.2 - UI admin de entregas desde órdenes. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.

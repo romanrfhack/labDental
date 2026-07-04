@@ -6,6 +6,209 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-04 - Fase 3.4.1.1 QA Técnico Delivery
+
+### Cambio Realizado
+
+Se ejecutó QA técnico real de migración delivery, permisos y endpoints antes de commit/push. No se hizo commit.
+
+### Revisión Técnica
+
+- Migración `20260704053734_AddWorkOrderDeliveries`: solo crea `WorkOrderDeliveries`, FKs e índices; no altera tablas existentes ni agrega seed sensible.
+- FK requerida a `WorkOrders`; FK opcional a `Security.Users` para `AssignedToUserId`.
+- Campos opcionales (`AssignedToUserId`, `RecipientName`, `DeliveryNotes`, `FailedReason`, timestamps de asignación/salida/entrega/fallo) quedan nullable.
+- Índice único por `WorkOrderId`; índices por `AssignedToUserId`, `Status` y `CreatedAtUtc`.
+- `WorkOrderDelivery` valida transiciones, requiere `recipientName` para completar, requiere `failedReason` para no entregada y usa timestamps UTC recibidos del servicio.
+- `WorkOrder.DeliveryDate` no se modifica; al completar entrega se sincroniza `WorkOrder.Status` a `Delivered`.
+- Endpoints usan permisos esperados y validaciones 400 controladas; no exponen password, `passwordHash` ni email del usuario asignado en respuestas de delivery.
+- `tests/LaboratorioTlahuac.Domain.Tests/UnitTest1.cs` ya contenía `PermissionsTests`; se renombró a `PermissionsTests.cs` para limpiar el placeholder.
+
+### Corrección Acotada
+
+Durante QA real, el Admin local existente no tenía `deliveries.assign` porque `SecuritySeed:RunOnStartup=false` y solo corría baseline. Se corrigió `SecuritySeeder` para que `SecuritySeed:EnsureBaselineOnStartup=true` sincronice permisos faltantes de `Permissions.All` al rol `Admin` existente sin leer ni escribir contraseñas ni crear usuarios.
+
+Prueba agregada: `BaselineSeedAddsMissingPermissionsToExistingAdminRole`.
+
+### SQL Local
+
+- `docker ps --filter "name=ldt-labdental-sql"`: contenedor activo.
+- `docker port ldt-labdental-sql`: `14336 -> 1433/tcp`.
+- `docker ps --filter "name=codex-cobranza-sql" --format "{{.Names}}"`: sin salida; no se usó.
+- `dotnet ef migrations list`: `20260704053734_AddWorkOrderDeliveries` estaba pendiente.
+- `dotnet ef database update`: correcto contra `LaboratorioTlahuac_Dev` local.
+- `dotnet ef migrations list` posterior: `20260704053734_AddWorkOrderDeliveries` quedó aplicado.
+
+### API Local Real
+
+Se levantó API local en `http://localhost:5277` y se ejecutó script temporal de QA en `/tmp`, sin imprimir cookies, passwords ni payloads completos.
+
+Resultado:
+
+- `GET /health`: `200`.
+- Sin sesión: delivery endpoints respondieron `401` con XSRF válido en mutables.
+- Admin: permisos delivery presentes tras corrección de baseline.
+- `Repartidor`: solo `deliveries.complete` y `deliveries.view`.
+- Flujo Admin: crear orden/entrega, consultar por orden, listar, asignar, registrar salida y completar con `recipientName`: correcto.
+- Validación `complete` sin `recipientName`: `400`.
+- Validación `failed` sin `failedReason`: `400`.
+- Flujo Repartidor: ve entregas asignadas, recibe `403` al asignar y al registrar salida, completa entrega asignada.
+- Logout: correcto.
+- Se crearon datos QA locales con prefijos de prueba; no se limpiaron.
+
+### Validaciones Ejecutadas
+
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 121/121.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; warning de budget inicial excedido por 26.71 kB.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias de delivery, permisos, rutas, `Repartidor`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`: ejecutadas. Las búsquedas sensibles usaron salida limitada a archivos.
+
+### Confirmaciones
+
+- No se tocaron frontend UI, `AuthService`, guards, cookies, XSRF ni deploy.
+- No se instalaron dependencias.
+- No se crearon migraciones adicionales.
+- No se ejecutó `dotnet user-secrets list`.
+- No se imprimieron secretos.
+- No se usó `codex-cobranza-sql`.
+- No se hizo commit.
+- Pendiente: aplicar migración en VPS DEV antes de usar endpoints delivery publicados.
+
+## 2026-07-04 - Fase 3.4.1 Backend Delivery MVP Y Permisos
+
+### Cambio Realizado
+
+Se implementó Fase 3.4.1 como backend delivery MVP + permisos, sin UI.
+
+### Backend
+
+- Se agregó `DeliveryStatus`.
+- Se agregó entidad `WorkOrderDelivery`.
+- Se configuró EF para `WorkOrderDeliveries`.
+- Se agregó `DbSet<WorkOrderDelivery>`.
+- Se agregó migración `20260704053734_AddWorkOrderDeliveries`.
+- Se agregaron contratos y servicio `IDeliveryService`.
+- Se agregaron endpoints API:
+  - `GET /api/deliveries`
+  - `GET /api/deliveries/{id}`
+  - `GET /api/work-orders/{workOrderId}/delivery`
+  - `POST /api/work-orders/{workOrderId}/delivery`
+  - `PATCH /api/deliveries/{id}/assign`
+  - `PATCH /api/deliveries/{id}/out-for-delivery`
+  - `PATCH /api/deliveries/{id}/complete`
+  - `PATCH /api/deliveries/{id}/failed`
+
+### Permisos Y Seed
+
+- Se agregaron permisos:
+  - `deliveries.view`
+  - `deliveries.assign`
+  - `deliveries.update`
+  - `deliveries.complete`
+- Admin conserva todos los permisos porque el seed Admin usa `Permissions.All`.
+- `Repartidor` se sincroniza con permisos mínimos:
+  - `deliveries.view`
+  - `deliveries.complete`
+- `Repartidor` no recibe `deliveries.assign`, `deliveries.update`, `orders.view`, `customers.view`, `payments.view`, `users.manage` ni `roles.manage`.
+
+### Reglas Implementadas
+
+- Una orden puede tener una entrega en este MVP.
+- `POST /api/work-orders/{workOrderId}/delivery` crea entrega `PendingAssignment`.
+- Asignar repartidor pasa a `Assigned`.
+- Marcar salida requiere `Assigned` y pasa a `OutForDelivery`.
+- Completar requiere `OutForDelivery` y `recipientName`; pasa a `Delivered`.
+- No entregada requiere `Assigned` u `OutForDelivery` y `failedReason`; pasa a `FailedDelivery`.
+- Transiciones inválidas devuelven `400`.
+- Orden cancelada no puede crear, salir, completar ni fallar entrega.
+- `DeliveryDate` de `WorkOrder` no se modifica.
+- Al completar entrega correctamente, `WorkOrder.Status` se sincroniza a `Delivered` para conservar tableros actuales.
+- Usuarios sin permisos administrativos solo ven/mutan entregas asignadas a su usuario.
+
+### Pruebas Agregadas
+
+- `DeliveryIntegrationTests`.
+- Actualización de `AdminSecurityIntegrationTests`.
+- Actualización de `SecuritySeederTests`.
+- Actualización de `PermissionsTests`.
+
+Cobertura principal:
+
+- `401` sin sesión.
+- `403` sin permisos.
+- Flujo Admin crear/listar/detalle/asignar/salida/completar/fallida.
+- Validaciones de `recipientName` y `failedReason`.
+- Transición inválida.
+- Repartidor ve asignadas y completa.
+- Repartidor no puede asignar.
+- Permisos y seed esperados.
+
+### Archivos Creados
+
+- `src/LaboratorioTlahuac.Domain/Deliveries/DeliveryStatus.cs`
+- `src/LaboratorioTlahuac.Domain/Deliveries/Entities/WorkOrderDelivery.cs`
+- `src/LaboratorioTlahuac.Application/Deliveries/DeliveryContracts.cs`
+- `src/LaboratorioTlahuac.Application/Deliveries/DeliveryServiceResult.cs`
+- `src/LaboratorioTlahuac.Application/Deliveries/IDeliveryService.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Deliveries/DeliveryService.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Persistence/Configurations/WorkOrderDeliveryConfiguration.cs`
+- `src/LaboratorioTlahuac.Api/Endpoints/DeliveryEndpoints.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Persistence/Migrations/20260704053734_AddWorkOrderDeliveries.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Persistence/Migrations/20260704053734_AddWorkOrderDeliveries.Designer.cs`
+- `tests/LaboratorioTlahuac.Api.Tests/DeliveryIntegrationTests.cs`
+- `docs/08-qa/delivery-api-qa.md`
+
+### Archivos Modificados
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/delivery-mvp-design.md`
+- `docs/01-product/driver-mobile-workflow.md`
+- `docs/01-product/internal-system.md`
+- `docs/01-product/operations-orders-delivery.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `src/LaboratorioTlahuac.Api/Program.cs`
+- `src/LaboratorioTlahuac.Domain/Security/Permissions.cs`
+- `src/LaboratorioTlahuac.Infrastructure/DependencyInjection.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Persistence/LaboratorioTlahuacDbContext.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Persistence/Migrations/LaboratorioTlahuacDbContextModelSnapshot.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Security/Seed/SecuritySeeder.cs`
+- `tests/LaboratorioTlahuac.Api.Tests/AdminSecurityIntegrationTests.cs`
+- `tests/LaboratorioTlahuac.Api.Tests/SecuritySeederTests.cs`
+- `tests/LaboratorioTlahuac.Domain.Tests/UnitTest1.cs`
+
+### Validaciones Ejecutadas
+
+- `git status --short` antes de modificar: sin salida.
+- `git diff --stat` antes de modificar: sin salida.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 120/120.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; warning de budget inicial excedido por 26.71 kB.
+- `git diff --check`: correcto.
+- Búsquedas finales solicitadas de delivery, permisos, rutas, `Repartidor`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`: ejecutadas; las búsquedas sensibles se limitaron a archivos para no imprimir valores.
+
+### Confirmaciones
+
+- No se implementó UI.
+- No se tocaron `AuthService`, guards, cookies ni XSRF.
+- No se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+- No se cambiaron rutas privadas reales.
+- `/dashboard` no se convirtió en ruta privada real.
+- No se cambió `DeliveryDate`.
+- No se instalaron dependencias.
+- No se hizo deploy real.
+- No se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+
+### Siguiente Fase Recomendada
+
+Fase 3.4.2 - UI admin de entregas desde órdenes.
+
 ## 2026-07-03 - Fase 3.4.0 Análisis Técnico Entregas/Repartidor Mobile-First
 
 ### Cambio Realizado
