@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -15,38 +15,39 @@ import { CustomerService } from '../customer.service';
       <header class="page-header">
         <div>
           <h1>Editar cliente</h1>
-          @if (customer) {
+          @if (customer(); as customer) {
             <p>{{ customer.displayName }}</p>
           }
         </div>
-        <a class="ghost-button" [routerLink]="customer ? ['/app/clientes', customer.id] : '/app/clientes'">
-          Volver
-        </a>
+        @if (customer(); as customer) {
+          <a class="ghost-button" [routerLink]="['/app/clientes', customer.id]">Volver</a>
+        } @else {
+          <a class="ghost-button" routerLink="/app/clientes">Volver</a>
+        }
       </header>
 
-      @if (isLoading) {
+      @if (isLoading()) {
         <p class="loading-state">Cargando cliente...</p>
-      } @else if (loadErrorMessage) {
-        <p class="alert-error" role="alert">{{ loadErrorMessage }}</p>
-      } @else if (customer) {
+      } @else if (customer(); as customer) {
         <app-customer-form
           submitLabel="Guardar cambios"
           [customer]="customer"
-          [isSubmitting]="isSubmitting"
-          [errorMessage]="errorMessage"
+          [isSubmitting]="isSubmitting()"
+          [errorMessage]="errorMessage()"
           (save)="update($event)"
           (cancel)="cancel()"
         />
+      } @else if (errorMessage(); as errorMessage) {
+        <p class="alert-error" role="alert">{{ errorMessage }}</p>
       }
     </section>
   `
 })
 export class CustomerEditPageComponent implements OnInit {
-  customer: CustomerDetail | null = null;
-  isLoading = false;
-  isSubmitting = false;
-  loadErrorMessage = '';
-  errorMessage = '';
+  readonly customer = signal<CustomerDetail | null>(null);
+  readonly isLoading = signal(false);
+  readonly isSubmitting = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   constructor(
     private readonly customerService: CustomerService,
@@ -59,27 +60,34 @@ export class CustomerEditPageComponent implements OnInit {
   }
 
   update(request: CustomerUpsertRequest): void {
-    if (!this.customer) {
+    const currentCustomer = this.customer();
+
+    if (!currentCustomer || this.isSubmitting()) {
       return;
     }
 
-    this.isSubmitting = true;
-    this.errorMessage = '';
+    this.isSubmitting.set(true);
+    this.errorMessage.set(null);
 
     this.customerService
-      .update(this.customer.id, request)
-      .pipe(finalize(() => (this.isSubmitting = false)))
+      .update(currentCustomer.id, request)
+      .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
-        next: (customer) => this.router.navigate(['/app/clientes', customer.id]),
+        next: (customer) =>
+          this.router.navigate(['/app/clientes', customer.id], {
+            info: { successMessage: 'Cliente actualizado correctamente.' }
+          }),
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.toSaveErrorMessage(error);
+          this.errorMessage.set(this.toSaveErrorMessage(error));
         }
       });
   }
 
   cancel(): void {
-    if (this.customer) {
-      this.router.navigate(['/app/clientes', this.customer.id]);
+    const currentCustomer = this.customer();
+
+    if (currentCustomer) {
+      this.router.navigate(['/app/clientes', currentCustomer.id]);
       return;
     }
 
@@ -90,25 +98,38 @@ export class CustomerEditPageComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
 
     if (!id) {
-      this.loadErrorMessage = 'Cliente no encontrado.';
+      this.errorMessage.set('Cliente no encontrado.');
+      this.customer.set(null);
       return;
     }
 
-    this.isLoading = true;
-    this.loadErrorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
     this.customerService
       .getById(id)
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (customer) => {
-          this.customer = customer;
+          this.customer.set(customer);
         },
         error: (error: HttpErrorResponse) => {
-          this.loadErrorMessage =
-            error.status === 404 ? 'Cliente no encontrado.' : 'No fue posible cargar el cliente.';
+          this.errorMessage.set(this.toLoadErrorMessage(error));
+          this.customer.set(null);
         }
       });
+  }
+
+  private toLoadErrorMessage(error: HttpErrorResponse): string {
+    if (error.status === 404) {
+      return 'Cliente no encontrado.';
+    }
+
+    if (error.status === 403) {
+      return 'No tienes permiso para ver clientes.';
+    }
+
+    return 'No fue posible cargar el cliente.';
   }
 
   private toSaveErrorMessage(error: HttpErrorResponse): string {

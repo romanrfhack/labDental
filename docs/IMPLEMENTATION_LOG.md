@@ -6,6 +6,88 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-03 - Corrección Admin Clientes Editar En Angular Zoneless
+
+### Cambio Realizado
+
+Se corrigió Admin > Clientes > Editar para que `/app/clientes/{id}/editar` cargue los datos del cliente en el formulario sin quedarse mostrando `Cargando cliente...`.
+
+El componente de edición ahora usa Angular signals para el estado que controla renderizado y submit: `customer`, `isLoading`, `isSubmitting` y `errorMessage`.
+
+### Causa Técnica
+
+La auditoría confirmó el mismo patrón zoneless corregido previamente en Clientes listado/detalle/crear, Nueva orden, Dashboard y Detalle de orden: `CustomerEditPageComponent` mantenía `customer`, `isLoading`, `isSubmitting`, `loadErrorMessage` y `errorMessage` como propiedades mutables actualizadas dentro de `subscribe()` y `finalize()`.
+
+En Angular sin `zone.js`, con `HttpClient` y `withFetch()`, esas mutaciones pueden no invalidar inmediatamente la vista aunque el `GET /api/customers/{id}` haya respondido, dejando visible `Cargando cliente...`.
+
+### Flujo Auditado
+
+- Ruta real: `/app/clientes/:id/editar`.
+- Componente: `CustomerEditPageComponent`.
+- Formulario hijo: `CustomerFormComponent`.
+- Lectura de parámetro: `this.route.snapshot.paramMap.get('id')`.
+- Servicio frontend: `CustomerService.getById(id)` y `CustomerService.update(id, request)`.
+- Endpoint de carga: `GET /api/customers/{id}`.
+- Endpoint de guardado: `PUT /api/customers/{id}`.
+- Endpoint backend: `CustomerEndpoints.MapCustomerEndpoints()`.
+- Servicio backend: `CustomerService.GetByIdAsync()` y `UpdateAsync()`.
+- DTO de submit conservado: `CustomerUpsertRequest`.
+
+### Respuestas De Auditoría
+
+- `Cargando cliente...` en edición lo renderizaba `CustomerEditPageComponent`.
+- La ruta real está declarada como `/app/clientes/:id/editar` bajo `/app`.
+- El parámetro `id` se lee desde `ActivatedRoute.snapshot.paramMap`.
+- Por código, el `GET /api/customers/{id}` se ejecuta mediante `CustomerService.getById(id)`.
+- Backend expone `GET /api/customers/{id:guid}` y responde `CustomerDetailResponse` con `MapCustomerDetail(customer)` cuando existe.
+- No se encontró mismatch de contrato frontend/backend como causa.
+- El componente de edición sí usaba propiedades mutables actualizadas en `subscribe()`/`finalize()`.
+- El loading se apagaba en success/error mediante `finalize()`, pero al ser propiedad mutable podía no repintar en modo zoneless.
+- Existía error visible de carga (`loadErrorMessage`) para 404/genérico; quedó consolidado en `errorMessage` signal con mensajes controlados para 404, 403 y error genérico.
+- `CustomerFormComponent` recibe correctamente el `customer` cargado y ejecuta `ngOnChanges()` para poblar el formulario.
+- El submit conserva `CustomerUpsertRequest` y el `PUT /api/customers/{id}` existente.
+- La diferencia principal frente a `CustomerDetailPageComponent` era que detalle ya usaba signals y edición no.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/customers/pages/customer-edit-page.component.ts`: migra estado renderizado a signals, actualiza template a lecturas `signal()`, mantiene errores controlados, conserva el servicio existente y navega al detalle con `NavigationExtras.info` transitorio tras guardar.
+- `docs/PROJECT_STATUS.md` y `docs/IMPLEMENTATION_LOG.md`: documentan causa raíz, alcance, archivos modificados, validación y confirmaciones.
+
+### Decisiones Técnicas
+
+- No se modificó `CustomerFormComponent` porque sus inputs actuales funcionan para creación y edición; el padre ahora entrega valores desde signals.
+- No se modificó `CustomerService` porque `GET /api/customers/{id}` y `PUT /api/customers/{id}` ya coinciden con backend y DTOs.
+- La alerta de éxito post-update usa `NavigationExtras.info`, no `history.state`, para que no sobreviva a refresh.
+- Se respetó el interceptor `401` existente: los componentes mantienen mensajes controlados como fallback y el redirect centralizado a `/login` sigue siendo responsabilidad del interceptor.
+- No se usaron hacks de repintado como `setTimeout`, reload, `ApplicationRef.tick()`, clicks simulados ni `detectChanges()`.
+
+### Validaciones Ejecutadas
+
+- `git diff --check`: correcto.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; reporta warning de presupuesto inicial excedido por 2.79 kB.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- `git status --short`: ejecutado.
+- `git diff --stat`: ejecutado.
+- No existe script frontend `test` en `src/LaboratorioTlahuac.Web/package.json`; solo existen `ng`, `start`, `build` y `watch`.
+
+### Confirmaciones
+
+- No se modificó backend.
+- No se modificó base de datos.
+- No se crearon migraciones.
+- No se cambiaron contratos API ni endpoints.
+- No se modificaron auth, sesiones, cookies, CSRF/XSRF, guards ni interceptor `401`.
+- No se agregó `zone.js` ni se quitó `withFetch()`.
+- No se desplegó.
+- No se hizo commit.
+
+### Pendientes
+
+- Validar manualmente en navegador real: `/app/clientes`, clic en `Editar`, carga de `/app/clientes/{id}/editar` sin clic manual, edición de un campo no crítico, guardado, navegación al detalle, regreso a listado, refresh directo de la URL de edición, consola sin errores y Network con `GET /api/customers/{id}` y `PUT /api/customers/{id}` correctos.
+- Validar regresión manual rápida en `/app/clientes/nuevo`, `/app/clientes/{id}`, `/app/dashboard` y `/app/ordenes/nueva`.
+- Continúan existiendo patrones de estado mutable async en otros módulos administrativos fuera del alcance, por ejemplo doctores internos, órdenes listado/edición, etiquetas y pagos.
+
 ## 2026-07-03 - Redirección A Login Por Sesión Expirada
 
 ### Cambio Realizado
