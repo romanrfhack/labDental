@@ -176,9 +176,9 @@ Permisos actuales relevantes:
 
 No existen permisos de reparto en el código actual. Permisos sugeridos para fases futuras:
 
-- `delivery.view`: ver entregas asignadas o panel de entregas.
-- `delivery.update`: avanzar estado de entrega y registrar recibido.
-- `delivery.assign`: asignar repartidor y registrar salida, si se separa de administración.
+- `deliveries.view`: ver entregas asignadas o panel de entregas.
+- `deliveries.update`: avanzar estado de entrega y registrar recibido.
+- `deliveries.assign`: asignar repartidor y registrar salida, si se separa de administración.
 - `labels.print`: imprimir etiquetas, si se decide separar de `orders.view`.
 
 Para el MVP de etiquetas desde detalle de orden puede bastar inicialmente con `orders.view`, pero si imprimir etiquetas se considera acción sensible conviene agregar permiso explícito en una fase posterior.
@@ -189,9 +189,10 @@ Existe modelo de usuarios, roles, permisos y seed:
 
 - Rol `Admin` con todos los permisos.
 - Seed QA limitado solo `Development`, desactivado por default.
-- Páginas `/app/admin/usuarios` y `/app/admin/roles` existen como placeholders.
+- Fase 3.3 implementa `/app/admin/usuarios` y `/app/admin/roles`.
+- Rol `Repartidor` preparado sin permisos activos.
 
-No existe CRUD funcional de usuarios/roles en la app. Para rol repartidor se recomienda primero definir permisos y, si hace falta validar en DEV/local, usar mecanismo seguro de seed/QA antes de construir CRUD administrativo.
+Usuarios ya permite CRUD administrativo mínimo y asignación de roles existentes; Roles queda readonly para ver permisos. Para el flujo repartidor falta definir permisos `deliveries.*`, modelo de entregas y endpoints antes de otorgar acceso operativo.
 
 ### Catálogo Público Y Backlog
 
@@ -276,7 +277,7 @@ Alternativa mínima para MVP: usar `ReadyForDelivery` y `Delivered` en `WorkOrde
 
 Fase 3.2 de etiquetas quedó implementada sin campos nuevos al imprimir datos existentes y textos pendientes seguros para dirección/contacto.
 
-Para Fase 3.3 de reparto sí se requerirá diseño de base de datos. Campos o entidades posibles:
+Para Fase 3.4 de reparto sí se requerirá diseño de base de datos. Campos o entidades posibles:
 
 - Entidad `Delivery` o `DeliveryAssignment`.
 - `WorkOrderId`.
@@ -310,9 +311,9 @@ MVP etiquetas:
 
 MVP reparto:
 
-- `delivery.view`: ver entregas.
-- `delivery.update`: marcar salida, no entregada o entregada según rol.
-- `delivery.assign`: asignar repartidor, recomendado para administración.
+- `deliveries.view`: ver entregas.
+- `deliveries.update`: marcar salida, no entregada o entregada según rol.
+- `deliveries.assign`: asignar repartidor, recomendado para administración.
 - `orders.view`: consultar datos esenciales de orden.
 - `customers.view`: solo si la ruta de entrega consulta datos completos del cliente; preferir DTO mínimo de entrega para no exponer de más al repartidor.
 
@@ -323,7 +324,7 @@ Fase 3.2 etiquetas:
 - Sin cambios de base si las etiquetas usan datos existentes.
 - Sin migraciones si solo se agregan rutas privadas de impresión y CSS.
 
-Fase 3.3 reparto:
+Fase 3.4 reparto:
 
 - Probable migración nueva para entidad de entregas/asignaciones.
 - Probable relación con `Users` para repartidor.
@@ -331,10 +332,10 @@ Fase 3.3 reparto:
 - Posibles índices por repartidor, estado y fecha.
 - Definir si dirección/contacto se lee vivo desde cliente o se guarda snapshot.
 
-Fase 3.4 usuarios/roles:
+Fase 3.3 usuarios/roles:
 
-- Puede apoyarse en tablas existentes, pero requiere endpoints, pantallas y reglas de seguridad.
-- Evaluar si hace falta cambio de modelo antes de construir CRUD.
+- Implementada con tablas existentes, endpoints privados, pantallas y reglas de seguridad.
+- Prepara rol `Repartidor` sin permisos activos ni acceso amplio a órdenes completas.
 
 Fase 3.5 catálogo:
 
@@ -343,8 +344,8 @@ Fase 3.5 catálogo:
 ## Prioridad Recomendada
 
 1. Validar Fase 3.2 con impresora térmica real en DEV.
-2. Fase 3.3: entrega/repartidor mobile-first.
-3. Fase 3.4: administración de usuarios/roles.
+2. Fase 3.3: administración de usuarios/roles MVP. Implementada.
+3. Fase 3.4: entrega/repartidor mobile-first.
 4. Fase 3.5: administración de catálogo, precios e imágenes.
 
-La siguiente fase implementable mayor es Fase 3.3, pero antes conviene cerrar prueba física de etiquetas para confirmar tamaño real, margen, escala del navegador y calibración de rollo.
+La siguiente fase implementable mayor es Fase 3.4, pero antes conviene validar Fase 3.3 en DEV y cerrar prueba física de etiquetas para confirmar tamaño real, margen, escala del navegador y calibración de rollo.

@@ -4,6 +4,8 @@ public sealed class SecuritySeedOptions
 {
     public const string SectionName = "SecuritySeed";
 
+    public bool EnsureBaselineOnStartup { get; init; }
+
     public bool RunOnStartup { get; init; }
 
     public string AdminRoleName { get; init; } = "Admin";

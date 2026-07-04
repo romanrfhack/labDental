@@ -10,6 +10,75 @@ Limitación de ejecución: no hay navegador/headless local instalado en este ent
 
 Seguimiento Fase 2.3: los dos hallazgos principales de este reporte quedaron corregidos por código y pruebas. El dashboard usa fecha operativa de negocio `America/Mexico_City` para `dueToday`, `overdue` y `upcomingDue`; la navegación privada marca la ruta activa con `routerLinkActive` y estilos accesibles.
 
+## Fase 3.3 - Usuarios Y Roles MVP
+
+### Fecha
+
+- Implementación técnica: 2026-07-03, America/Mexico_City.
+- Sin commits.
+- Sin migraciones.
+- Sin dependencias nuevas.
+- Sin cambios a `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies ni XSRF.
+
+### Alcance Implementado
+
+| Ruta | Resultado |
+| --- | --- |
+| `/app/admin/usuarios` | Deja de ser placeholder; lista usuarios, crea usuarios, edita email/nombre, activa/desactiva, asigna roles existentes y actualiza contraseña temporal. |
+| `/app/admin/roles` | Deja de ser placeholder; muestra roles, conteos y permisos por rol en modo solo lectura. |
+| `/app/access-denied` | Se conserva como destino de usuario autenticado sin permiso por `permissionGuard`. |
+
+### Endpoints Cubiertos
+
+| Endpoint | Permiso |
+| --- | --- |
+| `GET /api/admin/users` | `users.manage` |
+| `GET /api/admin/users/{id}` | `users.manage` |
+| `POST /api/admin/users` | `users.manage` |
+| `PUT /api/admin/users/{id}` | `users.manage` |
+| `PATCH /api/admin/users/{id}/status` | `users.manage` |
+| `PATCH /api/admin/users/{id}/roles` | `users.manage` |
+| `POST /api/admin/users/{id}/temporary-password` | `users.manage` |
+| `GET /api/admin/roles` | `roles.manage` |
+| `GET /api/admin/roles/{id}` | `roles.manage` |
+
+### Seguridad Validada Por Pruebas
+
+- Admin puede listar usuarios.
+- Admin puede crear usuario.
+- Admin puede asignar rol.
+- Admin puede activar/desactivar usuario.
+- Usuario autenticado sin permiso recibe `403`.
+- Usuario sin sesión recibe `401`.
+- Respuestas de usuarios no exponen `passwordHash`.
+- La contraseña temporal capturada para crear usuario no se devuelve en la respuesta.
+- Roles list/detail funcionan.
+- Admin existente conserva `users.manage`, `roles.manage` y rol `Admin`.
+- El rol `Repartidor` existe por baseline Development y no tiene permisos asignados.
+
+### Limitaciones Y Pendientes
+
+- Roles/permisos quedan readonly; no hay edición de permisos en Fase 3.3.
+- No hay delete de usuarios ni roles.
+- No hay force-change password en primer login después de contraseña temporal.
+- No se envían correos ni hay recuperación de contraseña por correo.
+- No se implementan entregas, flujo repartidor, catálogo ni permisos `deliveries.view`/`deliveries.update`.
+- Validación visual en navegador real queda pendiente en DEV: `/app/admin/usuarios`, `/app/admin/roles`, creación de usuario, asignación de `Repartidor`, activar/desactivar y acceso denegado con usuario sin `users.manage`/`roles.manage`.
+
+### Como Validar En DEV
+
+1. Entrar a `https://dev.laboratoriodentaltlahuac.com/login` con Admin.
+2. Abrir `/app/admin/usuarios`.
+3. Confirmar listado de usuarios, roles actuales y estado activo/inactivo.
+4. Crear un usuario con contraseña temporal y rol `Repartidor`.
+5. Confirmar que no se muestra la contraseña después de crear.
+6. Editar nombre/email del usuario creado.
+7. Activar/desactivar el usuario creado.
+8. Cambiar roles del usuario y guardar.
+9. Abrir `/app/admin/roles`.
+10. Confirmar que `Repartidor` aparece sin permisos y que `Admin` conserva permisos administrativos.
+11. Iniciar sesión con usuario sin `users.manage`/`roles.manage` y confirmar `/app/admin/usuarios` o `/app/admin/roles` terminan en `/app/access-denied`.
+
 ## Fase 3.0 - Baseline UAT DEV
 
 ### Fecha

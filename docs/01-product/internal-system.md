@@ -21,11 +21,12 @@ Permitir que el laboratorio opere registros nuevos sin depender del Excel para e
 - Estados e historial de órdenes.
 - Pagos, abonos, cancelación de pagos y saldos calculados.
 - Dashboard operativo y financiero básico.
-- Páginas iniciales de inventario, proveedores, usuarios y roles.
+- Administración MVP de usuarios y roles.
+- Páginas iniciales de inventario y proveedores.
 
 ## Órdenes, Etiquetas Y Entrega
 
-Estado: Fase 3.1 documentó el análisis operativo y Fase 3.2 implementó impresión MVP de etiquetas desde órdenes existentes.
+Estado: Fase 3.1 documentó el análisis operativo, Fase 3.2 implementó impresión MVP de etiquetas desde órdenes existentes y Fase 3.3 preparó administración de usuarios/roles como habilitador operativo previo a reparto.
 
 La Fase 3.1 definió el siguiente frente operativo sobre órdenes existentes: etiquetas internas, etiquetas de entrega, flujo de salida a repartidor, captura de recibido y priorización futura de usuarios/roles y catálogo. La Fase 3.2 ya permite abrir e imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`.
 
@@ -46,11 +47,61 @@ Estado: Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes ex
 Prioridad sugerida:
 
 1. Fase 3.2: imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`. Implementada con rutas privadas `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`.
-2. Fase 3.3: validar impresión real con impresora térmica y entrega/repartidor mobile-first bajo `/app/entregas` o ruta equivalente.
-3. Fase 3.4: administración de usuarios/roles.
+2. Fase 3.3: administración de usuarios/roles MVP para DEV/UAT. Implementada.
+3. Fase 3.4: entrega/repartidor mobile-first bajo `/app/entregas` o ruta equivalente.
 4. Fase 3.5: administración de catálogo.
 
-Fase 3.2 quedó implementada sin migraciones, sin dependencias, sin endpoints nuevos y sin tocar auth/guards. Reutiliza el detalle existente de orden y CSS de impresión; como el DTO actual no incluye dirección/contacto completos del cliente, la etiqueta de entrega muestra `Dirección pendiente` y `Contacto pendiente`. Fase 3.3 sí requerirá diseño de base para asignación, salida, entrega, receptor y trazabilidad.
+Fase 3.2 quedó implementada sin migraciones, sin dependencias, sin endpoints nuevos y sin tocar auth/guards. Reutiliza el detalle existente de orden y CSS de impresión; como el DTO actual no incluye dirección/contacto completos del cliente, la etiqueta de entrega muestra `Dirección pendiente` y `Contacto pendiente`. Fase 3.4 sí requerirá diseño de base para asignación, salida, entrega, receptor y trazabilidad.
+
+Fase 3.3 quedó implementada sin migraciones y sin modificar `AuthService`, guards, cookies ni XSRF. Prepara el rol `Repartidor` sin permisos activos ni acceso amplio a órdenes completas. Fase 3.4 deberá diseñar permisos nuevos de entregas, sugeridos como `deliveries.view` y `deliveries.update`, junto con modelo y endpoints de salida/recepción.
+
+## Usuarios Y Roles
+
+Estado: Fase 3.3 implementada como MVP operativo para DEV/UAT y Fase 3.3.1 validada tecnicamente para preparar despliegue DEV.
+
+- Rutas privadas:
+  - `/app/admin/usuarios`: administración de usuarios.
+  - `/app/admin/roles`: consulta readonly de roles y permisos.
+- Endpoints de usuarios:
+  - `GET /api/admin/users`
+  - `GET /api/admin/users/{id}`
+  - `POST /api/admin/users`
+  - `PUT /api/admin/users/{id}`
+  - `PATCH /api/admin/users/{id}/status`
+  - `PATCH /api/admin/users/{id}/roles`
+  - `POST /api/admin/users/{id}/temporary-password`
+- Endpoints de roles:
+  - `GET /api/admin/roles`
+  - `GET /api/admin/roles/{id}`
+- Permisos:
+  - Usuarios: `users.manage`.
+  - Roles: `roles.manage`.
+- Capacidades MVP:
+  - listar usuarios;
+  - crear usuarios con contraseña temporal capturada por Admin;
+  - editar email y nombre;
+  - activar/desactivar usuarios;
+  - asignar roles existentes;
+  - actualizar contraseña temporal sin mostrarla después;
+  - ver roles y permisos por rol en modo solo lectura.
+- Seguridad:
+  - no hay delete de usuarios ni roles;
+  - no se expone `passwordHash`;
+  - no se envían correos;
+  - no se implementa recuperación de contraseña por correo;
+  - el backend evita desactivar al propio usuario y evita dejar el sistema sin un usuario activo con `users.manage`.
+- QA Fase 3.3.1:
+  - appsettings revisados sin passwords reales ni secretos guardados;
+  - endpoints admin protegidos por `users.manage` o `roles.manage`;
+  - sin sesión, los nueve endpoints admin devuelven `401` usando XSRF válido en mutables;
+  - usuario sin permisos admin recibe `403` por pruebas API;
+  - Admin puede operar por pruebas API;
+  - la contraseña temporal no aparece en listados ni respuestas y no se registra en logs;
+  - el rol `Repartidor` existe como rol base sin permisos activos.
+- Limitaciones:
+  - no hay force-change password en el siguiente login;
+  - la edición de permisos/roles queda fuera del MVP;
+  - `Repartidor` queda preparado sin permisos de entregas hasta diseñar el módulo de entregas.
 
 ### Administración De Catálogo, Precios E Imágenes
 

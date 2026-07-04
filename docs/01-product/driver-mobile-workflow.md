@@ -1,6 +1,6 @@
 # Flujo Mobile-First Para Repartidor
 
-Fuente funcional para la futura Fase 3.3. Este documento define el MVP de repartidor desde navegador móvil. No implementa código, permisos, base de datos ni endpoints.
+Fuente funcional para la futura Fase 3.4. Este documento define el MVP de repartidor desde navegador móvil. No implementa código, permisos, base de datos ni endpoints.
 
 ## Objetivo
 
@@ -12,15 +12,15 @@ Rol futuro sugerido: `Repartidor`.
 
 Permisos sugeridos:
 
-- `delivery.view`: ver entregas asignadas.
-- `delivery.update`: actualizar estado de entrega y registrar recibido.
+- `deliveries.view`: ver entregas asignadas.
+- `deliveries.update`: actualizar estado de entrega y registrar recibido.
 
 Permisos administrativos opcionales:
 
-- `delivery.assign`: asignar repartidor y registrar salida.
-- `delivery.viewAll`: ver todas las entregas, si se separa de `delivery.view`.
+- `deliveries.assign`: asignar repartidor y registrar salida.
+- `deliveries.viewAll`: ver todas las entregas, si se separa de `deliveries.view`.
 
-El sistema actual todavía no tiene estos permisos ni CRUD funcional de usuarios/roles. Para validar primero puede convenir seed/usuarios QA controlados antes de construir administración completa.
+El sistema actual todavía no tiene estos permisos ni módulo de entregas. Fase 3.3 ya preparó administración MVP de usuarios/roles y rol `Repartidor` sin permisos activos.
 
 ## Ruta Recomendada
 
@@ -116,7 +116,7 @@ Resultado esperado:
 - Administración ve cuándo se entregó.
 - Administración ve a qué cliente se entregó.
 - Administración ve quién recibió.
-- La orden puede cambiar a `Delivered` o mostrar estado de entrega entregado, según diseño de base de Fase 3.3.
+- La orden puede cambiar a `Delivered` o mostrar estado de entrega entregado, según diseño de base de Fase 3.4.
 
 ## Seguridad
 
@@ -130,7 +130,7 @@ Resultado esperado:
 
 ## Impacto Técnico Futuro
 
-La Fase 3.3 requerirá:
+La Fase 3.4 requerirá:
 
 - Modelo de entrega/asignación.
 - Relación con orden.

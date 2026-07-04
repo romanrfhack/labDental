@@ -99,6 +99,13 @@ public sealed class User
         UpdatedAtUtc = utcNow;
     }
 
+    public void UpdateProfile(string email, string fullName, DateTimeOffset utcNow)
+    {
+        SetEmail(email);
+        SetFullName(fullName);
+        UpdatedAtUtc = utcNow;
+    }
+
     public void Activate(DateTimeOffset utcNow)
     {
         IsActive = true;

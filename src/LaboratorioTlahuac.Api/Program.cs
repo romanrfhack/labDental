@@ -171,6 +171,7 @@ app.MapCustomerEndpoints();
 app.MapWorkOrderEndpoints();
 app.MapPaymentEndpoints();
 app.MapDashboardEndpoints();
+app.MapAdminSecurityEndpoints();
 app.MapSecurityDiagnosticEndpoints(app.Environment);
 
 app.Run();
@@ -195,6 +196,11 @@ static bool RequiresAntiforgeryValidation(HttpRequest request)
 
 static bool ShouldRunSecuritySeed(WebApplication app)
 {
+    if (app.Configuration.GetValue<bool>("SecuritySeed:EnsureBaselineOnStartup"))
+    {
+        return true;
+    }
+
     if (app.Configuration.GetValue<bool>("SecuritySeed:RunOnStartup"))
     {
         return true;

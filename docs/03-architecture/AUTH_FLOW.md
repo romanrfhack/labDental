@@ -25,8 +25,21 @@ Endpoints técnicos solo en Development:
 - `GET /api/security/permissions-check`
 - `POST /api/security/csrf-check`
 
+Endpoints administrativos Fase 3.3:
+
+- `GET /api/admin/users`
+- `GET /api/admin/users/{id}`
+- `POST /api/admin/users`
+- `PUT /api/admin/users/{id}`
+- `PATCH /api/admin/users/{id}/status`
+- `PATCH /api/admin/users/{id}/roles`
+- `POST /api/admin/users/{id}/temporary-password`
+- `GET /api/admin/roles`
+- `GET /api/admin/roles/{id}`
+
 Seed tecnico solo en Development:
 
+- `SecuritySeed:EnsureBaselineOnStartup`
 - `SecuritySeed:LimitedQaUser:RunOnStartup`
 - `SecuritySeed:LimitedQaUser:Email`
 - `SecuritySeed:LimitedQaUser:Password`
@@ -34,7 +47,9 @@ Seed tecnico solo en Development:
 - `SecuritySeed:LimitedQaUser:Permissions`
 - Variables sensibles equivalentes: `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME`
 
-Este seed no expone endpoint HTTP, no corre fuera de `Development`, esta desactivado por default y debe apagarse despues de sincronizar el usuario local.
+`SecuritySeed:EnsureBaselineOnStartup` queda activo en `Development` para asegurar el catálogo de permisos existentes y el rol `Repartidor`. Ese baseline no lee ni escribe contraseñas y crea `Repartidor` sin permisos activos.
+
+El seed QA limitado no expone endpoint HTTP, no corre fuera de `Development`, esta desactivado por default y debe apagarse despues de sincronizar el usuario local.
 
 ## Cookie De Sesión
 
@@ -105,6 +120,26 @@ Permisos por ruta privada:
 - `/app/admin/usuarios`: `users.manage`
 - `/app/admin/roles`: `roles.manage`
 
+Permisos por endpoints administrativos:
+
+- `/api/admin/users*`: `users.manage`
+- `/api/admin/roles*`: `roles.manage`
+
+Validación Fase 3.3.1:
+
+- Los nueve endpoints administrativos usan `RequireAuthorization` con policy de permiso.
+- `GET`, `POST`, `PUT` y `PATCH` de usuarios requieren `users.manage`.
+- `GET` de roles requiere `roles.manage`.
+- Sin sesión, los nueve endpoints respondieron `401`; en endpoints mutables se validó enviando XSRF válido para confirmar que el rechazo fue de autenticación/autorización y no de antiforgery.
+- Usuario autenticado sin permisos administrativos recibe `403` por pruebas API existentes para `/api/admin/users` y `/api/admin/roles`.
+- Endpoints `/api` no redirigen con `302` a `/login`; devuelven `401` o `403`.
+
+Rol `Repartidor`:
+
+- Se prepara en Fase 3.3 como rol existente sin permisos.
+- No recibe `orders.view`, `orders.edit` ni acceso amplio a órdenes completas.
+- Permisos futuros sugeridos para el módulo de entregas: `deliveries.view` y `deliveries.update`; no existen todavía en `Permissions.All`.
+
 ## Redirecciones
 
 - Usuario sin sesión en `/app/*`: redirección frontend a `/login?returnUrl=...`.
@@ -169,6 +204,9 @@ La sanitización vive en el componente de login antes de ejecutar `router.naviga
 ## Pendientes De Seguridad
 
 - Definir checklist de seguridad previo a producción.
+- Implementar force-change password para contraseñas temporales antes de operación productiva amplia.
+- Validar en DEV con usuario limitado real que `/app/admin/usuarios` y `/app/admin/roles` terminan en `/app/access-denied` sin `users.manage`/`roles.manage`.
+- Diseñar edición segura de roles/permisos si se requiere después del MVP readonly.
 - Confirmar HTTPS, reverse proxy y política final de CORS.
 - Evaluar Content Security Policy cuando el sitio público incorpore más assets o integraciones.
 - Mantener revisión de dependencias frontend y backend.

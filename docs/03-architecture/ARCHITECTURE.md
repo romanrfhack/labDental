@@ -87,6 +87,8 @@ Rutas existentes bajo `/app`:
 
 `/dashboard` no es una ruta privada real del sistema actual.
 
+Fase 3.3 reemplaza los placeholders de `/app/admin/usuarios` y `/app/admin/roles`: Usuarios es funcional para CRUD administrativo mínimo y asignación de roles existentes; Roles es funcional en modo readonly para ver permisos.
+
 ## Backend / API
 
 La API vive en `src/LaboratorioTlahuac.Api` y expone endpoints REST. Los controladores/endpoints deben mantenerse delgados y delegar reglas en servicios de aplicación/infraestructura.
@@ -99,6 +101,8 @@ Módulos API principales:
 - `/api/work-orders`
 - `/api/payments`
 - `/api/dashboard/summary`
+- `/api/admin/users`
+- `/api/admin/roles`
 
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
 
@@ -120,6 +124,10 @@ Compatibilidad de zona horaria:
 
 Seed QA limitado:
 
+- Clave baseline: `SecuritySeed:EnsureBaselineOnStartup`.
+- Uso baseline Fase 3.3: asegurar catálogo de permisos existentes y rol `Repartidor` en `Development`.
+- Rol `Repartidor`: rol de sistema sin permisos activos; no otorga acceso amplio a órdenes completas.
+- Validación Fase 3.3.1: `appsettings.json` conserva baseline apagado por default general, `appsettings.Development.json` lo activa solo para Development, y no se guardan passwords reales en appsettings.
 - Clave: `SecuritySeed:LimitedQaUser`.
 - Bandera: `SecuritySeed:LimitedQaUser:RunOnStartup`.
 - Campos: `Email`, `Password`, `FullName` y `Permissions`.
@@ -181,6 +189,7 @@ Detalle de base de datos: `docs/03-architecture/database-design.md`.
 - QA funcional del MVP administrativo documentada en `docs/08-qa/`.
 - Frontend no tiene runner no interactivo configurado como script npm; se valida con `npm run build` y revisión manual cuando aplique.
 - QA responsive del sitio público: `docs/08-qa/RESPONSIVE_CHECKLIST.md`.
+- QA usuarios/roles Fase 3.3.1: `docs/08-qa/users-roles-qa.md` registra endpoints, permisos, matriz `401` sin sesión, cobertura `403` por pruebas API, riesgos de contraseña temporal y preparación DEV.
 
 ## Supuestos Técnicos
 

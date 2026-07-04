@@ -4,7 +4,7 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 
 ## Estado Actual
 
-- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only y Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes.
+- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes y Fase 3.3 implementada para administración MVP de usuarios/roles.
 - Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; contenido final del cliente pendiente.
 - Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev` y validado como baseline UAT inicial en Fase 3.0 para sitio público, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login`.
 - Deploy productivo: pendiente de plataforma, DNS, HTTPS, variables y base productiva.
@@ -68,6 +68,7 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 - El ID canónico es IANA; el backend contempla `Central Standard Time (Mexico)` como equivalente Windows.
 - Usuario QA limitado local: `SecuritySeed:LimitedQaUser:RunOnStartup`, `SecuritySeed:LimitedQaUser:Permissions` y `LT_QA_LIMITED_EMAIL` / `LT_QA_LIMITED_PASSWORD` / `LT_QA_LIMITED_FULL_NAME`.
 - El seed QA limitado solo corre en `Development`, esta desactivado por default y no debe guardar ni imprimir contrasenas.
+- Baseline de seguridad Development: `SecuritySeed:EnsureBaselineOnStartup=true` asegura permisos existentes y rol `Repartidor` sin permisos activos.
 
 ## Rutas Principales
 
@@ -76,7 +77,8 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 - Aplicación privada: `/app`.
 - Dashboard privado real: `/app/dashboard`.
 - Etiquetas privadas de órdenes: `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`.
-- API: `/api/auth`, `/api/customers`, `/api/work-orders`, `/api/payments`, `/api/dashboard/summary`.
+- Admin privado: `/app/admin/usuarios` y `/app/admin/roles`.
+- API: `/api/auth`, `/api/customers`, `/api/work-orders`, `/api/payments`, `/api/dashboard/summary`, `/api/admin/users`, `/api/admin/roles`.
 - Health: `/health`.
 
 ## Documentación Canónica
@@ -95,10 +97,11 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 - QA MVP administrativo: [docs/08-qa/mvp-qa-checklist.md](docs/08-qa/mvp-qa-checklist.md).
 - QA impresión de etiquetas: [docs/08-qa/label-printing-qa.md](docs/08-qa/label-printing-qa.md).
 - Plan QA usuario limitado: [docs/08-qa/limited-user-qa-plan.md](docs/08-qa/limited-user-qa-plan.md).
+- QA usuarios y roles: [docs/08-qa/users-roles-qa.md](docs/08-qa/users-roles-qa.md).
 - Documentación comercial: [docs/09-commercial/](docs/09-commercial/).
 
 ## Próximos Pasos
 
-1. Validar Fase 3.2 en DEV con impresora térmica real y ajustar escala/márgenes del navegador si hace falta.
-2. Cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real.
+1. Desplegar Fase 3.3 a DEV y validar `/app/admin/usuarios`, `/app/admin/roles`, creación/asignación de usuario y acceso denegado para usuario sin permisos administrativos.
+2. Validar Fase 3.2 en DEV con impresora térmica real y ajustar escala/márgenes del navegador si hace falta.
 3. Confirmar contenido real pendiente del cliente: dirección, horarios, WhatsApp, precios y materiales visuales.

@@ -171,4 +171,4 @@ Checklist físico:
 
 No hay hallazgos técnicos bloqueantes para preparar despliegue DEV desde rama `dev`.
 
-Siguiente paso recomendado: commit/push a `dev`, desplegar en VPS DEV y ejecutar la prueba física con impresora térmica real antes de iniciar cambios funcionales de Fase 3.3.
+Siguiente paso recomendado: commit/push a `dev`, desplegar en VPS DEV y ejecutar la prueba física con impresora térmica real en paralelo a la validación DEV de Fase 3.3. El flujo repartidor queda para Fase 3.4.

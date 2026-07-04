@@ -88,8 +88,8 @@ Antes de implementar se debe definir:
 La secuencia sugerida después de Fase 3.2 es:
 
 1. Validación real de etiquetas con impresora térmica.
-2. Fase 3.3: entrega/repartidor mobile-first.
-3. Fase 3.4: usuarios/roles.
+2. Fase 3.3: usuarios/roles MVP. Implementada.
+3. Fase 3.4: entrega/repartidor mobile-first.
 4. Fase 3.5: administración de catálogo.
 
 El catálogo requiere modelo de datos, endpoints, almacenamiento de imágenes, permisos y reglas de publicación; por eso no conviene mezclarlo con el MVP operativo de entrega.

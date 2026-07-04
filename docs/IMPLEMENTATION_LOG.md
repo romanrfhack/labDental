@@ -6,6 +6,194 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-03 - Fase 3.3.1 QA Seguridad Usuarios/Roles Y Preparacion DEV
+
+### Cambio Realizado
+
+Se ejecutó QA de seguridad, validación técnica y preparación de despliegue DEV para la administración MVP de usuarios y roles.
+
+No se implementaron funcionalidades nuevas, no se rediseñaron pantallas, no se hicieron migraciones, no se tocó deploy real y no se hizo commit.
+
+### Seguridad Revisada
+
+- `appsettings.json` conserva `SecuritySeed:EnsureBaselineOnStartup=false` y `SecuritySeed:RunOnStartup=false`.
+- `appsettings.Development.json` mantiene `SecuritySeed:EnsureBaselineOnStartup=true` solo para Development.
+- Revisión redaccionada de `ConnectionStrings`: cadenas locales sin `Password=` ni `User Id=`.
+- `SecuritySeed:Admin:Password` permanece vacío en `appsettings.json`.
+- No se detectaron passwords reales ni secretos guardados en appsettings.
+- Todos los endpoints admin tienen `RequireAuthorization` con `users.manage` o `roles.manage`.
+- Sin sesión, los nueve endpoints admin devolvieron `401`; para `POST`/`PUT`/`PATCH` se envió XSRF válido para aislar la validación de autenticación.
+- Usuario sin permisos admin recibe `403` por pruebas API existentes para `/api/admin/users` y `/api/admin/roles`.
+- La contraseña temporal no se devuelve en listados ni detalles, no se registra en logs y queda como riesgo DEV/UAT hasta implementar force-change password.
+- El backend evita desactivar la propia cuenta y evita dejar el sistema sin un usuario activo con `users.manage`.
+- `Repartidor` queda como rol base sin permisos activos; permisos reales de entregas se difieren a Fase 3.4.
+
+### Validacion Local
+
+- `docker ps --filter name=ldt-labdental-sql`: `ldt-labdental-sql` activo en `14336`.
+- `docker ps --filter name=codex-cobranza-sql`: sin contenedor activo; no se usó.
+- API local levantada con `dotnet run --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`.
+- Angular local levantado con `npm start` en `http://localhost:4200/`.
+- `GET /health`: `200`.
+- `GET /api/auth/csrf`: `204` y token XSRF presente.
+- `/login`, `/app/admin/usuarios` y `/app/admin/roles`: shell Angular `200` por `curl`.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; warning de presupuesto inicial excedido por 31.04 kB (`531.04 kB` contra budget `500.00 kB`).
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 110/110.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias ejecutadas para endpoints, permisos, rutas, `Repartidor`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`.
+- Las búsquedas de variables sensibles y `ConnectionStrings` se limitaron a archivos para no imprimir valores.
+
+### Documentación Actualizada
+
+- `docs/08-qa/users-roles-qa.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/01-product/internal-system.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Pendientes
+
+- Validar visualmente en DEV `/app/admin/usuarios` y `/app/admin/roles` con Admin real.
+- Validar en DEV `/app/access-denied` con usuario real sin `users.manage`/`roles.manage`.
+- Implementar force-change password antes de producción.
+- Atender el warning de budget inicial en una fase de optimización frontend; no bloquea DEV porque está por debajo del `maximumError` de `1MB`.
+- Si el pase DEV no encuentra bloqueantes, hacer commit/push a `dev` y desplegar DEV antes de iniciar Fase 3.4.
+
+## 2026-07-03 - Fase 3.3 Administracion De Usuarios Y Roles MVP
+
+### Cambio Realizado
+
+Se implementó la administración MVP de usuarios y roles para DEV/UAT.
+
+`/app/admin/usuarios` deja de ser placeholder y permite:
+
+- listar usuarios;
+- crear usuarios con contraseña temporal capturada por Admin;
+- editar email y nombre;
+- activar/desactivar usuarios;
+- asignar roles existentes;
+- actualizar contraseña temporal sin mostrarla después ni enviarla por correo;
+- ver estados de carga, error y vacío con layout responsive.
+
+`/app/admin/roles` deja de ser placeholder y permite ver roles, conteos y permisos por rol en modo solo lectura.
+
+### Backend
+
+Endpoints agregados bajo `/api/admin`:
+
+- `GET /api/admin/users`
+- `GET /api/admin/users/{id}`
+- `POST /api/admin/users`
+- `PUT /api/admin/users/{id}`
+- `PATCH /api/admin/users/{id}/status`
+- `PATCH /api/admin/users/{id}/roles`
+- `POST /api/admin/users/{id}/temporary-password`
+- `GET /api/admin/roles`
+- `GET /api/admin/roles/{id}`
+
+Archivos creados:
+
+- `src/LaboratorioTlahuac.Application/Admin/AdminSecurityContracts.cs`
+- `src/LaboratorioTlahuac.Application/Admin/AdminSecurityServiceResult.cs`
+- `src/LaboratorioTlahuac.Application/Admin/IAdminSecurityService.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Admin/AdminSecurityService.cs`
+- `src/LaboratorioTlahuac.Api/Endpoints/AdminSecurityEndpoints.cs`
+- `tests/LaboratorioTlahuac.Api.Tests/AdminSecurityIntegrationTests.cs`
+
+Archivos modificados:
+
+- `src/LaboratorioTlahuac.Domain/Security/Entities/User.cs`: agrega actualización controlada de email/nombre.
+- `src/LaboratorioTlahuac.Infrastructure/DependencyInjection.cs`: registra `IAdminSecurityService`.
+- `src/LaboratorioTlahuac.Api/Program.cs`: mapea endpoints admin y considera `SecuritySeed:EnsureBaselineOnStartup`.
+- `src/LaboratorioTlahuac.Infrastructure/Security/Seed/SecuritySeedOptions.cs`: agrega bandera de baseline.
+- `src/LaboratorioTlahuac.Infrastructure/Security/Seed/SecuritySeeder.cs`: asegura permisos existentes y rol `Repartidor`.
+- `src/LaboratorioTlahuac.Api/appsettings.json`: documenta baseline apagado por default general.
+- `src/LaboratorioTlahuac.Api/appsettings.Development.json`: activa baseline Development.
+
+### Frontend
+
+Archivos creados:
+
+- `src/LaboratorioTlahuac.Web/src/app/admin/admin-security.models.ts`
+- `src/LaboratorioTlahuac.Web/src/app/admin/admin-security.service.ts`
+
+Archivos modificados:
+
+- `src/LaboratorioTlahuac.Web/src/app/admin/pages/users/users-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/admin/pages/roles/roles-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/styles.scss`
+
+Las rutas existentes en `app.routes.ts` se conservaron:
+
+- `/app/admin/usuarios` requiere `users.manage`.
+- `/app/admin/roles` requiere `roles.manage`.
+
+No se modificaron `auth.guard.ts`, `permission.guard.ts`, `AuthService`, cookies, XSRF, `returnUrl` ni `/dashboard`.
+
+### Seguridad Y Decisiones
+
+- El modelo actual soporta usuarios, roles y permisos; no se crearon migraciones.
+- No hay delete de usuarios ni roles.
+- Roles/permisos quedan readonly en Fase 3.3.
+- Las respuestas admin no incluyen `passwordHash`.
+- La contraseña temporal se recibe por request, se hashea con `PasswordHasher<User>` y no se devuelve en respuestas.
+- El backend evita desactivar al propio usuario.
+- El backend evita dejar el sistema sin un usuario activo con `users.manage`.
+- `Repartidor` se prepara como rol de sistema sin permisos activos y sin acceso amplio a órdenes completas.
+- Permisos futuros sugeridos para entregas: `deliveries.view` y `deliveries.update`; no se agregaron a `Permissions.All` porque no existe módulo de entregas todavía.
+
+### Pruebas Agregadas
+
+`AdminSecurityIntegrationTests` cubre:
+
+- Admin puede listar usuarios.
+- Admin puede crear usuario.
+- Admin puede asignar rol.
+- Admin puede activar/desactivar usuario.
+- Usuario sin permiso recibe `403`.
+- Usuario sin sesión recibe `401`.
+- No se filtra `passwordHash`.
+- La contraseña temporal no se devuelve en respuesta.
+- Roles list/detail funcionan.
+- Admin existente conserva `users.manage`, `roles.manage` y rol `Admin`.
+- `Repartidor` existe y no tiene permisos.
+
+### Validaciones Ejecutadas
+
+- `git status --short`: limpio al inicio.
+- `git diff --stat`: limpio al inicio.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; warning de presupuesto inicial excedido por 31.04 kB.
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 110/110.
+- `git diff --check`: correcto.
+- `rg "/app/admin/usuarios" src docs README.md`: ejecutado.
+- `rg "/app/admin/roles" src docs README.md`: ejecutado.
+- `rg "users.manage" src docs tests README.md`: ejecutado.
+- `rg "roles.manage" src docs tests README.md`: ejecutado.
+- `rg "Repartidor" src docs tests README.md`: ejecutado.
+- `rg "/dashboard" .`: ejecutado; no se creó `/dashboard` como ruta privada real.
+- `rg "/app/dashboard" .`: ejecutado; `/app/dashboard` sigue siendo la ruta privada real.
+- `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: ejecutado; `/login` sigue público con `returnUrl`.
+- `rg "LT_ADMIN_PASSWORD" .`: ejecutado; solo nombres de variables/placeholders o referencias documentales, sin valores reales impresos en documentación.
+- `rg "LT_QA_LIMITED_PASSWORD" .`: ejecutado; solo nombres de variables/placeholders o referencias documentales, sin valores reales impresos en documentación.
+- `rg "LDT_SQL_SA_PASSWORD" .`: ejecutado; solo nombres de variables/placeholders o referencias documentales, sin valores reales impresos en documentación.
+- `rg "ConnectionStrings" src docs README.md`: ejecutado; solo claves/placeholders o cadenas locales sin passwords reales documentados.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: ejecutado; solo menciones históricas/documentales de no uso.
+
+### Pendientes
+
+- Ejecutar validación visual real en DEV de `/app/admin/usuarios` y `/app/admin/roles`.
+- Confirmar `/app/access-denied` en DEV con usuario real sin `users.manage`/`roles.manage`.
+- Implementar force-change password antes de operación productiva amplia.
+- Diseñar Fase 3.4 de entregas/repartidor mobile-first con permisos, modelo, endpoints y UI.
+- Mantener pendiente la prueba física de etiquetas por driver de impresora.
+
 ## 2026-07-03 - Auditoría Admin Angular Zoneless Extendida
 
 ### Cambio Realizado
@@ -789,7 +977,7 @@ Etiqueta entrega:
 
 ### Siguiente Fase Recomendada
 
-Validar Fase 3.2 en DEV con impresora térmica real, confirmar escala/márgenes/orientación en navegador y después avanzar Fase 3.3 de entrega/repartidor mobile-first.
+Validar Fase 3.2 en DEV con impresora térmica real, confirmar escala/márgenes/orientación en navegador y avanzar con usuarios/roles como habilitador previo de reparto. Esta recomendación quedó actualizada posteriormente por Fase 3.3.
 
 ## 2026-07-02 - Fase 3.1 Análisis Operativo De Órdenes, Etiquetas Y Reparto
 
@@ -847,7 +1035,7 @@ Estrategia inicial:
 Se propuso MVP mobile-first:
 
 - Rol futuro `Repartidor`.
-- Permisos sugeridos `delivery.view` y `delivery.update`.
+- Permisos sugeridos `deliveries.view` y `deliveries.update`.
 - Ruta privada recomendada `/app/entregas`.
 - Listado de entregas asignadas.
 - Detalle con cliente, dirección, contacto, indicaciones y trabajos.

@@ -16,6 +16,8 @@ public sealed class SecuritySeeder(
     ILogger<SecuritySeeder> logger)
     : ISecuritySeeder
 {
+    private const string DriverRoleName = "Repartidor";
+    private const string DriverRoleDescription = "Rol operativo para futuras entregas; sin permisos activos en Fase 3.3.";
     private const string LimitedQaRoleName = "Limited QA";
     private const string LimitedQaRoleDescription = "Usuario QA limitado local de Development.";
     private static readonly char[] PermissionSeparators = [',', ';', ' ', '\n', '\r', '\t'];
@@ -44,8 +46,10 @@ public sealed class SecuritySeeder(
     {
         var adminSeedEnabled = configuration.GetValue<bool>($"{SecuritySeedOptions.SectionName}:RunOnStartup");
         var limitedQaSeedEnabled = IsLimitedQaSeedEnabled();
+        var baselineSeedEnabled = configuration.GetValue<bool>(
+            $"{SecuritySeedOptions.SectionName}:EnsureBaselineOnStartup");
 
-        if (!adminSeedEnabled && !limitedQaSeedEnabled)
+        if (!baselineSeedEnabled && !adminSeedEnabled && !limitedQaSeedEnabled)
         {
             return;
         }
@@ -60,6 +64,7 @@ public sealed class SecuritySeeder(
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var permissionsByKey = await EnsurePermissionsAsync(now, cancellationToken);
+        await EnsureDriverRoleAsync(now, cancellationToken);
 
         if (adminSeedEnabled)
         {
@@ -147,6 +152,25 @@ public sealed class SecuritySeeder(
         dbContext.Roles.Add(adminRole);
 
         return adminRole;
+    }
+
+    private async Task<Role> EnsureDriverRoleAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var normalizedRoleName = SecurityTextNormalizer.NormalizeName(DriverRoleName);
+        var role = await dbContext.Roles
+            .FirstOrDefaultAsync(
+                currentRole => currentRole.NormalizedName == normalizedRoleName,
+                cancellationToken);
+
+        if (role is not null)
+        {
+            return role;
+        }
+
+        role = Role.Create(DriverRoleName, DriverRoleDescription, isSystem: true, now);
+        dbContext.Roles.Add(role);
+
+        return role;
     }
 
     private async Task EnsureAdminPermissionsAsync(
