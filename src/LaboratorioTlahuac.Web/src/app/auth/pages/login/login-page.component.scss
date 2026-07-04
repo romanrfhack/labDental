@@ -16,18 +16,30 @@
   box-shadow: var(--shadow-lg);
   display: grid;
   gap: var(--space-4);
+  justify-items: center;
   max-width: 460px;
   padding: var(--space-8);
+  text-align: center;
   width: min(100%, 460px);
+}
+
+.login-logo-wrap {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .login-logo {
   background: var(--color-neutral-0);
   border: 1px solid rgba(166, 223, 247, 0.35);
   border-radius: var(--radius-md);
+  height: auto;
   margin-bottom: var(--space-2);
-  max-width: min(196px, 62vw);
-  padding: 8px;
+  max-width: min(132px, 40vw);
+  object-fit: contain;
+  padding: 6px;
+  width: 100%;
 }
 
 .login-brand {
@@ -41,16 +53,20 @@
 .login-copy {
   display: grid;
   gap: var(--space-2);
+  justify-items: center;
 }
 
 .login-copy p {
   color: var(--color-neutral-400);
+  max-width: 34ch;
 }
 
 form {
   display: grid;
   gap: var(--space-4);
   margin: var(--space-2) 0;
+  text-align: left;
+  width: 100%;
 }
 
 .login-actions {
@@ -72,5 +88,9 @@ form {
   .login-panel {
     border-radius: var(--radius-md);
     padding: var(--space-6);
+  }
+
+  .login-logo {
+    max-width: min(116px, 38vw);
   }
 }

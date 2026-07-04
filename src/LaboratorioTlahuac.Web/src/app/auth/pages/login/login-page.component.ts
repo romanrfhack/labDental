@@ -39,13 +39,15 @@ export function getSafePrivateReturnUrl(returnUrl: string | null) {
   template: `
     <main class="login-page">
       <section class="login-panel">
-        <img
-          class="login-logo"
-          src="/assets/brand/logo-ldt.webp"
-          alt="Laboratorio Dental Tláhuac"
-          width="809"
-          height="545"
-        />
+        <div class="login-logo-wrap">
+          <img
+            class="login-logo"
+            src="/assets/brand/logo-ldt.webp"
+            alt="Laboratorio Dental Tláhuac"
+            width="809"
+            height="545"
+          />
+        </div>
         <div class="login-copy">
           <p class="login-brand">Precisión • Estética • Confianza</p>
           <h1>Acceso privado</h1>
