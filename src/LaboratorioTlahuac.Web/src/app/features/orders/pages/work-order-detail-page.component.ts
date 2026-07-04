@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { DeliveryAdminSectionComponent } from '../../deliveries/components/delivery-admin-section.component';
 import { WorkOrderPaymentsSectionComponent } from '../../payments/components/work-order-payments-section.component';
 import { WorkOrderStatusBadgeComponent } from '../components/work-order-status-badge.component';
 import { WorkOrderStatusChangeComponent } from '../components/work-order-status-change.component';
@@ -21,6 +22,7 @@ import { WorkOrderService } from '../work-order.service';
   imports: [
     CurrencyPipe,
     DatePipe,
+    DeliveryAdminSectionComponent,
     RouterLink,
     WorkOrderPaymentsSectionComponent,
     WorkOrderStatusBadgeComponent,
@@ -116,6 +118,12 @@ import { WorkOrderService } from '../work-order.service';
           </div>
         </div>
 
+        <app-delivery-admin-section
+          [workOrderId]="order.id"
+          [isWorkOrderCancelled]="order.isCancelled"
+          (deliveryChanged)="refreshOrderAfterDeliveryChange()"
+        />
+
         @if (canChangeStatus) {
           <section class="feature-page">
             <h2>Cambiar estado</h2>
@@ -202,7 +210,21 @@ export class WorkOrderDetailPageComponent implements OnInit {
         error: (error: HttpErrorResponse) => {
           this.statusErrorMessage.set(this.toStatusErrorMessage(error));
         }
-      });
+    });
+  }
+
+  refreshOrderAfterDeliveryChange(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+
+    if (!id) {
+      return;
+    }
+
+    this.workOrderService.getById(id).subscribe({
+      next: (order) => {
+        this.order.set(order);
+      }
+    });
   }
 
   formatDateOnly(value: string | null): string {

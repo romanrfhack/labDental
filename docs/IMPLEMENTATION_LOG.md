@@ -6,6 +6,83 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-04 - Fase 3.4.2 UI Admin De Entregas Desde Órdenes
+
+### Cambio Realizado
+
+Se implementó la UI administrativa de entregas dentro del detalle de orden existente `/app/ordenes/:id`.
+
+### Frontend
+
+- Se agregó `DeliveryService` frontend para consumir:
+  - `GET /api/work-orders/{workOrderId}/delivery`
+  - `POST /api/work-orders/{workOrderId}/delivery`
+  - `GET /api/deliveries`
+  - `GET /api/deliveries/{id}`
+  - `PATCH /api/deliveries/{id}/assign`
+  - `PATCH /api/deliveries/{id}/out-for-delivery`
+  - `PATCH /api/deliveries/{id}/complete`
+  - `PATCH /api/deliveries/{id}/failed`
+- Se agregaron modelos frontend de entrega.
+- Se agregó sección `Entrega` en `/app/ordenes/:id` mediante componente standalone.
+- La sección muestra estado vacío, estado logístico, repartidor, timestamps, `Recibió` y motivo de falla.
+- La sección permite crear entrega, asignar repartidor, marcar salida, marcar entregada y marcar no entregada.
+- Los botones se muestran solo según permisos:
+  - `deliveries.assign`
+  - `deliveries.update`
+  - `deliveries.complete`
+- La visualización de entrega requiere `deliveries.view`.
+- Cada acción refresca la entrega y notifica al detalle de orden para refrescar estado/historial cuando el backend sincroniza la orden a `Delivered`.
+- Los errores `400`, `403`, `404` y `409` se muestran como mensajes controlados.
+
+### Repartidores
+
+- Se reutilizan endpoints admin existentes para listar usuarios/roles.
+- Se filtran candidatos por rol `Repartidor` cuando la información está disponible.
+- Si no se puede filtrar de forma segura por rol, la UI muestra advertencia visual y selector controlado de usuarios activos.
+- No se exponen passwords, `passwordHash` ni contraseñas temporales.
+- El backend sigue validando que el usuario asignado esté activo y tenga `deliveries.view`.
+
+### Exclusiones Confirmadas
+
+- No se implementó la UI mobile-first del repartidor.
+- No se creó `/app/entregas`.
+- No se creó `/dashboard`.
+- No se cambió `/login`.
+- No se tocaron `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies ni XSRF.
+- No se modificó backend.
+- No se crearon migraciones.
+- No se crearon endpoints nuevos.
+- No se tocó deploy.
+- No se instalaron dependencias.
+- No se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+- No se hizo commit.
+
+### Documentación
+
+- Se creó `docs/08-qa/delivery-admin-ui-qa.md`.
+- Se actualizaron estado, roadmap, bitácora, fuentes funcionales de delivery y documentación de QA.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `304.19 kB`, sin warning de budget.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 121/121.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias de `DeliveryService`, permisos `deliveries.*`, `/api/deliveries`, `/api/work-orders`, `/app/ordenes`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`: ejecutadas. Las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
+
+### Pendientes
+
+- Ejecutar validación manual Admin en DEV:
+  - crear entrega;
+  - asignar repartidor;
+  - marcar salida;
+  - marcar entregada con `Recibió`;
+  - marcar no entregada con motivo;
+  - validar errores de campos obligatorios y `403`.
+- Siguiente fase: Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`.
+
 ## 2026-07-04 - Cierre DEV Fase 3.4.1 Delivery Y Lazy Loading
 
 ### Cambio Realizado
@@ -32,7 +109,7 @@ Se documentó el cierre de despliegue DEV para Fase 3.4.1 backend delivery MVP y
 ### Pendientes
 
 - Validación manual Admin en DEV del flujo delivery.
-- Siguiente fase: Fase 3.4.2 - UI admin de entregas desde órdenes.
+- Siguiente fase en ese cierre: Fase 3.4.2 - UI admin de entregas desde órdenes. Implementada posteriormente el 2026-07-04.
 
 ### Validaciones Ejecutadas
 

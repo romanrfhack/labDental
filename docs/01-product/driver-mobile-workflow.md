@@ -4,7 +4,9 @@ Fuente funcional para la Fase 3.4 de entregas/repartidor. Este documento define 
 
 Actualización Fase 3.4.0: el análisis técnico previo queda documentado en `docs/01-product/delivery-mvp-design.md`. La recomendación es crear una entidad separada `WorkOrderDelivery` para trazabilidad real, en lugar de extender `WorkOrder` salvo que se decida un MVP extremadamente rápido.
 
-Actualización Fase 3.4.1: backend/API implementado sin UI. Ya existen `WorkOrderDelivery`, permisos `deliveries.*`, migración `AddWorkOrderDeliveries` y endpoints privados de entregas. La pantalla mobile-first de repartidor bajo `/app/entregas` sigue pendiente para Fase 3.4.3.
+Actualización Fase 3.4.1: backend/API implementado sin UI. Ya existen `WorkOrderDelivery`, permisos `deliveries.*`, migración `AddWorkOrderDeliveries` y endpoints privados de entregas.
+
+Actualización Fase 3.4.2: UI admin de entregas implementada desde `/app/ordenes/:id` para crear entrega, asignar repartidor, marcar salida, entregar y marcar no entregada. La pantalla mobile-first de repartidor bajo `/app/entregas` sigue pendiente para Fase 3.4.3.
 
 ## Objetivo
 
@@ -90,7 +92,7 @@ No mostrar información financiera al repartidor salvo decisión explícita del 
 
 ## Acciones
 
-Backend MVP implementado:
+Backend MVP implementado y UI admin disponible desde órdenes:
 
 - Ver detalle.
 - Marcar como entregado.
@@ -98,7 +100,7 @@ Backend MVP implementado:
 - Marcar no entregado con motivo.
 - Guardar entrega.
 
-Acciones posteriores de UI:
+Acciones pendientes de UI mobile-first:
 
 - Marcar en ruta desde móvil si se otorga `deliveries.update` al rol.
 - Marcar no entregado.

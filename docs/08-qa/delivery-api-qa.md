@@ -6,6 +6,8 @@ Fase 3.4.1 implementa backend delivery MVP + permisos. El alcance de implementac
 
 Actualización 2026-07-04: la implementación backend delivery MVP fue desplegada correctamente a DEV en el commit `e4c28205c6b866ab0d71edb13c49164100340b0d` mediante GitHub Actions run `28712956106`. Esta actualización no agrega UI; solo registra el cierre de despliegue y validación técnica publicada.
 
+Actualización Fase 3.4.2, 2026-07-04: la UI admin de entregas desde `/app/ordenes/:id` quedó implementada consumiendo estos endpoints existentes. El QA funcional/manual de UI queda documentado en `docs/08-qa/delivery-admin-ui-qa.md`.
+
 ## Modelo Y Migración
 
 - Entidad: `WorkOrderDelivery`.
@@ -147,9 +149,11 @@ Queda pendiente la validación manual Admin en DEV:
 9. Completar entrega con `recipientName`.
 10. Confirmar que la entrega queda `Delivered` y la orden queda `Delivered`.
 
+Para la validación visual/funcional de la UI admin, usar además `docs/08-qa/delivery-admin-ui-qa.md`.
+
 ## Pendientes
 
-- Fase 3.4.2: UI admin de entregas desde órdenes.
+- Fase 3.4.2: UI admin de entregas desde órdenes. Implementada; pendiente validación manual DEV.
 - Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`.
 - Fase 3.4.4: QA DEV y ajustes con celular real.
 - Validación manual Admin en DEV del flujo delivery desplegado.

@@ -2,9 +2,11 @@
 
 Fase 3.4.0 fue análisis técnico/documental. No implementó código, migraciones, endpoints, permisos reales, rutas frontend, auth, guards, cookies, XSRF, deploy ni dependencias.
 
-Actualización Fase 3.4.1, 2026-07-04: backend delivery MVP + permisos quedó implementado sin UI. La implementación crea `WorkOrderDelivery`, `DeliveryStatus`, migración `AddWorkOrderDeliveries`, endpoints API mínimos y permisos `deliveries.*`. La UI admin y la UI mobile-first de repartidor quedan pendientes para Fase 3.4.2 y Fase 3.4.3.
+Actualización Fase 3.4.1, 2026-07-04: backend delivery MVP + permisos quedó implementado sin UI. La implementación crea `WorkOrderDelivery`, `DeliveryStatus`, migración `AddWorkOrderDeliveries`, endpoints API mínimos y permisos `deliveries.*`.
 
 Actualización Fase 3.4.1.1, 2026-07-04: QA técnico real aplicó la migración en SQL local `LaboratorioTlahuac_Dev`, validó endpoints delivery con Admin y Repartidor QA local, y corrigió el seed baseline para sincronizar permisos nuevos al rol `Admin` existente sin leer ni escribir contraseñas.
+
+Actualización Fase 3.4.2, 2026-07-04: UI admin de entregas quedó implementada dentro de `/app/ordenes/:id`. Permite crear entrega, asignar repartidor, marcar salida, cerrar como entregada con `recipientName`, cerrar como no entregada con `failedReason`, ver timestamps y manejar errores controlados. La UI mobile-first de repartidor queda pendiente para Fase 3.4.3.
 
 ## Objetivo
 
@@ -448,10 +450,18 @@ Decisión 3.4.1: no se implementa estado `Cancelled` para entrega en este MVP. S
 
 ### Fase 3.4.2 - UI Admin Desde Órdenes
 
-- Mostrar panel de entrega en `/app/ordenes/:id`.
-- Asignar repartidor.
-- Ver estatus, salida, entregado, recibido y observaciones.
-- Actualizar etiqueta de entrega con repartidor/dirección/contacto cuando el DTO esté listo.
+- Estado: implementada el 2026-07-04.
+- Muestra sección `Entrega` en `/app/ordenes/:id`.
+- Crea entrega si no existe.
+- Asigna repartidor usando usuarios activos disponibles; filtra por rol `Repartidor` cuando los endpoints admin permiten identificarlo.
+- Muestra estatus, repartidor, timestamps, `Recibió` y motivo de falla.
+- Registra salida a entrega.
+- Marca entregada con `recipientName`.
+- Marca no entregada con `failedReason`.
+- Refresca entrega y orden después de cada acción.
+- Muestra acciones solo por permisos `deliveries.assign`, `deliveries.update` y `deliveries.complete`.
+- Muestra errores controlados para `400`, `403`, `404` y `409`.
+- No crea `/app/entregas`, no implementa la pantalla mobile-first del repartidor y no cambia etiquetas de impresión.
 
 ### Fase 3.4.3 - UI Repartidor Mobile-First
 
@@ -489,4 +499,4 @@ Decisión 3.4.1: no se implementa estado `Cancelled` para entrega en este MVP. S
 - Sin dependencias.
 - Sin cambios de auth, guards, cookies, XSRF ni deploy.
 - Fase siguiente implementada posteriormente: Fase 3.4.1 - backend delivery MVP + permisos.
-- Siguiente fase recomendada actual: Fase 3.4.2 - UI admin de entregas desde órdenes.
+- Siguiente fase recomendada actual: Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`.

@@ -31,7 +31,7 @@ Validación informada para el despliegue DEV de Fase 3.4.1 backend delivery MVP 
 
 El cambio de `/api/deliveries` sin sesión de `404` anterior a `401` confirma que `DeliveryEndpoints` ya están publicados en DEV y protegidos. La migración `WorkOrderDeliveries` ya está aplicada o la base DEV está al día para este despliegue.
 
-Pendiente específico posterior al deploy: validación manual Admin en DEV del flujo delivery. Siguiente fase técnica: Fase 3.4.2 - UI admin de entregas desde órdenes.
+Pendiente específico posterior al deploy: validación manual Admin en DEV del flujo delivery. La fase técnica posterior, Fase 3.4.2 - UI admin de entregas desde órdenes, quedó implementada después de este cierre de deploy.
 
 ## Alcance Validado
 
@@ -174,4 +174,4 @@ Actualización 2026-07-04:
 
 ## Siguiente Fase Recomendada
 
-Fase 3.4.2 - UI admin de entregas desde órdenes, con validación manual Admin en DEV como pendiente inmediato del cierre 3.4.1. En paralelo, cerrar usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validado con cuenta limitada real sin `reports.view`.
+Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`, después de validar en DEV la UI admin de entregas implementada en Fase 3.4.2. En paralelo, cerrar usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validado con cuenta limitada real sin `reports.view`.

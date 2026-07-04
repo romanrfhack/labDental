@@ -1,6 +1,6 @@
 # Operación De Órdenes, Etiquetas Y Entrega
 
-Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor y Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI.
+Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI y Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id`.
 
 Diseño técnico Fase 3.4.0: `docs/01-product/delivery-mvp-design.md`.
 
@@ -51,6 +51,40 @@ La etiqueta interna usa tamaño objetivo 76 x 51 mm y muestra LDT, folio, client
 La etiqueta de entrega usa tamaño objetivo 102 x 51 mm y muestra LDT, folio, cliente, paciente/referencia, trabajo, entrega, estado, `Dirección pendiente`, `Contacto pendiente`, `Recibe: __________________` y `Firma: __________________`.
 
 Limitación vigente: el detalle actual de orden no incluye dirección, teléfono, WhatsApp ni email del cliente. Para no exigir `customers.view` en una ruta cuyo permiso de negocio es `orders.view`, la etiqueta de entrega imprime textos pendientes seguros hasta diseñar un DTO de impresión/entrega o ampliar el contrato de orden.
+
+### Implementación Fase 3.4.2
+
+El detalle de orden `/app/ordenes/:id` agrega sección `Entrega` sin duplicar el panel de órdenes.
+
+Capacidades implementadas:
+
+- Ver estado de entrega con etiquetas en español.
+- Ver repartidor asignado, si existe.
+- Ver timestamps de asignación, salida, entrega y falla.
+- Ver `Recibió` o motivo de falla cuando aplica.
+- Crear entrega si la orden no tiene entrega.
+- Asignar repartidor.
+- Marcar salida a entrega.
+- Marcar entregada con `recipientName`.
+- Marcar no entregada con `failedReason`.
+- Refrescar estado después de cada acción.
+- Mostrar errores controlados.
+
+Permisos UI:
+
+- `deliveries.view`: ver sección de seguimiento.
+- `deliveries.assign`: crear entrega y asignar repartidor.
+- `deliveries.update`: marcar salida.
+- `deliveries.complete`: marcar entregada o no entregada.
+
+La carga de repartidores reutiliza `/api/admin/users` y `/api/admin/roles` cuando el usuario tiene permisos administrativos suficientes. Si no se puede filtrar de forma segura por rol `Repartidor`, la UI muestra advertencia y selector controlado de usuarios activos. El backend conserva la validación de usuario activo y permiso `deliveries.view`.
+
+Exclusiones:
+
+- No se crea `/app/entregas`.
+- No se implementa UI mobile-first de repartidor.
+- No se cambian etiquetas de impresión.
+- No se agregan endpoints, migraciones ni cambios de backend.
 
 ### Modelo Actual De Orden
 
@@ -385,9 +419,9 @@ Fase 3.5 catálogo:
 2. Fase 3.3: administración de usuarios/roles MVP. Implementada y subida a `origin/dev`.
 3. Fase 3.4.0: análisis técnico previo de entrega/repartidor mobile-first. Documentado.
 4. Fase 3.4.1: backend delivery MVP + permisos. Implementada.
-5. Fase 3.4.2: UI admin desde órdenes. Siguiente recomendada.
-6. Fase 3.4.3: UI repartidor mobile-first.
+5. Fase 3.4.2: UI admin desde órdenes. Implementada.
+6. Fase 3.4.3: UI repartidor mobile-first. Siguiente recomendada.
 7. Fase 3.4.4: QA DEV y ajustes.
 8. Fase 3.5: administración de catálogo, precios e imágenes.
 
-La siguiente fase implementable mayor es Fase 3.4.2 - UI admin de entregas desde órdenes. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.
+La siguiente fase implementable mayor es Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.
