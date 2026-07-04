@@ -6,6 +6,87 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-03 - Corrección Admin Órdenes Listado En Angular Zoneless Y Responsive
+
+### Cambio Realizado
+
+Se corrigió Admin > Órdenes de trabajo para que `/app/ordenes` pinte el listado al entrar al módulo sin depender de clic, blur o focus.
+
+También se ajustó el responsive de la pantalla: el header permite wrap, los filtros de órdenes usan grid adaptable, la tabla queda contenida en scroll horizontal local para anchos intermedios y en móvil se muestran cards por orden con acciones Ver/Editar accesibles.
+
+### Causa Técnica
+
+El render congelado tenía la misma causa que Clientes, Nueva orden, Dashboard y Detalle de orden: `WorkOrderListPageComponent` mantenía `items`, `customers`, `statuses`, `isLoading`, `errorMessage`, `totalCount`, `page`, `pageSize` y filtros como propiedades mutables actualizadas dentro de `subscribe()` y `finalize()`.
+
+En Angular zoneless con `HttpClient` y `withFetch()`, esas mutaciones pueden no invalidar inmediatamente la vista aunque los endpoints respondan `200`; por eso la pantalla podía quedar en `Cargando ordenes...` hasta que un evento DOM como blur/focus provocaba repintado.
+
+El desbordamiento responsive venía de dos puntos: `orders-toolbar` tenía una grilla de siete columnas fijas/minmax que no envolvía bien en anchos intermedios, y la tabla de ocho columnas se renderizaba directamente en el flujo de página sin contenedor de overflow local ni alternativa móvil.
+
+### Flujo Auditado
+
+- Ruta real: `/app/ordenes`.
+- Componente: `WorkOrderListPageComponent`.
+- Servicio de órdenes: `WorkOrderService.list()` y `WorkOrderService.getStatuses()`.
+- Servicio de clientes para filtro: `CustomerService.list({ isActive: true, pageSize: 100 })`.
+- Endpoints al entrar: `GET /api/work-orders`, `GET /api/work-orders/statuses` y `GET /api/customers?isActive=true&pageSize=100`.
+- Filtros conservados: búsqueda, cliente, estado, entrega desde, entrega hasta, incluir canceladas, botón Filtrar y paginación.
+- Acciones conservadas: Ver, Editar cuando hay permiso y la orden no está cancelada, y navegación a `/app/ordenes/nueva`.
+- Backend auditado: `WorkOrderEndpoints`, `CustomerEndpoints`, `WorkOrderService.ListAsync()` y contratos `WorkOrderListQuery`/`WorkOrderPagedResponse`.
+
+### Respuestas De Auditoría
+
+- `Cargando ordenes...` lo renderizaba `WorkOrderListPageComponent`.
+- Los tres GET iniciales se ejecutaban desde `subscribe()`; el listado además apagaba loading en `finalize()`.
+- El componente sí usaba propiedades mutables normales para items, clientes, estados, loading, error, total, página, total de páginas derivado y filtros.
+- El loading se apagaba en success/error mediante `finalize()`, pero al ser mutable podía no repintar en zoneless.
+- Ya existía mensaje visible para errores del listado; se mantuvo y se agregaron mensajes controlados para errores de carga de filtros.
+- `CustomerListPageComponent` ya tenía el patrón corregido con signals; `WorkOrderListPageComponent` era el pendiente.
+- No se encontró evidencia de lentitud o error backend como causa raíz.
+- El botón `Nueva orden` estaba dentro de `page-header` sin wrap global suficiente para anchos reducidos.
+- La tabla necesitaba scroll local en tablet y una alternativa móvil; se implementaron ambas.
+- El patrón de Clientes se replicó para signals, y el responsive se ajustó con clases existentes más `table-scroll`, `orders-table-scroll`, `orders-mobile-list`, `order-card` y `pagination-actions`.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-list-page.component.ts`: migra estado renderizado, filtros y paginación a Angular signals; actualiza template a lecturas `signal()`; mantiene endpoints, DTOs, filtros, paginación y acciones; limpia listado/total en error y usa mensajes controlados.
+- `src/LaboratorioTlahuac.Web/src/styles.scss`: ajusta `page-header`, `orders-toolbar`, contención de tablas, cards móviles de órdenes y paginación para evitar overflow global y mantener la tabla usable.
+- `docs/PROJECT_STATUS.md` y `docs/IMPLEMENTATION_LOG.md`: documentan causa raíz, alcance, responsive, archivos modificados, validación y confirmaciones.
+
+### Decisiones Técnicas
+
+- No se modificó `WorkOrderService` porque los endpoints y DTOs ya coincidían con backend.
+- No se tocó backend, base de datos ni migraciones porque la auditoría no mostró una causa backend.
+- No se modificaron auth, sesiones, cookies, CSRF/XSRF, guards ni interceptor `401`; un `401` sigue siendo responsabilidad del interceptor global.
+- No se agregó `zone.js` ni se quitó `withFetch()`.
+- No se usaron hacks de repintado como `setTimeout`, reload, `ApplicationRef.tick()`, clicks simulados ni `detectChanges()`.
+
+### Validaciones Ejecutadas
+
+- `git status --short`: limpio al inicio.
+- `git log --oneline --decorate -5`: HEAD en `be647a2 (HEAD -> dev, origin/dev) fix: update customer edit state with signals`.
+- `git diff --check`: correcto.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; reporta warning de presupuesto inicial excedido por 5.93 kB.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en el proyecto de tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 101/101.
+- No existe script frontend `test` en `src/LaboratorioTlahuac.Web/package.json`; solo existen `ng`, `start`, `build` y `watch`.
+
+### Confirmaciones
+
+- No se hizo commit.
+- No se desplegó.
+- No se modificó backend.
+- No se modificó base de datos.
+- No se crearon migraciones.
+- No se cambiaron contratos API ni endpoints.
+- No se modificaron auth, sesiones, cookies, CSRF/XSRF ni interceptor `401`.
+- No se agregaron secretos ni PII en documentación.
+
+### Pendientes
+
+- Validar manualmente en navegador real: `/app/ordenes` pinta sin clic/blur/focus, recarga correctamente, Network muestra `work-orders`, `customers` y `statuses` en `200`, filtros y paginación funcionan, Ver/Editar navegan correctamente y responsive desktop/tablet/móvil/DevTools no genera overflow global.
+- Validar regresión visual rápida en `/app/clientes`, `/app/dashboard`, `/app/ordenes/nueva`, `/app/ordenes/{id}` y `/login` ante `401`.
+- Siguen existiendo patrones mutables async fuera del alcance en pantallas de etiquetas de orden, edición de orden, pagos y algunos componentes secundarios; no se tocaron en esta tarea.
+
 ## 2026-07-03 - Corrección Admin Clientes Editar En Angular Zoneless
 
 ### Cambio Realizado

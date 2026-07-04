@@ -743,13 +743,19 @@ button:disabled {
 .feature-page {
   display: grid;
   gap: 20px;
+  min-width: 0;
 }
 
 .page-header {
   align-items: start;
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   justify-content: space-between;
+}
+
+.page-header > div {
+  min-width: 0;
 }
 
 .page-actions {
@@ -766,14 +772,7 @@ button:disabled {
 }
 
 .orders-toolbar {
-  grid-template-columns:
-    minmax(220px, 1fr)
-    minmax(180px, 240px)
-    160px
-    150px
-    150px
-    minmax(150px, auto)
-    auto;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
 }
 
 .payments-toolbar {
@@ -811,6 +810,11 @@ button:disabled {
   align-items: center;
   grid-template-columns: auto 1fr;
   min-height: 40px;
+  min-width: 0;
+}
+
+.check-field span {
+  overflow-wrap: anywhere;
 }
 
 .compact-check {
@@ -885,6 +889,12 @@ button:disabled {
   text-decoration: none;
 }
 
+.page-header > .primary-button,
+.page-header > .secondary-button,
+.page-header > .ghost-button {
+  flex-shrink: 0;
+}
+
 .primary-button {
   background: #0f766e;
   border: 1px solid #0f766e;
@@ -924,10 +934,81 @@ button:disabled {
   vertical-align: top;
 }
 
+.data-table th,
+.data-table td,
+.order-card {
+  overflow-wrap: anywhere;
+}
+
 .data-table th {
   background: #f3f4f6;
   color: #374151;
   font-size: 0.9rem;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.table-scroll .data-table {
+  min-width: 760px;
+}
+
+.orders-table-scroll .data-table {
+  min-width: 960px;
+}
+
+.orders-mobile-list {
+  display: none;
+}
+
+.order-card {
+  background: #ffffff;
+  border: 1px solid #d8dee4;
+  border-radius: 6px;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.order-card header {
+  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.order-card header > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.order-card dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.order-card dl div {
+  display: grid;
+  gap: 3px;
+}
+
+.order-card dt {
+  color: #374151;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.order-card dd {
+  margin: 0;
+}
+
+.pagination-actions {
+  align-items: center;
 }
 
 .status-pill {
@@ -1051,11 +1132,35 @@ button:disabled {
 
 @media (max-width: 920px) {
   .toolbar,
-  .orders-toolbar,
   .payments-toolbar,
   .field-grid,
   .detail-grid,
   .payment-summary-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .orders-table-scroll {
+    display: none;
+  }
+
+  .orders-mobile-list {
+    display: grid;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-header > .primary-button,
+  .page-header > .secondary-button,
+  .page-header > .ghost-button,
+  .orders-toolbar .secondary-button,
+  .pagination-actions > button {
+    width: 100%;
+  }
+
+  .pagination-actions {
+    justify-content: center;
   }
 }
