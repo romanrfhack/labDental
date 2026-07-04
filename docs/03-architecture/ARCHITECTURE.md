@@ -170,6 +170,14 @@ Estructura conceptual:
 - `features/`: módulos privados.
 - `core/`: auth, guards y cliente HTTP.
 
+Routing:
+
+- `src/app/app.routes.ts` carga layouts y páginas con `loadComponent` para evitar imports eager de features públicas/privadas en el bundle inicial.
+- Imports eager actuales en rutas: `Routes`, `authGuard` y `permissionGuard`.
+- `/login` se mantiene público; `/app` se mantiene protegido por `authGuard`; las rutas privadas conservan sus permisos con `permissionGuard`.
+- `/dashboard` no existe como ruta privada real; el dashboard privado sigue siendo `/app/dashboard`.
+- Optimización 2026-07-04: initial bundle bajó de `535.62 kB` con warning de budget a `304.19 kB` sin warning, sin cambiar `angular.json`.
+
 Estructura pública implementada en Fase 1:
 
 - `public/layout/public-layout.component.ts`: header, navegación pública y footer.

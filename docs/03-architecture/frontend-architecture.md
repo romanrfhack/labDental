@@ -51,6 +51,43 @@ src/app/
 - `/app/admin/roles`
 - `/app/access-denied`
 
+## Carga De Rutas
+
+`src/app/app.routes.ts` usa `loadComponent` para cargar de forma lazy los layouts y páginas públicas/privadas. El archivo conserva imports eager solo para `Routes`, `authGuard` y `permissionGuard`.
+
+Rutas lazy públicas:
+
+- `/`
+- `/catalogo`
+- `/servicios`
+- `/contacto`
+- `/login`
+
+Rutas lazy privadas:
+
+- `/app`
+- `/app/dashboard`
+- `/app/ordenes`
+- `/app/ordenes/nueva`
+- `/app/ordenes/:id`
+- `/app/ordenes/:id/editar`
+- `/app/ordenes/:id/etiqueta-trabajo`
+- `/app/ordenes/:id/etiqueta-entrega`
+- `/app/clientes`
+- `/app/clientes/nuevo`
+- `/app/clientes/:id`
+- `/app/clientes/:id/editar`
+- `/app/pagos`
+- `/app/inventario`
+- `/app/proveedores`
+- `/app/admin/usuarios`
+- `/app/admin/roles`
+- `/app/access-denied`
+
+El cambio de lazy loading no modifica paths, redirects, `returnUrl`, guards ni permisos. `/app` conserva `authGuard`; las rutas privadas con permisos conservan `permissionGuard` y su `data.permission`; `/dashboard` no existe como ruta privada real.
+
+Validación 2026-07-04: el build inicial bajó de `535.62 kB` con warning de budget a `304.19 kB` sin warning, sin modificar el budget `500kB`/`1MB`.
+
 ## Estilo
 
 Se eligió SCSS como formato de estilos para Angular. El diseño actual es mínimo y no representa pantallas finales.

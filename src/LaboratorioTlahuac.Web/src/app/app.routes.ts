@@ -1,151 +1,207 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
-import { PublicLayoutComponent } from './public/layout/public-layout.component';
-import { HomePageComponent } from './public/pages/home/home-page.component';
-import { ServicesPageComponent } from './public/pages/services/services-page.component';
-import { ContactPageComponent } from './public/pages/contact/contact-page.component';
-import { CatalogPageComponent } from './public/pages/catalog/catalog-page.component';
-import { LoginPageComponent } from './auth/pages/login/login-page.component';
-import { PrivateLayoutComponent } from './admin/layout/private-layout.component';
-import { DashboardPageComponent } from './features/dashboard/dashboard-page.component';
-import { WorkOrderCreatePageComponent } from './features/orders/pages/work-order-create-page.component';
-import { WorkOrderDeliveryLabelPageComponent } from './features/orders/pages/work-order-delivery-label-page.component';
-import { WorkOrderDetailPageComponent } from './features/orders/pages/work-order-detail-page.component';
-import { WorkOrderEditPageComponent } from './features/orders/pages/work-order-edit-page.component';
-import { WorkOrderJobLabelPageComponent } from './features/orders/pages/work-order-job-label-page.component';
-import { WorkOrderListPageComponent } from './features/orders/pages/work-order-list-page.component';
-import { CustomerCreatePageComponent } from './features/customers/pages/customer-create-page.component';
-import { CustomerDetailPageComponent } from './features/customers/pages/customer-detail-page.component';
-import { CustomerEditPageComponent } from './features/customers/pages/customer-edit-page.component';
-import { CustomerListPageComponent } from './features/customers/pages/customer-list-page.component';
-import { PaymentListPageComponent } from './features/payments/pages/payment-list-page.component';
-import { InventoryPageComponent } from './features/inventory/inventory-page.component';
-import { SuppliersPageComponent } from './features/suppliers/suppliers-page.component';
-import { UsersPageComponent } from './admin/pages/users/users-page.component';
-import { RolesPageComponent } from './admin/pages/roles/roles-page.component';
-import { AccessDeniedPageComponent } from './admin/pages/access-denied/access-denied-page.component';
 
 export const routes: Routes = [
   {
     path: '',
-    component: PublicLayoutComponent,
+    loadComponent: () =>
+      import('./public/layout/public-layout.component').then((m) => m.PublicLayoutComponent),
     children: [
-      { path: '', component: HomePageComponent, title: 'Laboratorio Dental Tláhuac' },
-      { path: 'catalogo', component: CatalogPageComponent, title: 'Catálogo | Laboratorio Dental Tláhuac' },
-      { path: 'servicios', component: ServicesPageComponent, title: 'Servicios | Laboratorio Dental Tláhuac' },
-      { path: 'contacto', component: ContactPageComponent, title: 'Contacto | Laboratorio Dental Tláhuac' }
-    ]
+      {
+        path: '',
+        loadComponent: () =>
+          import('./public/pages/home/home-page.component').then((m) => m.HomePageComponent),
+        title: 'Laboratorio Dental Tláhuac',
+      },
+      {
+        path: 'catalogo',
+        loadComponent: () =>
+          import('./public/pages/catalog/catalog-page.component').then(
+            (m) => m.CatalogPageComponent,
+          ),
+        title: 'Catálogo | Laboratorio Dental Tláhuac',
+      },
+      {
+        path: 'servicios',
+        loadComponent: () =>
+          import('./public/pages/services/services-page.component').then(
+            (m) => m.ServicesPageComponent,
+          ),
+        title: 'Servicios | Laboratorio Dental Tláhuac',
+      },
+      {
+        path: 'contacto',
+        loadComponent: () =>
+          import('./public/pages/contact/contact-page.component').then(
+            (m) => m.ContactPageComponent,
+          ),
+        title: 'Contacto | Laboratorio Dental Tláhuac',
+      },
+    ],
   },
-  { path: 'login', component: LoginPageComponent, title: 'Login' },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./auth/pages/login/login-page.component').then((m) => m.LoginPageComponent),
+    title: 'Login',
+  },
   {
     path: 'app',
-    component: PrivateLayoutComponent,
+    loadComponent: () =>
+      import('./admin/layout/private-layout.component').then((m) => m.PrivateLayoutComponent),
     canActivate: [authGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
         path: 'access-denied',
-        component: AccessDeniedPageComponent,
-        title: 'Acceso denegado'
+        loadComponent: () =>
+          import('./admin/pages/access-denied/access-denied-page.component').then(
+            (m) => m.AccessDeniedPageComponent,
+          ),
+        title: 'Acceso denegado',
       },
       {
         path: 'dashboard',
-        component: DashboardPageComponent,
+        loadComponent: () =>
+          import('./features/dashboard/dashboard-page.component').then(
+            (m) => m.DashboardPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'reports.view' }
+        data: { permission: 'reports.view' },
       },
       {
         path: 'ordenes',
-        component: WorkOrderListPageComponent,
+        loadComponent: () =>
+          import('./features/orders/pages/work-order-list-page.component').then(
+            (m) => m.WorkOrderListPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'orders.view' }
+        data: { permission: 'orders.view' },
       },
       {
         path: 'ordenes/nueva',
-        component: WorkOrderCreatePageComponent,
+        loadComponent: () =>
+          import('./features/orders/pages/work-order-create-page.component').then(
+            (m) => m.WorkOrderCreatePageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'orders.create' }
+        data: { permission: 'orders.create' },
       },
       {
         path: 'ordenes/:id/editar',
-        component: WorkOrderEditPageComponent,
+        loadComponent: () =>
+          import('./features/orders/pages/work-order-edit-page.component').then(
+            (m) => m.WorkOrderEditPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'orders.edit' }
+        data: { permission: 'orders.edit' },
       },
       {
         path: 'ordenes/:id/etiqueta-trabajo',
-        component: WorkOrderJobLabelPageComponent,
+        loadComponent: () =>
+          import('./features/orders/pages/work-order-job-label-page.component').then(
+            (m) => m.WorkOrderJobLabelPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'orders.view' }
+        data: { permission: 'orders.view' },
       },
       {
         path: 'ordenes/:id/etiqueta-entrega',
-        component: WorkOrderDeliveryLabelPageComponent,
+        loadComponent: () =>
+          import('./features/orders/pages/work-order-delivery-label-page.component').then(
+            (m) => m.WorkOrderDeliveryLabelPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'orders.view' }
+        data: { permission: 'orders.view' },
       },
       {
         path: 'ordenes/:id',
-        component: WorkOrderDetailPageComponent,
+        loadComponent: () =>
+          import('./features/orders/pages/work-order-detail-page.component').then(
+            (m) => m.WorkOrderDetailPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'orders.view' }
+        data: { permission: 'orders.view' },
       },
       {
         path: 'clientes',
-        component: CustomerListPageComponent,
+        loadComponent: () =>
+          import('./features/customers/pages/customer-list-page.component').then(
+            (m) => m.CustomerListPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'customers.view' }
+        data: { permission: 'customers.view' },
       },
       {
         path: 'clientes/nuevo',
-        component: CustomerCreatePageComponent,
+        loadComponent: () =>
+          import('./features/customers/pages/customer-create-page.component').then(
+            (m) => m.CustomerCreatePageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'customers.create' }
+        data: { permission: 'customers.create' },
       },
       {
         path: 'clientes/:id/editar',
-        component: CustomerEditPageComponent,
+        loadComponent: () =>
+          import('./features/customers/pages/customer-edit-page.component').then(
+            (m) => m.CustomerEditPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'customers.edit' }
+        data: { permission: 'customers.edit' },
       },
       {
         path: 'clientes/:id',
-        component: CustomerDetailPageComponent,
+        loadComponent: () =>
+          import('./features/customers/pages/customer-detail-page.component').then(
+            (m) => m.CustomerDetailPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'customers.view' }
+        data: { permission: 'customers.view' },
       },
       {
         path: 'pagos',
-        component: PaymentListPageComponent,
+        loadComponent: () =>
+          import('./features/payments/pages/payment-list-page.component').then(
+            (m) => m.PaymentListPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'payments.view' }
+        data: { permission: 'payments.view' },
       },
       {
         path: 'inventario',
-        component: InventoryPageComponent,
+        loadComponent: () =>
+          import('./features/inventory/inventory-page.component').then(
+            (m) => m.InventoryPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'inventory.view' }
+        data: { permission: 'inventory.view' },
       },
       {
         path: 'proveedores',
-        component: SuppliersPageComponent,
+        loadComponent: () =>
+          import('./features/suppliers/suppliers-page.component').then(
+            (m) => m.SuppliersPageComponent,
+          ),
         canActivate: [permissionGuard],
-        data: { permission: 'suppliers.view' }
+        data: { permission: 'suppliers.view' },
       },
       {
         path: 'admin/usuarios',
-        component: UsersPageComponent,
+        loadComponent: () =>
+          import('./admin/pages/users/users-page.component').then((m) => m.UsersPageComponent),
         canActivate: [permissionGuard],
-        data: { permission: 'users.manage' }
+        data: { permission: 'users.manage' },
       },
       {
         path: 'admin/roles',
-        component: RolesPageComponent,
+        loadComponent: () =>
+          import('./admin/pages/roles/roles-page.component').then((m) => m.RolesPageComponent),
         canActivate: [permissionGuard],
-        data: { permission: 'roles.manage' }
-      }
-    ]
+        data: { permission: 'roles.manage' },
+      },
+    ],
   },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: '' },
 ];

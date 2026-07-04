@@ -6,6 +6,67 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-04 - Optimización Frontend Lazy Loading De Rutas
+
+### Cambio Realizado
+
+Se redujo el bundle inicial Angular convirtiendo `src/LaboratorioTlahuac.Web/src/app/app.routes.ts` de imports eager con `component:` a rutas lazy con `loadComponent`.
+
+### Motivo
+
+Después de Fase 3.4.1, `npm run build` pasaba pero emitía warning de presupuesto inicial:
+
+- Budget configurado: `maximumWarning: 500kB`, `maximumError: 1MB`.
+- Build base: initial total `535.62 kB`.
+- Exceso: `35.62 kB` sobre el warning de `500.00 kB`.
+
+No se subió el budget porque el problema venía de cargar eagerly páginas públicas, privadas, layouts y features desde `app.routes.ts`.
+
+### Estrategia Aplicada
+
+- `app.routes.ts` conserva eager solo `Routes`, `authGuard` y `permissionGuard`.
+- `PublicLayoutComponent` y `PrivateLayoutComponent` se cargan con `loadComponent`.
+- Todas las páginas públicas se cargan con `loadComponent`: `/`, `/catalogo`, `/servicios`, `/contacto` y `/login`.
+- Todas las páginas privadas existentes bajo `/app` se cargan con `loadComponent`: dashboard, órdenes, etiquetas, clientes, pagos, inventario, proveedores, usuarios, roles y access denied.
+- Los paths, redirects, titles, guards y `data.permission` quedaron sin cambios.
+- Los componentes ya eran compatibles con `loadComponent` porque usan componentes standalone con `imports` en sus decorators; no se requirió convertir componentes ni agregar módulos.
+
+### Resultado
+
+- Build posterior: initial total `304.19 kB`.
+- Reducción aproximada: `231.43 kB`.
+- El warning de budget inicial desapareció.
+- No se modificó `angular.json`; `maximumWarning` sigue en `500kB` y `maximumError` sigue en `1MB`.
+- `npm run build -- --stats-json` fue soportado por el builder y generó `dist/laboratorio-tlahuac-web/stats.json` durante esa corrida; el build final normal limpia el output y no conserva el archivo.
+
+### Confirmaciones
+
+- `/login` sigue público.
+- `/app` y `/app/dashboard` siguen privados por `authGuard` y `permissionGuard`.
+- `/dashboard` no se creó ni se convirtió en ruta privada real.
+- Las rutas de etiquetas siguen bajo `/app/ordenes/:id/*` y protegidas con `orders.view`.
+- `/app/admin/usuarios` y `/app/admin/roles` siguen protegidas con `users.manage` y `roles.manage`.
+- No se tocaron backend, `AuthService`, guards, cookies, XSRF, endpoints, migraciones ni deploy.
+- No se instalaron dependencias.
+- No se imprimieron secretos.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `git status --short`: limpio antes de iniciar.
+- `git diff --stat`: sin cambios antes de iniciar.
+- `npm run build` base: correcto con warning inicial `535.62 kB`.
+- `npm run build -- --stats-json`: correcto; builder soporta stats.
+- `npm run build` posterior: correcto sin warning de budget inicial, initial total `304.19 kB`.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 121/121; mismos warnings `NU1903` conocidos durante restore.
+- `git diff --check`: correcto.
+- `rg "component:" src/LaboratorioTlahuac.Web/src/app/app.routes.ts`: sin coincidencias.
+- `rg "loadComponent" src/LaboratorioTlahuac.Web/src/app/app.routes.ts`: confirma rutas lazy.
+- `rg "/dashboard" .`, `rg "/app/dashboard" .` y `rg "/login" src/LaboratorioTlahuac.Web/src/app docs README.md AGENTS.md`: ejecutados; las menciones confirman `/app/dashboard` como ruta privada real y `/login` como entrada pública, sin crear `/dashboard` raíz como ruta privada.
+- Búsquedas de `LT_ADMIN_PASSWORD`, `LT_QA_LIMITED_PASSWORD`, `LDT_SQL_SA_PASSWORD` y `ConnectionStrings`: ejecutadas con salida limitada a archivos para no imprimir valores.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: solo menciones documentales/históricas de no uso.
+
 ## 2026-07-04 - Fase 3.4.1.1 QA Técnico Delivery
 
 ### Cambio Realizado
