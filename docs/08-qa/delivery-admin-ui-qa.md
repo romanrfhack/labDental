@@ -4,6 +4,25 @@
 
 Fase 3.4.2 agrega UI administrativa de entregas dentro del detalle de orden existente. No crea la pantalla mobile-first del repartidor, no agrega rutas nuevas, no modifica backend, no crea migraciones, no cambia auth, guards, cookies, XSRF ni deploy.
 
+## Cierre Operativo DEV 2026-07-04
+
+La Fase 3.4.2 quedó operativamente activa en DEV después de un ajuste manual del despliegue:
+
+- GitHub Actions para commit `97d46e9` falló durante health check con `502`.
+- El rollback dejó activo `dev-23-eea8f39`.
+- El release nuevo `dev-24-97d46e9` quedó copiado en VPS.
+- El release `dev-24-97d46e9` fue validado manualmente en puerto alterno `5013`.
+- El primer intento manual fue inválido porque se intentó sourcear `/etc/laboratorio-tlahuac-dev/api.env` en Bash y la connection string contiene espacios/semicolons.
+- La carga correcta de `api.env` con parser seguro permitió validar que el release nuevo arrancaba correctamente.
+- Se cambió manualmente `backend/current` a `dev-24-97d46e9`.
+- Se reinició `laboratorio-tlahuac-dev-api.service` y quedó `active`.
+- Validación final: `/health` respondió `200`.
+- Validación final: `/api/deliveries` sin sesión respondió `401`.
+- No se imprimieron secretos.
+- No se usó `codex-cobranza-sql`.
+
+Este cierre no reemplaza el checklist manual funcional de UI. El siguiente paso recomendado es ejecutar QA manual DEV de esta pantalla con usuario Admin antes de iniciar Fase 3.4.3.
+
 ## Rutas Afectadas
 
 - `/app/ordenes`
@@ -96,6 +115,7 @@ Si el usuario no puede listar roles o usuarios, la UI muestra error controlado y
 
 ## Pendientes Para Fase 3.4.3
 
+- Completar primero QA manual DEV de Fase 3.4.2 con Admin.
 - Crear `/app/entregas`.
 - Crear `/app/entregas/:id`.
 - Diseñar listado mobile-first para repartidor.

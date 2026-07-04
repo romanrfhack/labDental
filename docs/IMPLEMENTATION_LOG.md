@@ -6,6 +6,62 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-04 - Cierre Operativo DEV Fase 3.4.2
+
+### Cambio Realizado
+
+Se documentó el cierre operativo del despliegue DEV de Fase 3.4.2 y el ajuste manual de `backend/current`/restart. No se modificó código.
+
+### Incidente De Deploy
+
+- GitHub Actions para commit `97d46e9` falló durante health check con `502`.
+- El rollback dejó activo `dev-23-eea8f39`.
+- El release nuevo `dev-24-97d46e9` quedó copiado en el VPS.
+- El primer intento manual de validación fue inválido porque se intentó sourcear `/etc/laboratorio-tlahuac-dev/api.env` en Bash y la connection string contiene espacios/semicolons.
+- La carga correcta de `api.env` con parser seguro permitió validar que `dev-24-97d46e9` arrancaba correctamente.
+- El release se validó manualmente en puerto alterno `5013`.
+- Se cambió manualmente `backend/current` a `dev-24-97d46e9`.
+- Se reinició `laboratorio-tlahuac-dev-api.service` y quedó `active`.
+
+### Validación Final DEV
+
+- `http://127.0.0.1:5012/health`: `200`.
+- `http://127.0.0.1:5012/api/deliveries` sin sesión: `401`.
+- `https://dev.laboratoriodentaltlahuac.com/health`: `200`.
+- `https://dev.laboratoriodentaltlahuac.com/api/deliveries` sin sesión: `401`.
+
+### Pendiente Técnico
+
+- Ajustar el workflow de deploy DEV para esperar más o validar `/health` con reintentos más tolerantes después del restart, evitando falsos negativos `502` cuando el servicio arranca correctamente.
+
+### Siguiente Fase Recomendada
+
+- Ejecutar QA manual DEV de Fase 3.4.2.
+- Después iniciar Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`.
+
+### Validaciones Ejecutadas
+
+- `npm run build`: correcto.
+- `dotnet build`: correcto.
+- `dotnet test`: correcto.
+- `git diff --check`: correcto.
+
+### Archivos Modificados
+
+- `docs/05-delivery/dev-deployment-validation.md`
+- `docs/08-qa/delivery-admin-ui-qa.md`
+- `docs/08-qa/delivery-api-qa.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Confirmaciones
+
+- Solo documentación modificada.
+- No se modificó código.
+- No se imprimieron secretos.
+- No se usó `codex-cobranza-sql`.
+
 ## 2026-07-04 - Fase 3.4.2 UI Admin De Entregas Desde Órdenes
 
 ### Cambio Realizado

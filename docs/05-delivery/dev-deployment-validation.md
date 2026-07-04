@@ -4,14 +4,15 @@
 
 - Fase: 3.0 - cierre formal del despliegue DEV y baseline UAT.
 - Actualización 2026-07-04: cierre DEV de Fase 3.4.1 backend delivery MVP y optimización frontend lazy loading.
+- Actualización 2026-07-04: cierre operativo DEV de Fase 3.4.2 tras ajuste manual de `backend/current` a `dev-24-97d46e9` y reinicio del servicio.
 - Fecha de validación: 2026-07-02, America/Mexico_City.
 - URL DEV: `https://dev.laboratoriodentaltlahuac.com`.
 - Rama desplegada: `dev`.
 - Upstream local verificado antes de documentar: `origin/dev`.
 - Alcance: documentación y validación del ambiente DEV ya publicado.
-- Resultado general: DEV queda registrado como baseline UAT inicial validado y, desde la actualización 2026-07-04, con Delivery API desplegada/protegida y lazy loading frontend desplegado.
+- Resultado general: DEV queda registrado como baseline UAT inicial validado y, desde la actualización 2026-07-04, con Delivery API desplegada/protegida, lazy loading frontend desplegado y Fase 3.4.2 publicada operativamente en `dev-24-97d46e9`.
 
-Fase 3.0 no implementó funcionalidad nueva. La actualización 2026-07-04 es documental y registra un deploy ya ejecutado; no modifica frontend funcional, backend, auth, guards, cookies, XSRF, endpoints, base de datos, migraciones, dependencias ni despliegue real desde Codex.
+Fase 3.0 no implementó funcionalidad nueva. Las actualizaciones 2026-07-04 son documentales y registran despliegues/acciones operativas ya ejecutadas; esta documentación no modifica frontend funcional, backend, auth, guards, cookies, XSRF, endpoints, base de datos, migraciones, dependencias ni despliegue real desde Codex.
 
 ## Actualización 2026-07-04 - Fase 3.4.1 DEV
 
@@ -32,6 +33,33 @@ Validación informada para el despliegue DEV de Fase 3.4.1 backend delivery MVP 
 El cambio de `/api/deliveries` sin sesión de `404` anterior a `401` confirma que `DeliveryEndpoints` ya están publicados en DEV y protegidos. La migración `WorkOrderDeliveries` ya está aplicada o la base DEV está al día para este despliegue.
 
 Pendiente específico posterior al deploy: validación manual Admin en DEV del flujo delivery. La fase técnica posterior, Fase 3.4.2 - UI admin de entregas desde órdenes, quedó implementada después de este cierre de deploy.
+
+## Actualización 2026-07-04 - Cierre Operativo DEV Fase 3.4.2
+
+GitHub Actions para el commit `97d46e9` falló durante el health check con respuesta `502`. El rollback automático dejó activo el release anterior `dev-23-eea8f39`, aunque el release nuevo `dev-24-97d46e9` sí quedó copiado en el VPS.
+
+Validación operativa posterior:
+
+| Punto | Resultado |
+| --- | --- |
+| Commit/release validado | `97d46e9` / `dev-24-97d46e9` |
+| Resultado inicial GitHub Actions | Falló en health check con `502`. |
+| Estado tras rollback automático | `backend/current` apuntaba a `dev-23-eea8f39`. |
+| Validación manual inicial | Inválida: se intentó sourcear `api.env` en Bash y la connection string contiene espacios/semicolons. |
+| Validación manual correcta | Release `dev-24-97d46e9` arrancó correctamente cargando `/etc/laboratorio-tlahuac-dev/api.env` con parser seguro. |
+| Puerto alterno de validación | `5013`. |
+| Ajuste operativo | `backend/current` cambiado manualmente a `dev-24-97d46e9`. |
+| Servicio | `laboratorio-tlahuac-dev-api.service` reiniciado correctamente y quedó `active`. |
+| `http://127.0.0.1:5012/health` | `200`. |
+| `http://127.0.0.1:5012/api/deliveries` sin sesión | `401`. |
+| `https://dev.laboratoriodentaltlahuac.com/health` | `200`. |
+| `https://dev.laboratoriodentaltlahuac.com/api/deliveries` sin sesión | `401`. |
+
+El `401` final de `/api/deliveries` sin sesión confirma que la API sigue publicada y protegida después del ajuste manual de symlink y reinicio. No se imprimieron secretos y no se usó `codex-cobranza-sql`.
+
+Pendiente técnico de despliegue: ajustar el workflow DEV para esperar más tiempo después del restart o validar `/health` con reintentos más tolerantes, evitando rollback cuando el servicio tarda más en responder pero arranca correctamente.
+
+Siguiente fase recomendada después de este cierre: QA manual DEV de Fase 3.4.2 y luego Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`.
 
 ## Alcance Validado
 
@@ -126,6 +154,7 @@ Documentado en esta fase:
 - DEV está publicado en VPS bajo `https://dev.laboratoriodentaltlahuac.com`.
 - El despliegue DEV corresponde a la rama `dev`.
 - Actualización 2026-07-04: GitHub Actions run `28712956106` desplegó correctamente el commit `e4c28205c6b866ab0d71edb13c49164100340b0d` a DEV.
+- Actualización 2026-07-04 Fase 3.4.2: tras falla de GitHub Actions por health check `502`, el release `dev-24-97d46e9` fue validado manualmente en puerto alterno `5013`, se ajustó `backend/current` hacia ese release y `laboratorio-tlahuac-dev-api.service` quedó reiniciado y `active`.
 
 No están documentados en el repositorio los nombres de servicios systemd, rutas del servidor, usuario del sistema, reverse proxy exacto ni comandos operativos del VPS. No se inspeccionaron ni modificaron servicios del VPS en esta fase.
 
@@ -140,6 +169,7 @@ No están documentados en el repositorio los nombres de servicios systemd, rutas
 - Completar imágenes faltantes para `Servicios prostodónticos`.
 - Cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada sin `reports.view`.
 - Validar manualmente con Admin en DEV el flujo delivery desplegado.
+- Ajustar workflow DEV para health check con espera/reintentos más tolerantes después de reiniciar backend.
 - Definir el siguiente incremento funcional.
 - Definir checklist productivo final: DNS, HTTPS productivo, variables, base productiva, respaldos, monitoreo, CORS, cookies seguras y rollback.
 
@@ -158,6 +188,14 @@ Actualización 2026-07-04:
 - `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 121/121.
 - `git diff --check`: correcto.
 
+Actualización operativa Fase 3.4.2, 2026-07-04:
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto.
+- `dotnet build`: correcto.
+- `dotnet test`: correcto.
+- `git diff --check`: correcto.
+- Validaciones DEV finales reportadas: `GET /health` `200` y `GET /api/deliveries` sin sesión `401` tanto en loopback `127.0.0.1:5012` como vía `https://dev.laboratoriodentaltlahuac.com`.
+
 ## Confirmaciones De Alcance
 
 - Solo documentación modificada.
@@ -167,6 +205,7 @@ Actualización 2026-07-04:
 - No se imprimieron secretos.
 - No se ejecutó `dotnet user-secrets list`.
 - No se usó `codex-cobranza-sql`.
+- Para Fase 3.4.2, no se modificó código; solo documentación.
 - No se hicieron commits.
 - `/login` sigue público.
 - `/app` y `/app/dashboard` siguen privados.

@@ -8,6 +8,8 @@ Actualización 2026-07-04: la implementación backend delivery MVP fue desplegad
 
 Actualización Fase 3.4.2, 2026-07-04: la UI admin de entregas desde `/app/ordenes/:id` quedó implementada consumiendo estos endpoints existentes. El QA funcional/manual de UI queda documentado en `docs/08-qa/delivery-admin-ui-qa.md`.
 
+Actualización operativa Fase 3.4.2, 2026-07-04: GitHub Actions para commit `97d46e9` falló durante health check con `502`, el rollback dejó activo `dev-23-eea8f39`, y el release nuevo `dev-24-97d46e9` fue validado manualmente y activado mediante ajuste de `backend/current` y restart del servicio. La validación final confirmó `GET /health` `200` y `GET /api/deliveries` sin sesión `401` en DEV. No se imprimieron secretos ni se usó `codex-cobranza-sql`.
+
 ## Modelo Y Migración
 
 - Entidad: `WorkOrderDelivery`.
@@ -151,11 +153,27 @@ Queda pendiente la validación manual Admin en DEV:
 
 Para la validación visual/funcional de la UI admin, usar además `docs/08-qa/delivery-admin-ui-qa.md`.
 
+## Nota Operativa DEV Fase 3.4.2
+
+El fallo inicial de GitHub Actions no invalidó el release `dev-24-97d46e9`: la causa observada fue el health check `502` durante el despliegue. En la validación manual, el primer intento fue descartado porque se intentó sourcear `api.env` directamente en Bash; ese método no aplica para la connection string del ambiente porque contiene espacios/semicolons. Al cargar `/etc/laboratorio-tlahuac-dev/api.env` con parser seguro, el release arrancó correctamente en puerto alterno `5013`.
+
+Después de activar manualmente `backend/current` hacia `dev-24-97d46e9` y reiniciar `laboratorio-tlahuac-dev-api.service`, DEV quedó con:
+
+| Punto | Resultado |
+| --- | --- |
+| `http://127.0.0.1:5012/health` | `200` |
+| `http://127.0.0.1:5012/api/deliveries` sin sesión | `401` |
+| `https://dev.laboratoriodentaltlahuac.com/health` | `200` |
+| `https://dev.laboratoriodentaltlahuac.com/api/deliveries` sin sesión | `401` |
+
+Pendiente técnico: ajustar el workflow para esperar más tiempo o usar reintentos más tolerantes en health check después del restart.
+
 ## Pendientes
 
 - Fase 3.4.2: UI admin de entregas desde órdenes. Implementada; pendiente validación manual DEV.
 - Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`.
 - Fase 3.4.4: QA DEV y ajustes con celular real.
+- Ajustar workflow DEV para reducir falsos negativos de health check `502` después del restart.
 - Validación manual Admin en DEV del flujo delivery desplegado.
 - Definir si `Repartidor` debe recibir `deliveries.update` para registrar salida desde móvil.
 - Diseñar cancelación de entregas si operación la requiere.

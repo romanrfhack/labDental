@@ -28,9 +28,10 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.4.1: backend delivery MVP + permisos. Implementada y desplegada a DEV el 2026-07-04; agrega `WorkOrderDelivery`, `DeliveryStatus`, migración `AddWorkOrderDeliveries`, endpoints `/api/deliveries` y `/api/work-orders/{workOrderId}/delivery`, permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`, y rol `Repartidor` con permisos mínimos `deliveries.view`/`deliveries.complete`. Deploy DEV: commit `e4c28205c6b866ab0d71edb13c49164100340b0d`, GitHub Actions run `28712956106`, resultado `success`; `/health` responde `200` y `/api/deliveries` sin sesión responde `401`.
 - Fase 3.4.1.1: QA técnico de migración delivery, permisos y endpoints reales. Completada el 2026-07-04 contra SQL local `ldt-labdental-sql`/`LaboratorioTlahuac_Dev`; aplica migración local, valida API real con Admin/Repartidor QA y corrige sincronización baseline de permisos faltantes para rol Admin existente. El pendiente de base DEV quedó cerrado o no aplica porque `/api/deliveries` ya responde `401` en DEV.
 - Fase 3.4.1.2: cierre documental de deploy DEV y lazy loading. Completada el 2026-07-04; confirma Delivery API desplegada/protegida, lazy loading desplegado, warning de initial bundle resuelto de `535.62 kB` a `304.19 kB` y validación manual Admin en DEV como pendiente.
-- Fase 3.4.2: UI admin desde órdenes para asignar, registrar salida/estado y ver seguimiento. Implementada el 2026-07-04 en `/app/ordenes/:id`; consume endpoints delivery existentes, reutiliza endpoints admin para candidatos de repartidor y no crea rutas nuevas.
+- Fase 3.4.2: UI admin desde órdenes para asignar, registrar salida/estado y ver seguimiento. Implementada el 2026-07-04 en `/app/ordenes/:id`; consume endpoints delivery existentes, reutiliza endpoints admin para candidatos de repartidor y no crea rutas nuevas. Cierre operativo DEV: GitHub Actions de commit `97d46e9` falló por health check `502`, rollback dejó activo `dev-23-eea8f39`, y `dev-24-97d46e9` se validó manualmente en puerto alterno `5013` y se activó ajustando `backend/current`; health final `200` y `/api/deliveries` sin sesión `401`.
 - Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`. Siguiente fase.
 - Fase 3.4.4: QA DEV y ajustes del flujo de entregas. Pendiente.
+- Pendiente técnico de despliegue DEV: ajustar el workflow para esperar más o validar health con reintentos más tolerantes después del restart.
 - Fase 3.5: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
@@ -65,7 +66,7 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Iniciar Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`, tomando como fuente `docs/01-product/driver-mobile-workflow.md` y los endpoints ya implementados en Fase 3.4.1.
+Ejecutar QA manual DEV de Fase 3.4.2 y después iniciar Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`, tomando como fuente `docs/01-product/driver-mobile-workflow.md` y los endpoints ya implementados en Fase 3.4.1.
 
 Alcance sugerido inmediato: listado mobile-first de entregas asignadas, detalle de entrega, captura de `Recibio`, captura de motivo de no entrega y validación con usuario `Repartidor`. No debe ampliar acceso del repartidor a órdenes, clientes, pagos, usuarios ni roles.
 
