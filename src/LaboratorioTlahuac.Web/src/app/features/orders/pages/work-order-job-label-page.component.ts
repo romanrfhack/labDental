@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -12,14 +12,14 @@ import { WorkOrderService } from '../work-order.service';
   imports: [RouterLink],
   template: `
     <section class="label-print-page">
-      @if (isLoading) {
+      @if (isLoading()) {
         <p class="loading-state">Cargando etiqueta...</p>
-      } @else if (errorMessage) {
-        <p class="alert-error" role="alert">{{ errorMessage }}</p>
+      } @else if (errorMessage(); as message) {
+        <p class="alert-error" role="alert">{{ message }}</p>
         <div class="label-screen-actions">
-          <a class="ghost-button" [routerLink]="fallbackRoute">Volver</a>
+          <a class="ghost-button" [routerLink]="fallbackRoute()">Volver</a>
         </div>
-      } @else if (order) {
+      } @else if (order(); as order) {
         <header class="label-page-heading">
           <div>
             <h1>Etiqueta interna</h1>
@@ -93,10 +93,10 @@ import { WorkOrderService } from '../work-order.service';
   styleUrl: './work-order-job-label-page.component.scss'
 })
 export class WorkOrderJobLabelPageComponent implements OnInit, OnDestroy {
-  order: WorkOrderDetail | null = null;
-  isLoading = false;
-  errorMessage = '';
-  fallbackRoute = '/app/ordenes';
+  readonly order = signal<WorkOrderDetail | null>(null);
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+  readonly fallbackRoute = signal('/app/ordenes');
 
   private readonly pageStyleId = 'ldt-work-order-job-label-page-size';
 
@@ -148,21 +148,23 @@ export class WorkOrderJobLabelPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.fallbackRoute = `/app/ordenes/${id}`;
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.fallbackRoute.set(`/app/ordenes/${id}`);
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    this.order.set(null);
 
     this.workOrderService
       .getById(id)
-      .pipe(finalize(() => (this.isLoading = false)))
+      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (order) => {
-          this.order = order;
+          this.order.set(order);
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.toLoadErrorMessage(error);
+          this.errorMessage.set(this.toLoadErrorMessage(error));
+          this.order.set(null);
           if (error.status === 404) {
-            this.fallbackRoute = '/app/ordenes';
+            this.fallbackRoute.set('/app/ordenes');
           }
         }
       });

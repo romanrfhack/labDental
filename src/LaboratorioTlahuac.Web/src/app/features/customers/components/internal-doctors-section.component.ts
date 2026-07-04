@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +21,7 @@ type InternalDoctorControlName = 'fullName' | 'phone' | 'whatsApp' | 'email' | '
           <h2>Doctores internos</h2>
           <p>Contactos clinicos asociados a esta clinica.</p>
         </div>
-        @if (canCreate && !showForm) {
+        @if (canCreate && !showForm()) {
           <button class="primary-button" type="button" (click)="startCreate()">Nuevo doctor interno</button>
         }
       </header>
@@ -29,14 +29,18 @@ type InternalDoctorControlName = 'fullName' | 'phone' | 'whatsApp' | 'email' | '
       <div class="toolbar">
         <label class="filter-field">
           <span>Estado</span>
-          <select name="doctorStatus" [(ngModel)]="activeFilter" (ngModelChange)="load()">
+          <select name="doctorStatus" [ngModel]="activeFilter()" (ngModelChange)="setActiveFilter($event)">
             <option value="active">Activos</option>
             <option value="inactive">Inactivos</option>
           </select>
         </label>
       </div>
 
-      @if (showForm) {
+      @if (!showForm() && errorMessage(); as message) {
+        <p class="alert-error" role="alert">{{ message }}</p>
+      }
+
+      @if (showForm()) {
         <form class="feature-page" [formGroup]="form" (ngSubmit)="submit()">
           <div class="field-grid">
             <label class="form-field">
@@ -67,22 +71,22 @@ type InternalDoctorControlName = 'fullName' | 'phone' | 'whatsApp' | 'email' | '
             </label>
           </div>
 
-          @if (errorMessage) {
-            <p class="alert-error" role="alert">{{ errorMessage }}</p>
+          @if (errorMessage(); as message) {
+            <p class="alert-error" role="alert">{{ message }}</p>
           }
 
           <div class="page-actions">
-            <button class="primary-button" type="submit" [disabled]="isSaving">
-              {{ isSaving ? 'Guardando...' : editingDoctor ? 'Guardar doctor' : 'Crear doctor' }}
+            <button class="primary-button" type="submit" [disabled]="isSaving()">
+              {{ isSaving() ? 'Guardando...' : editingDoctor() ? 'Guardar doctor' : 'Crear doctor' }}
             </button>
             <button class="ghost-button" type="button" (click)="cancelForm()">Cancelar</button>
           </div>
         </form>
       }
 
-      @if (isLoading) {
+      @if (isLoading()) {
         <p class="loading-state">Cargando doctores internos...</p>
-      } @else if (doctors.length === 0) {
+      } @else if (doctors().length === 0) {
         <p class="empty-state">No hay doctores internos con el filtro actual.</p>
       } @else {
         <table class="data-table">
@@ -96,7 +100,7 @@ type InternalDoctorControlName = 'fullName' | 'phone' | 'whatsApp' | 'email' | '
             </tr>
           </thead>
           <tbody>
-            @for (doctor of doctors; track doctor.id) {
+            @for (doctor of doctors(); track doctor.id) {
               <tr>
                 <td>{{ doctor.fullName }}</td>
                 <td>{{ doctor.phone || doctor.whatsApp || '-' }}</td>
@@ -134,13 +138,13 @@ type InternalDoctorControlName = 'fullName' | 'phone' | 'whatsApp' | 'email' | '
 export class InternalDoctorsSectionComponent implements OnChanges {
   @Input() customer: CustomerDetail | null = null;
 
-  doctors: InternalDoctor[] = [];
-  activeFilter: ActiveFilter = 'active';
-  showForm = false;
-  editingDoctor: InternalDoctor | null = null;
-  isLoading = false;
-  isSaving = false;
-  errorMessage = '';
+  readonly doctors = signal<InternalDoctor[]>([]);
+  readonly activeFilter = signal<ActiveFilter>('active');
+  readonly showForm = signal(false);
+  readonly editingDoctor = signal<InternalDoctor | null>(null);
+  readonly isLoading = signal(false);
+  readonly isSaving = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   readonly form = new FormGroup({
     fullName: new FormControl('', {
@@ -182,32 +186,38 @@ export class InternalDoctorsSectionComponent implements OnChanges {
     this.load();
   }
 
+  setActiveFilter(activeFilter: ActiveFilter): void {
+    this.activeFilter.set(activeFilter);
+    this.load();
+  }
+
   load(): void {
     if (!this.customer || this.customer.type !== 'Clinic') {
-      this.doctors = [];
+      this.doctors.set([]);
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
     this.customerService
-      .listInternalDoctors(this.customer.id, { isActive: this.activeFilter === 'active' })
-      .pipe(finalize(() => (this.isLoading = false)))
+      .listInternalDoctors(this.customer.id, { isActive: this.activeFilter() === 'active' })
+      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (doctors) => {
-          this.doctors = doctors;
+          this.doctors.set(doctors);
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.toErrorMessage(error);
+          this.errorMessage.set(this.toErrorMessage(error));
+          this.doctors.set([]);
         }
       });
   }
 
   startCreate(): void {
-    this.editingDoctor = null;
-    this.showForm = true;
-    this.errorMessage = '';
+    this.editingDoctor.set(null);
+    this.showForm.set(true);
+    this.errorMessage.set(null);
     this.form.reset({
       fullName: '',
       phone: '',
@@ -218,9 +228,9 @@ export class InternalDoctorsSectionComponent implements OnChanges {
   }
 
   startEdit(doctor: InternalDoctor): void {
-    this.editingDoctor = doctor;
-    this.showForm = true;
-    this.errorMessage = '';
+    this.editingDoctor.set(doctor);
+    this.showForm.set(true);
+    this.errorMessage.set(null);
     this.form.reset({
       fullName: doctor.fullName,
       phone: doctor.phone ?? '',
@@ -231,43 +241,48 @@ export class InternalDoctorsSectionComponent implements OnChanges {
   }
 
   cancelForm(): void {
-    this.showForm = false;
-    this.editingDoctor = null;
-    this.errorMessage = '';
+    this.showForm.set(false);
+    this.editingDoctor.set(null);
+    this.errorMessage.set(null);
   }
 
   submit(): void {
-    if (!this.customer) {
+    const currentCustomer = this.customer;
+    const currentDoctor = this.editingDoctor();
+
+    if (!currentCustomer) {
       return;
     }
 
     this.form.markAllAsTouched();
 
-    if (this.form.invalid || this.isSaving) {
+    if (this.form.invalid || this.isSaving()) {
       return;
     }
 
-    this.isSaving = true;
-    this.errorMessage = '';
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
 
     const request = this.toRequest();
-    const save$ = this.editingDoctor
-      ? this.customerService.updateInternalDoctor(this.customer.id, this.editingDoctor.id, request)
-      : this.customerService.createInternalDoctor(this.customer.id, request);
+    const save$ = currentDoctor
+      ? this.customerService.updateInternalDoctor(currentCustomer.id, currentDoctor.id, request)
+      : this.customerService.createInternalDoctor(currentCustomer.id, request);
 
-    save$.pipe(finalize(() => (this.isSaving = false))).subscribe({
+    save$.pipe(finalize(() => this.isSaving.set(false))).subscribe({
       next: () => {
         this.cancelForm();
         this.load();
       },
       error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.toErrorMessage(error);
+        this.errorMessage.set(this.toErrorMessage(error));
       }
     });
   }
 
   toggleStatus(doctor: InternalDoctor): void {
-    if (!this.customer) {
+    const currentCustomer = this.customer;
+
+    if (!currentCustomer) {
       return;
     }
 
@@ -275,10 +290,10 @@ export class InternalDoctorsSectionComponent implements OnChanges {
       return;
     }
 
-    this.customerService.updateInternalDoctorStatus(this.customer.id, doctor.id, !doctor.isActive).subscribe({
+    this.customerService.updateInternalDoctorStatus(currentCustomer.id, doctor.id, !doctor.isActive).subscribe({
       next: () => this.load(),
       error: (error: HttpErrorResponse) => {
-        this.errorMessage = this.toErrorMessage(error);
+        this.errorMessage.set(this.toErrorMessage(error));
       }
     });
   }

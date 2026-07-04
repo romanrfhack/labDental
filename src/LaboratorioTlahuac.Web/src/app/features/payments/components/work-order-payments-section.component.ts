@@ -1,5 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -33,19 +33,23 @@ import { PaymentSummaryCardComponent } from './payment-summary-card.component';
           <p>Abonos registrados y saldo calculado.</p>
         </div>
         <label class="check-field compact-check">
-          <input type="checkbox" [(ngModel)]="includeCancelled" (ngModelChange)="loadPayments()" />
+          <input
+            type="checkbox"
+            [ngModel]="includeCancelled()"
+            (ngModelChange)="setIncludeCancelled($event)"
+          />
           <span>Incluir cancelados</span>
         </label>
       </header>
 
-      @if (summary) {
+      @if (summary(); as summary) {
         <app-payment-summary-card [summary]="summary" />
-      } @else if (isLoadingSummary) {
+      } @else if (isLoadingSummary()) {
         <p class="loading-state">Cargando resumen financiero...</p>
       }
 
-      @if (loadErrorMessage) {
-        <p class="alert-error" role="alert">{{ loadErrorMessage }}</p>
+      @if (loadErrorMessage(); as message) {
+        <p class="alert-error" role="alert">{{ message }}</p>
       }
 
       @if (canCreate) {
@@ -55,22 +59,22 @@ import { PaymentSummaryCardComponent } from './payment-summary-card.component';
           <p class="empty-state">La orden cancelada no permite registrar pagos.</p>
         } @else {
           <app-payment-create-form
-            [methods]="methods"
-            [isSubmitting]="isCreating"
-            [errorMessage]="createErrorMessage"
-            [resetSignal]="createResetSignal"
+            [methods]="methods()"
+            [isSubmitting]="isCreating()"
+            [errorMessage]="createErrorMessage() ?? ''"
+            [resetSignal]="createResetSignal()"
             (create)="createPayment($event)"
           />
         }
       }
 
-      @if (cancelErrorMessage) {
-        <p class="alert-error" role="alert">{{ cancelErrorMessage }}</p>
+      @if (cancelErrorMessage(); as message) {
+        <p class="alert-error" role="alert">{{ message }}</p>
       }
 
-      @if (isLoadingPayments) {
+      @if (isLoadingPayments()) {
         <p class="loading-state">Cargando pagos...</p>
-      } @else if (payments.length === 0) {
+      } @else if (payments().length === 0) {
         <p class="empty-state">No hay pagos registrados con los filtros actuales.</p>
       } @else {
         <table class="data-table">
@@ -86,7 +90,7 @@ import { PaymentSummaryCardComponent } from './payment-summary-card.component';
             </tr>
           </thead>
           <tbody>
-            @for (payment of payments; track payment.id) {
+            @for (payment of payments(); track payment.id) {
               <tr>
                 <td>{{ formatDateOnly(payment.paymentDate) }}</td>
                 <td>{{ payment.amount | currency: 'MXN':'symbol-narrow' }}</td>
@@ -107,7 +111,7 @@ import { PaymentSummaryCardComponent } from './payment-summary-card.component';
                   @if (canCancel && !payment.isCancelled) {
                     <app-payment-cancel-action
                       [payment]="payment"
-                      [isSubmitting]="cancellingPaymentId === payment.id"
+                      [isSubmitting]="cancellingPaymentId() === payment.id"
                       (cancelPayment)="cancelPayment(payment, $event)"
                     />
                   } @else {
@@ -127,18 +131,18 @@ export class WorkOrderPaymentsSectionComponent implements OnInit, OnChanges {
   @Input() totalAmount: number | null = null;
   @Input() isWorkOrderCancelled = false;
 
-  summary: PaymentSummary | null = null;
-  payments: WorkOrderPayment[] = [];
-  methods: PaymentMethodOption[] = [];
-  includeCancelled = false;
-  isLoadingSummary = false;
-  isLoadingPayments = false;
-  isCreating = false;
-  cancellingPaymentId = '';
-  createResetSignal = 0;
-  loadErrorMessage = '';
-  createErrorMessage = '';
-  cancelErrorMessage = '';
+  readonly summary = signal<PaymentSummary | null>(null);
+  readonly payments = signal<WorkOrderPayment[]>([]);
+  readonly methods = signal<PaymentMethodOption[]>([]);
+  readonly includeCancelled = signal(false);
+  readonly isLoadingSummary = signal(false);
+  readonly isLoadingPayments = signal(false);
+  readonly isCreating = signal(false);
+  readonly cancellingPaymentId = signal('');
+  readonly createResetSignal = signal(0);
+  readonly loadErrorMessage = signal<string | null>(null);
+  readonly createErrorMessage = signal<string | null>(null);
+  readonly cancelErrorMessage = signal<string | null>(null);
 
   constructor(
     private readonly paymentService: PaymentService,
@@ -164,68 +168,75 @@ export class WorkOrderPaymentsSectionComponent implements OnInit, OnChanges {
     }
   }
 
+  setIncludeCancelled(includeCancelled: boolean): void {
+    this.includeCancelled.set(includeCancelled);
+    this.loadPayments();
+  }
+
   loadPayments(): void {
     if (!this.workOrderId) {
+      this.payments.set([]);
       return;
     }
 
-    this.isLoadingPayments = true;
-    this.loadErrorMessage = '';
+    this.isLoadingPayments.set(true);
+    this.loadErrorMessage.set(null);
 
     this.paymentService
-      .listForWorkOrder(this.workOrderId, { includeCancelled: this.includeCancelled })
-      .pipe(finalize(() => (this.isLoadingPayments = false)))
+      .listForWorkOrder(this.workOrderId, { includeCancelled: this.includeCancelled() })
+      .pipe(finalize(() => this.isLoadingPayments.set(false)))
       .subscribe({
         next: (payments) => {
-          this.payments = payments;
+          this.payments.set(payments);
         },
         error: (error: HttpErrorResponse) => {
-          this.loadErrorMessage = this.toLoadErrorMessage(error);
+          this.loadErrorMessage.set(this.toLoadErrorMessage(error));
+          this.payments.set([]);
         }
       });
   }
 
   createPayment(request: PaymentCreateRequest): void {
-    if (!this.workOrderId || this.isCreating) {
+    if (!this.workOrderId || this.isCreating()) {
       return;
     }
 
-    this.isCreating = true;
-    this.createErrorMessage = '';
+    this.isCreating.set(true);
+    this.createErrorMessage.set(null);
 
     this.paymentService
       .create(this.workOrderId, request)
-      .pipe(finalize(() => (this.isCreating = false)))
+      .pipe(finalize(() => this.isCreating.set(false)))
       .subscribe({
         next: (response) => {
-          this.summary = response.summary;
-          this.createResetSignal++;
+          this.summary.set(response.summary);
+          this.createResetSignal.update((value) => value + 1);
           this.loadPayments();
         },
         error: (error: HttpErrorResponse) => {
-          this.createErrorMessage = this.toCreateErrorMessage(error);
+          this.createErrorMessage.set(this.toCreateErrorMessage(error));
         }
       });
   }
 
   cancelPayment(payment: WorkOrderPayment, reason: string): void {
-    if (!this.workOrderId || this.cancellingPaymentId) {
+    if (!this.workOrderId || this.cancellingPaymentId()) {
       return;
     }
 
-    this.cancellingPaymentId = payment.id;
-    this.cancelErrorMessage = '';
+    this.cancellingPaymentId.set(payment.id);
+    this.cancelErrorMessage.set(null);
 
     this.paymentService
       .cancel(this.workOrderId, payment.id, reason)
-      .pipe(finalize(() => (this.cancellingPaymentId = '')))
+      .pipe(finalize(() => this.cancellingPaymentId.set('')))
       .subscribe({
         next: (response) => {
-          this.summary = response.summary;
+          this.summary.set(response.summary);
           this.loadPayments();
         },
         error: (error: HttpErrorResponse) => {
-          this.cancelErrorMessage = this.toCancelErrorMessage(error);
+          this.cancelErrorMessage.set(this.toCancelErrorMessage(error));
         }
       });
   }
@@ -243,21 +254,23 @@ export class WorkOrderPaymentsSectionComponent implements OnInit, OnChanges {
 
   private loadSummary(): void {
     if (!this.workOrderId) {
+      this.summary.set(null);
       return;
     }
 
-    this.isLoadingSummary = true;
-    this.loadErrorMessage = '';
+    this.isLoadingSummary.set(true);
+    this.loadErrorMessage.set(null);
 
     this.paymentService
       .getSummary(this.workOrderId)
-      .pipe(finalize(() => (this.isLoadingSummary = false)))
+      .pipe(finalize(() => this.isLoadingSummary.set(false)))
       .subscribe({
         next: (summary) => {
-          this.summary = summary;
+          this.summary.set(summary);
         },
         error: (error: HttpErrorResponse) => {
-          this.loadErrorMessage = this.toLoadErrorMessage(error);
+          this.loadErrorMessage.set(this.toLoadErrorMessage(error));
+          this.summary.set(null);
         }
       });
   }
@@ -265,7 +278,11 @@ export class WorkOrderPaymentsSectionComponent implements OnInit, OnChanges {
   private loadMethods(): void {
     this.paymentService.getMethods().subscribe({
       next: (methods) => {
-        this.methods = methods;
+        this.methods.set(methods);
+      },
+      error: () => {
+        this.methods.set([]);
+        this.createErrorMessage.set('No fue posible cargar metodos de pago.');
       }
     });
   }

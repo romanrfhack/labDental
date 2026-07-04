@@ -6,6 +6,90 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-03 - Auditoría Admin Angular Zoneless Extendida
+
+### Cambio Realizado
+
+Se auditó el frontend Admin completo buscando pantallas que todavía actualizaran estado renderizado desde `subscribe()` o `finalize()` mediante propiedades mutables normales en Angular sin `zone.js` y con `HttpClient` + `withFetch()`.
+
+Se corrigieron los componentes con evidencia clara y alcance acotado:
+
+- `/app/ordenes/:id/editar`.
+- `/app/ordenes/:id/etiqueta-trabajo`.
+- `/app/ordenes/:id/etiqueta-entrega`.
+- `/app/pagos`.
+- Sección de pagos dentro de `/app/ordenes/:id`.
+- Sección de doctores internos dentro del detalle de clientes.
+
+### Causa Técnica
+
+El patrón pendiente era el mismo ya corregido en Clientes, Dashboard y Órdenes: estados como `isLoading`, `order`, `items`, `payments`, `summary`, `errorMessage`, `isSubmitting`, `isCreating`, `cancellingPaymentId` o filtros se mutaban dentro de callbacks async.
+
+En Angular zoneless esas mutaciones no siempre invalidan la vista, aunque la respuesta HTTP sea `200`, por lo que la pantalla puede quedarse en `Cargando...` hasta que un clic, blur, focus u otro evento DOM provoca un nuevo ciclo de render.
+
+### Inventario Global Ejecutado
+
+Se ejecutaron búsquedas sobre `src/LaboratorioTlahuac.Web/src/app` para:
+
+- Textos y estados de carga: `Cargando`, `loading`, `isLoading`.
+- Patrones async: `subscribe()`, `finalize()`, `catchError()`, `HttpErrorResponse`, `firstValueFrom`, `lastValueFrom`.
+- Uso de Angular signals: `signal()`, `computed()`, `toSignal`, `effect()`.
+- Pantallas Admin relevantes: Etiquetas, Pagos, Ordenes, Clientes, Dashboard, Inventario, Proveedores, Usuarios y Roles.
+- APIs de change detection o hacks: `ChangeDetectorRef`, `detectChanges`, `NgZone`, `ApplicationRef`, `window.location`, `setTimeout`, `dispatchEvent`, `reload`.
+
+### Matriz De Auditoría Resumida
+
+| Pantalla/ruta | Archivo | Problema encontrado | Acción | Estado |
+| --- | --- | --- | --- | --- |
+| `/app/ordenes/:id/editar` | `work-order-edit-page.component.ts` | `order`, `isLoading`, `isSubmitting` y mensajes eran mutables actualizados desde HTTP. | Migrado a signals y navegación post-update con `NavigationExtras.info`. | Corregido |
+| `/app/ordenes/:id` | `work-order-detail-page.component.ts` | La página principal ya usaba signals; la sección hija de pagos no. | No tocar página; corregir componente hijo de pagos. | Ya estaba correcto / hijo corregido |
+| Etiqueta interna | `work-order-job-label-page.component.ts` | `order`, `isLoading`, `errorMessage` y `fallbackRoute` eran mutables. | Migrado a signals. | Corregido |
+| Etiqueta entrega | `work-order-delivery-label-page.component.ts` | `order`, `isLoading`, `errorMessage` y `fallbackRoute` eran mutables. | Migrado a signals. | Corregido |
+| `/app/pagos` | `payment-list-page.component.ts` | Items, métodos, filtros, paginación, loading y error eran mutables. | Migrado a signals y bindings `[ngModel]`/`(ngModelChange)`. | Corregido |
+| Pagos en detalle de orden | `work-order-payments-section.component.ts` | Resumen, pagos, métodos, flags de crear/cancelar/cargar y mensajes eran mutables. | Migrado a signals. | Corregido |
+| Doctores internos | `internal-doctors-section.component.ts` | Lista, filtro, formulario visible, doctor en edición, saving/loading y error eran mutables. | Migrado a signals conservando Reactive Forms. | Corregido |
+| `/app/ordenes` | `work-order-list-page.component.ts` | Ya corregido en tarea previa con signals. | Revisado sin cambios. | Ya estaba correcto |
+| `/app/ordenes/nueva` | `work-order-create-page.component.ts` y `work-order-form.component.ts` | Ya corregido con signals para submit, clientes y doctores. | Revisado sin cambios. | Ya estaba correcto |
+| `/app/dashboard` | `dashboard-page.component.ts` | Ya corregido con signals. | Revisado sin cambios. | Ya estaba correcto |
+| `/app/clientes` y detalle/crear/editar | `features/customers/pages/*` | Listado, detalle, crear y editar ya tenían signals en los flujos reportados. | Revisado sin cambios, salvo sección de doctores internos. | Ya estaba correcto / hijo corregido |
+| Inventario | `inventory-page.component.ts` | Placeholder sin HTTP ni loading. | No tocar. | No aplica |
+| Proveedores | `suppliers-page.component.ts` | Placeholder sin HTTP ni loading. | No tocar. | No aplica |
+| Usuarios | `users-page.component.ts` | Placeholder sin HTTP ni loading. | No tocar. | No aplica |
+| Roles | `roles-page.component.ts` | Placeholder sin HTTP ni loading. | No tocar. | No aplica |
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-edit-page.component.ts`: migra carga/submit/error/orden a signals, conserva `WorkOrderUpsertRequest` y usa `NavigationExtras.info` para el flash transitorio post-guardado.
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-job-label-page.component.ts`: migra etiqueta interna a signals sin cambiar formato ni `window.print()`.
+- `src/LaboratorioTlahuac.Web/src/app/features/orders/pages/work-order-delivery-label-page.component.ts`: migra etiqueta de entrega a signals sin cambiar formato ni `window.print()`.
+- `src/LaboratorioTlahuac.Web/src/app/features/payments/pages/payment-list-page.component.ts`: migra listado de pagos, filtros, métodos y paginación a signals.
+- `src/LaboratorioTlahuac.Web/src/app/features/payments/components/work-order-payments-section.component.ts`: migra resumen, pagos, métodos, crear/cancelar y mensajes a signals.
+- `src/LaboratorioTlahuac.Web/src/app/features/customers/components/internal-doctors-section.component.ts`: migra lista, filtro, modo formulario, doctor en edición, loading/saving y errores a signals conservando `FormGroup`.
+- `docs/PROJECT_STATUS.md` y `docs/IMPLEMENTATION_LOG.md`: documentan auditoría, pantallas corregidas, pantallas revisadas y validación.
+
+### Decisiones Técnicas
+
+- No se modificaron servicios porque los contratos frontend/backend ya eran suficientes.
+- No se modificó backend, base de datos, migraciones, endpoints ni DTOs.
+- No se modificaron auth, sesiones, cookies, CSRF/XSRF, guards ni interceptor `401`.
+- No se agregó `zone.js`, no se quitó `withFetch()` y no se usaron hacks de repintado como `setTimeout`, reload, `ApplicationRef.tick()`, clicks simulados, `detectChanges()` indiscriminado ni `document.dispatchEvent`.
+- Los `403` siguen mostrando mensajes controlados locales; los `401` quedan a cargo del interceptor global existente.
+- No se hizo rediseño responsive global.
+
+### Validaciones Ejecutadas
+
+- `git status --short`: limpio al inicio.
+- `git log --oneline --decorate -8`: HEAD inicial en `d3534bc (HEAD -> dev, origin/dev) Ordenes a Angulas signals`.
+- `npm run build` intermedio desde `src/LaboratorioTlahuac.Web`: correcto; warning de presupuesto inicial excedido por 7.01 kB.
+- Validación de cierre: `git diff --check` correcto; `npm run build` correcto con warning de presupuesto inicial excedido por 7.01 kB; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101; `git status --short` y `git diff --stat` ejecutados.
+- No existe script frontend `test` en `src/LaboratorioTlahuac.Web/package.json`; scripts detectados: `ng`, `start`, `build` y `watch`.
+
+### Pendientes
+
+- Validación manual en navegador real de `/app/ordenes/:id/editar`, etiqueta interna, etiqueta entrega, `/app/pagos`, crear/cancelar pagos si aplica y sección de doctores internos.
+- Confirmar manualmente que un `401` redirige a `/login` y que un `403` no redirige a login en las pantallas corregidas.
+- Revisar en otra fase cualquier pantalla futura de Inventario, Proveedores, Usuarios o Roles cuando deje de ser placeholder y agregue HTTP real.
+
 ## 2026-07-03 - Corrección Admin Órdenes Listado En Angular Zoneless Y Responsive
 
 ### Cambio Realizado
