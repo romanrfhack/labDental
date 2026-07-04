@@ -2,6 +2,8 @@
 
 Fuente funcional para la futura Fase 3.4. Este documento define el MVP de repartidor desde navegador móvil. No implementa código, permisos, base de datos ni endpoints.
 
+Actualización Fase 3.4.0: el análisis técnico previo queda documentado en `docs/01-product/delivery-mvp-design.md`. La recomendación es crear una entidad separada `WorkOrderDelivery` para trazabilidad real, en lugar de extender `WorkOrder` salvo que se decida un MVP extremadamente rápido.
+
 ## Objetivo
 
 Permitir que el repartidor consulte entregas asignadas desde celular, confirme la información esencial y registre quién recibió la entrega con fecha/hora de servidor.
@@ -13,7 +15,8 @@ Rol futuro sugerido: `Repartidor`.
 Permisos sugeridos:
 
 - `deliveries.view`: ver entregas asignadas.
-- `deliveries.update`: actualizar estado de entrega y registrar recibido.
+- `deliveries.update`: actualizar salida a ruta o no entrega.
+- `deliveries.complete`: registrar entrega completada y recibido.
 
 Permisos administrativos opcionales:
 
@@ -22,13 +25,18 @@ Permisos administrativos opcionales:
 
 El sistema actual todavía no tiene estos permisos ni módulo de entregas. Fase 3.3 ya preparó administración MVP de usuarios/roles y rol `Repartidor` sin permisos activos.
 
+Para el rol `Repartidor`, la combinación recomendada en MVP es `deliveries.view`, `deliveries.update` y `deliveries.complete`, sin `orders.view`, `customers.view`, `payments.view`, `users.manage` ni `roles.manage`.
+
 ## Ruta Recomendada
 
 Ruta privada recomendada:
 
 - `/app/entregas`
+- `/app/entregas/:id`
 
 Motivo: permite crecer a listado de entregas para administración y repartidor sin acoplar todo a una persona. Si se quiere una entrada más explícita para el rol, puede evaluarse `/app/repartidor` como alias o vista filtrada, pero no debe reemplazar ni duplicar `/app/ordenes`.
+
+El texto de navegación puede cambiar por contexto: `Entregas` para administración y `Mis entregas` para repartidor, usando la misma ruta.
 
 ## Pantalla First-Mobile
 
@@ -116,7 +124,38 @@ Resultado esperado:
 - Administración ve cuándo se entregó.
 - Administración ve a qué cliente se entregó.
 - Administración ve quién recibió.
-- La orden puede cambiar a `Delivered` o mostrar estado de entrega entregado, según diseño de base de Fase 3.4.
+- La entrega queda en `Delivered`.
+- La orden puede cambiar a `Delivered` en la misma operación para conservar tableros actuales, siempre que el backend lo haga con timestamp de servidor y reglas documentadas.
+
+## Modelo Recomendado Fase 3.4.0
+
+Recomendado: entidad separada `WorkOrderDelivery`.
+
+Campos mínimos:
+
+- `WorkOrderId`.
+- `AssignedDriverUserId`.
+- `AssignedAtUtc`.
+- `AssignedByUserId`.
+- `Status`.
+- `OutForDeliveryAtUtc`.
+- `OutForDeliveryByUserId`.
+- `DeliveredAtUtc`.
+- `DeliveredByUserId`.
+- `ReceivedByName`.
+- `DeliveryNotes`.
+- `FailureReason`.
+
+Estados recomendados:
+
+- `PendingAssignment`.
+- `Assigned`.
+- `OutForDelivery`.
+- `Delivered`.
+- `FailedDelivery`.
+- `Cancelled`.
+
+El detalle completo de comparación contra extender `WorkOrder` queda en `docs/01-product/delivery-mvp-design.md`.
 
 ## Seguridad
 

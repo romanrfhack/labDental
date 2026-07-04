@@ -24,7 +24,11 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.2.1: QA técnico/visual de etiquetas y preparación de despliegue DEV. Completada el 2026-07-02 por revisión técnica local, build/test y checklist físico; no tuvo hallazgos bloqueantes. La prueba visual local quedó limitada por falta de navegador/headless sin instalar dependencias y la impresión física queda pendiente en DEV.
 - Fase 3.3: administración de usuarios/roles MVP para DEV/UAT. Implementada el 2026-07-03; `/app/admin/usuarios` permite listar, crear, editar datos básicos, activar/desactivar, asignar roles existentes y setear contraseña temporal sin exponerla en respuestas; `/app/admin/roles` queda funcional readonly con permisos por rol; `Repartidor` queda preparado como rol sin permisos amplios. No implementa reparto, entregas, catálogo ni recuperación por correo.
 - Fase 3.3.1: QA de seguridad, validación técnica y preparación de despliegue DEV para usuarios/roles. Completada el 2026-07-03 sin bloqueantes; confirma appsettings sin secretos reales, endpoints admin protegidos con `users.manage`/`roles.manage`, `401` sin sesión en los nueve endpoints, pruebas API 110/110, build frontend con warning de budget no bloqueante y pendiente force-change password antes de producción.
-- Fase 3.4: entrega/repartidor mobile-first. Pendiente; requiere validar usuarios/roles en DEV, diseñar permisos de entregas, modelo de asignación/salida/recepción, endpoints privados y UI móvil. Permisos sugeridos futuros: `deliveries.view` y `deliveries.update`, no implementados todavía.
+- Fase 3.4.0: análisis técnico previo de entrega/repartidor mobile-first. Documentada el 2026-07-03; recomienda entidad separada `WorkOrderDelivery`, estados logísticos propios, ruta `/app/entregas`, endpoints `/api/deliveries/*` y permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`. No implementa código, migraciones, endpoints, permisos reales, auth, guards, cookies, XSRF, deploy ni dependencias.
+- Fase 3.4.1: backend delivery MVP + permisos. Pendiente; debe implementar modelo, migración, permisos y endpoints mínimos.
+- Fase 3.4.2: UI admin desde órdenes para asignar, registrar salida/estado y ver seguimiento. Pendiente.
+- Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`. Pendiente.
+- Fase 3.4.4: QA DEV y ajustes del flujo de entregas. Pendiente.
 - Fase 3.5: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
 ## Sitio Público Institucional
@@ -59,9 +63,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Desplegar Fase 3.3/3.3.1 a DEV desde rama `dev`, validar administración de usuarios/roles con Admin y usuario sin permiso, y después iniciar Fase 3.4 - entrega/repartidor mobile-first.
+Iniciar Fase 3.4.1 - backend delivery MVP + permisos, tomando como fuente `docs/01-product/delivery-mvp-design.md`.
 
-Alcance sugerido inmediato: commit/push a `dev`, desplegar VPS DEV, validar `/app/admin/usuarios`, `/app/admin/roles`, creación de usuario, asignación del rol `Repartidor`, activación/desactivación y acceso denegado para usuario sin `users.manage`/`roles.manage`. La prueba física de etiquetas queda pendiente en paralelo por driver de impresora. El siguiente incremento funcional mayor sigue siendo entrega/repartidor mobile-first bajo `/app`, con diseño previo de permisos, modelo y endpoints.
+Alcance sugerido inmediato: agregar permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`; crear `WorkOrderDelivery`; definir `DeliveryStatus`; crear endpoints mínimos de entregas; cubrir autorización con pruebas. La prueba física de etiquetas y validación DEV final de usuarios/roles pueden seguir en paralelo si aún faltan evidencias humanas, pero no bloquean el backend de entregas.
 
 Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 

@@ -26,7 +26,7 @@ Permitir que el laboratorio opere registros nuevos sin depender del Excel para e
 
 ## Órdenes, Etiquetas Y Entrega
 
-Estado: Fase 3.1 documentó el análisis operativo, Fase 3.2 implementó impresión MVP de etiquetas desde órdenes existentes y Fase 3.3 preparó administración de usuarios/roles como habilitador operativo previo a reparto.
+Estado: Fase 3.1 documentó el análisis operativo, Fase 3.2 implementó impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 preparó administración de usuarios/roles como habilitador operativo previo a reparto y Fase 3.4.0 documentó el diseño técnico recomendado para entregas/repartidor.
 
 La Fase 3.1 definió el siguiente frente operativo sobre órdenes existentes: etiquetas internas, etiquetas de entrega, flujo de salida a repartidor, captura de recibido y priorización futura de usuarios/roles y catálogo. La Fase 3.2 ya permite abrir e imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`.
 
@@ -35,6 +35,7 @@ Fuentes funcionales:
 - `docs/01-product/operations-orders-delivery.md`
 - `docs/01-product/label-printing.md`
 - `docs/01-product/driver-mobile-workflow.md`
+- `docs/01-product/delivery-mvp-design.md`
 
 Decisión principal: no crear un panel duplicado de órdenes. El flujo extiende `/app/ordenes`, especialmente `/app/ordenes/:id`, porque ahí ya existen datos de orden, estado, historial y pagos.
 
@@ -42,18 +43,22 @@ Decisión principal: no crear un panel duplicado de órdenes. El flujo extiende 
 
 ### Órdenes, Etiquetas Y Reparto
 
-Estado: Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes; reparto sigue como análisis/backlog.
+Estado: Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes; reparto queda diseñado en Fase 3.4.0 y pendiente de implementación.
 
 Prioridad sugerida:
 
 1. Fase 3.2: imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`. Implementada con rutas privadas `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`.
 2. Fase 3.3: administración de usuarios/roles MVP para DEV/UAT. Implementada.
-3. Fase 3.4: entrega/repartidor mobile-first bajo `/app/entregas` o ruta equivalente.
-4. Fase 3.5: administración de catálogo.
+3. Fase 3.4.0: análisis técnico previo de entrega/repartidor mobile-first. Documentado.
+4. Fase 3.4.1: backend delivery MVP + permisos.
+5. Fase 3.4.2: UI admin desde órdenes.
+6. Fase 3.4.3: UI repartidor mobile-first.
+7. Fase 3.4.4: QA DEV y ajustes.
+8. Fase 3.5: administración de catálogo.
 
 Fase 3.2 quedó implementada sin migraciones, sin dependencias, sin endpoints nuevos y sin tocar auth/guards. Reutiliza el detalle existente de orden y CSS de impresión; como el DTO actual no incluye dirección/contacto completos del cliente, la etiqueta de entrega muestra `Dirección pendiente` y `Contacto pendiente`. Fase 3.4 sí requerirá diseño de base para asignación, salida, entrega, receptor y trazabilidad.
 
-Fase 3.3 quedó implementada sin migraciones y sin modificar `AuthService`, guards, cookies ni XSRF. Prepara el rol `Repartidor` sin permisos activos ni acceso amplio a órdenes completas. Fase 3.4 deberá diseñar permisos nuevos de entregas, sugeridos como `deliveries.view` y `deliveries.update`, junto con modelo y endpoints de salida/recepción.
+Fase 3.3 quedó implementada sin migraciones y sin modificar `AuthService`, guards, cookies ni XSRF. Prepara el rol `Repartidor` sin permisos activos ni acceso amplio a órdenes completas. Fase 3.4.0 recomienda crear entidad separada `WorkOrderDelivery`, estados logísticos `PendingAssignment`, `Assigned`, `OutForDelivery`, `Delivered`, `FailedDelivery` y `Cancelled`, ruta `/app/entregas`, y permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`.
 
 ## Usuarios Y Roles
 

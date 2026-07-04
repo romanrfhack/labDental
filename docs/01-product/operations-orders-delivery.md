@@ -1,6 +1,8 @@
 # Operación De Órdenes, Etiquetas Y Entrega
 
-Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones.
+Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documenta el análisis técnico previo del flujo de entregas/repartidor sin implementar código.
+
+Diseño técnico Fase 3.4.0: `docs/01-product/delivery-mvp-design.md`.
 
 ## Alcance De Fase 3.1
 
@@ -142,6 +144,8 @@ Faltante hoy:
 - Evidencia futura: foto, firma, ubicación o escaneo.
 - Snapshot de dirección/contacto al momento de salida, si se requiere trazabilidad contra cambios posteriores del cliente.
 
+Fase 3.4.0 confirma que estos datos no deben mezclarse sin análisis con `DeliveryDate`: `DeliveryDate` sigue siendo fecha planeada/capturada de entrega, mientras que salida, entrega real, receptor y no entrega pertenecen al flujo logístico.
+
 ### Pagos Relacionados
 
 Los pagos ya están asociados a órdenes:
@@ -177,7 +181,8 @@ Permisos actuales relevantes:
 No existen permisos de reparto en el código actual. Permisos sugeridos para fases futuras:
 
 - `deliveries.view`: ver entregas asignadas o panel de entregas.
-- `deliveries.update`: avanzar estado de entrega y registrar recibido.
+- `deliveries.update`: marcar salida o no entrega.
+- `deliveries.complete`: registrar entrega completada y recibido.
 - `deliveries.assign`: asignar repartidor y registrar salida, si se separa de administración.
 - `labels.print`: imprimir etiquetas, si se decide separar de `orders.view`.
 
@@ -268,16 +273,23 @@ La orden ya tiene estados operativos. Para reparto conviene evaluar un estado se
 | `Assigned` | Repartidor asignado. |
 | `OutForDelivery` | Salió a ruta. |
 | `Delivered` | Entrega completada. |
-| `Failed` | No se pudo entregar. |
+| `FailedDelivery` | No se pudo entregar. |
 | `Cancelled` | Entrega cancelada. |
 
 Alternativa mínima para MVP: usar `ReadyForDelivery` y `Delivered` en `WorkOrderStatus`, y agregar solo datos de asignación/recibido. La desventaja es que se pierde trazabilidad fina de intentos y salida.
+
+Recomendación Fase 3.4.0: usar `DeliveryStatus` separado con los nombres anteriores. `FailedDelivery` se prefiere sobre `Failed` para evitar confundir fallos técnicos con intentos logísticos no entregados.
 
 ## Campos Nuevos Posibles
 
 Fase 3.2 de etiquetas quedó implementada sin campos nuevos al imprimir datos existentes y textos pendientes seguros para dirección/contacto.
 
-Para Fase 3.4 de reparto sí se requerirá diseño de base de datos. Campos o entidades posibles:
+Para Fase 3.4 de reparto sí se requerirá diseño de base de datos. Fase 3.4.0 compara dos alternativas:
+
+- Extender `WorkOrder` con campos de entrega.
+- Crear entidad `Delivery` o `WorkOrderDelivery`.
+
+La recomendación es crear `WorkOrderDelivery` para trazabilidad real y crecimiento futuro. Campos mínimos sugeridos:
 
 - Entidad `Delivery` o `DeliveryAssignment`.
 - `WorkOrderId`.
@@ -312,10 +324,30 @@ MVP etiquetas:
 MVP reparto:
 
 - `deliveries.view`: ver entregas.
-- `deliveries.update`: marcar salida, no entregada o entregada según rol.
+- `deliveries.update`: marcar salida o no entregada según rol.
+- `deliveries.complete`: marcar entregada y registrar recibido.
 - `deliveries.assign`: asignar repartidor, recomendado para administración.
 - `orders.view`: consultar datos esenciales de orden.
 - `customers.view`: solo si la ruta de entrega consulta datos completos del cliente; preferir DTO mínimo de entrega para no exponer de más al repartidor.
+
+Rol `Repartidor` recomendado: `deliveries.view`, `deliveries.update` y `deliveries.complete`, sin `orders.view`, `customers.view` ni `payments.view`.
+
+Administración/operación recomendada: `orders.view`, `orders.changeStatus`, `deliveries.view`, `deliveries.assign` y, si operará correcciones/cierres, `deliveries.update` y `deliveries.complete`.
+
+## Endpoints Sugeridos Fase 3.4.1
+
+MVP recomendado:
+
+- `GET /api/deliveries/mine`: entregas asignadas al usuario actual.
+- `GET /api/deliveries/{id}`: detalle de entrega, filtrado por usuario asignado salvo permiso administrativo.
+- `GET /api/work-orders/{workOrderId}/delivery`: seguimiento desde detalle de orden.
+- `POST /api/work-orders/{workOrderId}/delivery`: crear/asignar entrega inicial.
+- `PATCH /api/deliveries/{id}/assignment`: reasignar repartidor.
+- `PATCH /api/deliveries/{id}/out-for-delivery`: registrar salida.
+- `PATCH /api/deliveries/{id}/delivered`: registrar entrega, `ReceivedByName` obligatorio.
+- `PATCH /api/deliveries/{id}/failed`: registrar no entrega, `FailureReason` obligatorio.
+
+El endpoint de repartidor debe devolver un DTO mínimo de entrega con cliente, dirección/contacto necesarios, folio, paciente/referencia, trabajo e indicaciones, sin información financiera en MVP.
 
 ## Impacto En Base De Datos
 
@@ -331,6 +363,7 @@ Fase 3.4 reparto:
 - Posible relación con `WorkOrders`.
 - Posibles índices por repartidor, estado y fecha.
 - Definir si dirección/contacto se lee vivo desde cliente o se guarda snapshot.
+- Recomendación Fase 3.4.0: una entrega activa por orden en MVP, con posibilidad posterior de historial de intentos.
 
 Fase 3.3 usuarios/roles:
 
@@ -344,8 +377,12 @@ Fase 3.5 catálogo:
 ## Prioridad Recomendada
 
 1. Validar Fase 3.2 con impresora térmica real en DEV.
-2. Fase 3.3: administración de usuarios/roles MVP. Implementada.
-3. Fase 3.4: entrega/repartidor mobile-first.
-4. Fase 3.5: administración de catálogo, precios e imágenes.
+2. Fase 3.3: administración de usuarios/roles MVP. Implementada y subida a `origin/dev`.
+3. Fase 3.4.0: análisis técnico previo de entrega/repartidor mobile-first. Documentado.
+4. Fase 3.4.1: backend delivery MVP + permisos.
+5. Fase 3.4.2: UI admin desde órdenes.
+6. Fase 3.4.3: UI repartidor mobile-first.
+7. Fase 3.4.4: QA DEV y ajustes.
+8. Fase 3.5: administración de catálogo, precios e imágenes.
 
-La siguiente fase implementable mayor es Fase 3.4, pero antes conviene validar Fase 3.3 en DEV y cerrar prueba física de etiquetas para confirmar tamaño real, margen, escala del navegador y calibración de rollo.
+La siguiente fase implementable mayor es Fase 3.4.1 - backend delivery MVP + permisos. La prueba física de etiquetas puede seguir en paralelo porque no bloquea el diseño de permisos/modelo de entregas.

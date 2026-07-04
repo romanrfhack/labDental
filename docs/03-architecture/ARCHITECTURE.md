@@ -89,6 +89,13 @@ Rutas existentes bajo `/app`:
 
 Fase 3.3 reemplaza los placeholders de `/app/admin/usuarios` y `/app/admin/roles`: Usuarios es funcional para CRUD administrativo mínimo y asignación de roles existentes; Roles es funcional en modo readonly para ver permisos.
 
+Rutas privadas futuras documentadas para Fase 3.4, no implementadas todavía:
+
+- `/app/entregas`
+- `/app/entregas/:id`
+
+Estas rutas se recomiendan para el flujo mobile-first de repartidor y deben requerir permisos `deliveries.*` cuando se implementen. No deben dar al rol `Repartidor` acceso amplio a `/app/ordenes`, `/app/clientes` ni `/app/pagos`.
+
 ## Backend / API
 
 La API vive en `src/LaboratorioTlahuac.Api` y expone endpoints REST. Los controladores/endpoints deben mantenerse delgados y delegar reglas en servicios de aplicación/infraestructura.
@@ -103,6 +110,14 @@ Módulos API principales:
 - `/api/dashboard/summary`
 - `/api/admin/users`
 - `/api/admin/roles`
+
+API futura documentada para Fase 3.4, no implementada todavía:
+
+- `/api/deliveries/mine`
+- `/api/deliveries/{id}`
+- `/api/work-orders/{workOrderId}/delivery`
+
+La recomendación Fase 3.4.0 es crear una entidad separada `WorkOrderDelivery` con `DeliveryStatus` propio, en lugar de mezclar asignación, salida, entrega real y receptor dentro de `WorkOrder`. Fuente: `docs/01-product/delivery-mvp-design.md`.
 
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
 

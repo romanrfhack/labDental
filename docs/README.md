@@ -15,6 +15,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 | Operación de órdenes y entrega | `docs/01-product/operations-orders-delivery.md` |
 | Impresión de etiquetas | `docs/01-product/label-printing.md` |
 | Flujo mobile-first repartidor | `docs/01-product/driver-mobile-workflow.md` |
+| Diseño MVP entregas/repartidor | `docs/01-product/delivery-mvp-design.md` |
 | Backlog administración de catálogo | `docs/01-product/admin-catalog-management.md` |
 | Lineamientos de marca | `docs/02-domain/brand-guidelines.md` |
 | Arquitectura global | `docs/03-architecture/ARCHITECTURE.md` |
@@ -44,7 +45,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 
 ## Separación De Frentes
 
-- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, DEV validado como baseline UAT inicial en Fase 3.0, Fase 3.1 documentada como análisis operativo para órdenes, etiquetas, reparto, usuarios/roles y catálogo, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes y Fase 3.3 implementada para administración MVP de usuarios/roles.
+- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, DEV validado como baseline UAT inicial en Fase 3.0, Fase 3.1 documentada como análisis operativo para órdenes, etiquetas, reparto, usuarios/roles y catálogo, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles y Fase 3.4.0 documentada como diseño técnico previo de entregas/repartidor.
 - Sitio público institucional: vive en la app Angular existente bajo `src/LaboratorioTlahuac.Web/src/app/public`; la primera versión mobile-first está implementada y Fase 1.6 quedó validada visualmente por el responsable del proyecto.
 - Documentación comercial: describe alcance propuesto y fases comerciales, no necesariamente implementación técnica actual.
 

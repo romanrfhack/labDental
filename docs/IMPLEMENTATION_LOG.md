@@ -6,6 +6,111 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-03 - Fase 3.4.0 Análisis Técnico Entregas/Repartidor Mobile-First
+
+### Cambio Realizado
+
+Se ejecutó Fase 3.4.0 como análisis técnico/documental previo del flujo de entregas/repartidor mobile-first.
+
+No se implementó código. No se crearon migraciones. No se modificó backend/frontend funcional. No se tocaron `AuthService`, guards, cookies, XSRF, rutas privadas reales, deploy ni dependencias.
+
+### Contexto Revisado
+
+- `AGENTS.md`.
+- `README.md`.
+- `docs/PROJECT_STATUS.md`.
+- `docs/ROADMAP.md`.
+- `docs/IMPLEMENTATION_LOG.md`.
+- `docs/01-product/driver-mobile-workflow.md`.
+- `docs/01-product/operations-orders-delivery.md`.
+- `docs/01-product/label-printing.md`.
+- `docs/01-product/internal-system.md`.
+- `docs/08-qa/users-roles-qa.md`.
+- Modelo actual de `WorkOrder`, estados, endpoints, rutas `/app/ordenes`, permisos, rol `Repartidor` y administración de usuarios/roles.
+
+### Hallazgos Técnicos
+
+- `/app/ordenes` ya existe como módulo real y no debe duplicarse.
+- El detalle de orden ya concentra estado, historial, pagos y acciones de etiqueta.
+- Etiquetas ya existen bajo `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`.
+- `WorkOrder` contiene `DeliveryDate`, pero esa fecha es planeada/capturada; no representa salida, entrega real, receptor ni evidencia.
+- `WorkOrderStatus` ya contiene `ReadyForDelivery` y `Delivered`, pero esos estados pertenecen al ciclo operativo de la orden, no a logística fina.
+- El detalle actual de orden no expone dirección, teléfono, WhatsApp ni email del cliente; esos datos existen en `Customer`.
+- No existe entidad `Delivery`, `WorkOrderDelivery` ni `DeliveryStatus`.
+- No existen permisos `deliveries.*` en `Permissions.All`.
+- El rol `Repartidor` existe como rol de sistema sin permisos activos y sin acceso amplio a órdenes completas.
+- `/app/admin/usuarios` permite crear/editar/activar/desactivar usuarios, asignar roles existentes y setear contraseña temporal.
+- `/app/admin/roles` es readonly y muestra roles/permisos.
+
+### Diseño Documentado
+
+Se creó `docs/01-product/delivery-mvp-design.md` con:
+
+- Comparación entre extender `WorkOrder` y crear entidad separada `Delivery` / `WorkOrderDelivery`.
+- Recomendación de entidad separada `WorkOrderDelivery` para trazabilidad real.
+- Regla MVP de una entrega activa por orden.
+- Estados recomendados: `PendingAssignment`, `Assigned`, `OutForDelivery`, `Delivered`, `FailedDelivery` y `Cancelled`.
+- Permisos propuestos: `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`.
+- Permisos recomendados para rol `Repartidor`: `deliveries.view`, `deliveries.update` y `deliveries.complete`, sin `orders.view`, `customers.view` ni `payments.view`.
+- Rutas recomendadas: `/app/entregas` y `/app/entregas/:id`.
+- Endpoints MVP recomendados:
+  - `GET /api/deliveries/mine`
+  - `GET /api/deliveries/{id}`
+  - `GET /api/work-orders/{workOrderId}/delivery`
+  - `POST /api/work-orders/{workOrderId}/delivery`
+  - `PATCH /api/deliveries/{id}/assignment`
+  - `PATCH /api/deliveries/{id}/out-for-delivery`
+  - `PATCH /api/deliveries/{id}/delivered`
+  - `PATCH /api/deliveries/{id}/failed`
+- Flujo MVP para administración desde orden y para repartidor desde celular.
+- Fases recomendadas 3.4.1 a 3.4.4 y fase posterior de firma/foto/ubicación/QR.
+
+### Archivos Creados
+
+- `docs/01-product/delivery-mvp-design.md`
+
+### Archivos Modificados
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/driver-mobile-workflow.md`
+- `docs/01-product/internal-system.md`
+- `docs/01-product/operations-orders-delivery.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+
+### Validaciones Ejecutadas
+
+- `git status --short` antes de documentar: sin salida.
+- `git diff --stat` antes de documentar: sin salida.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; warning de presupuesto inicial excedido por 31.04 kB (`531.04 kB` contra budget `500.00 kB`).
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 110/110.
+- `git diff --check`: correcto.
+- Búsquedas/revisión local ejecutadas para `WorkOrder`, `WorkOrderStatus`, endpoints de órdenes, rutas `/app/ordenes`, permisos, `Repartidor`, administración de usuarios/roles, `Delivery`, `/app/entregas`, `/api/deliveries`, `/app/dashboard` y `/login`.
+
+### Confirmaciones
+
+- No se modificó código.
+- No se crearon migraciones.
+- No se agregaron endpoints.
+- No se agregaron permisos reales a `Permissions.All`.
+- No se modificó base de datos.
+- No se modificaron `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies ni XSRF.
+- No se tocó deploy.
+- No se instalaron dependencias.
+- No se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+- No se imprimieron secretos.
+
+### Siguiente Fase Recomendada
+
+Fase 3.4.1 - backend delivery MVP + permisos.
+
+Alcance recomendado: agregar permisos `deliveries.*`, crear entidad `WorkOrderDelivery`, crear `DeliveryStatus`, generar migración, implementar endpoints mínimos de entregas y cubrir autorización con pruebas antes de construir UI admin/repartidor.
+
 ## 2026-07-03 - Fase 3.3.1 QA Seguridad Usuarios/Roles Y Preparacion DEV
 
 ### Cambio Realizado
