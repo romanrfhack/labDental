@@ -88,6 +88,8 @@ El cambio de lazy loading no modifica paths, redirects, `returnUrl`, guards ni p
 
 Validación 2026-07-04: el build inicial bajó de `535.62 kB` con warning de budget a `304.19 kB` sin warning, sin modificar el budget `500kB`/`1MB`.
 
+Despliegue DEV 2026-07-04: la optimización lazy loading quedó desplegada junto con el commit `e4c28205c6b866ab0d71edb13c49164100340b0d` mediante GitHub Actions run `28712956106`, resultado `success`. `/login` sigue público, `/app` y `/app/dashboard` siguen privados, y `/dashboard` no existe como ruta privada real.
+
 ## Estilo
 
 Se eligió SCSS como formato de estilos para Angular. El diseño actual es mínimo y no representa pantallas finales.

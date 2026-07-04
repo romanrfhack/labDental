@@ -6,6 +6,61 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-04 - Cierre DEV Fase 3.4.1 Delivery Y Lazy Loading
+
+### Cambio Realizado
+
+Se documentó el cierre de despliegue DEV para Fase 3.4.1 backend delivery MVP y la optimización frontend lazy loading. No se modificó código.
+
+### Evidencia De Deploy
+
+- Commit desplegado: `e4c28205c6b866ab0d71edb13c49164100340b0d`.
+- GitHub Actions run: `28712956106`.
+- Resultado deploy DEV: `success`.
+- DEV: `https://dev.laboratoriodentaltlahuac.com`.
+- `GET /health`: `200`.
+- `GET /api/deliveries` sin sesión: `401`.
+
+### Resultado
+
+- Delivery API queda registrada como desplegada y protegida en DEV.
+- El cambio de `/api/deliveries` sin sesión de `404` anterior a `401` confirma que `DeliveryEndpoints` están publicados.
+- La migración `WorkOrderDeliveries` ya está aplicada o la base DEV está al día.
+- Lazy loading frontend queda registrado como desplegado.
+- Warning de initial bundle queda resuelto: de `535.62 kB` a `304.19 kB`, sin modificar budgets.
+
+### Pendientes
+
+- Validación manual Admin en DEV del flujo delivery.
+- Siguiente fase: Fase 3.4.2 - UI admin de entregas desde órdenes.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `304.19 kB`, sin warning de budget.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 121/121.
+- `git diff --check`: correcto.
+
+### Archivos Modificados
+
+- `docs/05-delivery/dev-deployment-validation.md`
+- `docs/08-qa/delivery-api-qa.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/03-architecture/frontend-architecture.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+
+### Confirmaciones
+
+- Solo documentación modificada.
+- No se imprimieron secretos.
+- No se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+- `/login` sigue público.
+- `/app` y `/app/dashboard` siguen privados.
+- `/dashboard` no es ruta privada real.
+
 ## 2026-07-04 - Optimización Frontend Lazy Loading De Rutas
 
 ### Cambio Realizado
@@ -133,7 +188,7 @@ Resultado:
 - No se imprimieron secretos.
 - No se usó `codex-cobranza-sql`.
 - No se hizo commit.
-- Pendiente: aplicar migración en VPS DEV antes de usar endpoints delivery publicados.
+- Pendiente en ese momento: aplicar migración en VPS DEV antes de usar endpoints delivery publicados. Cerrado o no aplicable tras el despliegue DEV 2026-07-04 porque `/api/deliveries` ya responde `401` sin sesión.
 
 ## 2026-07-04 - Fase 3.4.1 Backend Delivery MVP Y Permisos
 

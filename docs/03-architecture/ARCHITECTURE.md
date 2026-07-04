@@ -126,6 +126,8 @@ API de entregas implementada en Fase 3.4.1:
 
 Fase 3.4.1 crea una entidad separada `WorkOrderDelivery` con `DeliveryStatus` propio, en lugar de mezclar asignación, salida, entrega real y receptor dentro de `WorkOrder`. Fuente: `docs/01-product/delivery-mvp-design.md`.
 
+Validación DEV 2026-07-04: commit `e4c28205c6b866ab0d71edb13c49164100340b0d` desplegado correctamente mediante GitHub Actions run `28712956106`; `GET /health` responde `200` y `GET /api/deliveries` sin sesión responde `401`. Esto confirma que la Delivery API está publicada y protegida en DEV. Queda pendiente validación manual Admin del flujo delivery.
+
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
 
 ## Configuración Operativa
@@ -177,6 +179,7 @@ Routing:
 - `/login` se mantiene público; `/app` se mantiene protegido por `authGuard`; las rutas privadas conservan sus permisos con `permissionGuard`.
 - `/dashboard` no existe como ruta privada real; el dashboard privado sigue siendo `/app/dashboard`.
 - Optimización 2026-07-04: initial bundle bajó de `535.62 kB` con warning de budget a `304.19 kB` sin warning, sin cambiar `angular.json`.
+- Deploy DEV 2026-07-04: la optimización lazy loading quedó desplegada en commit `e4c28205c6b866ab0d71edb13c49164100340b0d`; el warning de initial bundle queda resuelto en DEV.
 
 Estructura pública implementada en Fase 1:
 
@@ -210,6 +213,7 @@ Detalle frontend: `docs/03-architecture/frontend-architecture.md`.
 - DbContext: `LaboratorioTlahuacDbContext`.
 - Migraciones existentes: `InitialSecurityModel`, `AddCustomersAndInternalDoctors`, `AddWorkOrders`, `AddPayments`, `AddWorkOrderDeliveries`.
 - Validación local Fase 3.4.1.1: `AddWorkOrderDeliveries` aplica correctamente en SQL Server local `LaboratorioTlahuac_Dev`, creando tabla `WorkOrderDeliveries` con FK requerida a `WorkOrders`, FK opcional a `Security.Users`, índice único por `WorkOrderId` e índices por asignado, estado y creación.
+- DEV Fase 3.4.1: la migración `WorkOrderDeliveries` ya está aplicada o la base DEV está al día; la evidencia publicada es `GET /api/deliveries` sin sesión respondiendo `401` en lugar de `404`.
 - No hay auto-migración al iniciar la aplicación.
 
 Detalle de base de datos: `docs/03-architecture/database-design.md`.

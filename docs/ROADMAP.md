@@ -25,9 +25,10 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.3: administración de usuarios/roles MVP para DEV/UAT. Implementada el 2026-07-03; `/app/admin/usuarios` permite listar, crear, editar datos básicos, activar/desactivar, asignar roles existentes y setear contraseña temporal sin exponerla en respuestas; `/app/admin/roles` queda funcional readonly con permisos por rol; `Repartidor` queda preparado como rol sin permisos amplios. No implementa reparto, entregas, catálogo ni recuperación por correo.
 - Fase 3.3.1: QA de seguridad, validación técnica y preparación de despliegue DEV para usuarios/roles. Completada el 2026-07-03 sin bloqueantes; confirma appsettings sin secretos reales, endpoints admin protegidos con `users.manage`/`roles.manage`, `401` sin sesión en los nueve endpoints, pruebas API 110/110, build frontend con warning de budget no bloqueante y pendiente force-change password antes de producción.
 - Fase 3.4.0: análisis técnico previo de entrega/repartidor mobile-first. Documentada el 2026-07-03; recomienda entidad separada `WorkOrderDelivery`, estados logísticos propios, ruta `/app/entregas`, endpoints `/api/deliveries/*` y permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`. No implementa código, migraciones, endpoints, permisos reales, auth, guards, cookies, XSRF, deploy ni dependencias.
-- Fase 3.4.1: backend delivery MVP + permisos. Implementada el 2026-07-04; agrega `WorkOrderDelivery`, `DeliveryStatus`, migración `AddWorkOrderDeliveries`, endpoints `/api/deliveries` y `/api/work-orders/{workOrderId}/delivery`, permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`, y rol `Repartidor` con permisos mínimos `deliveries.view`/`deliveries.complete`.
-- Fase 3.4.1.1: QA técnico de migración delivery, permisos y endpoints reales. Completada el 2026-07-04 contra SQL local `ldt-labdental-sql`/`LaboratorioTlahuac_Dev`; aplica migración local, valida API real con Admin/Repartidor QA, corrige sincronización baseline de permisos faltantes para rol Admin existente y deja pendiente aplicar migración en VPS DEV antes de usar endpoints publicados.
-- Fase 3.4.2: UI admin desde órdenes para asignar, registrar salida/estado y ver seguimiento. Pendiente.
+- Fase 3.4.1: backend delivery MVP + permisos. Implementada y desplegada a DEV el 2026-07-04; agrega `WorkOrderDelivery`, `DeliveryStatus`, migración `AddWorkOrderDeliveries`, endpoints `/api/deliveries` y `/api/work-orders/{workOrderId}/delivery`, permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`, y rol `Repartidor` con permisos mínimos `deliveries.view`/`deliveries.complete`. Deploy DEV: commit `e4c28205c6b866ab0d71edb13c49164100340b0d`, GitHub Actions run `28712956106`, resultado `success`; `/health` responde `200` y `/api/deliveries` sin sesión responde `401`.
+- Fase 3.4.1.1: QA técnico de migración delivery, permisos y endpoints reales. Completada el 2026-07-04 contra SQL local `ldt-labdental-sql`/`LaboratorioTlahuac_Dev`; aplica migración local, valida API real con Admin/Repartidor QA y corrige sincronización baseline de permisos faltantes para rol Admin existente. El pendiente de base DEV quedó cerrado o no aplica porque `/api/deliveries` ya responde `401` en DEV.
+- Fase 3.4.1.2: cierre documental de deploy DEV y lazy loading. Completada el 2026-07-04; confirma Delivery API desplegada/protegida, lazy loading desplegado, warning de initial bundle resuelto de `535.62 kB` a `304.19 kB` y validación manual Admin en DEV como pendiente.
+- Fase 3.4.2: UI admin desde órdenes para asignar, registrar salida/estado y ver seguimiento. Siguiente fase.
 - Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`. Pendiente.
 - Fase 3.4.4: QA DEV y ajustes del flujo de entregas. Pendiente.
 - Fase 3.5: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
@@ -48,7 +49,7 @@ Fuente funcional: `docs/01-product/public-website.md`.
 - Fase sitio/sistema 2.0: validación real del flujo de `/login`, sesión, `returnUrl` y acceso a `/app/dashboard`, sin rediseñar pantallas ni implementar módulos nuevos. Ejecutada por código/build/tests/curl; login real con Admin local y dashboard autenticado fueron cerrados posteriormente en Fase 2.1d.
 - Fase sitio 3: QA mobile-first completo y preparación de contenido final. Pendiente.
 - Fase sitio 4: publicación productiva en `laboratoriodentaltlahuac.com` cuando deploy/DNS estén definidos. Pendiente; DEV ya está publicado en `https://dev.laboratoriodentaltlahuac.com` como baseline UAT inicial.
-- Fase sitio 5: optimización, Lighthouse o revisión equivalente, y mejoras por feedback. Pendiente.
+- Fase sitio 5: optimización, Lighthouse o revisión equivalente, y mejoras por feedback. Pendiente; la optimización técnica de lazy loading de rutas ya quedó desplegada en DEV y eliminó el warning de initial bundle sin cambiar budgets.
 
 ## Roadmap Comercial
 
@@ -68,7 +69,7 @@ Iniciar Fase 3.4.2 - UI admin de entregas desde órdenes, tomando como fuente `d
 
 Alcance sugerido inmediato: mostrar panel de entrega en `/app/ordenes/:id`, crear entrega si no existe, asignar repartidor, registrar salida, ver estado logístico y dejar preparada la navegación futura hacia `/app/entregas`. La UI repartidor mobile-first queda para Fase 3.4.3.
 
-Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
+Pendiente inmediato: validación manual Admin en DEV del flujo delivery desplegado. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
 ## Regla De Actualización
 

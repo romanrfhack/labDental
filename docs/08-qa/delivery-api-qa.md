@@ -2,7 +2,9 @@
 
 ## Alcance
 
-Fase 3.4.1 implementa backend delivery MVP + permisos. No implementa UI admin, UI repartidor, cambios visuales, impresión nueva, QR/barcode, evidencia, foto, firma digital, geolocalización, notificaciones, deploy real ni dependencias nuevas.
+Fase 3.4.1 implementa backend delivery MVP + permisos. El alcance de implementación no incluye UI admin, UI repartidor, cambios visuales, impresión nueva, QR/barcode, evidencia, foto, firma digital, geolocalización, notificaciones ni dependencias nuevas.
+
+Actualización 2026-07-04: la implementación backend delivery MVP fue desplegada correctamente a DEV en el commit `e4c28205c6b866ab0d71edb13c49164100340b0d` mediante GitHub Actions run `28712956106`. Esta actualización no agrega UI; solo registra el cierre de despliegue y validación técnica publicada.
 
 ## Modelo Y Migración
 
@@ -15,7 +17,7 @@ Fase 3.4.1 implementa backend delivery MVP + permisos. No implementa UI admin, U
 - `WorkOrder.DeliveryDate` no cambia; sigue siendo fecha planeada/capturada.
 - Al completar entrega correctamente, el backend sincroniza `WorkOrder.Status` a `Delivered`.
 
-La migración debe aplicarse en DEV antes de validar el flujo por API. No aplicar a producción sin plan de despliegue y respaldo.
+Para el cierre DEV 2026-07-04, la migración ya está aplicada o la base DEV está al día. No aplicar a producción sin plan de despliegue y respaldo.
 
 ## Estados
 
@@ -119,24 +121,38 @@ Cobertura:
 
 ## Validación DEV Sugerida
 
-1. Aplicar migración `AddWorkOrderDeliveries` en base DEV.
-2. Levantar API DEV con seed baseline habilitado para asegurar permisos y rol `Repartidor`.
-3. Confirmar en `/api/auth/me` que Admin recibe `deliveries.assign`, `deliveries.update` y `deliveries.complete`; si el Admin ya existía, Fase 3.4.1.1 cubre la sincronización baseline de permisos faltantes.
-4. Confirmar en `/api/admin/roles` que `Repartidor` tiene solo `deliveries.view` y `deliveries.complete`.
-5. Crear usuario con rol `Repartidor`.
-6. Crear orden y entrega con Admin.
-7. Asignar entrega al repartidor.
-8. Registrar salida con Admin.
-9. Iniciar sesión como repartidor y confirmar que solo ve sus entregas.
-10. Completar entrega con `recipientName`.
-11. Confirmar que la entrega queda `Delivered` y la orden queda `Delivered`.
+Validación publicada del despliegue DEV:
+
+| Punto | Resultado |
+| --- | --- |
+| Commit desplegado | `e4c28205c6b866ab0d71edb13c49164100340b0d` |
+| GitHub Actions run | `28712956106` |
+| Resultado deploy | `success` |
+| `GET /health` | `200` |
+| `GET /api/deliveries` sin sesión | `401` |
+| Estado Delivery API | Desplegada y protegida. |
+
+El `401` de `/api/deliveries` sin sesión reemplaza el `404` observado antes del deploy y confirma que `DeliveryEndpoints` están publicados en DEV con protección de sesión/permisos. La migración `WorkOrderDeliveries` ya está aplicada o la base DEV está al día.
+
+Queda pendiente la validación manual Admin en DEV:
+
+1. Iniciar sesión como Admin en DEV.
+2. Confirmar en `/api/auth/me` que Admin recibe `deliveries.assign`, `deliveries.update` y `deliveries.complete`; si el Admin ya existía, Fase 3.4.1.1 cubre la sincronización baseline de permisos faltantes.
+3. Confirmar en `/api/admin/roles` que `Repartidor` tiene solo `deliveries.view` y `deliveries.complete`.
+4. Crear usuario con rol `Repartidor`.
+5. Crear orden y entrega con Admin.
+6. Asignar entrega al repartidor.
+7. Registrar salida con Admin.
+8. Iniciar sesión como repartidor y confirmar que solo ve sus entregas.
+9. Completar entrega con `recipientName`.
+10. Confirmar que la entrega queda `Delivered` y la orden queda `Delivered`.
 
 ## Pendientes
 
 - Fase 3.4.2: UI admin de entregas desde órdenes.
 - Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`.
 - Fase 3.4.4: QA DEV y ajustes con celular real.
-- Aplicar la migración en VPS DEV antes de usar endpoints delivery publicados.
+- Validación manual Admin en DEV del flujo delivery desplegado.
 - Definir si `Repartidor` debe recibir `deliveries.update` para registrar salida desde móvil.
 - Diseñar cancelación de entregas si operación la requiere.
 - Diseñar firma, foto, geolocalización, QR/barcode, evidencia y retención antes de implementarlos.
