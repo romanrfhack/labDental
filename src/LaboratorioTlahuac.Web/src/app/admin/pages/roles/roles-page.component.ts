@@ -43,7 +43,7 @@ import { AdminRoleDetail, AdminRoleListItem } from '../../admin-security.models'
                   <tr>
                     <td>
                       <strong>{{ role.name }}</strong>
-                      <small class="muted-block">{{ role.description }}</small>
+                      <small class="text-muted">{{ role.description }}</small>
                     </td>
                     <td>{{ role.isSystem ? 'Sistema' : 'Operativo' }}</td>
                     <td>{{ role.userCount }}</td>

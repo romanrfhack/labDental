@@ -77,7 +77,76 @@ import { PaymentService } from '../payment.service';
       } @else if (items().length === 0) {
         <p class="empty-state">No hay pagos con los filtros actuales.</p>
       } @else {
-        <table class="data-table">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Orden</th>
+                <th>Cliente</th>
+                <th>Paciente</th>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Metodo</th>
+                <th>Referencia</th>
+                <th>Cancelado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (payment of items(); track payment.id) {
+                <tr>
+                  <td>
+                    <a [routerLink]="['/app/ordenes', payment.workOrderId]">{{ payment.orderNumber }}</a>
+                  </td>
+                  <td>{{ payment.customerDisplayName }}</td>
+                  <td>{{ payment.patientName }}</td>
+                  <td>{{ formatDateOnly(payment.paymentDate) }}</td>
+                  <td>{{ payment.amount | currency: 'MXN':'symbol-narrow' }}</td>
+                  <td>{{ payment.methodLabel }}</td>
+                  <td>{{ payment.reference || '-' }}</td>
+                  <td>
+                    <span class="status-pill" [class.active]="!payment.isCancelled" [class.inactive]="payment.isCancelled">
+                      {{ payment.isCancelled ? 'Si' : 'No' }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-mobile-list">
+          @for (payment of items(); track payment.id) {
+            <article class="admin-card">
+              <header>
+                <div>
+                  <a [routerLink]="['/app/ordenes', payment.workOrderId]">{{ payment.orderNumber }}</a>
+                  <strong>{{ payment.customerDisplayName }}</strong>
+                </div>
+                <span class="status-pill" [class.active]="!payment.isCancelled" [class.inactive]="payment.isCancelled">
+                  {{ payment.isCancelled ? 'Cancelado' : 'Vigente' }}
+                </span>
+              </header>
+              <dl>
+                <div>
+                  <dt>Paciente</dt>
+                  <dd>{{ payment.patientName }}</dd>
+                </div>
+                <div>
+                  <dt>Fecha</dt>
+                  <dd>{{ formatDateOnly(payment.paymentDate) }}</dd>
+                </div>
+                <div>
+                  <dt>Monto</dt>
+                  <dd>{{ payment.amount | currency: 'MXN':'symbol-narrow' }}</dd>
+                </div>
+                <div>
+                  <dt>Metodo</dt>
+                  <dd>{{ payment.methodLabel }}</dd>
+                </div>
+              </dl>
+            </article>
+          }
+        </div>
           <thead>
             <tr>
               <th>Orden</th>
@@ -110,7 +179,6 @@ import { PaymentService } from '../payment.service';
               </tr>
             }
           </tbody>
-        </table>
       }
 
       <div class="page-actions">

@@ -25,7 +25,7 @@ type ActiveFilter = 'active' | 'inactive';
         }
       </header>
 
-      <form class="toolbar" (ngSubmit)="applyFilters()">
+      <form class="toolbar customers-toolbar" (ngSubmit)="applyFilters()">
         <label class="filter-field">
           <span>Busqueda</span>
           <input type="search" name="search" [(ngModel)]="search" />
@@ -58,7 +58,95 @@ type ActiveFilter = 'active' | 'inactive';
       } @else if (items().length === 0) {
         <p class="empty-state">No hay clientes con los filtros actuales.</p>
       } @else {
-        <table class="data-table">
+        <div class="table-scroll">
+          <table class="data-table">
+           <thead>
+             <tr>
+               <th>Nombre</th>
+               <th>Tipo</th>
+               <th>Contacto</th>
+               <th>Email</th>
+               <th>Estado</th>
+               <th>Acciones</th>
+             </tr>
+           </thead>
+           <tbody>
+             @for (customer of items(); track customer.id) {
+               <tr>
+                 <td>
+                   <a [routerLink]="['/app/clientes', customer.id]">{{ customer.displayName }}</a>
+                 </td>
+                 <td>{{ formatType(customer.type) }}</td>
+                 <td>{{ customer.contactName || customer.phone || customer.whatsApp || '-' }}</td>
+                 <td>{{ customer.email || '-' }}</td>
+                 <td>
+                   <span class="status-pill" [class.active]="customer.isActive" [class.inactive]="!customer.isActive">
+                     {{ customer.isActive ? 'Activo' : 'Inactivo' }}
+                   </span>
+                 </td>
+                 <td>
+                   <div class="page-actions">
+                     <a class="ghost-button" [routerLink]="['/app/clientes', customer.id]">Ver</a>
+                     @if (canEdit) {
+                       <a class="secondary-button" [routerLink]="['/app/clientes', customer.id, 'editar']">
+                         Editar
+                       </a>
+                       <button
+                         type="button"
+                         [class.danger-button]="customer.isActive"
+                         [class.secondary-button]="!customer.isActive"
+                         (click)="toggleStatus(customer)"
+                       >
+                         {{ customer.isActive ? 'Desactivar' : 'Activar' }}
+                       </button>
+                     }
+                   </div>
+                 </td>
+               </tr>
+             }
+           </tbody>
+          </table>
+        </div>
+
+        <div class="admin-mobile-list">
+          @for (customer of items(); track customer.id) {
+            <article class="admin-card">
+              <header>
+                <div>
+                  <a [routerLink]="['/app/clientes', customer.id]">{{ customer.displayName }}</a>
+                  <span>{{ formatType(customer.type) }}</span>
+                </div>
+                <span class="status-pill" [class.active]="customer.isActive" [class.inactive]="!customer.isActive">
+                  {{ customer.isActive ? 'Activo' : 'Inactivo' }}
+                </span>
+              </header>
+              <dl>
+                <div>
+                  <dt>Contacto</dt>
+                  <dd>{{ customer.contactName || customer.phone || customer.whatsApp || '-' }}</dd>
+                </div>
+                <div>
+                  <dt>Email</dt>
+                  <dd>{{ customer.email || '-' }}</dd>
+                </div>
+              </dl>
+              <div class="page-actions">
+                <a class="ghost-button" [routerLink]="['/app/clientes', customer.id]">Ver</a>
+                @if (canEdit) {
+                  <a class="secondary-button" [routerLink]="['/app/clientes', customer.id, 'editar']">Editar</a>
+                  <button
+                    type="button"
+                    [class.danger-button]="customer.isActive"
+                    [class.secondary-button]="!customer.isActive"
+                    (click)="toggleStatus(customer)"
+                  >
+                    {{ customer.isActive ? 'Desactivar' : 'Activar' }}
+                  </button>
+                }
+              </div>
+            </article>
+          }
+        </div>
           <thead>
             <tr>
               <th>Nombre</th>
@@ -104,7 +192,6 @@ type ActiveFilter = 'active' | 'inactive';
               </tr>
             }
           </tbody>
-        </table>
       }
 
       <div class="page-actions">
