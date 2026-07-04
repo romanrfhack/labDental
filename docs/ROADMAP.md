@@ -30,7 +30,7 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.4.1.2: cierre documental de deploy DEV y lazy loading. Completada el 2026-07-04; confirma Delivery API desplegada/protegida, lazy loading desplegado, warning de initial bundle resuelto de `535.62 kB` a `304.19 kB` y validación manual Admin en DEV como pendiente.
 - Fase 3.4.2: UI admin desde órdenes para asignar, registrar salida/estado y ver seguimiento. Implementada el 2026-07-04 en `/app/ordenes/:id`; consume endpoints delivery existentes, reutiliza endpoints admin para candidatos de repartidor y no crea rutas nuevas. Cierre operativo DEV: GitHub Actions de commit `97d46e9` falló por health check `502`, rollback dejó activo `dev-23-eea8f39`, y `dev-24-97d46e9` se validó manualmente en puerto alterno `5013` y se activó ajustando `backend/current`; health final `200` y `/api/deliveries` sin sesión `401`.
 - Fase 3.4.2.1: estado de entrega en listado/grid de órdenes. Implementada el 2026-07-04; `GET /api/work-orders` incluye resumen `delivery` opcional sin cambiar `WorkOrder.Status`, `/app/ordenes` muestra `Estado` de orden y badge `Entrega` por separado, las órdenes sin entrega muestran `Sin entrega` y `FailedDelivery` se muestra como `No entregada`. No crea migraciones, endpoints nuevos, rutas nuevas ni cambios de auth/deploy.
-- Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`. Siguiente fase.
+- Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`. Implementada el 2026-07-04; agrega rutas privadas `/app/entregas` y `/app/entregas/:id` con `deliveries.view`, listado mobile-first con `assignedToMe=true`, detalle de entrega asignada al usuario autenticado, cierre con `recipientName`, no entrega con `failedReason` y lectura sin acciones si falta `deliveries.complete`.
 - Fase 3.4.4: QA DEV y ajustes del flujo de entregas. Pendiente.
 - Pendiente técnico de despliegue DEV: ajustar el workflow para esperar más o validar health con reintentos más tolerantes después del restart.
 - Fase 3.5: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
@@ -67,11 +67,11 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Iniciar Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`, tomando como fuente `docs/01-product/driver-mobile-workflow.md` y los endpoints ya implementados en Fase 3.4.1.
+Iniciar Fase 3.4.4 - QA DEV y ajustes del flujo de entregas, tomando como fuentes `docs/08-qa/delivery-admin-ui-qa.md` y `docs/08-qa/driver-mobile-qa.md`.
 
-Alcance sugerido inmediato: listado mobile-first de entregas asignadas, detalle de entrega, captura de `Recibio`, captura de motivo de no entrega y validación con usuario `Repartidor`. No debe ampliar acceso del repartidor a órdenes, clientes, pagos, usuarios ni roles.
+Alcance sugerido inmediato: validar con Admin creación/asignación/salida, validar con usuario `Repartidor` que `/app/entregas` lista solo entregas asignadas, cerrar una entrega `OutForDelivery` con `recipientName`, marcar una entrega como no entregada con `failedReason`, confirmar lectura sin acciones si falta `deliveries.complete` y revisar responsive en celular real o DevTools móvil.
 
-Pendiente inmediato: validar en DEV que `/app/ordenes` muestra `No entregada` en la columna `Entrega` para una entrega `FailedDelivery` y que la columna `Estado` conserva el estado operativo de orden. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
+Pendiente paralelo: validar en DEV que `/app/ordenes` muestra `No entregada` en la columna `Entrega` para una entrega `FailedDelivery` y que la columna `Estado` conserva el estado operativo de orden; cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
 ## Regla De Actualización
 

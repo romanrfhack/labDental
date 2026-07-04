@@ -4,7 +4,7 @@
 
 Fase 3.4.2 agrega UI administrativa de entregas dentro del detalle de orden existente. Fase 3.4.2.1 agrega estado de entrega al listado `/app/ordenes`.
 
-No crea la pantalla mobile-first del repartidor, no agrega rutas nuevas, no crea migraciones, no cambia auth, guards, cookies, XSRF ni deploy.
+Esta pantalla admin no asigna alcance a la UI mobile-first del repartidor. La UI de repartidor quedó implementada después en Fase 3.4.3 bajo `/app/entregas` y tiene QA propio en `docs/08-qa/driver-mobile-qa.md`.
 
 ## Alcance Fase 3.4.2.1
 
@@ -135,19 +135,17 @@ Si el usuario no puede listar roles o usuarios, la UI muestra error controlado y
 
 ## Limitaciones
 
-- La UI de repartidor mobile-first bajo `/app/entregas` no está implementada en esta fase.
+- La UI de repartidor mobile-first bajo `/app/entregas` no se implementó dentro de Fase 3.4.2; quedó implementada posteriormente en Fase 3.4.3.
 - La salida a entrega desde móvil sigue pendiente; el rol `Repartidor` no recibe `deliveries.update` en el MVP actual.
 - La sección admin no agrega firma, foto, geolocalización, QR/barcode ni evidencia.
 - La asignación depende de los endpoints admin existentes para listar usuarios/roles; no se agregó endpoint específico de repartidores.
 - La validación visual con navegador real/DEV queda pendiente si no se ejecuta manualmente.
 
-## Pendientes Para Fase 3.4.3
+## Relación Con Fase 3.4.3
 
-- Completar primero validación DEV del grid `/app/ordenes` con estado de entrega.
-- Crear `/app/entregas`.
-- Crear `/app/entregas/:id`.
-- Diseñar listado mobile-first para repartidor.
-- Mostrar solo entregas asignadas al repartidor.
-- Diseñar acciones táctiles para entregada/no entregada.
+- `/app/entregas` y `/app/entregas/:id` ya existen y requieren `deliveries.view`.
+- El listado de repartidor usa `assignedToMe=true`.
+- La UI de repartidor no permite asignar repartidor.
+- La UI de repartidor muestra acciones de cierre solo con `deliveries.complete`.
 - Decidir si `Repartidor` debe recibir `deliveries.update` para marcar salida desde móvil.
 - Validar en celular real con usuario `Repartidor`.

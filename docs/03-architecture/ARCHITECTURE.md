@@ -68,6 +68,8 @@ Rutas públicas futuras opcionales, solo si el contenido lo justifica:
 Rutas existentes bajo `/app`:
 
 - `/app/dashboard`
+- `/app/entregas`
+- `/app/entregas/:id`
 - `/app/ordenes`
 - `/app/ordenes/nueva`
 - `/app/ordenes/:id`
@@ -89,12 +91,12 @@ Rutas existentes bajo `/app`:
 
 Fase 3.3 reemplaza los placeholders de `/app/admin/usuarios` y `/app/admin/roles`: Usuarios es funcional para CRUD administrativo mínimo y asignación de roles existentes; Roles es funcional en modo readonly para ver permisos.
 
-Rutas privadas futuras documentadas para Fase 3.4, no implementadas todavía:
+Rutas privadas de Fase 3.4.3:
 
 - `/app/entregas`
 - `/app/entregas/:id`
 
-Estas rutas se recomiendan para el flujo mobile-first de repartidor y deben requerir permisos `deliveries.*` cuando se implementen. No deben dar al rol `Repartidor` acceso amplio a `/app/ordenes`, `/app/clientes` ni `/app/pagos`. Fase 3.4.1 implementa solo backend/API; no agrega estas rutas frontend.
+Estas rutas implementan el flujo mobile-first de repartidor y requieren `deliveries.view`. Usan `GET /api/deliveries?assignedToMe=true` para el listado, no dan al rol `Repartidor` acceso amplio a `/app/ordenes`, `/app/clientes` ni `/app/pagos`, y muestran acciones de cierre solo con `deliveries.complete`.
 
 ## Backend / API
 

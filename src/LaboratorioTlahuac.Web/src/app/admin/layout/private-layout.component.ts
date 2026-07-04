@@ -28,6 +28,9 @@ import { AuthService } from '../../core/auth/auth.service';
           @if (authService.hasPermission('orders.view')) {
             <a routerLink="/app/ordenes" routerLinkActive="is-active" ariaCurrentWhenActive="page">Ordenes</a>
           }
+          @if (authService.hasPermission('deliveries.view')) {
+            <a routerLink="/app/entregas" routerLinkActive="is-active" ariaCurrentWhenActive="page">Entregas</a>
+          }
           @if (authService.hasPermission('customers.view')) {
             <a routerLink="/app/clientes" routerLinkActive="is-active" ariaCurrentWhenActive="page">Clientes</a>
           }

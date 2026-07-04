@@ -28,7 +28,7 @@ Permitir que el laboratorio opere registros nuevos sin depender del Excel para e
 
 ## Órdenes, Etiquetas Y Entrega
 
-Estado: Fase 3.1 documentó el análisis operativo, Fase 3.2 implementó impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 preparó administración de usuarios/roles como habilitador operativo previo a reparto, Fase 3.4.0 documentó el diseño técnico recomendado para entregas/repartidor, Fase 3.4.1 implementó backend/API de entregas sin UI y Fase 3.4.2 implementó UI admin de entregas desde órdenes.
+Estado: Fase 3.1 documentó el análisis operativo, Fase 3.2 implementó impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 preparó administración de usuarios/roles como habilitador operativo previo a reparto, Fase 3.4.0 documentó el diseño técnico recomendado para entregas/repartidor, Fase 3.4.1 implementó backend/API de entregas sin UI, Fase 3.4.2 implementó UI admin de entregas desde órdenes y Fase 3.4.3 implementó UI mobile-first de repartidor bajo `/app/entregas`.
 
 La Fase 3.1 definió el siguiente frente operativo sobre órdenes existentes: etiquetas internas, etiquetas de entrega, flujo de salida a repartidor, captura de recibido y priorización futura de usuarios/roles y catálogo. La Fase 3.2 ya permite abrir e imprimir etiqueta interna y etiqueta de entrega desde `/app/ordenes/:id`.
 
@@ -45,7 +45,7 @@ Decisión principal: no crear un panel duplicado de órdenes. El flujo extiende 
 
 ### Órdenes, Etiquetas Y Reparto
 
-Estado: Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes; reparto queda diseñado en Fase 3.4.0, backend/API implementado en Fase 3.4.1 y UI admin implementada en Fase 3.4.2. UI repartidor sigue pendiente.
+Estado: Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes; reparto queda diseñado en Fase 3.4.0, backend/API implementado en Fase 3.4.1, UI admin implementada en Fase 3.4.2 y UI repartidor implementada en Fase 3.4.3.
 
 Prioridad sugerida:
 
@@ -54,13 +54,13 @@ Prioridad sugerida:
 3. Fase 3.4.0: análisis técnico previo de entrega/repartidor mobile-first. Documentado.
 4. Fase 3.4.1: backend delivery MVP + permisos. Implementada.
 5. Fase 3.4.2: UI admin desde órdenes. Implementada.
-6. Fase 3.4.3: UI repartidor mobile-first. Siguiente recomendada.
+6. Fase 3.4.3: UI repartidor mobile-first. Implementada.
 7. Fase 3.4.4: QA DEV y ajustes.
 8. Fase 3.5: administración de catálogo.
 
 Fase 3.2 quedó implementada sin migraciones, sin dependencias, sin endpoints nuevos y sin tocar auth/guards. Reutiliza el detalle existente de orden y CSS de impresión; como el DTO actual no incluye dirección/contacto completos del cliente, la etiqueta de entrega muestra `Dirección pendiente` y `Contacto pendiente`. Fase 3.4.1 ya agrega base/API para asignación, salida, entrega, receptor y trazabilidad.
 
-Fase 3.3 quedó implementada sin migraciones y sin modificar `AuthService`, guards, cookies ni XSRF. Fase 3.4.1 agrega permisos reales de entregas, entidad separada `WorkOrderDelivery`, estados logísticos `PendingAssignment`, `Assigned`, `OutForDelivery`, `Delivered` y `FailedDelivery`, endpoints `/api/deliveries` y `/api/work-orders/{workOrderId}/delivery`. Fase 3.4.2 agrega UI admin en `/app/ordenes/:id` para crear entrega, asignar repartidor, marcar salida, marcar entregada y marcar no entregada, sin crear `/app/entregas`. `Repartidor` queda con `deliveries.view` y `deliveries.complete`, sin acceso amplio a órdenes/clientes/pagos.
+Fase 3.3 quedó implementada sin migraciones y sin modificar `AuthService`, guards, cookies ni XSRF. Fase 3.4.1 agrega permisos reales de entregas, entidad separada `WorkOrderDelivery`, estados logísticos `PendingAssignment`, `Assigned`, `OutForDelivery`, `Delivered` y `FailedDelivery`, endpoints `/api/deliveries` y `/api/work-orders/{workOrderId}/delivery`. Fase 3.4.2 agrega UI admin en `/app/ordenes/:id` para crear entrega, asignar repartidor, marcar salida, marcar entregada y marcar no entregada. Fase 3.4.3 agrega UI mobile-first de repartidor en `/app/entregas`. `Repartidor` queda con `deliveries.view` y `deliveries.complete`, sin acceso amplio a órdenes/clientes/pagos.
 
 ## Usuarios Y Roles
 

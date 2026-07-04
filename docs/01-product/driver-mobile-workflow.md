@@ -6,7 +6,9 @@ Actualización Fase 3.4.0: el análisis técnico previo queda documentado en `do
 
 Actualización Fase 3.4.1: backend/API implementado sin UI. Ya existen `WorkOrderDelivery`, permisos `deliveries.*`, migración `AddWorkOrderDeliveries` y endpoints privados de entregas.
 
-Actualización Fase 3.4.2: UI admin de entregas implementada desde `/app/ordenes/:id` para crear entrega, asignar repartidor, marcar salida, entregar y marcar no entregada. La pantalla mobile-first de repartidor bajo `/app/entregas` sigue pendiente para Fase 3.4.3.
+Actualización Fase 3.4.2: UI admin de entregas implementada desde `/app/ordenes/:id` para crear entrega, asignar repartidor, marcar salida, entregar y marcar no entregada.
+
+Actualización Fase 3.4.3: UI mobile-first de repartidor implementada bajo `/app/entregas` y `/app/entregas/:id`. El listado consume `GET /api/deliveries?assignedToMe=true`; el detalle valida que la entrega cargada esté asignada al usuario autenticado antes de mostrar datos; `deliveries.complete` habilita marcar entregada con `recipientName` o no entregada con `failedReason`.
 
 ## Objetivo
 
@@ -100,11 +102,19 @@ Backend MVP implementado y UI admin disponible desde órdenes:
 - Marcar no entregado con motivo.
 - Guardar entrega.
 
+Acciones implementadas en UI mobile-first Fase 3.4.3:
+
+- Listar entregas asignadas al usuario autenticado.
+- Abrir detalle de entrega.
+- Marcar entregada cuando la entrega está `OutForDelivery`.
+- Capturar `recipientName`.
+- Marcar no entregada cuando la entrega está `Assigned` u `OutForDelivery`.
+- Capturar `failedReason`.
+- Mostrar lectura sin acciones si falta `deliveries.complete`.
+
 Acciones pendientes de UI mobile-first:
 
 - Marcar en ruta desde móvil si se otorga `deliveries.update` al rol.
-- Marcar no entregado.
-- Capturar motivo de no entrega.
 - Llamar/abrir WhatsApp desde contacto.
 - Escanear QR/código.
 - Capturar foto.
@@ -122,14 +132,15 @@ Reglas mínimas:
 - No permitir modificar entrega ya cerrada salvo permiso administrativo futuro.
 - Registrar usuario que realizó la acción.
 
-Resultado esperado:
+Resultado implementado en Fase 3.4.3:
 
 - Administración ve quién entregó.
 - Administración ve cuándo se entregó.
 - Administración ve a qué cliente se entregó.
 - Administración ve quién recibió.
-- La entrega queda en `Delivered`.
-- La orden puede cambiar a `Delivered` en la misma operación para conservar tableros actuales, siempre que el backend lo haga con timestamp de servidor y reglas documentadas.
+- La entrega queda en `Delivered` cuando el backend acepta el cierre.
+- La orden cambia a `Delivered` en la misma operación si el backend completa la entrega correctamente.
+- Una no entrega queda como `FailedDelivery` sin convertir `WorkOrder.Status` a otro estado.
 
 ## Modelo Recomendado Fase 3.4.0
 

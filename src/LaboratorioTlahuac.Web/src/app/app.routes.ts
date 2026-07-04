@@ -71,6 +71,24 @@ export const routes: Routes = [
         data: { permission: 'reports.view' },
       },
       {
+        path: 'entregas',
+        loadComponent: () =>
+          import('./features/deliveries/pages/delivery-list-page.component').then(
+            (m) => m.DeliveryListPageComponent,
+          ),
+        canActivate: [permissionGuard],
+        data: { permission: 'deliveries.view' },
+      },
+      {
+        path: 'entregas/:id',
+        loadComponent: () =>
+          import('./features/deliveries/pages/delivery-detail-page.component').then(
+            (m) => m.DeliveryDetailPageComponent,
+          ),
+        canActivate: [permissionGuard],
+        data: { permission: 'deliveries.view' },
+      },
+      {
         path: 'ordenes',
         loadComponent: () =>
           import('./features/orders/pages/work-order-list-page.component').then(

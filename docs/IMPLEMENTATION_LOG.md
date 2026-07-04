@@ -6,6 +6,80 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-04 - Fase 3.4.3 UI Repartidor Mobile-First
+
+### Cambio Realizado
+
+Se implementó la UI mobile-first del repartidor bajo `/app/entregas`.
+
+### Frontend
+
+- Se creó `/app/entregas` como ruta privada protegida con `deliveries.view`.
+- Se creó `/app/entregas/:id` como ruta privada protegida con `deliveries.view`.
+- Se agregó navegación privada `Entregas` visible solo con `deliveries.view`.
+- El listado consume `DeliveryService.list({ assignedToMe: true })`.
+- El listado muestra cards mobile-first con folio, cliente, paciente/referencia, trabajo, estado de entrega, fecha de entrega, dirección/contacto si existen y acción `Ver detalle`.
+- El detalle consume `GET /api/deliveries/{id}` mediante `DeliveryService.getById`.
+- El detalle valida que `assignedToUserId` coincida con el usuario autenticado antes de mostrar datos de la entrega.
+- El detalle muestra cliente, dirección, contacto, folio, paciente, referencia, trabajo, fecha de entrega, estado de orden, seguimiento, recibido y motivo de no entrega.
+- Con `deliveries.complete`, permite marcar entregada con `recipientName` requerido cuando la entrega está `OutForDelivery`.
+- Con `deliveries.complete`, permite marcar no entregada con `failedReason` requerido cuando la entrega está `Assigned` u `OutForDelivery`.
+- Si falta `deliveries.complete`, la pantalla queda en lectura sin formularios de cierre.
+- Después de cada cierre, refresca el detalle.
+- Loading, estado vacío y errores `400`, `403`, `404` y `409` se muestran de forma controlada.
+
+### Exclusiones Confirmadas
+
+- No se permite asignar ni cambiar repartidor desde la UI del repartidor.
+- No se muestran pagos, saldos ni información financiera.
+- No se crearon endpoints nuevos.
+- No se modificó backend.
+- No se crearon migraciones.
+- No se tocó `AuthService`, guards, cookies, XSRF ni deploy.
+- No se instalaron dependencias.
+- No se usó `codex-cobranza-sql`.
+- No se imprimieron secretos.
+- No se hizo commit.
+
+### Documentación
+
+- Se creó `docs/08-qa/driver-mobile-qa.md`.
+- Se actualizaron estado, roadmap, bitácora, documentación funcional, arquitectura/auth, README e índice de docs.
+- `docs/08-qa/delivery-admin-ui-qa.md` queda como QA de la UI admin; el QA de repartidor queda separado.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `305.66 kB`, sin warning de budget.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 124/124.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias ejecutadas: `/app/entregas`, `assignedToMe`, `deliveries.view`, `deliveries.complete`, `/dashboard`, `/app/dashboard` y `/login`.
+- Las búsquedas de rutas confirman que `/app/dashboard` sigue siendo la ruta privada real del dashboard, `/dashboard` no se convirtió en ruta privada real y `/login` sigue como entrada pública.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/app.routes.ts`
+- `src/LaboratorioTlahuac.Web/src/app/admin/layout/private-layout.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/deliveries/pages/delivery-list-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/deliveries/pages/delivery-detail-page.component.ts`
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/driver-mobile-workflow.md`
+- `docs/01-product/delivery-mvp-design.md`
+- `docs/01-product/operations-orders-delivery.md`
+- `docs/01-product/internal-system.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/08-qa/delivery-admin-ui-qa.md`
+- `docs/08-qa/driver-mobile-qa.md`
+
+### Siguiente Fase Recomendada
+
+Fase 3.4.4 - QA DEV y ajustes del flujo de entregas con Admin y usuario `Repartidor`.
+
 ## 2026-07-04 - Fase 3.4.2.1 Estado De Entrega En Listado De Órdenes
 
 ### Cambio Realizado

@@ -1,6 +1,6 @@
 # Operación De Órdenes, Etiquetas Y Entrega
 
-Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI, Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id` y Fase 3.4.2.1 agregó estado de entrega al listado `/app/ordenes`.
+Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI, Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id`, Fase 3.4.2.1 agregó estado de entrega al listado `/app/ordenes` y Fase 3.4.3 implementó la UI mobile-first de repartidor bajo `/app/entregas`.
 
 Diseño técnico Fase 3.4.0: `docs/01-product/delivery-mvp-design.md`.
 
@@ -122,6 +122,31 @@ Validación DEV sugerida:
 4. Crear o ubicar una entrega marcada como `FailedDelivery`.
 5. Confirmar que `/app/ordenes` muestra `No entregada` en `Entrega`.
 6. Confirmar que `Estado` conserva el valor operativo de `WorkOrder.Status` y no cambia a `No entregada`.
+
+### Implementación Fase 3.4.3
+
+La ruta privada `/app/entregas` agrega la UI mobile-first para repartidor sin duplicar `/app/ordenes`.
+
+Capacidades implementadas:
+
+- Navegación privada `Entregas` visible con `deliveries.view`.
+- Ruta `/app/entregas` protegida con `deliveries.view`.
+- Ruta `/app/entregas/:id` protegida con `deliveries.view`.
+- Listado de cards mobile-first usando `GET /api/deliveries?assignedToMe=true`.
+- Detalle que valida en frontend que la entrega esté asignada al usuario autenticado antes de mostrar datos.
+- Datos visibles: folio, cliente, paciente, referencia, trabajo, estado de entrega, fecha de entrega, dirección, contacto, estado de orden y seguimiento.
+- Cierre con `recipientName` requerido cuando la entrega está `OutForDelivery`.
+- No entrega con `failedReason` requerido cuando la entrega está `Assigned` u `OutForDelivery`.
+- Lectura sin acciones si el usuario no tiene `deliveries.complete`.
+- Loading, estado vacío y errores controlados.
+
+Exclusiones:
+
+- No se permite asignar repartidor desde la UI del repartidor.
+- No se muestran pagos, saldos ni información financiera.
+- No se otorga acceso amplio a órdenes, clientes, pagos, usuarios ni roles.
+- No se crean endpoints, migraciones ni cambios backend.
+- No se toca `AuthService`, guards, cookies, XSRF ni deploy.
 
 ### Modelo Actual De Orden
 
@@ -268,7 +293,7 @@ Existe modelo de usuarios, roles, permisos y seed:
 - Fase 3.3 implementa `/app/admin/usuarios` y `/app/admin/roles`.
 - Rol `Repartidor` preparado con permisos mínimos de entregas (`deliveries.view` y `deliveries.complete`).
 
-Usuarios ya permite CRUD administrativo mínimo y asignación de roles existentes; Roles queda readonly para ver permisos. Para el flujo repartidor ya existen permisos `deliveries.*`, modelo de entregas y endpoints. Falta implementar UI bajo `/app/entregas` y panel admin desde `/app/ordenes/:id`.
+Usuarios ya permite CRUD administrativo mínimo y asignación de roles existentes; Roles queda readonly para ver permisos. Para el flujo repartidor ya existen permisos `deliveries.*`, modelo de entregas, endpoints, UI admin desde `/app/ordenes/:id` y UI mobile-first bajo `/app/entregas`.
 
 ### Catálogo Público Y Backlog
 
@@ -458,8 +483,8 @@ Fase 3.5 catálogo:
 4. Fase 3.4.1: backend delivery MVP + permisos. Implementada.
 5. Fase 3.4.2: UI admin desde órdenes. Implementada.
 6. Fase 3.4.2.1: estado de entrega en listado `/app/ordenes`. Implementada.
-7. Fase 3.4.3: UI repartidor mobile-first. Siguiente recomendada.
+7. Fase 3.4.3: UI repartidor mobile-first. Implementada.
 8. Fase 3.4.4: QA DEV y ajustes.
 9. Fase 3.5: administración de catálogo, precios e imágenes.
 
-La siguiente fase implementable mayor es Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.
+La siguiente fase implementable mayor es Fase 3.4.4 - QA DEV y ajustes del flujo de entregas. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.

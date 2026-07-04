@@ -29,6 +29,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 | QA usuarios y roles | `docs/08-qa/users-roles-qa.md` |
 | QA API entregas | `docs/08-qa/delivery-api-qa.md` |
 | QA UI admin entregas | `docs/08-qa/delivery-admin-ui-qa.md` |
+| QA UI repartidor | `docs/08-qa/driver-mobile-qa.md` |
 | Plan QA usuario limitado | `docs/08-qa/limited-user-qa-plan.md` |
 | Alcance comercial | `docs/09-commercial/` |
 
@@ -47,7 +48,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 
 ## Separación De Frentes
 
-- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, DEV validado como baseline UAT inicial en Fase 3.0, Fase 3.1 documentada como análisis operativo para órdenes, etiquetas, reparto, usuarios/roles y catálogo, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4.0 documentada como diseño técnico previo de entregas/repartidor, Fase 3.4.1 implementada como backend delivery MVP + permisos y Fase 3.4.2 implementada como UI admin de entregas desde órdenes.
+- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, DEV validado como baseline UAT inicial en Fase 3.0, Fase 3.1 documentada como análisis operativo para órdenes, etiquetas, reparto, usuarios/roles y catálogo, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4.0 documentada como diseño técnico previo de entregas/repartidor, Fase 3.4.1 implementada como backend delivery MVP + permisos, Fase 3.4.2 implementada como UI admin de entregas desde órdenes y Fase 3.4.3 implementada como UI mobile-first de repartidor bajo `/app/entregas`.
 - Sitio público institucional: vive en la app Angular existente bajo `src/LaboratorioTlahuac.Web/src/app/public`; la primera versión mobile-first está implementada y Fase 1.6 quedó validada visualmente por el responsable del proyecto.
 - Documentación comercial: describe alcance propuesto y fases comerciales, no necesariamente implementación técnica actual.
 

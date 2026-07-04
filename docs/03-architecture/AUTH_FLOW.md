@@ -115,6 +115,8 @@ La autorización es por permisos, no por nombre de rol.
 Permisos por ruta privada:
 
 - `/app/dashboard`: `reports.view`
+- `/app/entregas`: `deliveries.view`
+- `/app/entregas/:id`: `deliveries.view`
 - `/app/ordenes`: `orders.view`
 - `/app/ordenes/nueva`: `orders.create`
 - `/app/ordenes/:id`: `orders.view`

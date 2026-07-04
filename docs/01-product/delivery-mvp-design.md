@@ -10,6 +10,8 @@ Actualización Fase 3.4.2, 2026-07-04: UI admin de entregas quedó implementada 
 
 Actualización Fase 3.4.2.1, 2026-07-04: `/app/ordenes` muestra estado operativo de orden y estado logístico de entrega en columnas/badges separados. `No entregada` corresponde a `DeliveryStatus.FailedDelivery`; no se cambia `WorkOrder.Status` al registrar una no entrega.
 
+Actualización Fase 3.4.3, 2026-07-04: UI mobile-first de repartidor implementada bajo `/app/entregas` y `/app/entregas/:id`. La ruta requiere `deliveries.view`, el listado usa `assignedToMe=true`, el detalle no muestra entregas ajenas al usuario autenticado y las acciones de cierre requieren `deliveries.complete`.
+
 ## Objetivo
 
 Habilitar en la siguiente fase un flujo mobile-first para que el repartidor entre desde celular, vea entregas asignadas, consulte a dónde ir y a quién entregar, y registre la entrega con nombre de quien recibió y fecha/hora tomada del servidor.
@@ -479,11 +481,19 @@ Decisión 3.4.1: no se implementa estado `Cancelled` para entrega en este MVP. S
 
 ### Fase 3.4.3 - UI Repartidor Mobile-First
 
-- Crear `/app/entregas`.
-- Crear `/app/entregas/:id`.
-- Lista de entregas asignadas.
-- Detalle con acciones táctiles.
-- Captura de recibido/no entregado.
+- Estado: implementada el 2026-07-04.
+- Crea `/app/entregas`.
+- Crea `/app/entregas/:id`.
+- Ambas rutas están bajo `/app`, usan `permissionGuard` y requieren `deliveries.view`.
+- El listado consume `GET /api/deliveries?assignedToMe=true` con paginación.
+- Las cards muestran folio, cliente, paciente/referencia, trabajo, estado de entrega, fecha de entrega, dirección/contacto si existen y acción `Ver detalle`.
+- El detalle destaca cliente, dirección, contacto, folio, paciente, referencia, trabajo, fecha de entrega, estado de orden, seguimiento y cierre.
+- Si el usuario tiene `deliveries.complete`, permite marcar entregada con `recipientName` requerido cuando la entrega está `OutForDelivery`.
+- Si el usuario tiene `deliveries.complete`, permite marcar no entregada con `failedReason` requerido cuando la entrega está `Assigned` u `OutForDelivery`.
+- Si falta `deliveries.complete`, la pantalla queda en lectura.
+- No permite asignar repartidor desde la UI del repartidor.
+- No muestra información financiera.
+- No toca backend, migraciones, endpoints, auth, guards, cookies, XSRF, deploy ni dependencias.
 
 ### Fase 3.4.4 - QA DEV Y Ajustes
 
@@ -513,4 +523,4 @@ Decisión 3.4.1: no se implementa estado `Cancelled` para entrega en este MVP. S
 - Sin dependencias.
 - Sin cambios de auth, guards, cookies, XSRF ni deploy.
 - Fase siguiente implementada posteriormente: Fase 3.4.1 - backend delivery MVP + permisos.
-- Siguiente fase recomendada actual: Fase 3.4.3 - UI repartidor mobile-first bajo `/app/entregas`.
+- Siguiente fase recomendada actual: Fase 3.4.4 - QA DEV y ajustes del flujo de entregas con usuario `Repartidor`.
