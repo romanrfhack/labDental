@@ -1,67 +1,78 @@
 .private-shell {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 264px minmax(0, 1fr);
   min-height: 100vh;
 }
 
 .private-sidebar {
   background:
-    radial-gradient(circle at top, rgba(46, 178, 255, 0.16), transparent 34%),
+    radial-gradient(circle at top, rgba(46, 178, 255, 0.14), transparent 32%),
     linear-gradient(180deg, #081c45 0%, #061632 100%);
   color: var(--color-neutral-0);
   display: grid;
-  gap: var(--space-8);
-  padding: var(--space-8) var(--space-6);
+  align-content: start;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-4);
 }
 
 .sidebar-brand-block {
   display: grid;
-  gap: var(--space-2);
+  gap: 2px;
+  padding: 2px 6px 8px;
 }
 
 .brand {
   color: var(--color-neutral-0);
   display: block;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 800;
   letter-spacing: 0.01em;
+  line-height: 1.1;
   text-decoration: none;
 }
 
 .brand-caption {
-  color: rgba(215, 236, 255, 0.76);
-  font-size: 0.92rem;
+  color: rgba(215, 236, 255, 0.72);
+  font-size: 0.78rem;
+  line-height: 1.2;
 }
 
 .private-nav {
   display: grid;
-  gap: var(--space-2);
+  gap: 6px;
 }
 
 .private-nav a {
+  align-items: center;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   color: rgba(232, 243, 252, 0.88);
+  display: flex;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+  min-height: 40px;
   min-width: 0;
-  padding: 12px 14px;
+  padding: 9px 12px;
   text-decoration: none;
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
     color 160ms ease,
-    transform 160ms ease;
+    transform 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .private-nav a:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
   color: var(--color-neutral-0);
   transform: translateX(1px);
 }
 
 .private-nav a.is-active {
   background: linear-gradient(135deg, rgba(233, 247, 255, 0.96), rgba(213, 239, 255, 0.92));
-  border-color: rgba(166, 223, 247, 0.78);
-  box-shadow: 0 14px 28px rgba(2, 15, 37, 0.18);
+  border-color: rgba(166, 223, 247, 0.72);
+  box-shadow: 0 10px 20px rgba(2, 15, 37, 0.16);
   color: var(--color-navy-800);
   font-weight: 800;
 }
@@ -110,6 +121,7 @@
 }
 
 .user-chip {
+  align-items: center;
   background: rgba(233, 247, 255, 0.95);
   border: 1px solid rgba(166, 223, 247, 0.8);
   border-radius: var(--radius-pill);
@@ -119,7 +131,6 @@
   font-weight: 700;
   min-height: 40px;
   padding: 0 14px;
-  align-items: center;
 }
 
 .private-content {
@@ -135,8 +146,8 @@
   }
 
   .private-sidebar {
-    gap: var(--space-5);
-    padding: var(--space-5) var(--space-4);
+    gap: var(--space-4);
+    padding: var(--space-4);
   }
 
   .private-nav {
