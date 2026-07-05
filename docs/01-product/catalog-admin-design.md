@@ -2,7 +2,7 @@
 
 Fase 3.5.0 - análisis y documentación para administración de catálogo, precios e imágenes bajo `/app`.
 
-Actualización Fase 3.5.1, 2026-07-05: el backend del catálogo administrable ya quedó implementado con migración, seed inicial, permisos y endpoints. La UI admin, el consumo de `/catalogo` desde API y el upload de imágenes siguen fuera de esta fase.
+Actualización Fase 3.5.1, 2026-07-05: el backend del catálogo administrable ya quedó implementado con migración, seed inicial, permisos y endpoints, y quedó cerrado en DEV en commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8`. La UI admin, el consumo de `/catalogo` desde API y el upload de imágenes siguen fuera de esta fase.
 
 ## Resumen Ejecutivo
 
@@ -553,6 +553,7 @@ Para Fase 3.5.1:
 - Repartidor no tiene permisos de catálogo.
 - Pruebas backend cubren público, admin, sin sesión y sin permiso.
 - `/catalogo` público sigue funcionando con data estática porque aún no se migra el frontend público.
+- QA DEV cerrado el 2026-07-05: GitHub Actions `success`, `/health` `200`, `/api/catalog/public` sin sesión `200`, endpoints admin sin sesión `401` y `/catalogo` público `200`.
 
 ## Qué No Implementar Todavía
 
@@ -580,6 +581,6 @@ Antes de exponer cambios administrables al público, validar:
 
 ## Siguiente Fase Implementable
 
-Fase 3.5.1 - backend catálogo administrable + migración + seed inicial.
+Fase 3.5.2 - UI admin catálogo/precios con selección de imagen existente.
 
-La implementación debe empezar por backend y permisos, manteniendo `/catalogo` público sin cambios hasta que los endpoints privados y públicos estén validados.
+La implementación debe crear la UI privada bajo `/app/admin/catalogo`, consumir los endpoints admin existentes, proteger la ruta con `catalog.view`, restringir mutaciones a `catalog.manage` y mantener `/catalogo` público sin cambios hasta Fase 3.5.3.

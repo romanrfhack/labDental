@@ -8,6 +8,21 @@
 
 ## 2026-07-05 - Fase 3.5.1 Backend Catálogo Administrable
 
+### Cierre QA DEV
+
+- Working tree local previo reportado por responsable del proyecto: limpio.
+- Commit desplegado: `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8`.
+- GitHub Actions: `success`.
+- `GET /health`: `200`.
+- `GET /api/catalog/public` sin sesión: `200`.
+- `/api/catalog/public` devuelve secciones, productos, precios MXN e `imagePath`.
+- `/catalogo` público en DEV: `200`.
+- `GET /api/admin/catalog/sections` sin sesión: `401`.
+- `GET /api/admin/catalog/products` sin sesión: `401`.
+- Observación no bloqueante: validar visualmente rutas de imágenes con nombres `yacket` y doble punto durante Fase 3.5.2.
+- Resultado: Fase 3.5.1 cerrada en DEV sin bug claro.
+- Validación de cierre documental: `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 140/140; `npm run build` correcto con initial total `314.59 kB` sin warning de budget; `git diff --check` correcto.
+
 ### Cambio Realizado
 
 Se implementó backend/base de datos para catálogo administrable, sin cambiar `/catalogo` público ni crear UI admin.

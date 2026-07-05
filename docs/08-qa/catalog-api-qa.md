@@ -2,6 +2,30 @@
 
 Fase 3.5.1 - backend catálogo administrable + migración + seed inicial.
 
+## Cierre QA DEV
+
+Fecha: 2026-07-05.
+
+- Commit desplegado: `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8`.
+- GitHub Actions: `success`.
+- Working tree local previo reportado por responsable del proyecto: limpio.
+- `GET /health`: `200`.
+- `GET /api/catalog/public` sin sesión: `200`.
+- `GET /api/catalog/public` devuelve secciones, productos, precios MXN e `imagePath`.
+- `/catalogo` público en DEV: `200` por HTTP; sigue sirviendo el shell Angular público.
+- `GET /api/admin/catalog/sections` sin sesión: `401`.
+- `GET /api/admin/catalog/products` sin sesión: `401`.
+- Resultado: Fase 3.5.1 cerrada en DEV sin bug bloqueante reportado.
+
+Observación para siguiente fase: validar visualmente en la UI de selección de imágenes las rutas heredadas con nombres `yacket` y doble punto, especialmente `provisionales-yacket-*` y `protesis-removible-unidad-metalica..webp`. Se conservan como compatibilidad de assets existentes; no se normalizaron en esta fase.
+
+Validación de cierre documental:
+
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 140/140.
+- `npm run build`: correcto desde `src/LaboratorioTlahuac.Web`, initial total `314.59 kB`, sin warning de budget.
+- `git diff --check`: correcto.
+
 ## Alcance Validado
 
 - Entidades `CatalogSection` y `CatalogProduct`.

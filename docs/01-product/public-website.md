@@ -154,6 +154,7 @@ Backlog futuro relacionado:
 - La edición futura deberá vivir bajo `/app`, requerir permisos administrativos y no exponerse en el sitio público.
 - Fase 3.5.0 documenta el diseño técnico en `docs/01-product/catalog-admin-design.md`. Hasta que se implemente y valide Fase 3.5.3, `/catalogo` debe seguir funcionando con `catalog-data.ts` para no romper la experiencia pública.
 - Fase 3.5.1 implementa `GET /api/catalog/public` y endpoints admin de catálogo, pero `/catalogo` no los consume todavía. La transición pública queda para Fase 3.5.3.
+- QA DEV Fase 3.5.1 confirmó que `/catalogo` sigue respondiendo `200` y que la API pública de catálogo también responde `200` sin sesión. No se cambió la fuente de datos visible del catálogo público.
 
 Assets:
 
