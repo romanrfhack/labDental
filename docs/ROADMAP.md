@@ -35,7 +35,7 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.4.4: pulido UX operativo de entregas. Implementada y validada en DEV el 2026-07-05; `/app/entregas` agrega filtros `Todas`, `En ruta`, `Asignadas`, `No entregadas` y `Entregadas`, contadores por estado operativo, cards mobile-first más claras y detalle con teléfono `tel:`, WhatsApp y Google Maps solo cuando existen datos. QA DEV: GitHub Actions `success`, `/health` `200`, `/api/deliveries` sin sesión `401`, resultados de Repartidor OK y sin observaciones reportadas. No cambia backend, migraciones, dependencias, permisos, rutas privadas, auth, guards, cookies ni XSRF.
 - Fase 3.5.0: diseño técnico del catálogo administrable. Documentada; incluye inventario del catálogo público actual, confirma que `/catalogo` usa `catalog-data.ts`, propone modelo `CatalogSection`/`CatalogProduct`, permisos `catalog.view`/`catalog.manage` con `catalog.publish` opcional, endpoints público/admin, estrategia de imágenes y fases 3.5.1 a 3.5.4. Recomendación MVP: backend + migración + seed inicial y selección de imágenes existentes; upload queda para fase posterior con almacenamiento y backup definidos. No implementa código, migraciones, endpoints, frontend funcional, dependencias ni deploy.
 - Pendiente técnico de despliegue DEV: ajustar el workflow para esperar más o validar health con reintentos más tolerantes después del restart.
-- Fase 3.5.1: backend catálogo administrable + migración + seed inicial. Recomendada como siguiente fase implementable. Fuente: `docs/01-product/catalog-admin-design.md`.
+- Fase 3.5.1: backend catálogo administrable + migración + seed inicial. Implementada; agrega `CatalogSection`, `CatalogProduct`, migración `AddCatalogManagement`, seed idempotente desde `catalog-data.ts`, permisos `catalog.view`/`catalog.manage`, `GET /api/catalog/public` sin autenticación y endpoints admin bajo `/api/admin/catalog`. No cambia `/catalogo`, no crea UI admin y no implementa upload.
 
 ## Sitio Público Institucional
 
@@ -49,7 +49,7 @@ Fuente funcional: `docs/01-product/public-website.md`.
 - Fase sitio 1.3.1: cierre técnico del catálogo, limpieza de assets `:Zone.Identifier`, documentación de placeholders y preparación para revisión visual del cliente. Implementada por código/documentación; revisión visual real cubierta posteriormente por Fase 1.6.
 - Fase sitio 1.5: identidad visual LDT, logo, tokens de marca y datos de contacto del cartel/catálogo. Implementada; validación visual cubierta posteriormente por Fase 1.6 y aprobación comercial del cliente pendiente.
 - Fase sitio 1.6: pulido visual premium del sitio público con CSS/IntersectionObserver, reveal sutil, parallax ligero, microinteracciones y mejoras de composición en home, servicios, catálogo, contacto y login visual. Completada y validada visualmente por el responsable del proyecto.
-- Backlog relacionado: administración privada futura de catálogo, precios e imágenes. No modifica el catálogo público actual; `/catalogo` sigue usando data frontend hasta diseñar esa fase. Fuente: `docs/01-product/admin-catalog-management.md`.
+- Backlog relacionado: administración privada futura de catálogo, precios e imágenes. Fase 3.5.1 ya dejó backend/API/seed; `/catalogo` sigue usando data frontend hasta Fase 3.5.3. Fuente: `docs/01-product/admin-catalog-management.md`.
 - Fase sitio/sistema 2.0: validación real del flujo de `/login`, sesión, `returnUrl` y acceso a `/app/dashboard`, sin rediseñar pantallas ni implementar módulos nuevos. Ejecutada por código/build/tests/curl; login real con Admin local y dashboard autenticado fueron cerrados posteriormente en Fase 2.1d.
 - Fase sitio 3: QA mobile-first completo y preparación de contenido final. Pendiente.
 - Fase sitio 4: publicación productiva en `laboratoriodentaltlahuac.com` cuando deploy/DNS estén definidos. Pendiente; DEV ya está publicado en `https://dev.laboratoriodentaltlahuac.com` como baseline UAT inicial.
@@ -69,9 +69,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Fase 3.5.1, backend catálogo administrable + migración + seed inicial.
+Fase 3.5.2, UI admin catálogo/precios con selección de imagen existente.
 
-Fase 3.5.0 queda documentada como diseño técnico del catálogo administrable. La siguiente fase técnica recomendada es implementar backend, migración, seed inicial desde `catalog-data.ts`, permisos `catalog.view`/`catalog.manage` y endpoints público/admin sin cambiar todavía `/catalogo` público.
+Fase 3.5.1 queda implementada como backend catálogo administrable + migración + seed inicial. La siguiente fase técnica recomendada es crear la UI privada de administración de catálogo y precios bajo `/app/admin/catalogo`, consumiendo endpoints admin existentes y sin cambiar todavía `/catalogo` público.
 
 La administración visual bajo `/app` queda para Fase 3.5.2, el consumo público de API para Fase 3.5.3 y la carga/reemplazo de imágenes desde admin para Fase 3.5.4. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 

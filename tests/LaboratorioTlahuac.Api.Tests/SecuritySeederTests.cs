@@ -140,12 +140,16 @@ public sealed class SecuritySeederTests
         Assert.Contains(Permissions.DeliveriesAssign, permissionKeys);
         Assert.Contains(Permissions.DeliveriesUpdate, permissionKeys);
         Assert.Contains(Permissions.DeliveriesComplete, permissionKeys);
+        Assert.Contains(Permissions.CatalogView, permissionKeys);
+        Assert.Contains(Permissions.CatalogManage, permissionKeys);
         Assert.Equal(
             [Permissions.DeliveriesComplete, Permissions.DeliveriesView],
             driverPermissionKeys);
         Assert.DoesNotContain(Permissions.UsersManage, driverPermissionKeys);
         Assert.DoesNotContain(Permissions.RolesManage, driverPermissionKeys);
         Assert.DoesNotContain(Permissions.OrdersView, driverPermissionKeys);
+        Assert.DoesNotContain(Permissions.CatalogView, driverPermissionKeys);
+        Assert.DoesNotContain(Permissions.CatalogManage, driverPermissionKeys);
     }
 
     [Fact]
@@ -179,6 +183,8 @@ public sealed class SecuritySeederTests
         Assert.Contains(Permissions.DeliveriesAssign, adminPermissionKeys);
         Assert.Contains(Permissions.DeliveriesUpdate, adminPermissionKeys);
         Assert.Contains(Permissions.DeliveriesComplete, adminPermissionKeys);
+        Assert.Contains(Permissions.CatalogView, adminPermissionKeys);
+        Assert.Contains(Permissions.CatalogManage, adminPermissionKeys);
     }
 
     private static Dictionary<string, string?> CompleteLimitedQaSettings()

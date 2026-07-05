@@ -9,6 +9,7 @@ using LaboratorioTlahuac.Application;
 using LaboratorioTlahuac.Application.Abstractions.Security;
 using LaboratorioTlahuac.Domain.Security;
 using LaboratorioTlahuac.Infrastructure;
+using LaboratorioTlahuac.Infrastructure.Catalog;
 using LaboratorioTlahuac.Infrastructure.Persistence;
 using LaboratorioTlahuac.Infrastructure.Security.Seed;
 
@@ -129,6 +130,13 @@ if (ShouldRunSecuritySeed(app))
     await seeder.SeedAsync();
 }
 
+if (ShouldRunCatalogSeed(app))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var seeder = scope.ServiceProvider.GetRequiredService<ICatalogSeeder>();
+    await seeder.SeedAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseCors(DevelopmentCorsPolicy);
@@ -170,6 +178,7 @@ app.MapAuthEndpoints();
 app.MapCustomerEndpoints();
 app.MapWorkOrderEndpoints();
 app.MapDeliveryEndpoints();
+app.MapCatalogEndpoints();
 app.MapPaymentEndpoints();
 app.MapDashboardEndpoints();
 app.MapAdminSecurityEndpoints();
@@ -209,6 +218,11 @@ static bool ShouldRunSecuritySeed(WebApplication app)
 
     return app.Environment.IsDevelopment()
         && app.Configuration.GetValue<bool>("SecuritySeed:LimitedQaUser:RunOnStartup");
+}
+
+static bool ShouldRunCatalogSeed(WebApplication app)
+{
+    return app.Configuration.GetValue("CatalogSeed:RunOnStartup", true);
 }
 
 public partial class Program;

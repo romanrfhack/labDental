@@ -6,6 +6,101 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-05 - Fase 3.5.1 Backend Catálogo Administrable
+
+### Cambio Realizado
+
+Se implementó backend/base de datos para catálogo administrable, sin cambiar `/catalogo` público ni crear UI admin.
+
+### Backend
+
+- Entidades de dominio `CatalogSection` y `CatalogProduct`.
+- Contratos Application para catálogo público/admin.
+- Servicio `CatalogService` en Infrastructure.
+- Seeder `CatalogSeeder` con `CatalogSeed:RunOnStartup=true`.
+- Endpoint público `GET /api/catalog/public`.
+- Endpoints admin bajo `/api/admin/catalog/sections` y `/api/admin/catalog/products`.
+- Validación de precio no negativo.
+- Validación de `ImagePath` como ruta relativa segura bajo `assets/catalog/products/`.
+
+### Migración
+
+- Migración creada: `20260705054221_AddCatalogManagement`.
+- Crea `CatalogSections` y `CatalogProducts`.
+- Agrega FK `CatalogProducts.CatalogSectionId`.
+- Agrega índices únicos por `Key` e índices por `SortOrder` e `IsActive`.
+- No toca tablas ajenas.
+- No elimina datos.
+- No se aplicó migración en VPS.
+
+### Permisos
+
+- Permisos agregados: `catalog.view` y `catalog.manage`.
+- Admin recibe ambos permisos por `Permissions.All` y baseline.
+- `Repartidor` no recibe permisos de catálogo.
+- `GET` admin requiere `catalog.view` o `catalog.manage`.
+- Mutaciones admin requieren `catalog.manage`.
+
+### Seed Inicial
+
+- Fuente: `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
+- Seed inicial: 12 secciones y 40 productos.
+- Idempotente por `Key`.
+- No sobreescribe precios, nombres, orden ni estado de registros existentes.
+- Rellena solo `ImagePath`/`AltText` ausentes en registros existentes.
+- No depende del filesystem.
+- No copia archivos de imagen.
+
+### Pruebas
+
+- Se agregó `tests/LaboratorioTlahuac.Api.Tests/CatalogIntegrationTests.cs`.
+- Cobertura pública: 200 sin autenticación, activos únicamente, orden y no exposición de campos administrativos.
+- Cobertura admin: 401 sin sesión, 403 sin permiso, listar/crear/actualizar/activar/desactivar secciones y productos, actualizar precio, rechazo de precio negativo, rechazo de `ImagePath` inseguro y rechazo para `Repartidor`.
+- Se actualizaron pruebas de permisos y seeder.
+
+### Documentación Actualizada
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/catalog-admin-design.md`
+- `docs/01-product/admin-catalog-management.md`
+- `docs/01-product/public-website.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/08-qa/catalog-api-qa.md`
+
+### Exclusiones Confirmadas
+
+- No se modificó `/catalogo` para consumir API.
+- No se creó UI admin.
+- No se implementó upload de imágenes.
+- No se borró `catalog-data.ts`.
+- No se movieron assets.
+- No se cambiaron rutas públicas.
+- No se tocó `AuthService`, guards, cookies ni XSRF.
+- No se tocó deploy.
+- No se instalaron dependencias.
+- No se usó `codex-cobranza-sql`.
+- No se imprimieron secretos.
+- No se ejecutó `dotnet user-secrets list`.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `dotnet build`: correcto con warnings conocidos `NU1903` por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 140/140.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `314.59 kB`, sin warning de budget.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias ejecutadas para `catalog.view`, `catalog.manage`, `/api/catalog/public`, `/api/admin/catalog`, `CatalogSection`, `CatalogProduct`, `catalog-data`, `assets/catalog`, `/catalogo`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`.
+- Las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
+
+### Siguiente Fase Recomendada
+
+Fase 3.5.2 - UI admin catálogo/precios con selección de imagen existente.
+
 ## 2026-07-05 - Fase 3.5.0 Diseño Técnico Catálogo Administrable
 
 ### Cambio Realizado

@@ -49,6 +49,19 @@ Endpoints delivery Fase 3.4.1:
 - `PATCH /api/deliveries/{id}/failed`
 - `PATCH /api/deliveries/{id}/retry`
 
+Endpoints catálogo Fase 3.5.1:
+
+- `GET /api/catalog/public`
+- `GET /api/admin/catalog/sections`
+- `POST /api/admin/catalog/sections`
+- `PUT /api/admin/catalog/sections/{id}`
+- `PATCH /api/admin/catalog/sections/{id}/status`
+- `GET /api/admin/catalog/products`
+- `POST /api/admin/catalog/products`
+- `PUT /api/admin/catalog/products/{id}`
+- `PATCH /api/admin/catalog/products/{id}/status`
+- `PATCH /api/admin/catalog/products/{id}/price`
+
 Seed tecnico solo en Development:
 
 - `SecuritySeed:EnsureBaselineOnStartup`
@@ -150,6 +163,19 @@ Permisos por endpoints delivery:
 - `PATCH /api/deliveries/{id}/failed`: `deliveries.complete`
 - `PATCH /api/deliveries/{id}/retry`: `deliveries.update` para Admin/operación o `deliveries.complete` si el repartidor asignado reintenta su propia entrega
 
+Permisos por endpoints catálogo:
+
+- `GET /api/catalog/public`: público, sin autenticación.
+- `GET /api/admin/catalog/sections`: `catalog.view` o `catalog.manage`.
+- `POST /api/admin/catalog/sections`: `catalog.manage`.
+- `PUT /api/admin/catalog/sections/{id}`: `catalog.manage`.
+- `PATCH /api/admin/catalog/sections/{id}/status`: `catalog.manage`.
+- `GET /api/admin/catalog/products`: `catalog.view` o `catalog.manage`.
+- `POST /api/admin/catalog/products`: `catalog.manage`.
+- `PUT /api/admin/catalog/products/{id}`: `catalog.manage`.
+- `PATCH /api/admin/catalog/products/{id}/status`: `catalog.manage`.
+- `PATCH /api/admin/catalog/products/{id}/price`: `catalog.manage`.
+
 Validación Fase 3.3.1:
 
 - Los nueve endpoints administrativos usan `RequireAuthorization` con policy de permiso.
@@ -164,7 +190,7 @@ Rol `Repartidor`:
 - Se prepara en Fase 3.3 como rol existente sin permisos y se activa en Fase 3.4.1 con permisos mínimos.
 - No recibe `orders.view`, `orders.edit` ni acceso amplio a órdenes completas.
 - Permisos implementados: `deliveries.view` y `deliveries.complete`.
-- No recibe `deliveries.assign`, `deliveries.update`, `customers.view`, `payments.view`, `users.manage` ni `roles.manage`.
+- No recibe `deliveries.assign`, `deliveries.update`, `catalog.view`, `catalog.manage`, `customers.view`, `payments.view`, `users.manage` ni `roles.manage`.
 - El backend filtra detalles/listas para que un usuario sin permiso administrativo solo vea entregas asignadas a su usuario.
 - Desde Fase 3.4.3.1 puede reintentar una entrega propia en `FailedDelivery` usando `deliveries.complete`; no puede reintentar entregas ajenas ni operar retry global sin `deliveries.update`.
 

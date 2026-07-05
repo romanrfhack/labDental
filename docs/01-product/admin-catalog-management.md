@@ -4,13 +4,15 @@ Backlog futuro para Laboratorio Dental Tláhuac.
 
 ## Estado
 
-No pertenece a la fase actual y no está implementado.
+Fase 3.5.1 ya implementó el backend/base de datos, permisos, seed inicial y endpoints de catálogo. La UI privada de administración todavía no está implementada.
 
-Esta funcionalidad será una mejora futura de la app privada bajo `/app`. El catálogo público actual en `/catalogo` debe seguir funcionando con datos estructurados del frontend en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` hasta que se diseñe, apruebe e implemente esta fase.
+El catálogo público actual en `/catalogo` sigue funcionando con datos estructurados del frontend en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` hasta Fase 3.5.3. No debe cambiarse a consumo de API antes de validar la transición.
 
 Actualización Fase 3.2: la administración de catálogo permanece como backlog. No debe bloquear el flujo operativo de órdenes, etiquetas y reparto. El MVP de etiquetas desde órdenes existentes ya quedó implementado; antes del catálogo sigue conviniendo validar impresión real y, si el cliente lo prioriza, avanzar flujo mobile-first de entrega/repartidor.
 
 Actualización Fase 3.5.0: el diseño técnico quedó documentado en `docs/01-product/catalog-admin-design.md`. La recomendación MVP es crear backend/base de datos con seed desde `catalog-data.ts`, exponer endpoints público/admin, administrar precios/secciones/productos bajo `/app` y permitir solo selección de imágenes existentes al inicio. La carga de imágenes desde admin queda recomendada para una fase posterior con política de almacenamiento y backup.
+
+Actualización Fase 3.5.1: el backend quedó implementado con `CatalogSection`, `CatalogProduct`, migración `20260705054221_AddCatalogManagement`, seed idempotente desde `catalog-data.ts`, `GET /api/catalog/public` sin autenticación y endpoints admin bajo `/api/admin/catalog/sections` y `/api/admin/catalog/products`. Los permisos reales son `catalog.view` y `catalog.manage`; Admin recibe ambos por baseline, `Repartidor` no recibe permisos de catálogo. No se creó UI admin, no se implementó upload y no se modificó `/catalogo`.
 
 ## Propósito Futuro
 
@@ -48,7 +50,7 @@ Permitir que usuarios autorizados administren secciones, productos, precios e im
 ## Seguridad
 
 - Acceso solo para usuarios autorizados.
-- Permiso futuro sugerido: `catalog.manage` o equivalente.
+- Permisos implementados: `catalog.view` para lectura admin y `catalog.manage` para mutaciones.
 - La edición no debe exponerse en el sitio público.
 - Cualquier definición de permisos, guards, sesión o autorización debe revisar `docs/03-architecture/AUTH_FLOW.md` y `docs/03-architecture/ARCHITECTURE.md` antes de implementar.
 
@@ -56,9 +58,9 @@ Permitir que usuarios autorizados administren secciones, productos, precios e im
 
 Antes de implementar se debe definir:
 
-- Migración del catálogo desde `catalog-data.ts` a backend/base de datos. Recomendación Fase 3.5.0: sí migrar en Fase 3.5.1 con seed inicial idempotente.
-- Modelo de datos para secciones, productos, precios, imágenes, estados y ordenamiento. Recomendación Fase 3.5.0: `CatalogSection` y `CatalogProduct` con `ImagePath` simple para MVP.
-- Endpoints requeridos y reglas de autorización. Recomendación Fase 3.5.0: `GET /api/catalog/public` y endpoints privados bajo `/api/admin/catalog`.
+- Migración del catálogo desde `catalog-data.ts` a backend/base de datos. Implementado en Fase 3.5.1 con seed inicial idempotente.
+- Modelo de datos para secciones, productos, precios, imágenes, estados y ordenamiento. Implementado en Fase 3.5.1 con `CatalogSection` y `CatalogProduct` con `ImagePath` simple para MVP.
+- Endpoints requeridos y reglas de autorización. Implementado en Fase 3.5.1: `GET /api/catalog/public` y endpoints privados bajo `/api/admin/catalog`.
 - Almacenamiento de imágenes: local, cloud storage o CDN. Recomendación Fase 3.5.0: mantener assets estáticos existentes para MVP y diferir upload.
 - Reglas de validación de imagen: peso, formato, dimensiones y nombres. Recomendación Fase 3.5.0: aplicar cuando se implemente Fase 3.5.4 de carga de imágenes.
 - Historial de cambios de precios, si el cliente lo requiere.
@@ -72,24 +74,25 @@ Antes de implementar se debe definir:
 
 ## Fuera De Alcance Actual
 
-- No se crean pantallas.
-- No se crean rutas.
-- No se modifica backend.
+Después de Fase 3.5.1, sigue fuera de alcance:
+
+- No se crean pantallas admin todavía.
+- No se crea ruta `/app/admin/catalogo` todavía.
 - No se modifica frontend funcional.
-- No se modifica auth.
+- No se modifica `AuthService`.
 - No se modifican guards.
-- No se modifica base de datos.
-- No se crean migraciones.
-- No se crean endpoints.
+- No se implementa upload de imágenes.
 - No se instalan dependencias.
 - No se cambia deploy.
 - No se modifica el catálogo público actual.
+- No se elimina `catalog-data.ts`.
+- No se mueve ningún asset.
 
 ## Prioridad Recomendada
 
 La secuencia sugerida después de Fase 3.5.0 es:
 
-1. Fase 3.5.1: backend catálogo administrable + migración + seed inicial desde `catalog-data.ts`.
+1. Fase 3.5.1: backend catálogo administrable + migración + seed inicial desde `catalog-data.ts`. Implementada.
 2. Fase 3.5.2: UI admin de catálogo/precios con selección de imagen existente.
 3. Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición.
 4. Fase 3.5.4: carga/reemplazo de imágenes desde admin con política de almacenamiento y backup.

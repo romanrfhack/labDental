@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using LaboratorioTlahuac.Domain.Catalog.Entities;
 using LaboratorioTlahuac.Domain.Customers.Entities;
 using LaboratorioTlahuac.Domain.Deliveries.Entities;
 using LaboratorioTlahuac.Domain.Payments.Entities;
@@ -31,6 +32,10 @@ public sealed class LaboratorioTlahuacDbContext(DbContextOptions<LaboratorioTlah
     public DbSet<Payment> Payments => Set<Payment>();
 
     public DbSet<WorkOrderDelivery> WorkOrderDeliveries => Set<WorkOrderDelivery>();
+
+    public DbSet<CatalogSection> CatalogSections => Set<CatalogSection>();
+
+    public DbSet<CatalogProduct> CatalogProducts => Set<CatalogProduct>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

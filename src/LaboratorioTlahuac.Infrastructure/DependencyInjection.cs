@@ -6,11 +6,13 @@ using LaboratorioTlahuac.Application.Abstractions.Authentication;
 using LaboratorioTlahuac.Application.Abstractions.Security;
 using LaboratorioTlahuac.Application.Abstractions.Time;
 using LaboratorioTlahuac.Application.Admin;
+using LaboratorioTlahuac.Application.Catalog;
 using LaboratorioTlahuac.Application.Customers;
 using LaboratorioTlahuac.Application.Dashboard;
 using LaboratorioTlahuac.Application.Deliveries;
 using LaboratorioTlahuac.Domain.Security.Entities;
 using LaboratorioTlahuac.Infrastructure.Admin;
+using LaboratorioTlahuac.Infrastructure.Catalog;
 using LaboratorioTlahuac.Infrastructure.Customers;
 using LaboratorioTlahuac.Infrastructure.Dashboard;
 using LaboratorioTlahuac.Infrastructure.Deliveries;
@@ -64,6 +66,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IAuthSessionService, AuthSessionService>();
         services.AddScoped<IAdminSecurityService, AdminSecurityService>();
+        services.AddScoped<ICatalogService, CatalogService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IDeliveryService, DeliveryService>();
         services.AddScoped<IWorkOrderService, WorkOrderService>();
@@ -72,6 +75,7 @@ public static class DependencyInjection
         services.AddSingleton<IWorkOrderNumberGenerator, GuidWorkOrderNumberGenerator>();
         services.AddSingleton(new SecuritySeedRuntimeOptions { IsDevelopment = isDevelopment });
         services.AddScoped<ISecuritySeeder, SecuritySeeder>();
+        services.AddScoped<ICatalogSeeder, CatalogSeeder>();
 
         return services;
     }

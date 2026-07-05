@@ -25,6 +25,8 @@ public static class Permissions
     public const string DeliveriesAssign = "deliveries.assign";
     public const string DeliveriesUpdate = "deliveries.update";
     public const string DeliveriesComplete = "deliveries.complete";
+    public const string CatalogView = "catalog.view";
+    public const string CatalogManage = "catalog.manage";
 
     public static IReadOnlyDictionary<string, string> Descriptions { get; } =
         new Dictionary<string, string>(StringComparer.Ordinal)
@@ -51,7 +53,9 @@ public static class Permissions
             [DeliveriesView] = "Ver entregas.",
             [DeliveriesAssign] = "Asignar repartidores a entregas.",
             [DeliveriesUpdate] = "Actualizar salida y notas de entregas.",
-            [DeliveriesComplete] = "Marcar entregas como entregadas o no entregadas."
+            [DeliveriesComplete] = "Marcar entregas como entregadas o no entregadas.",
+            [CatalogView] = "Ver administracion de catalogo.",
+            [CatalogManage] = "Administrar secciones, productos y precios del catalogo."
         };
 
     public static IReadOnlySet<string> All { get; } = new HashSet<string>(StringComparer.Ordinal)
@@ -78,6 +82,8 @@ public static class Permissions
         DeliveriesView,
         DeliveriesAssign,
         DeliveriesUpdate,
-        DeliveriesComplete
+        DeliveriesComplete,
+        CatalogView,
+        CatalogManage
     };
 }

@@ -2,22 +2,24 @@
 
 Fase 3.5.0 - análisis y documentación para administración de catálogo, precios e imágenes bajo `/app`.
 
+Actualización Fase 3.5.1, 2026-07-05: el backend del catálogo administrable ya quedó implementado con migración, seed inicial, permisos y endpoints. La UI admin, el consumo de `/catalogo` desde API y el upload de imágenes siguen fuera de esta fase.
+
 ## Resumen Ejecutivo
 
 El catálogo público actual de `/catalogo` ya funciona y no debe romperse. Hoy se renderiza desde datos estructurados estáticos en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` y usa assets locales en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
 
 La recomendación para el MVP administrable es migrar secciones y productos a backend/base de datos, sembrar la información inicial desde `catalog-data.ts`, exponer un endpoint público de solo lectura y crear endpoints privados de administración bajo `/api/admin/catalog`. Para reducir riesgo, el MVP debe permitir seleccionar una imagen existente por `imagePath`/`assetPath`, sin carga de archivos desde UI todavía. La carga/reemplazo de imágenes debe quedar para una fase posterior con política explícita de almacenamiento, validación y backup.
 
-Siguiente fase implementable recomendada: Fase 3.5.1 - backend catálogo administrable + migración + seed inicial.
+Siguiente fase implementable recomendada: Fase 3.5.2 - UI admin catálogo/precios con selección de imagen existente.
 
 ## Estado Actual
 
 ### Confirmaciones
 
 - `/catalogo` público usa datos frontend estáticos desde `catalog-data.ts`.
-- No existe backend de catálogo.
-- No existen entidades, migraciones ni endpoints de catálogo.
-- No existe administración de precios o imágenes bajo `/app`.
+- Existe backend de catálogo desde Fase 3.5.1.
+- Existen entidades `CatalogSection` y `CatalogProduct`, migración `20260705054221_AddCatalogManagement` y endpoints de catálogo.
+- No existe todavía UI de administración de precios o imágenes bajo `/app`.
 - No existe carga de imágenes desde `/app`.
 - Las imágenes del catálogo viven como assets locales.
 - La app privada actual vive bajo `/app`.
@@ -32,6 +34,9 @@ Siguiente fase implementable recomendada: Fase 3.5.1 - backend catálogo adminis
 - Assets: `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
 - Ruta pública de assets esperada: `/assets/catalog/products/...`.
 - Configuración Angular: hoy copia `src/assets/**/*.webp` hacia `assets`.
+- API pública implementada: `GET /api/catalog/public`.
+- API admin implementada: `/api/admin/catalog/sections` y `/api/admin/catalog/products`.
+- `/catalogo` público todavía no consume la API; sigue usando `catalog-data.ts`.
 
 ### Inventario Del Catálogo Actual
 
@@ -208,6 +213,16 @@ Fase 3.5.1 debe sembrar desde el inventario actual:
 - Mantener placeholders como productos activos sin `ImagePath`.
 - Ejecutar seed de forma idempotente para no duplicar datos.
 
+Implementación Fase 3.5.1:
+
+- Seed idempotente en `CatalogSeeder`.
+- `CatalogSeed:RunOnStartup=true`.
+- Crea datos faltantes por `Key`.
+- No sobreescribe precios, nombres, orden ni estado de registros existentes para evitar pisar cambios administrativos futuros.
+- Solo rellena `ImagePath`/`AltText` ausentes en registros existentes.
+- No depende de filesystem y no copia archivos de imagen.
+- Las rutas se guardan como paths relativos existentes de assets.
+
 ## Permisos
 
 Permisos propuestos:
@@ -215,6 +230,13 @@ Permisos propuestos:
 - `catalog.view`: permite entrar a la administración privada del catálogo en modo lectura y consultar endpoints admin de catálogo.
 - `catalog.manage`: permite crear, editar, activar/desactivar, ordenar, actualizar precios y seleccionar imágenes existentes.
 - `catalog.publish`: opcional futuro si se implementa flujo de borrador/aprobación/publicación.
+
+Implementación Fase 3.5.1:
+
+- Se implementaron `catalog.view` y `catalog.manage`.
+- No se implementó `catalog.publish`.
+- Admin recibe ambos permisos por `Permissions.All`.
+- `Repartidor` no recibe permisos `catalog.*`.
 
 Asignación inicial recomendada:
 
@@ -277,6 +299,20 @@ Base recomendada:
 ```text
 /api/admin/catalog
 ```
+
+Implementación Fase 3.5.1:
+
+- `GET /api/admin/catalog/sections`
+- `POST /api/admin/catalog/sections`
+- `PUT /api/admin/catalog/sections/{id}`
+- `PATCH /api/admin/catalog/sections/{id}/status`
+- `GET /api/admin/catalog/products`
+- `POST /api/admin/catalog/products`
+- `PUT /api/admin/catalog/products/{id}`
+- `PATCH /api/admin/catalog/products/{id}/status`
+- `PATCH /api/admin/catalog/products/{id}/price`
+- `GET /api/admin/catalog/products` soporta filtro `sectionId`.
+- No se implementaron endpoints de upload, assets allowlist, sort-order dedicado ni patch image dedicado en esta fase.
 
 Lectura:
 
@@ -508,7 +544,7 @@ Para Fase 3.5.0:
 
 Para Fase 3.5.1:
 
-- Migración de catálogo creada y revisada.
+- Migración de catálogo creada y revisada: `20260705054221_AddCatalogManagement`.
 - Seed inicial crea 12 secciones y 40 productos.
 - Seed conserva precios, keys, sort order e imágenes actuales.
 - `GET /api/catalog/public` devuelve solo activos.

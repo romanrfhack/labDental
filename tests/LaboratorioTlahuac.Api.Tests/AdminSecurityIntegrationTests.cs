@@ -195,6 +195,12 @@ public sealed class AdminSecurityIntegrationTests(TestApplicationFactory factory
             me.GetProperty("permissions").EnumerateArray(),
             permission => permission.GetString() == Permissions.DeliveriesComplete);
         Assert.Contains(
+            me.GetProperty("permissions").EnumerateArray(),
+            permission => permission.GetString() == Permissions.CatalogView);
+        Assert.Contains(
+            me.GetProperty("permissions").EnumerateArray(),
+            permission => permission.GetString() == Permissions.CatalogManage);
+        Assert.Contains(
             me.GetProperty("roles").EnumerateArray(),
             role => role.GetString() == "Admin");
     }
