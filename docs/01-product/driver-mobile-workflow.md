@@ -12,6 +12,8 @@ Actualización Fase 3.4.3: UI mobile-first de repartidor implementada bajo `/app
 
 Actualización Fase 3.4.3.1: el repartidor sin `returnUrl` interno válido queda redirigido a `/app/entregas` después del login si tiene `deliveries.view` y no tiene `reports.view`. El detalle mobile permite `Reintentar entrega` cuando la entrega propia está en `FailedDelivery`; la acción vuelve el estado a `OutForDelivery`, actualiza `OutForDeliveryAtUtc` con hora de servidor y mantiene el repartidor asignado.
 
+Actualización Fase 3.4.4: se pulió la UX operativa de `/app/entregas` y `/app/entregas/:id` sin cambiar modelo ni backend. El listado agrega filtros `Todas`, `En ruta`, `Asignadas`, `No entregadas` y `Entregadas`, contadores por estado y cards mobile-first más claras. El detalle mejora jerarquía visual, usa botones contextuales y muestra teléfono `tel:`, WhatsApp y Google Maps solo cuando existen datos.
+
 QA DEV Fase 3.4.3.1, 2026-07-05: en commit `59542efd4f57df7ba04a2444c5496040810d1702`, GitHub Actions `success`, `/health` `200` y `/api/deliveries` sin sesión `401`, el flujo de `Repartidor` quedó validado sin observaciones reportadas: login sin `returnUrl` a `/app/entregas`, carga del listado, rechazo de `/app/dashboard` a `/app/access-denied`, enlace `Ir a mi inicio`, retry de `FailedDelivery`, cierre posterior como `Entregada`, validación de `recipientName` vacío y logout.
 
 ## Objetivo
@@ -70,11 +72,19 @@ Datos mínimos por entrega:
 - Estado de entrega.
 - Número de trabajos/órdenes, si se agrupan en una entrega futura.
 
-Filtros mínimos:
+Filtros implementados en Fase 3.4.4:
 
-- Hoy.
-- Pendientes.
+- Todas.
 - En ruta.
+- Asignadas.
+- No entregadas.
+- Entregadas.
+
+Resumen implementado en Fase 3.4.4:
+
+- Asignadas.
+- En ruta.
+- No entregadas.
 - Entregadas.
 
 ## Detalle De Entrega
@@ -116,11 +126,15 @@ Acciones implementadas en UI mobile-first Fase 3.4.3:
 - Capturar `failedReason`.
 - Reintentar entrega fallida cuando la entrega propia está `FailedDelivery`.
 - Mostrar lectura sin acciones si falta `deliveries.complete`.
+- Filtrar listado por estado desde `/app/entregas`.
+- Ver contadores operativos por estado.
+- Llamar con `tel:` solo si existe teléfono.
+- Abrir WhatsApp solo si existe dato WhatsApp.
+- Abrir Google Maps solo si existe dirección.
 
 Acciones pendientes de UI mobile-first:
 
 - Marcar en ruta desde móvil si se otorga `deliveries.update` al rol.
-- Llamar/abrir WhatsApp desde contacto.
 - Escanear QR/código.
 - Capturar foto.
 - Capturar firma.
@@ -152,6 +166,7 @@ Resultado implementado en Fase 3.4.3:
 - Si el reintento vuelve a fallar, `failedReason` y `failedAtUtc` se actualizan al último intento fallido.
 - No existe historial completo de intentos todavía; queda como fase futura.
 - El QA DEV de Fase 3.4.3.1 no reportó fallas en redirect, access denied, retry, cierre posterior, validación de recibido vacío ni logout.
+- Fase 3.4.4 agrega solo pulido frontend: filtros, contadores, jerarquía visual y enlaces condicionales de contacto/mapa. No modifica reglas de autorización ni transiciones backend.
 
 ## Modelo Recomendado Fase 3.4.0
 

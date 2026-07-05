@@ -32,7 +32,7 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.4.2.1: estado de entrega en listado/grid de órdenes. Implementada el 2026-07-04; `GET /api/work-orders` incluye resumen `delivery` opcional sin cambiar `WorkOrder.Status`, `/app/ordenes` muestra `Estado` de orden y badge `Entrega` por separado, las órdenes sin entrega muestran `Sin entrega` y `FailedDelivery` se muestra como `No entregada`. No crea migraciones, endpoints nuevos, rutas nuevas ni cambios de auth/deploy.
 - Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`. Implementada el 2026-07-04; agrega rutas privadas `/app/entregas` y `/app/entregas/:id` con `deliveries.view`, listado mobile-first con `assignedToMe=true`, detalle de entrega asignada al usuario autenticado, cierre con `recipientName`, no entrega con `failedReason` y lectura sin acciones si falta `deliveries.complete`.
 - Fase 3.4.3.1: redirect post-login por permisos y reintento de entrega fallida. Implementada y validada en DEV el 2026-07-05; sin `returnUrl` interno válido el login usa la ruta inicial por permisos (`reports.view` primero y `deliveries.view -> /app/entregas` para `Repartidor`), `/app/access-denied` enlaza a `Ir a mi inicio`, y `PATCH /api/deliveries/{id}/retry` permite pasar `FailedDelivery` a `OutForDelivery` sin cambiar `WorkOrder.Status`. Admin/operación reintenta con `deliveries.update`; repartidor asignado reintenta con `deliveries.complete`. QA DEV: commit `59542efd4f57df7ba04a2444c5496040810d1702`, GitHub Actions `success`, `/health` `200`, `/api/deliveries` sin sesión `401`, resultados Repartidor/Admin OK y sin observaciones reportadas. No crea migraciones, no agrega dependencias y no toca cookies/XSRF.
-- Fase 3.4.4: pulido UX operativo de entregas. Pendiente; recomendada si el siguiente foco es refinar flujo mobile-first, mensajes, ergonomía y validaciones de operación.
+- Fase 3.4.4: pulido UX operativo de entregas. Implementada el 2026-07-05; `/app/entregas` agrega filtros `Todas`, `En ruta`, `Asignadas`, `No entregadas` y `Entregadas`, contadores por estado operativo, cards mobile-first más claras y detalle con teléfono `tel:`, WhatsApp y Google Maps solo cuando existen datos. No cambia backend, migraciones, dependencias, permisos, rutas privadas, auth, guards, cookies ni XSRF.
 - Pendiente técnico de despliegue DEV: ajustar el workflow para esperar más o validar health con reintentos más tolerantes después del restart.
 - Fase 3.5: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
 
@@ -68,9 +68,9 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Elegir entre Fase 3.4.4, pulido UX operativo de entregas, y Fase 3.5, administración de catálogo/precios/imágenes bajo `/app`.
+Fase 3.5, administración de catálogo/precios/imágenes bajo `/app`.
 
-Fase 3.4.4 debe tomar como fuentes `docs/08-qa/delivery-admin-ui-qa.md`, `docs/08-qa/driver-mobile-qa.md`, `docs/08-qa/delivery-api-qa.md`, `docs/01-product/driver-mobile-workflow.md` y `docs/01-product/operations-orders-delivery.md`. Enfoque sugerido: pulir labels/mensajes, estados vacíos, errores, ergonomía táctil, actualización visual después de acciones y revisión responsive con celular real o DevTools móvil, sin cambiar modelo ni permisos salvo decisión documentada.
+Fase 3.4.4 queda implementada como pulido UX operativo de entregas. La validación visual con celular real o DevTools móvil sigue recomendada para UAT, pero no bloquea la siguiente fase técnica.
 
 Fase 3.5 debe partir de `docs/01-product/admin-catalog-management.md` y definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 

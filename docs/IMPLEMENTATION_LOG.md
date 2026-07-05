@@ -6,6 +6,64 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-05 - Fase 3.4.4 Pulido UX Operativo De Entregas
+
+### Cambio Realizado
+
+Se implementó pulido mobile-first para el flujo operativo de repartidor en `/app/entregas` y `/app/entregas/:id`, sin cambiar backend, modelo, migraciones, rutas privadas, permisos, cookies ni XSRF.
+
+### Frontend Repartidor
+
+- `/app/entregas` agrega filtros simples por estado: `Todas`, `En ruta`, `Asignadas`, `No entregadas` y `Entregadas`.
+- El listado muestra resumen con contadores de `Asignadas`, `En ruta`, `No entregadas` y `Entregadas`.
+- Las cards mobile-first destacan folio, cliente, fecha de entrega, estado, paciente/referencia, trabajo, dirección y contacto solo cuando existen.
+- El botón principal de cada card queda más claro para abrir o registrar la entrega según el estado.
+- `/app/entregas/:id` reorganiza la jerarquía visual con bloque principal de cliente/folio/fecha/estado, datos de ruta/contacto, datos de entrega y seguimiento.
+- El detalle muestra `Llamar` con `tel:` solo si existe teléfono.
+- El detalle muestra `WhatsApp` clicable solo si existe dato de WhatsApp.
+- El detalle muestra `Abrir mapa` con Google Maps solo si existe dirección.
+- La dirección se mantiene como texto visible y no se inventa mapa cuando no hay dirección.
+- Las acciones quedan agrupadas como acción operativa contextual: `Reintentar entrega`, `Marcar entregada` o `Marcar no entregada`, según el estado permitido.
+
+### Exclusiones Confirmadas
+
+- No se tocó backend.
+- No se crearon migraciones.
+- No se instalaron dependencias.
+- No se tocó `AuthService`.
+- No se tocaron `auth.guard.ts` ni `permission.guard.ts`.
+- No se tocaron cookies ni XSRF.
+- No se relajaron permisos.
+- No se cambiaron rutas privadas.
+- No se convirtió `/dashboard` en ruta privada real.
+- No se usó `codex-cobranza-sql`.
+- No se imprimieron secretos.
+- No se ejecutó `dotnet user-secrets list`.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `314.59 kB`, sin warning de budget.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 129/129.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias ejecutadas para rutas, permisos, `Reintentar entrega`, `tel:`, `maps`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/features/deliveries/pages/delivery-list-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/deliveries/pages/delivery-detail-page.component.ts`
+- `docs/08-qa/driver-mobile-qa.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/driver-mobile-workflow.md`
+- `docs/01-product/operations-orders-delivery.md`
+
+### Siguiente Fase Recomendada
+
+Fase 3.5 - administración de catálogo/precios/imágenes.
+
 ## 2026-07-05 - QA DEV Fase 3.4.3.1 Redirect Y Reintento
 
 ### Cambio Realizado

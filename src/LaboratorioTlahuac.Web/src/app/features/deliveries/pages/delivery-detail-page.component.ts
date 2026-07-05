@@ -47,30 +47,84 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
         }
 
         <section class="driver-detail-hero">
-          <div>
+          <div class="driver-hero-copy">
             <span class="driver-section-label">Cliente</span>
             <h2>{{ delivery.customerDisplayName || 'Cliente sin nombre' }}</h2>
-            @if (delivery.customerAddress) {
-              <p>{{ delivery.customerAddress }}</p>
-            }
+            <div class="driver-hero-meta">
+              <span>Folio {{ delivery.orderNumber }}</span>
+              <span>Entrega {{ formatDateOnly(delivery.deliveryDate) }}</span>
+            </div>
           </div>
           <span [class]="deliveryStatusClass(delivery.status)">{{ delivery.statusLabel }}</span>
         </section>
 
-        <section class="driver-contact-panel">
-          <div>
-            <strong>Contacto</strong>
-            <span>{{ contactLine(delivery) }}</span>
-          </div>
-          @if (delivery.customerPhone) {
-            <a class="secondary-button" [href]="phoneHref(delivery.customerPhone)">Llamar</a>
-          }
-        </section>
+        @if (hasRouteDetails(delivery)) {
+          <section class="driver-route-panel" aria-label="Datos de ruta y contacto">
+            @if (delivery.customerAddress) {
+              <article class="driver-route-item">
+                <div>
+                  <strong>Direccion</strong>
+                  <span>{{ delivery.customerAddress }}</span>
+                </div>
+                <a
+                  class="secondary-button"
+                  [href]="mapHref(delivery.customerAddress)"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Abrir mapa
+                </a>
+              </article>
+            }
 
-        <section class="driver-detail-grid">
+            @if (hasContact(delivery)) {
+              <article class="driver-route-item">
+                <div>
+                  <strong>Contacto</strong>
+                  @if (delivery.customerContactName) {
+                    <span>{{ delivery.customerContactName }}</span>
+                  }
+                </div>
+                @if (hasPhone(delivery.customerPhone) || hasWhatsApp(delivery.customerWhatsApp)) {
+                  <div class="driver-route-actions">
+                    @if (hasPhone(delivery.customerPhone)) {
+                      <a class="secondary-button" [href]="phoneHref(delivery.customerPhone)">
+                        Llamar
+                      </a>
+                    }
+                    @if (hasWhatsApp(delivery.customerWhatsApp)) {
+                      <a
+                        class="secondary-button"
+                        [href]="whatsAppHref(delivery.customerWhatsApp)"
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        WhatsApp
+                      </a>
+                    }
+                  </div>
+                }
+              </article>
+            }
+          </section>
+        }
+
+        <section class="driver-detail-grid" aria-label="Datos de entrega">
           <div class="driver-detail-item">
             <strong>Folio</strong>
             <span>{{ delivery.orderNumber }}</span>
+          </div>
+          <div class="driver-detail-item">
+            <strong>Fecha de entrega</strong>
+            <span>{{ formatDateOnly(delivery.deliveryDate) }}</span>
+          </div>
+          <div class="driver-detail-item">
+            <strong>Estado entrega</strong>
+            <span>{{ delivery.statusLabel }}</span>
+          </div>
+          <div class="driver-detail-item">
+            <strong>Estado de orden</strong>
+            <span>{{ delivery.workOrderStatusLabel || '-' }}</span>
           </div>
           <div class="driver-detail-item">
             <strong>Paciente</strong>
@@ -80,22 +134,20 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
             <strong>Referencia</strong>
             <span>{{ delivery.referenceNumber || '-' }}</span>
           </div>
-          <div class="driver-detail-item">
-            <strong>Fecha de entrega</strong>
-            <span>{{ formatDateOnly(delivery.deliveryDate) }}</span>
-          </div>
           <div class="driver-detail-item driver-detail-wide">
             <strong>Trabajo</strong>
             <span>{{ delivery.workSummary || '-' }}</span>
           </div>
           <div class="driver-detail-item">
-            <strong>Estado de orden</strong>
-            <span>{{ delivery.workOrderStatusLabel || '-' }}</span>
-          </div>
-          <div class="driver-detail-item">
             <strong>Doctor interno</strong>
             <span>{{ delivery.internalDoctorFullName || '-' }}</span>
           </div>
+          @if (delivery.deliveryNotes) {
+            <div class="driver-detail-item driver-detail-wide">
+              <strong>Indicaciones</strong>
+              <span>{{ delivery.deliveryNotes }}</span>
+            </div>
+          }
         </section>
 
         <section class="driver-timeline-panel">
@@ -135,59 +187,67 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
         @if (!canCompleteDelivery) {
           <p class="empty-state">No tienes permiso para cerrar entregas.</p>
         } @else if (canShowCloseActions(delivery)) {
-          <section class="driver-action-stack">
-            @if (canRetryDelivery(delivery)) {
-              <section class="driver-action-panel">
-                <header>
-                  <h2>Reintentar entrega</h2>
-                  <p>La entrega volverá a marcarse como En ruta.</p>
-                </header>
-                <button class="secondary-button" type="button" [disabled]="isActionBusy()" (click)="retryDelivery(delivery)">
-                  {{ activeAction() === 'retry' ? 'Reintentando...' : 'Reintentar entrega' }}
-                </button>
-              </section>
-            }
+          <section class="driver-action-area">
+            <header class="driver-action-heading">
+              <span class="driver-section-label">Accion operativa</span>
+              <h2>{{ actionHeading(delivery) }}</h2>
+              <p>{{ actionDescription(delivery) }}</p>
+            </header>
 
-            @if (canMarkDelivered(delivery)) {
-              <form class="driver-action-panel" novalidate (ngSubmit)="markDelivered(delivery)">
-                <header>
-                  <h2>Entregada</h2>
-                </header>
-                <label class="form-field">
-                  <span>Recibio</span>
-                  <input
-                    name="recipientName"
-                    type="text"
-                    maxlength="150"
-                    required
-                    [(ngModel)]="recipientName"
-                  />
-                </label>
-                <button class="primary-button" type="submit" [disabled]="isActionBusy()">
-                  {{ activeAction() === 'complete' ? 'Guardando...' : 'Marcar entregada' }}
-                </button>
-              </form>
-            }
+            <div class="driver-action-stack">
+              @if (canRetryDelivery(delivery)) {
+                <section class="driver-action-panel is-primary">
+                  <header>
+                    <h3>Reintentar entrega</h3>
+                    <p>La entrega volvera a marcarse como En ruta.</p>
+                  </header>
+                  <button class="primary-button" type="button" [disabled]="isActionBusy()" (click)="retryDelivery(delivery)">
+                    {{ activeAction() === 'retry' ? 'Reintentando...' : 'Reintentar entrega' }}
+                  </button>
+                </section>
+              }
 
-            @if (canMarkFailed(delivery)) {
-              <form class="driver-action-panel" novalidate (ngSubmit)="markFailed(delivery)">
-                <header>
-                  <h2>No entregada</h2>
-                </header>
-                <label class="form-field">
-                  <span>Motivo</span>
-                  <textarea
-                    name="failedReason"
-                    maxlength="1000"
-                    required
-                    [(ngModel)]="failedReason"
-                  ></textarea>
-                </label>
-                <button class="danger-button" type="submit" [disabled]="isActionBusy()">
-                  {{ activeAction() === 'failed' ? 'Guardando...' : 'Marcar no entregada' }}
-                </button>
-              </form>
-            }
+              @if (canMarkDelivered(delivery)) {
+                <form class="driver-action-panel is-primary" novalidate (ngSubmit)="markDelivered(delivery)">
+                  <header>
+                    <h3>Marcar entregada</h3>
+                  </header>
+                  <label class="form-field">
+                    <span>Nombre de quien recibio</span>
+                    <input
+                      name="recipientName"
+                      type="text"
+                      maxlength="150"
+                      required
+                      [(ngModel)]="recipientName"
+                    />
+                  </label>
+                  <button class="primary-button" type="submit" [disabled]="isActionBusy()">
+                    {{ activeAction() === 'complete' ? 'Guardando...' : 'Marcar entregada' }}
+                  </button>
+                </form>
+              }
+
+              @if (canMarkFailed(delivery)) {
+                <form class="driver-action-panel is-danger" novalidate (ngSubmit)="markFailed(delivery)">
+                  <header>
+                    <h3>Marcar no entregada</h3>
+                  </header>
+                  <label class="form-field">
+                    <span>Motivo de no entrega</span>
+                    <textarea
+                      name="failedReason"
+                      maxlength="1000"
+                      required
+                      [(ngModel)]="failedReason"
+                    ></textarea>
+                  </label>
+                  <button class="danger-button" type="submit" [disabled]="isActionBusy()">
+                    {{ activeAction() === 'failed' ? 'Guardando...' : 'Marcar no entregada' }}
+                  </button>
+                </form>
+              }
+            </div>
           </section>
         } @else {
           <p class="empty-state">Esta entrega no tiene acciones disponibles.</p>
@@ -202,8 +262,9 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
     }
 
     .driver-detail-hero,
-    .driver-contact-panel,
+    .driver-route-item,
     .driver-timeline-panel,
+    .driver-action-area,
     .driver-action-panel,
     .driver-detail-item {
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.97));
@@ -220,7 +281,7 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
       padding: var(--space-5);
     }
 
-    .driver-detail-hero > div {
+    .driver-hero-copy {
       display: grid;
       gap: var(--space-2);
       min-width: 0;
@@ -235,43 +296,67 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
 
     .driver-detail-hero h2 {
       color: var(--color-neutral-900);
-      font-size: 1.42rem;
+      font-size: 1.48rem;
       line-height: 1.12;
       margin: 0;
       overflow-wrap: anywhere;
     }
 
-    .driver-detail-hero p {
-      color: var(--color-neutral-700);
-      line-height: 1.45;
-      margin: 0;
-      overflow-wrap: anywhere;
-    }
-
-    .driver-contact-panel {
-      align-items: center;
+    .driver-hero-meta {
+      color: var(--color-neutral-600);
       display: flex;
-      gap: var(--space-4);
-      justify-content: space-between;
-      padding: var(--space-4) var(--space-5);
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+      font-weight: 800;
+      gap: var(--space-2);
     }
 
-    .driver-contact-panel div {
+    .driver-hero-meta span {
+      background: rgba(233, 247, 255, 0.72);
+      border-radius: var(--radius-pill);
+      padding: 5px 9px;
+    }
+
+    .driver-route-panel {
       display: grid;
-      gap: 4px;
+      gap: var(--space-4);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .driver-route-item {
+      align-content: start;
+      display: grid;
+      gap: var(--space-4);
+      padding: var(--space-5);
+    }
+
+    .driver-route-item > div:first-child {
+      display: grid;
+      gap: 6px;
       min-width: 0;
     }
 
-    .driver-contact-panel strong,
+    .driver-route-item strong,
     .driver-detail-item strong {
       color: var(--color-neutral-700);
       font-size: 0.84rem;
     }
 
-    .driver-contact-panel span,
+    .driver-route-item span,
     .driver-detail-item span {
       color: var(--color-neutral-800);
       overflow-wrap: anywhere;
+    }
+
+    .driver-route-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .driver-route-actions .secondary-button,
+    .driver-route-item > .secondary-button {
+      min-height: 46px;
     }
 
     .driver-detail-grid {
@@ -297,9 +382,18 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
     }
 
     .driver-timeline-panel h2,
-    .driver-action-panel h2 {
-      font-size: 1rem;
+    .driver-action-heading h2,
+    .driver-action-panel h3 {
       margin: 0;
+    }
+
+    .driver-timeline-panel h2,
+    .driver-action-heading h2 {
+      font-size: 1.05rem;
+    }
+
+    .driver-action-panel h3 {
+      font-size: 1rem;
     }
 
     .driver-timeline-panel dl {
@@ -325,6 +419,24 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
       overflow-wrap: anywhere;
     }
 
+    .driver-action-area {
+      display: grid;
+      gap: var(--space-4);
+      padding: var(--space-5);
+    }
+
+    .driver-action-heading {
+      display: grid;
+      gap: var(--space-2);
+    }
+
+    .driver-action-heading p,
+    .driver-action-panel p {
+      color: var(--color-neutral-600);
+      line-height: 1.45;
+      margin: 0;
+    }
+
     .driver-action-stack {
       display: grid;
       gap: var(--space-4);
@@ -337,15 +449,17 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
       padding: var(--space-5);
     }
 
+    .driver-action-panel.is-primary {
+      border-color: rgba(84, 177, 232, 0.66);
+    }
+
+    .driver-action-panel.is-danger {
+      border-color: rgba(254, 202, 202, 0.9);
+    }
+
     .driver-action-panel header {
       display: grid;
       gap: var(--space-2);
-    }
-
-    .driver-action-panel p {
-      color: var(--color-neutral-600);
-      line-height: 1.45;
-      margin: 0;
     }
 
     .driver-action-panel textarea {
@@ -354,6 +468,7 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
     }
 
     .driver-action-panel button {
+      min-height: 48px;
       width: 100%;
     }
 
@@ -363,26 +478,28 @@ type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
     }
 
     @media (max-width: 760px) {
-      .driver-detail-hero,
-      .driver-contact-panel {
+      .driver-detail-hero {
         display: grid;
       }
 
-      .driver-contact-panel .secondary-button {
-        width: 100%;
-      }
-
+      .driver-route-panel,
       .driver-detail-grid,
       .driver-timeline-panel dl,
       .driver-action-stack {
         grid-template-columns: 1fr;
       }
+
+      .driver-route-actions .secondary-button,
+      .driver-route-item > .secondary-button {
+        width: 100%;
+      }
     }
 
     @media (max-width: 640px) {
       .driver-detail-hero,
-      .driver-contact-panel,
+      .driver-route-item,
       .driver-timeline-panel,
+      .driver-action-area,
       .driver-action-panel {
         padding: var(--space-4);
       }
@@ -510,6 +627,38 @@ export class DeliveryDetailPageComponent implements OnInit {
     return this.activeAction() !== null;
   }
 
+  actionHeading(delivery: DeliveryResponse): string {
+    if (this.canRetryDelivery(delivery)) {
+      return 'Reintentar entrega';
+    }
+
+    if (this.canMarkDelivered(delivery)) {
+      return 'Marcar entregada';
+    }
+
+    if (this.canMarkFailed(delivery)) {
+      return 'Marcar no entregada';
+    }
+
+    return 'Sin acciones disponibles';
+  }
+
+  actionDescription(delivery: DeliveryResponse): string {
+    if (this.canRetryDelivery(delivery)) {
+      return 'Vuelve a poner esta entrega En ruta para intentar cerrarla nuevamente.';
+    }
+
+    if (this.canMarkDelivered(delivery)) {
+      return 'Confirma quien recibio la entrega o registra el motivo si no se pudo entregar.';
+    }
+
+    if (this.canMarkFailed(delivery)) {
+      return 'La entrega aun no esta En ruta; solo puede registrarse como no entregada.';
+    }
+
+    return 'El estado actual no requiere accion del repartidor.';
+  }
+
   deliveryStatusClass(status: DeliveryStatus): string {
     return `status-pill delivery-status ${status}`;
   }
@@ -524,26 +673,39 @@ export class DeliveryDetailPageComponent implements OnInit {
     return year && month && day ? `${day}/${month}/${year}` : value;
   }
 
-  contactLine(delivery: DeliveryResponse): string {
-    const parts: string[] = [];
-
-    if (delivery.customerContactName) {
-      parts.push(delivery.customerContactName);
-    }
-
-    if (delivery.customerWhatsApp) {
-      parts.push(`WhatsApp ${delivery.customerWhatsApp}`);
-    }
-
-    if (delivery.customerPhone && delivery.customerPhone !== delivery.customerWhatsApp) {
-      parts.push(`Tel. ${delivery.customerPhone}`);
-    }
-
-    return parts.length > 0 ? parts.join(' | ') : '-';
+  hasRouteDetails(delivery: DeliveryResponse): boolean {
+    return !!delivery.customerAddress || this.hasContact(delivery);
   }
 
-  phoneHref(phone: string): string {
-    return `tel:${phone.replace(/\s/g, '')}`;
+  hasContact(delivery: DeliveryResponse): boolean {
+    return !!delivery.customerContactName || this.hasPhone(delivery.customerPhone) || this.hasWhatsApp(delivery.customerWhatsApp);
+  }
+
+  hasPhone(value: string | null): boolean {
+    return !!value?.trim();
+  }
+
+  hasWhatsApp(value: string | null): boolean {
+    return this.phoneDigits(value).length > 0;
+  }
+
+  phoneHref(phone: string | null): string {
+    const trimmed = phone?.trim() ?? '';
+    const digits = this.phoneDigits(trimmed);
+
+    if (!digits) {
+      return `tel:${trimmed.replace(/\s/g, '')}`;
+    }
+
+    return `tel:${trimmed.startsWith('+') ? '+' : ''}${digits}`;
+  }
+
+  whatsAppHref(whatsApp: string | null): string {
+    return `https://wa.me/${this.phoneDigits(whatsApp)}`;
+  }
+
+  mapHref(address: string | null): string {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address?.trim() ?? '')}`;
   }
 
   private loadDelivery(clearCurrent = true): void {
@@ -612,6 +774,10 @@ export class DeliveryDetailPageComponent implements OnInit {
     }
 
     return delivery.assignedToUserId.toLocaleLowerCase() === this.currentUserId.toLocaleLowerCase();
+  }
+
+  private phoneDigits(value: string | null): string {
+    return (value ?? '').replace(/\D/g, '');
   }
 
   private toLoadErrorMessage(error: HttpErrorResponse): string {
