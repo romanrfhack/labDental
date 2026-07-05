@@ -6,6 +6,63 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-05 - QA DEV Fase 3.4.4 Pulido UX Operativo De Entregas
+
+### Cambio Realizado
+
+Se documentó el cierre de QA DEV de Fase 3.4.4 para el pulido UX operativo mobile-first de entregas. No se modificó código.
+
+### Deploy Validado
+
+- GitHub Actions: `success`.
+- `/health`: `200`.
+- `/api/deliveries` sin sesión: `401`.
+
+### Resultados Repartidor
+
+- Login `Repartidor`: OK.
+- `/app/entregas` carga: OK.
+- Filtros de estado: OK.
+- Contadores: OK.
+- Cards mobile-first: OK.
+- Detalle de entrega: OK.
+- Acciones contextuales: OK.
+- Reintentar entrega: OK.
+- Marcar entregada: OK.
+- Marcar no entregada: OK.
+- `tel:` aparece solo si hay teléfono: OK.
+- WhatsApp aparece solo si existe dato: OK.
+- `Abrir mapa` aparece solo si hay dirección: OK.
+- Logout: OK.
+
+### Observaciones
+
+- Sin observaciones reportadas.
+- Sin bug claro que requiriera modificar código.
+- No se tocaron backend, migraciones, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
+- No se imprimieron secretos.
+- No se usó `codex-cobranza-sql`.
+
+### Documentación Actualizada
+
+- `docs/08-qa/driver-mobile-qa.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/driver-mobile-workflow.md`
+- `docs/01-product/operations-orders-delivery.md`
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `314.59 kB`, sin warning de budget.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 129/129.
+- `git diff --check`: correcto.
+
+### Siguiente Fase Recomendada
+
+Fase 3.5 - administración de catálogo/precios/imágenes.
+
 ## 2026-07-05 - Fase 3.4.4 Pulido UX Operativo De Entregas
 
 ### Cambio Realizado

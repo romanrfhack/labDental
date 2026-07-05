@@ -49,6 +49,39 @@ Validación local de implementación:
 
 Pendiente recomendado para UAT: revisión visual real en celular o DevTools móvil con usuario `Repartidor`.
 
+## Cierre QA DEV Fase 3.4.4 - 2026-07-05
+
+Validación manual reportada en DEV para el pulido UX operativo de entregas.
+
+Deploy validado:
+
+| Punto | Resultado |
+| --- | --- |
+| GitHub Actions | `success` |
+| `GET /health` | `200` |
+| `GET /api/deliveries` sin sesión | `401` |
+
+Resultados:
+
+| Caso | Resultado |
+| --- | --- |
+| Login `Repartidor` | OK |
+| `/app/entregas` carga correctamente | OK |
+| Filtros de estado | OK |
+| Contadores | OK |
+| Cards mobile-first | OK |
+| Detalle de entrega | OK |
+| Acciones contextuales | OK |
+| Reintentar entrega | OK |
+| Marcar entregada | OK |
+| Marcar no entregada | OK |
+| `tel:` aparece solo si hay teléfono | OK |
+| WhatsApp aparece solo si existe dato | OK |
+| `Abrir mapa` aparece solo si hay dirección | OK |
+| Logout | OK |
+
+Observaciones reportadas: sin hallazgos ni bug claro. No se modificó código, backend, migraciones, auth, guards, cookies, XSRF, deploy ni dependencias para este cierre documental.
+
 ## Rutas
 
 - `/app/entregas`: listado de entregas asignadas.
@@ -153,4 +186,4 @@ Puntos visuales:
 - El historial completo de intentos queda pendiente para fase futura.
 - No hay firma, foto, geolocalización, QR/barcode, offline/PWA ni evidencia adjunta.
 - La validación DEV de redirect/retry con usuario real `Repartidor` quedó cerrada el 2026-07-05.
-- Fase 3.4.4 quedó validada técnicamente en local; revisión visual UAT en celular real queda recomendada.
+- Fase 3.4.4 quedó validada técnicamente en local y cerrada en DEV el 2026-07-05 sin observaciones reportadas.

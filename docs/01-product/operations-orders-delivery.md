@@ -1,6 +1,6 @@
 # Operación De Órdenes, Etiquetas Y Entrega
 
-Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI, Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id`, Fase 3.4.2.1 agregó estado de entrega al listado `/app/ordenes`, Fase 3.4.3 implementó la UI mobile-first de repartidor bajo `/app/entregas`, Fase 3.4.3.1 corrigió redirect post-login por permisos, agregó reintento de entrega fallida y quedó validada en DEV el 2026-07-05, y Fase 3.4.4 pulió la UX operativa de entregas sin cambiar backend ni modelo.
+Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI, Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id`, Fase 3.4.2.1 agregó estado de entrega al listado `/app/ordenes`, Fase 3.4.3 implementó la UI mobile-first de repartidor bajo `/app/entregas`, Fase 3.4.3.1 corrigió redirect post-login por permisos, agregó reintento de entrega fallida y quedó validada en DEV el 2026-07-05, y Fase 3.4.4 pulió la UX operativa de entregas sin cambiar backend ni modelo y quedó validada en DEV sin observaciones reportadas.
 
 Diseño técnico Fase 3.4.0: `docs/01-product/delivery-mvp-design.md`.
 
@@ -219,6 +219,17 @@ Exclusiones:
 - No cambia permisos: `deliveries.view` para ver y `deliveries.complete` para cerrar/reintentar como repartidor asignado.
 - No toca `/login`, `/app/dashboard`, auth, guards, cookies, XSRF ni deploy.
 - No inventa dirección, teléfono, WhatsApp ni mapa cuando los datos no existen.
+
+### QA DEV Fase 3.4.4
+
+Validación reportada el 2026-07-05:
+
+- GitHub Actions: `success`.
+- `/health`: `200`.
+- `/api/deliveries` sin sesión: `401`.
+- Repartidor: login, carga de `/app/entregas`, filtros de estado, contadores, cards mobile-first, detalle, acciones contextuales, reintentar entrega, marcar entregada, marcar no entregada, `tel:` solo si hay teléfono, WhatsApp solo si existe dato, `Abrir mapa` solo si hay dirección y logout: OK.
+- Observaciones: sin hallazgos reportados.
+- Sin bug claro que requiriera modificar código.
 
 ### Modelo Actual De Orden
 
