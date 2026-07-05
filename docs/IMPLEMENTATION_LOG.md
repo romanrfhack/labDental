@@ -6,6 +6,84 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-05 - Fase 3.5.0 Diseño Técnico Catálogo Administrable
+
+### Cambio Realizado
+
+Se documentó el diseño técnico para administrar catálogo, precios e imágenes desde `/app`. La fase fue solo análisis y documentación.
+
+### Documentación Creada
+
+- `docs/01-product/catalog-admin-design.md`
+
+### Documentación Actualizada
+
+- `docs/01-product/admin-catalog-management.md`
+- `docs/01-product/public-website.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/README.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Inventario Confirmado
+
+- `/catalogo` público sigue usando `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
+- Catálogo actual: 12 secciones y 40 productos.
+- Productos con imagen específica: 19.
+- Productos con imagen representativa de sección: 16.
+- Productos con placeholder visual: 5.
+- Todas las imágenes referenciadas por `catalog-data.ts` existen en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
+- Assets no referenciados detectados: `metal-porcelana-corona-sing-ivoclar-1.webp` y `protesis-removible-unidad-acrilica.jpg`.
+- No existe backend de catálogo, endpoints de catálogo, administración de precios/imágenes ni carga de imágenes desde `/app`.
+
+### Diseño Propuesto
+
+- Modelo MVP: `CatalogSection` y `CatalogProduct`.
+- Campos clave: `Key`/`Slug` estable, `Price decimal(18,2)`, `IsActive`, `SortOrder`, `Description`, `ImagePath`, `CreatedAtUtc`, `UpdatedAtUtc` y `UpdatedByUserId`.
+- Permisos propuestos: `catalog.view`, `catalog.manage` y `catalog.publish` opcional.
+- Admin debe recibir permisos de catálogo por baseline de `Permissions.All`.
+- `Repartidor` no debe recibir permisos `catalog.*`.
+- Endpoint público propuesto: `GET /api/catalog/public`, sin auth y solo con secciones/productos activos.
+- Endpoints admin propuestos bajo `/api/admin/catalog`.
+- Ruta privada futura recomendada: `/app/admin/catalogo`.
+
+### Estrategia De Imágenes
+
+Recomendación MVP: mantener assets estáticos existentes y permitir seleccionar `ImagePath` desde una allowlist. La carga/reemplazo de imágenes desde admin queda diferida a Fase 3.5.4, con política de almacenamiento, validación de tipo/peso/dimensiones y backup.
+
+### Fases Propuestas
+
+- Fase 3.5.1: backend catálogo administrable + migración + seed inicial desde `catalog-data.ts`.
+- Fase 3.5.2: UI admin de catálogo/precios con selección de imagen existente.
+- Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición.
+- Fase 3.5.4: carga/reemplazo de imágenes desde admin.
+
+### Exclusiones Confirmadas
+
+- No se modificó código funcional.
+- No se crearon migraciones.
+- No se tocó backend funcional.
+- No se tocó frontend funcional.
+- No se instalaron dependencias.
+- No se tocó deploy.
+- No se usó `codex-cobranza-sql`.
+- No se imprimieron secretos.
+- No se ejecutó `dotnet user-secrets list`.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `314.59 kB`, sin warning de budget.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 129/129.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias ejecutadas: `catalog-data`, `/catalogo`, `catalog.manage`, `Catalog`, `assets/catalog`, `/dashboard`, `/app/dashboard` y `/login`.
+
+### Siguiente Fase Recomendada
+
+Fase 3.5.1 - backend catálogo administrable + migración + seed inicial.
+
 ## 2026-07-05 - QA DEV Fase 3.4.4 Pulido UX Operativo De Entregas
 
 ### Cambio Realizado

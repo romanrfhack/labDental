@@ -152,6 +152,7 @@ Backlog futuro relacionado:
 - No se implementa todavía.
 - El catálogo público actual sigue funcionando desde `catalog-data.ts` hasta que se diseñe la fase privada.
 - La edición futura deberá vivir bajo `/app`, requerir permisos administrativos y no exponerse en el sitio público.
+- Fase 3.5.0 documenta el diseño técnico en `docs/01-product/catalog-admin-design.md`. Hasta que se implemente y valide Fase 3.5.3, `/catalogo` debe seguir funcionando con `catalog-data.ts` para no romper la experiencia pública.
 
 Assets:
 

@@ -10,6 +10,8 @@ Esta funcionalidad será una mejora futura de la app privada bajo `/app`. El cat
 
 Actualización Fase 3.2: la administración de catálogo permanece como backlog. No debe bloquear el flujo operativo de órdenes, etiquetas y reparto. El MVP de etiquetas desde órdenes existentes ya quedó implementado; antes del catálogo sigue conviniendo validar impresión real y, si el cliente lo prioriza, avanzar flujo mobile-first de entrega/repartidor.
 
+Actualización Fase 3.5.0: el diseño técnico quedó documentado en `docs/01-product/catalog-admin-design.md`. La recomendación MVP es crear backend/base de datos con seed desde `catalog-data.ts`, exponer endpoints público/admin, administrar precios/secciones/productos bajo `/app` y permitir solo selección de imágenes existentes al inicio. La carga de imágenes desde admin queda recomendada para una fase posterior con política de almacenamiento y backup.
+
 ## Propósito Futuro
 
 Permitir que usuarios autorizados administren secciones, productos, precios e imágenes del catálogo desde la app privada, sin exponer edición en el sitio público.
@@ -54,11 +56,11 @@ Permitir que usuarios autorizados administren secciones, productos, precios e im
 
 Antes de implementar se debe definir:
 
-- Si el catálogo migra de `catalog-data.ts` a backend/base de datos.
-- Modelo de datos para secciones, productos, precios, imágenes, estados y ordenamiento.
-- Endpoints requeridos y reglas de autorización.
-- Almacenamiento de imágenes: local, cloud storage o CDN.
-- Reglas de validación de imagen: peso, formato, dimensiones y nombres.
+- Migración del catálogo desde `catalog-data.ts` a backend/base de datos. Recomendación Fase 3.5.0: sí migrar en Fase 3.5.1 con seed inicial idempotente.
+- Modelo de datos para secciones, productos, precios, imágenes, estados y ordenamiento. Recomendación Fase 3.5.0: `CatalogSection` y `CatalogProduct` con `ImagePath` simple para MVP.
+- Endpoints requeridos y reglas de autorización. Recomendación Fase 3.5.0: `GET /api/catalog/public` y endpoints privados bajo `/api/admin/catalog`.
+- Almacenamiento de imágenes: local, cloud storage o CDN. Recomendación Fase 3.5.0: mantener assets estáticos existentes para MVP y diferir upload.
+- Reglas de validación de imagen: peso, formato, dimensiones y nombres. Recomendación Fase 3.5.0: aplicar cuando se implemente Fase 3.5.4 de carga de imágenes.
 - Historial de cambios de precios, si el cliente lo requiere.
 - Flujo de aprobación antes de publicar cambios, si aplica.
 
@@ -85,11 +87,11 @@ Antes de implementar se debe definir:
 
 ## Prioridad Recomendada
 
-La secuencia sugerida después de Fase 3.2 es:
+La secuencia sugerida después de Fase 3.5.0 es:
 
-1. Validación real de etiquetas con impresora térmica.
-2. Fase 3.3: usuarios/roles MVP. Implementada.
-3. Fase 3.4: entrega/repartidor mobile-first.
-4. Fase 3.5: administración de catálogo.
+1. Fase 3.5.1: backend catálogo administrable + migración + seed inicial desde `catalog-data.ts`.
+2. Fase 3.5.2: UI admin de catálogo/precios con selección de imagen existente.
+3. Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición.
+4. Fase 3.5.4: carga/reemplazo de imágenes desde admin con política de almacenamiento y backup.
 
 El catálogo requiere modelo de datos, endpoints, almacenamiento de imágenes, permisos y reglas de publicación; por eso no conviene mezclarlo con el MVP operativo de entrega.

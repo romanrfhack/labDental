@@ -33,8 +33,9 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`. Implementada el 2026-07-04; agrega rutas privadas `/app/entregas` y `/app/entregas/:id` con `deliveries.view`, listado mobile-first con `assignedToMe=true`, detalle de entrega asignada al usuario autenticado, cierre con `recipientName`, no entrega con `failedReason` y lectura sin acciones si falta `deliveries.complete`.
 - Fase 3.4.3.1: redirect post-login por permisos y reintento de entrega fallida. Implementada y validada en DEV el 2026-07-05; sin `returnUrl` interno válido el login usa la ruta inicial por permisos (`reports.view` primero y `deliveries.view -> /app/entregas` para `Repartidor`), `/app/access-denied` enlaza a `Ir a mi inicio`, y `PATCH /api/deliveries/{id}/retry` permite pasar `FailedDelivery` a `OutForDelivery` sin cambiar `WorkOrder.Status`. Admin/operación reintenta con `deliveries.update`; repartidor asignado reintenta con `deliveries.complete`. QA DEV: commit `59542efd4f57df7ba04a2444c5496040810d1702`, GitHub Actions `success`, `/health` `200`, `/api/deliveries` sin sesión `401`, resultados Repartidor/Admin OK y sin observaciones reportadas. No crea migraciones, no agrega dependencias y no toca cookies/XSRF.
 - Fase 3.4.4: pulido UX operativo de entregas. Implementada y validada en DEV el 2026-07-05; `/app/entregas` agrega filtros `Todas`, `En ruta`, `Asignadas`, `No entregadas` y `Entregadas`, contadores por estado operativo, cards mobile-first más claras y detalle con teléfono `tel:`, WhatsApp y Google Maps solo cuando existen datos. QA DEV: GitHub Actions `success`, `/health` `200`, `/api/deliveries` sin sesión `401`, resultados de Repartidor OK y sin observaciones reportadas. No cambia backend, migraciones, dependencias, permisos, rutas privadas, auth, guards, cookies ni XSRF.
+- Fase 3.5.0: diseño técnico del catálogo administrable. Documentada; incluye inventario del catálogo público actual, confirma que `/catalogo` usa `catalog-data.ts`, propone modelo `CatalogSection`/`CatalogProduct`, permisos `catalog.view`/`catalog.manage` con `catalog.publish` opcional, endpoints público/admin, estrategia de imágenes y fases 3.5.1 a 3.5.4. Recomendación MVP: backend + migración + seed inicial y selección de imágenes existentes; upload queda para fase posterior con almacenamiento y backup definidos. No implementa código, migraciones, endpoints, frontend funcional, dependencias ni deploy.
 - Pendiente técnico de despliegue DEV: ajustar el workflow para esperar más o validar health con reintentos más tolerantes después del restart.
-- Fase 3.5: administración de catálogo, precios e imágenes bajo `/app`. Pendiente; requiere definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Fuente: `docs/01-product/admin-catalog-management.md`.
+- Fase 3.5.1: backend catálogo administrable + migración + seed inicial. Recomendada como siguiente fase implementable. Fuente: `docs/01-product/catalog-admin-design.md`.
 
 ## Sitio Público Institucional
 
@@ -68,11 +69,11 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Fase 3.5, administración de catálogo/precios/imágenes bajo `/app`.
+Fase 3.5.1, backend catálogo administrable + migración + seed inicial.
 
-Fase 3.4.4 queda implementada y validada en DEV como pulido UX operativo de entregas. La siguiente fase técnica recomendada es Fase 3.5.
+Fase 3.5.0 queda documentada como diseño técnico del catálogo administrable. La siguiente fase técnica recomendada es implementar backend, migración, seed inicial desde `catalog-data.ts`, permisos `catalog.view`/`catalog.manage` y endpoints público/admin sin cambiar todavía `/catalogo` público.
 
-Fase 3.5 debe partir de `docs/01-product/admin-catalog-management.md` y definir permisos administrativos, modelo de datos, endpoints, almacenamiento de imágenes y reglas de publicación antes de implementar. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
+La administración visual bajo `/app` queda para Fase 3.5.2, el consumo público de API para Fase 3.5.3 y la carga/reemplazo de imágenes desde admin para Fase 3.5.4. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
 ## Regla De Actualización
 

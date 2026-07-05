@@ -37,6 +37,7 @@ Fuente canónica de arquitectura para Laboratorio Dental Tláhuac.
 
 - Sitio público: rutas públicas dentro de `src/LaboratorioTlahuac.Web/src/app/public`.
 - Catálogo público: ruta `/catalogo`, renderizada desde data tipada local.
+- Diseño Fase 3.5.0: el catálogo administrable se documenta en `docs/01-product/catalog-admin-design.md`; hasta Fase 3.5.3, `/catalogo` debe seguir funcionando desde `catalog-data.ts`.
 - Logo público: asset local en `src/LaboratorioTlahuac.Web/src/assets/brand/logo-ldt.webp`, servido como `/assets/brand/logo-ldt.webp`.
 - Login: ruta pública `/login`, fuera del layout privado.
 - App privada: rutas bajo `/app`, renderizadas por `PrivateLayoutComponent`.
@@ -106,10 +107,12 @@ Módulos API principales:
 
 - `GET /health`
 - `/api/auth`
+- `/api/catalog/public` (propuesto Fase 3.5.1; no implementado todavía)
 - `/api/customers`
 - `/api/work-orders`
 - `/api/payments`
 - `/api/dashboard/summary`
+- `/api/admin/catalog` (propuesto Fase 3.5.1; no implementado todavía)
 - `/api/admin/users`
 - `/api/admin/roles`
 - `/api/deliveries`
@@ -132,6 +135,14 @@ Fase 3.4.1 crea una entidad separada `WorkOrderDelivery` con `DeliveryStatus` pr
 Validación DEV 2026-07-04: commit `e4c28205c6b866ab0d71edb13c49164100340b0d` desplegado correctamente mediante GitHub Actions run `28712956106`; `GET /health` responde `200` y `GET /api/deliveries` sin sesión responde `401`. Esto confirma que la Delivery API está publicada y protegida en DEV.
 
 QA DEV Fase 3.4.3.1, 2026-07-05: commit `59542efd4f57df7ba04a2444c5496040810d1702` desplegado con GitHub Actions `success`; `GET /health` responde `200`; `GET /api/deliveries` sin sesión responde `401`; Repartidor/Admin validaron redirect por permisos, access denied con `Ir a mi inicio`, retry de `FailedDelivery`, cierre posterior, `WorkOrder.Status` sin cambio por retry y refresco de grid sin observaciones reportadas.
+
+Diseño Fase 3.5.0 para catálogo administrable:
+
+- Modelo propuesto: `CatalogSection` y `CatalogProduct` con `Key`/`Slug` estable, `Price decimal(18,2)`, `IsActive`, `SortOrder`, `ImagePath`, `CreatedAtUtc`, `UpdatedAtUtc` y `UpdatedByUserId`.
+- Permisos propuestos: `catalog.view`, `catalog.manage` y `catalog.publish` opcional.
+- Endpoint público propuesto: `GET /api/catalog/public`, sin auth, solo activos y sin campos internos.
+- Endpoints privados propuestos: `/api/admin/catalog/sections`, `/api/admin/catalog/products` y mutaciones de estado, orden, precio e imagen con permisos de catálogo.
+- Estrategia MVP de imágenes: conservar assets estáticos existentes y guardar/seleccionar `ImagePath`; upload queda para fase posterior con almacenamiento y backup definidos.
 
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
 
@@ -202,6 +213,7 @@ Assets públicos del catálogo:
 - Fuente local: `src/assets/catalog/products/`.
 - Ruta servida por Angular: `/assets/catalog/products/`.
 - `angular.json` copia `src/assets/**/*.webp` para el catálogo público.
+- Fase 3.5.0 recomienda mantener estos assets como fuente de imágenes del MVP administrable y diferir upload desde `/app` hasta definir almacenamiento, validación y backup.
 
 Assets públicos de marca:
 
@@ -217,6 +229,7 @@ Detalle frontend: `docs/03-architecture/frontend-architecture.md`.
 - ORM: Entity Framework Core.
 - DbContext: `LaboratorioTlahuacDbContext`.
 - Migraciones existentes: `InitialSecurityModel`, `AddCustomersAndInternalDoctors`, `AddWorkOrders`, `AddPayments`, `AddWorkOrderDeliveries`.
+- Migración propuesta siguiente: catálogo administrable con `CatalogSections` y `CatalogProducts`, a crear en Fase 3.5.1; no existe todavía.
 - Validación local Fase 3.4.1.1: `AddWorkOrderDeliveries` aplica correctamente en SQL Server local `LaboratorioTlahuac_Dev`, creando tabla `WorkOrderDeliveries` con FK requerida a `WorkOrders`, FK opcional a `Security.Users`, índice único por `WorkOrderId` e índices por asignado, estado y creación.
 - DEV Fase 3.4.1: la migración `WorkOrderDeliveries` ya está aplicada o la base DEV está al día; la evidencia publicada es `GET /api/deliveries` sin sesión respondiendo `401` en lugar de `404`.
 - No hay auto-migración al iniciar la aplicación.

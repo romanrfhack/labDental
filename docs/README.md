@@ -17,6 +17,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 | Flujo mobile-first repartidor | `docs/01-product/driver-mobile-workflow.md` |
 | Diseño MVP entregas/repartidor | `docs/01-product/delivery-mvp-design.md` |
 | Backlog administración de catálogo | `docs/01-product/admin-catalog-management.md` |
+| Diseño técnico catálogo administrable | `docs/01-product/catalog-admin-design.md` |
 | Lineamientos de marca | `docs/02-domain/brand-guidelines.md` |
 | Arquitectura global | `docs/03-architecture/ARCHITECTURE.md` |
 | Auth y permisos | `docs/03-architecture/AUTH_FLOW.md` |
