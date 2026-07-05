@@ -129,7 +129,9 @@ API de entregas implementada en Fase 3.4.1:
 
 Fase 3.4.1 crea una entidad separada `WorkOrderDelivery` con `DeliveryStatus` propio, en lugar de mezclar asignación, salida, entrega real y receptor dentro de `WorkOrder`. Fuente: `docs/01-product/delivery-mvp-design.md`.
 
-Validación DEV 2026-07-04: commit `e4c28205c6b866ab0d71edb13c49164100340b0d` desplegado correctamente mediante GitHub Actions run `28712956106`; `GET /health` responde `200` y `GET /api/deliveries` sin sesión responde `401`. Esto confirma que la Delivery API está publicada y protegida en DEV. Queda pendiente validación manual Admin del flujo delivery.
+Validación DEV 2026-07-04: commit `e4c28205c6b866ab0d71edb13c49164100340b0d` desplegado correctamente mediante GitHub Actions run `28712956106`; `GET /health` responde `200` y `GET /api/deliveries` sin sesión responde `401`. Esto confirma que la Delivery API está publicada y protegida en DEV.
+
+QA DEV Fase 3.4.3.1, 2026-07-05: commit `59542efd4f57df7ba04a2444c5496040810d1702` desplegado con GitHub Actions `success`; `GET /health` responde `200`; `GET /api/deliveries` sin sesión responde `401`; Repartidor/Admin validaron redirect por permisos, access denied con `Ir a mi inicio`, retry de `FailedDelivery`, cierre posterior, `WorkOrder.Status` sin cambio por retry y refresco de grid sin observaciones reportadas.
 
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
 

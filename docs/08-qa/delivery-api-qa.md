@@ -12,6 +12,8 @@ Actualización operativa Fase 3.4.2, 2026-07-04: GitHub Actions para commit `97d
 
 Actualización Fase 3.4.3.1, 2026-07-05: se agrega `PATCH /api/deliveries/{id}/retry` para reintentar entregas en `FailedDelivery`. El endpoint vuelve la entrega a `OutForDelivery`, actualiza `OutForDeliveryAtUtc`, mantiene `AssignedToUserId`, no cambia `WorkOrder.Status` y permite cerrar después como `Delivered` o volver a `FailedDelivery`.
 
+Actualización QA DEV Fase 3.4.3.1, 2026-07-05: commit `59542efd4f57df7ba04a2444c5496040810d1702` desplegado con GitHub Actions `success`; `GET /health` respondió `200` y `GET /api/deliveries` sin sesión respondió `401`. La validación manual reportó OK para redirect de `Repartidor` a `/app/entregas`, access denied con `Ir a mi inicio`, retry de `FailedDelivery`, cierre posterior como `Delivered`, validación de `recipientName` vacío, logout, login Admin, carga de `/app/ordenes`, grid `Estado` + `Entrega`, sección admin `Entrega`, retry Admin sin cambiar `WorkOrder.Status` y refresco del grid.
+
 ## Modelo Y Migración
 
 - Entidad: `WorkOrderDelivery`.
@@ -152,7 +154,7 @@ Validación publicada del despliegue DEV:
 
 El `401` de `/api/deliveries` sin sesión reemplaza el `404` observado antes del deploy y confirma que `DeliveryEndpoints` están publicados en DEV con protección de sesión/permisos. La migración `WorkOrderDeliveries` ya está aplicada o la base DEV está al día.
 
-Queda pendiente la validación manual Admin en DEV:
+La validación manual DEV de Fase 3.4.3.1 quedó cerrada el 2026-07-05 con commit `59542efd4f57df7ba04a2444c5496040810d1702`. Los siguientes pasos quedan como referencia para futuras regresiones o para Fase 3.4.4:
 
 1. Iniciar sesión como Admin en DEV.
 2. Confirmar en `/api/auth/me` que Admin recibe `deliveries.assign`, `deliveries.update` y `deliveries.complete`; si el Admin ya existía, Fase 3.4.1.1 cubre la sincronización baseline de permisos faltantes.
@@ -189,12 +191,11 @@ Pendiente técnico: ajustar el workflow para esperar más tiempo o usar reintent
 
 ## Pendientes
 
-- Fase 3.4.2: UI admin de entregas desde órdenes. Implementada; pendiente validación manual DEV.
+- Fase 3.4.2: UI admin de entregas desde órdenes. Implementada; validación DEV específica de listado/detalle/retry cerrada en Fase 3.4.3.1.
 - Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`. Implementada.
-- Fase 3.4.3.1: redirect por permisos y retry de entrega fallida. Implementada; pendiente QA DEV.
-- Fase 3.4.4: QA DEV y ajustes con celular real.
+- Fase 3.4.3.1: redirect por permisos y retry de entrega fallida. Implementada y validada en DEV el 2026-07-05.
+- Fase 3.4.4: pulido UX operativo de entregas con celular real si se prioriza.
 - Ajustar workflow DEV para reducir falsos negativos de health check `502` después del restart.
-- Validación manual Admin en DEV del flujo delivery desplegado.
 - Definir si `Repartidor` debe recibir `deliveries.update` para registrar salida desde móvil.
 - Diseñar cancelación de entregas si operación la requiere.
 - Diseñar firma, foto, geolocalización, QR/barcode, evidencia y retención antes de implementarlos.

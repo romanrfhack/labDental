@@ -12,6 +12,8 @@ Actualización Fase 3.4.3: UI mobile-first de repartidor implementada bajo `/app
 
 Actualización Fase 3.4.3.1: el repartidor sin `returnUrl` interno válido queda redirigido a `/app/entregas` después del login si tiene `deliveries.view` y no tiene `reports.view`. El detalle mobile permite `Reintentar entrega` cuando la entrega propia está en `FailedDelivery`; la acción vuelve el estado a `OutForDelivery`, actualiza `OutForDeliveryAtUtc` con hora de servidor y mantiene el repartidor asignado.
 
+QA DEV Fase 3.4.3.1, 2026-07-05: en commit `59542efd4f57df7ba04a2444c5496040810d1702`, GitHub Actions `success`, `/health` `200` y `/api/deliveries` sin sesión `401`, el flujo de `Repartidor` quedó validado sin observaciones reportadas: login sin `returnUrl` a `/app/entregas`, carga del listado, rechazo de `/app/dashboard` a `/app/access-denied`, enlace `Ir a mi inicio`, retry de `FailedDelivery`, cierre posterior como `Entregada`, validación de `recipientName` vacío y logout.
+
 ## Objetivo
 
 Permitir que el repartidor consulte entregas asignadas desde celular, confirme la información esencial y registre quién recibió la entrega con fecha/hora de servidor.
@@ -149,6 +151,7 @@ Resultado implementado en Fase 3.4.3:
 - Si el reintento se cierra como entregado, `WorkOrder.Status` pasa a `Delivered`.
 - Si el reintento vuelve a fallar, `failedReason` y `failedAtUtc` se actualizan al último intento fallido.
 - No existe historial completo de intentos todavía; queda como fase futura.
+- El QA DEV de Fase 3.4.3.1 no reportó fallas en redirect, access denied, retry, cierre posterior, validación de recibido vacío ni logout.
 
 ## Modelo Recomendado Fase 3.4.0
 

@@ -1,6 +1,6 @@
 # Operación De Órdenes, Etiquetas Y Entrega
 
-Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI, Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id`, Fase 3.4.2.1 agregó estado de entrega al listado `/app/ordenes`, Fase 3.4.3 implementó la UI mobile-first de repartidor bajo `/app/entregas` y Fase 3.4.3.1 corrigió redirect post-login por permisos y agregó reintento de entrega fallida.
+Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI, Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id`, Fase 3.4.2.1 agregó estado de entrega al listado `/app/ordenes`, Fase 3.4.3 implementó la UI mobile-first de repartidor bajo `/app/entregas` y Fase 3.4.3.1 corrigió redirect post-login por permisos, agregó reintento de entrega fallida y quedó validada en DEV el 2026-07-05.
 
 Diseño técnico Fase 3.4.0: `docs/01-product/delivery-mvp-design.md`.
 
@@ -183,6 +183,17 @@ Exclusiones:
 - Sin geolocalización, firma, foto, QR ni dependencias.
 - Sin cambios de deploy.
 - Sin cambios de cookies ni XSRF.
+
+### QA DEV Fase 3.4.3.1
+
+Validación reportada el 2026-07-05 sobre el commit `59542efd4f57df7ba04a2444c5496040810d1702`:
+
+- GitHub Actions: `success`.
+- `/health`: `200`.
+- `/api/deliveries` sin sesión: `401`.
+- Repartidor: login sin `returnUrl` a `/app/entregas`, carga de `/app/entregas`, rechazo de `/app/dashboard` a `/app/access-denied`, enlace `Ir a mi inicio`, retry de `FailedDelivery`, cierre posterior como `Entregada`, validación de `recipientName` vacío y logout: OK.
+- Admin: login a `/app/dashboard`, carga de `/app/ordenes`, grid con `Estado` + `Entrega`, sección `Entrega`, retry de entrega fallida, `WorkOrder.Status` sin cambio por retry y refresco del grid: OK.
+- Observaciones: sin hallazgos reportados.
 
 ### Modelo Actual De Orden
 
@@ -521,8 +532,8 @@ Fase 3.5 catálogo:
 5. Fase 3.4.2: UI admin desde órdenes. Implementada.
 6. Fase 3.4.2.1: estado de entrega en listado `/app/ordenes`. Implementada.
 7. Fase 3.4.3: UI repartidor mobile-first. Implementada.
-8. Fase 3.4.3.1: redirect post-login por permisos y reintento de entrega fallida. Implementada.
-9. Fase 3.4.4: QA DEV y ajustes.
+8. Fase 3.4.3.1: redirect post-login por permisos y reintento de entrega fallida. Implementada y validada en DEV.
+9. Fase 3.4.4: pulido UX operativo de entregas.
 10. Fase 3.5: administración de catálogo, precios e imágenes.
 
-La siguiente fase implementable mayor es QA DEV de redirect/reintento y pulido mobile-first del flujo de reparto. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.
+La siguiente fase implementable mayor puede ser Fase 3.4.4 para pulido mobile-first del flujo de reparto, o Fase 3.5 para administración de catálogo, precios e imágenes. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.

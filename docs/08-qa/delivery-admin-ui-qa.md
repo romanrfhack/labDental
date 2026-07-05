@@ -6,6 +6,33 @@ Fase 3.4.2 agrega UI administrativa de entregas dentro del detalle de orden exis
 
 Esta pantalla admin no asigna alcance a la UI mobile-first del repartidor. La UI de repartidor quedó implementada después en Fase 3.4.3 bajo `/app/entregas` y tiene QA propio en `docs/08-qa/driver-mobile-qa.md`.
 
+## Cierre QA DEV Fase 3.4.3.1 - 2026-07-05
+
+Validación manual reportada en DEV para el flujo Admin de entregas.
+
+Deploy validado:
+
+| Punto | Resultado |
+| --- | --- |
+| Commit desplegado | `59542efd4f57df7ba04a2444c5496040810d1702` |
+| GitHub Actions | `success` |
+| `GET /health` | `200` |
+| `GET /api/deliveries` sin sesión | `401` |
+
+Resultados:
+
+| Caso | Resultado |
+| --- | --- |
+| Login Admin lleva a `/app/dashboard` | OK |
+| `/app/ordenes` carga correctamente | OK |
+| Grid muestra `Estado` de orden y `Entrega` | OK |
+| Detalle de orden muestra sección `Entrega` | OK |
+| Admin puede reintentar entrega fallida | OK |
+| Reintentar no cambia `WorkOrder.Status` | OK |
+| Grid se actualiza después de cambios de entrega | OK |
+
+Observaciones reportadas: sin hallazgos ni bug claro. No se modificó código, backend, migraciones, auth, guards, cookies, XSRF, deploy ni dependencias para este cierre documental.
+
 ## Alcance Fase 3.4.2.1
 
 El listado/grid de `/app/ordenes` debe mostrar ambos estados:
@@ -41,7 +68,7 @@ La Fase 3.4.2 quedó operativamente activa en DEV después de un ajuste manual d
 - No se imprimieron secretos.
 - No se usó `codex-cobranza-sql`.
 
-Este cierre no reemplaza el checklist manual funcional de UI. El siguiente paso recomendado es ejecutar QA manual DEV de esta pantalla con usuario Admin antes de iniciar Fase 3.4.3.
+Este cierre no reemplazaba el checklist manual funcional de UI en ese momento. La validación DEV específica de grid, sección `Entrega`, retry y refresco quedó cerrada posteriormente en Fase 3.4.3.1.
 
 ## Rutas Afectadas
 
@@ -148,7 +175,7 @@ Si el usuario no puede listar roles o usuarios, la UI muestra error controlado y
 - La sección admin no agrega firma, foto, geolocalización, QR/barcode ni evidencia.
 - La asignación depende de los endpoints admin existentes para listar usuarios/roles; no se agregó endpoint específico de repartidores.
 - No hay historial completo de intentos de entrega; queda como fase futura.
-- La validación visual con navegador real/DEV queda pendiente si no se ejecuta manualmente.
+- La validación DEV específica de listado, detalle, retry y actualización del grid quedó cerrada el 2026-07-05; el pulido UX operativo queda para Fase 3.4.4 si se prioriza.
 
 ## Relación Con Fase 3.4.3
 
@@ -157,4 +184,4 @@ Si el usuario no puede listar roles o usuarios, la UI muestra error controlado y
 - La UI de repartidor no permite asignar repartidor.
 - La UI de repartidor muestra acciones de cierre solo con `deliveries.complete`.
 - Decidir si `Repartidor` debe recibir `deliveries.update` para marcar salida desde móvil.
-- Validar en celular real con usuario `Repartidor`.
+- Validación DEV de usuario `Repartidor` para redirect, retry, cierre y logout cerrada el 2026-07-05 en `docs/08-qa/driver-mobile-qa.md`.

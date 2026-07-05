@@ -6,6 +6,74 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-05 - QA DEV Fase 3.4.3.1 Redirect Y Reintento
+
+### Cambio Realizado
+
+Se documentó el cierre de QA DEV de Fase 3.4.3.1 para redirect post-login por permisos y reintento de entrega fallida. No se modificó código.
+
+### Deploy Validado
+
+- Commit desplegado: `59542efd4f57df7ba04a2444c5496040810d1702`.
+- GitHub Actions: `success`.
+- `/health`: `200`.
+- `/api/deliveries` sin sesión: `401`.
+
+### Resultados Repartidor
+
+- Login `Repartidor` sin `returnUrl` redirige a `/app/entregas`: OK.
+- `/app/entregas` carga: OK.
+- `/app/dashboard` redirige a `/app/access-denied`: OK.
+- `/app/access-denied` muestra `Ir a mi inicio`: OK.
+- `Ir a mi inicio` lleva a `/app/entregas`: OK.
+- Entrega `FailedDelivery` muestra `Reintentar entrega`: OK.
+- `Reintentar entrega` cambia a `En ruta`: OK.
+- Después de reintentar permite marcar `Entregada`: OK.
+- Validación `recipientName` vacío: OK.
+- Logout: OK.
+
+### Resultados Admin
+
+- Login Admin lleva a `/app/dashboard`: OK.
+- `/app/ordenes` carga: OK.
+- Grid muestra `Estado` de orden y `Entrega`: OK.
+- Detalle de orden muestra sección `Entrega`: OK.
+- Admin puede reintentar entrega fallida: OK.
+- Reintentar no cambia `WorkOrder.Status`: OK.
+- Grid se actualiza después de cambios de entrega: OK.
+
+### Observaciones
+
+- Sin observaciones reportadas.
+- Sin bug claro que requiriera modificar código.
+- No se tocaron backend, migraciones, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
+- No se imprimieron secretos.
+- No se usó `codex-cobranza-sql`.
+
+### Documentación Actualizada
+
+- `docs/08-qa/driver-mobile-qa.md`
+- `docs/08-qa/delivery-admin-ui-qa.md`
+- `docs/08-qa/delivery-api-qa.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/driver-mobile-workflow.md`
+- `docs/01-product/operations-orders-delivery.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `314.59 kB`, sin warning de budget.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 129/129.
+- `git diff --check`: correcto.
+
+### Siguiente Fase Recomendada
+
+Fase 3.4.4 - pulido UX operativo de entregas, o Fase 3.5 - administración de catálogo/precios/imágenes.
+
 ## 2026-07-05 - Fase 3.4.3.1 Redirect Por Permisos Y Reintento De Entrega
 
 ### Cambio Realizado
@@ -131,7 +199,7 @@ Se corrigió el destino post-login cuando no existe `returnUrl` interno válido 
 
 ### Siguiente Fase Recomendada
 
-QA DEV de redirect/reintento con Admin y usuario `Repartidor`; después pulido mobile-first del flujo de reparto.
+QA DEV de redirect/reintento con Admin y usuario `Repartidor`; cerrado posteriormente en la entrada `2026-07-05 - QA DEV Fase 3.4.3.1 Redirect Y Reintento`. Después, Fase 3.4.4 pulido UX operativo de entregas o Fase 3.5 administración de catálogo/precios/imágenes.
 
 ## 2026-07-04 - Corrección ARIA Del Carrusel Del Catálogo Público
 
@@ -292,7 +360,7 @@ Se implementó la UI mobile-first del repartidor bajo `/app/entregas`.
 
 ### Siguiente Fase Recomendada
 
-Fase 3.4.4 - QA DEV y ajustes del flujo de entregas con Admin y usuario `Repartidor`.
+Fase 3.4.3.1 - redirect/reintento, cerrada posteriormente con QA DEV; después Fase 3.4.4 pulido UX operativo de entregas o Fase 3.5 administración de catálogo/precios/imágenes.
 
 ## 2026-07-04 - Fase 3.4.2.1 Estado De Entrega En Listado De Órdenes
 

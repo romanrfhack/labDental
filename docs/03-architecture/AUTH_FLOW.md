@@ -182,6 +182,18 @@ Rol `Repartidor`:
 
 La Fase 2.6 valida por API automatizada esta diferencia: sin sesion `/api/dashboard/summary` responde `401`; con usuario QA limitado autenticado sin `reports.view` responde `403`.
 
+Validación DEV Fase 3.4.3.1, 2026-07-05:
+
+- Commit desplegado: `59542efd4f57df7ba04a2444c5496040810d1702`.
+- GitHub Actions: `success`.
+- `/health`: `200`.
+- `/api/deliveries` sin sesión: `401`.
+- `Repartidor` sin `returnUrl` explícito entra a `/app/entregas`.
+- `Repartidor` al abrir `/app/dashboard` termina en `/app/access-denied`.
+- `/app/access-denied` muestra `Ir a mi inicio` y el enlace lleva a `/app/entregas`.
+- Logout validado sin observaciones reportadas.
+- No se tocaron cookies, XSRF, guards, backend de autenticación ni permisos para este cierre documental.
+
 ## Validación DEV Fase 3.0 - 2026-07-02
 
 Resultado manual confirmado en `https://dev.laboratoriodentaltlahuac.com`:

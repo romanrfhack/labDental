@@ -6,6 +6,36 @@ Fase 3.4.3 agrega la UI mobile-first del repartidor bajo `/app/entregas` y `/app
 
 Fase 3.4.3 no agregó backend, migraciones, endpoints, dependencias, deploy, cambios en `AuthService`, guards, cookies ni XSRF. Fase 3.4.3.1 agrega endpoint de retry y ajuste de redirect en frontend, sin migraciones, dependencias, deploy, guards, cookies ni XSRF. No permite asignar repartidor desde la UI mobile.
 
+## Cierre QA DEV Fase 3.4.3.1 - 2026-07-05
+
+Validación manual reportada en DEV para el flujo de `Repartidor`.
+
+Deploy validado:
+
+| Punto | Resultado |
+| --- | --- |
+| Commit desplegado | `59542efd4f57df7ba04a2444c5496040810d1702` |
+| GitHub Actions | `success` |
+| `GET /health` | `200` |
+| `GET /api/deliveries` sin sesión | `401` |
+
+Resultados:
+
+| Caso | Resultado |
+| --- | --- |
+| Login `Repartidor` sin `returnUrl` redirige a `/app/entregas` | OK |
+| `/app/entregas` carga correctamente | OK |
+| `/app/dashboard` redirige a `/app/access-denied` | OK |
+| `/app/access-denied` muestra `Ir a mi inicio` | OK |
+| `Ir a mi inicio` lleva a `/app/entregas` | OK |
+| Entrega `FailedDelivery` muestra `Reintentar entrega` | OK |
+| `Reintentar entrega` cambia la entrega a `En ruta` | OK |
+| Después de reintentar permite marcar `Entregada` | OK |
+| Validación de `recipientName` vacío | OK |
+| Logout | OK |
+
+Observaciones reportadas: sin hallazgos ni bug claro. No se modificó código, backend, migraciones, auth, guards, cookies, XSRF, deploy ni dependencias para este cierre documental.
+
 ## Rutas
 
 - `/app/entregas`: listado de entregas asignadas.
@@ -98,4 +128,4 @@ Puntos visuales:
 - Reintentar entrega solo aplica para `FailedDelivery`.
 - El historial completo de intentos queda pendiente para fase futura.
 - No hay firma, foto, geolocalización, QR/barcode, offline/PWA ni evidencia adjunta.
-- La validación final debe ejecutarse en DEV con usuario real `Repartidor`.
+- La validación DEV de redirect/retry con usuario real `Repartidor` quedó cerrada el 2026-07-05; el pulido UX mobile-first queda para Fase 3.4.4 si se prioriza.
