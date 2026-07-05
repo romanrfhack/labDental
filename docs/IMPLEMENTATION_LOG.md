@@ -6,6 +6,93 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-04 - Corrección ARIA Del Carrusel Del Catálogo Público
+
+### Cambio Realizado
+
+Se corrigió la semántica accesible del carrusel visual de secciones en `/catalogo` para dejar de representar el selector como tabs cuando solo existe en el DOM el contenido de la sección activa.
+
+### Frontend
+
+- El selector de secciones usa ahora `nav aria-label="Secciones del catálogo"` con botones nativos.
+- La sección activa se marca con `aria-current="true"` y conserva el resaltado visual existente.
+- Se eliminaron `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected` y `aria-controls` del carrusel/galería.
+- Se retiró el manejador de teclado específico de tabs; los botones conservan navegación nativa por teclado y las flechas anterior/siguiente mantienen sus `aria-label`.
+- Se conservaron click de selección, autoplay, pausa por hover/focus/interacción, `prefers-reduced-motion`, galería inferior, productos, precios y assets.
+
+### Exclusiones Confirmadas
+
+- No se modificó backend.
+- No se modificó base de datos.
+- No se crearon migraciones.
+- No se agregaron dependencias.
+- No se modificaron `package.json` ni `package-lock.json`.
+- No se cambiaron productos, precios ni datos del catálogo.
+- No se hizo commit ni deploy.
+
+### Validaciones Ejecutadas
+
+- `rg -n "role=\"tab|tablist|tabpanel|aria-controls|aria-selected" src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.ts`: sin coincidencias.
+- `git diff --check`: correcto.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `313.95 kB`.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 124/124.
+- Diffs de `package.json` y `package-lock.json`: sin cambios.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.ts`
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+## 2026-07-04 - Rediseño Visual Del Catálogo Público
+
+### Cambio Realizado
+
+Se rediseñó `/catalogo` para reemplazar el selector horizontal tipo chips por un explorador visual con carrusel custom de secciones y galería de imágenes por sección.
+
+### Frontend
+
+- Se implementó el estado del catálogo con Angular signals para secciones, sección activa, imagen activa, productos visibles, pausa de autoplay e imágenes faltantes.
+- El carrusel de secciones muestra tarjetas compactas con miniatura, nombre destacado y conteo de productos.
+- El carrusel oculta scrollbar visible, conserva scroll interno touch, agrega flechas discretas con `aria-label` y soporta navegación por botones/teclado.
+- El autoplay avanza cada 4 segundos, reinicia la galería al índice 0 al cambiar de sección y se pausa con hover, focus, interacción manual y `prefers-reduced-motion`.
+- La galería inferior muestra una imagen central estable con miniaturas anterior/siguiente cuando existen.
+- Las imágenes se resuelven desde `assets/catalog/products`; si una sección no tiene imagen propia usa una imagen de producto y, si tampoco existe, muestra fallback visual.
+- Los productos y precios se siguen leyendo de `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` sin cambiar nombres técnicos ni precios.
+- Los estilos del explorador se agregaron a `src/LaboratorioTlahuac.Web/src/styles.scss` bajo `.catalog-page` para evitar warning de presupuesto del SCSS del componente.
+
+### Exclusiones Confirmadas
+
+- No se modificó backend.
+- No se modificó base de datos.
+- No se crearon migraciones.
+- No se cambiaron contratos API.
+- No se agregaron dependencias npm.
+- No se modificaron `package.json` ni `package-lock.json`.
+- No se tocaron `/login`, `/app`, auth, guards, cookies, XSRF ni deploy.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `313.95 kB`, sin warning de budget.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 124/124.
+- `curl http://127.0.0.1:4200/catalogo`: `200` con dev server local.
+- Capturas Playwright móvil y desktop de `/catalogo`: generadas correctamente.
+- Pase manual interactivo completo: pendiente.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/styles.scss`
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Siguiente Mejora Recomendada
+
+Agregar swipe avanzado con cálculo de inercia y una prueba visual automatizada de `/catalogo` cuando haya navegador/headless disponible.
+
 ## 2026-07-04 - Fase 3.4.3 UI Repartidor Mobile-First
 
 ### Cambio Realizado
