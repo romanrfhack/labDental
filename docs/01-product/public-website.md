@@ -149,11 +149,12 @@ Backlog futuro relacionado:
 
 - La administración de catálogo, precios e imágenes queda documentada como fase futura separada en `docs/01-product/admin-catalog-management.md`.
 - No pertenece a la fase actual del sitio público.
-- Fase 3.5.1 ya implementó backend/API/seed de catálogo, pero no UI admin ni consumo público desde API.
+- Fase 3.5.1 ya implementó backend/API/seed de catálogo y Fase 3.5.2 ya implementó UI admin bajo `/app/admin/catalogo`, pero `/catalogo` no consume todavía la API.
 - El catálogo público actual sigue funcionando desde `catalog-data.ts` hasta que se diseñe la fase privada.
 - La edición futura deberá vivir bajo `/app`, requerir permisos administrativos y no exponerse en el sitio público.
 - Fase 3.5.0 documenta el diseño técnico en `docs/01-product/catalog-admin-design.md`. Hasta que se implemente y valide Fase 3.5.3, `/catalogo` debe seguir funcionando con `catalog-data.ts` para no romper la experiencia pública.
 - Fase 3.5.1 implementa `GET /api/catalog/public` y endpoints admin de catálogo, pero `/catalogo` no los consume todavía. La transición pública queda para Fase 3.5.3.
+- Fase 3.5.2 permite administrar secciones/productos/precios e imágenes existentes desde `/app/admin/catalogo`; no modifica la fuente actual de `/catalogo`.
 - QA DEV Fase 3.5.1 confirmó que `/catalogo` sigue respondiendo `200` y que la API pública de catálogo también responde `200` sin sesión. No se cambió la fuente de datos visible del catálogo público.
 
 Assets:
@@ -347,6 +348,7 @@ Las capacidades publicadas en Fase 1 son descripciones generales provisionales, 
 - Implementar módulos privados nuevos.
 - Implementar administración de catálogo, precios o imágenes.
 - Migrar `/catalogo` de `catalog-data.ts` a `GET /api/catalog/public` antes de Fase 3.5.3.
+- Implementar upload de imágenes desde la UI admin de catálogo antes de Fase 3.5.4.
 
 ## Secciones Faltantes O Pendientes
 

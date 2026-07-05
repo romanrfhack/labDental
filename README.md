@@ -4,7 +4,7 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 
 ## Estado Actual
 
-- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4.0 documentada como análisis técnico previo de entregas/repartidor mobile-first, Fase 3.4.1 implementada para backend delivery MVP + permisos, Fase 3.4.2 implementada para UI admin de entregas desde órdenes, Fase 3.4.3 implementada para UI mobile-first de repartidor bajo `/app/entregas`, Fase 3.4.3.1 implementada para redirect post-login por permisos y reintento de `FailedDelivery`, y Fase 3.5.1 implementada y cerrada en DEV como backend catálogo administrable + migración + seed inicial.
+- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4.0 documentada como análisis técnico previo de entregas/repartidor mobile-first, Fase 3.4.1 implementada para backend delivery MVP + permisos, Fase 3.4.2 implementada para UI admin de entregas desde órdenes, Fase 3.4.3 implementada para UI mobile-first de repartidor bajo `/app/entregas`, Fase 3.4.3.1 implementada para redirect post-login por permisos y reintento de `FailedDelivery`, Fase 3.5.1 implementada y cerrada en DEV como backend catálogo administrable + migración + seed inicial, y Fase 3.5.2 implementada como UI admin de catálogo/precios bajo `/app/admin/catalogo`.
 - Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; contenido final del cliente pendiente.
 - Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev` y validado como baseline UAT inicial en Fase 3.0 para sitio público, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login`.
 - Deploy productivo: pendiente de plataforma, DNS, HTTPS, variables y base productiva.
@@ -79,7 +79,7 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 - Dashboard privado real: `/app/dashboard`.
 - Entregas privadas de repartidor: `/app/entregas` y `/app/entregas/:id`.
 - Etiquetas privadas de órdenes: `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`.
-- Admin privado: `/app/admin/usuarios` y `/app/admin/roles`.
+- Admin privado: `/app/admin/usuarios`, `/app/admin/catalogo` y `/app/admin/roles`.
 - API: `/api/auth`, `/api/catalog/public`, `/api/customers`, `/api/work-orders`, `/api/work-orders/{id}/delivery`, `/api/deliveries`, `/api/deliveries/{id}/retry`, `/api/payments`, `/api/dashboard/summary`, `/api/admin/catalog/sections`, `/api/admin/catalog/products`, `/api/admin/users`, `/api/admin/roles`.
 - Health: `/health`.
 
@@ -102,6 +102,7 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 - QA usuarios y roles: [docs/08-qa/users-roles-qa.md](docs/08-qa/users-roles-qa.md).
 - QA API entregas: [docs/08-qa/delivery-api-qa.md](docs/08-qa/delivery-api-qa.md).
 - QA API catálogo: [docs/08-qa/catalog-api-qa.md](docs/08-qa/catalog-api-qa.md).
+- QA UI admin catálogo: [docs/08-qa/catalog-admin-ui-qa.md](docs/08-qa/catalog-admin-ui-qa.md).
 - QA UI admin entregas: [docs/08-qa/delivery-admin-ui-qa.md](docs/08-qa/delivery-admin-ui-qa.md).
 - QA UI repartidor: [docs/08-qa/driver-mobile-qa.md](docs/08-qa/driver-mobile-qa.md).
 - Diseño MVP entregas/repartidor: [docs/01-product/delivery-mvp-design.md](docs/01-product/delivery-mvp-design.md).
@@ -110,6 +111,6 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
 ## Próximos Pasos
 
-1. Implementar Fase 3.5.2: UI admin catálogo/precios con selección de imagen existente.
-2. Después implementar Fase 3.5.3: `/catalogo` público consume `GET /api/catalog/public` con transición controlada.
+1. Validar Fase 3.5.2 en DEV con Admin y usuario de solo lectura `catalog.view`.
+2. Implementar Fase 3.5.3: `/catalogo` público consume `GET /api/catalog/public` con transición controlada.
 3. Validar Fase 3.2 en DEV con impresora térmica real y ajustar escala/márgenes del navegador si hace falta.

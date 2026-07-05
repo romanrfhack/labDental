@@ -46,6 +46,9 @@ import { AuthService } from '../../core/auth/auth.service';
           @if (authService.hasPermission('users.manage')) {
             <a routerLink="/app/admin/usuarios" routerLinkActive="is-active" ariaCurrentWhenActive="page">Usuarios</a>
           }
+          @if (authService.hasPermission('catalog.view') || authService.hasPermission('catalog.manage')) {
+            <a routerLink="/app/admin/catalogo" routerLinkActive="is-active" ariaCurrentWhenActive="page">Catalogo</a>
+          }
           @if (authService.hasPermission('roles.manage')) {
             <a routerLink="/app/admin/roles" routerLinkActive="is-active" ariaCurrentWhenActive="page">Roles</a>
           }

@@ -6,6 +6,76 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-05 - Fase 3.5.2 UI Admin Catálogo
+
+### Cambio Realizado
+
+Se implementó la UI privada de administración de catálogo/precios bajo `/app/admin/catalogo`, consumiendo endpoints admin existentes y manteniendo `/catalogo` público con `catalog-data.ts`.
+
+### Frontend
+
+- Ruta privada nueva: `/app/admin/catalogo`.
+- `permissionGuard` usa `catalog.view` porque el guard actual soporta un permiso por ruta.
+- Navegación privada `Catálogo` visible con `catalog.view` o `catalog.manage`.
+- Modelos frontend `CatalogSection`, `CatalogProduct` y DTOs de create/update/status/price.
+- Servicio `AdminCatalogService` para `/api/admin/catalog/sections` y `/api/admin/catalog/products`.
+- Página standalone `AdminCatalogPageComponent` con resumen, estados loading/error/empty/success y layout mobile-first.
+- Listado, creación, edición y activación/desactivación de secciones.
+- Listado, filtros por sección/estado, creación, edición y activación/desactivación de productos.
+- Actualización rápida de precio vía `PATCH /api/admin/catalog/products/{id}/price`.
+- Validación UI de nombre requerido, sección requerida y precio no negativo.
+- Modo solo lectura para `catalog.view` sin `catalog.manage`.
+- Allowlist `catalog-image-options.ts` con assets `.webp` existentes bajo `assets/catalog/products`.
+- Preview de imagen cuando existe `imagePath` y opción para limpiar imagen.
+- Rutas heredadas `provisionales-yacket-*` y `protesis-removible-unidad-metalica..webp` quedan marcadas como observación visual sin renombrar assets.
+
+### Documentación Actualizada
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/admin-catalog-management.md`
+- `docs/01-product/catalog-admin-design.md`
+- `docs/01-product/public-website.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/08-qa/catalog-api-qa.md`
+
+### Documentación Creada
+
+- `docs/08-qa/catalog-admin-ui-qa.md`
+
+### Exclusiones Confirmadas
+
+- No se modificó `/catalogo` público.
+- No se implementó upload de imágenes.
+- No se crearon migraciones.
+- No se cambió backend.
+- No se tocó `AuthService`.
+- No se modificaron guards.
+- No se tocaron cookies ni XSRF.
+- No se tocó deploy.
+- No se instalaron dependencias.
+- No se usó `codex-cobranza-sql`.
+- No se imprimieron secretos.
+- No se ejecutó `dotnet user-secrets list`.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `317.27 kB`, sin warning de budget.
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- Primer `dotnet test` en paralelo con `dotnet build`: falló por bloqueo temporal de archivo en `obj`, patrón conocido del repo.
+- `dotnet test` en serial: correcto; Domain 1/1, Application 1/1 y API 140/140.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias: ejecutadas; los patrones sensibles se revisaron con salida limitada a nombres de archivo para no imprimir secretos.
+
+### Siguiente Fase Recomendada
+
+Fase 3.5.3 - `/catalogo` público consume `GET /api/catalog/public` con manejo de error/fallback de transición.
+
 ## 2026-07-05 - Fase 3.5.1 Backend Catálogo Administrable
 
 ### Cierre QA DEV

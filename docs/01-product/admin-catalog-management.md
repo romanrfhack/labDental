@@ -4,7 +4,7 @@ Backlog futuro para Laboratorio Dental Tláhuac.
 
 ## Estado
 
-Fase 3.5.1 ya implementó el backend/base de datos, permisos, seed inicial y endpoints de catálogo. La UI privada de administración todavía no está implementada.
+Fase 3.5.2 ya implementó la UI privada de administración de catálogo y precios bajo `/app/admin/catalogo`, consumiendo endpoints admin existentes.
 
 El catálogo público actual en `/catalogo` sigue funcionando con datos estructurados del frontend en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` hasta Fase 3.5.3. No debe cambiarse a consumo de API antes de validar la transición.
 
@@ -15,6 +15,8 @@ Actualización Fase 3.5.0: el diseño técnico quedó documentado en `docs/01-pr
 Actualización Fase 3.5.1: el backend quedó implementado con `CatalogSection`, `CatalogProduct`, migración `20260705054221_AddCatalogManagement`, seed idempotente desde `catalog-data.ts`, `GET /api/catalog/public` sin autenticación y endpoints admin bajo `/api/admin/catalog/sections` y `/api/admin/catalog/products`. Los permisos reales son `catalog.view` y `catalog.manage`; Admin recibe ambos por baseline, `Repartidor` no recibe permisos de catálogo. No se creó UI admin, no se implementó upload y no se modificó `/catalogo`.
 
 QA DEV Fase 3.5.1, 2026-07-05: commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8` desplegado con GitHub Actions `success`; `/health` respondió `200`, `/api/catalog/public` sin sesión respondió `200`, `/catalogo` respondió `200` y los endpoints admin `/api/admin/catalog/sections` y `/api/admin/catalog/products` sin sesión respondieron `401`. Observación para Fase 3.5.2: revisar visualmente rutas heredadas con `yacket` y doble punto al seleccionar imágenes existentes.
+
+Actualización Fase 3.5.2: la UI admin quedó implementada como ruta privada `/app/admin/catalogo`, protegida por `catalog.view` en el router actual. La navegación privada muestra `Catálogo` a usuarios con `catalog.view` o `catalog.manage`. Usuarios con `catalog.view` pueden listar secciones/productos en modo solo lectura; usuarios con `catalog.manage` pueden crear, editar, activar/desactivar, actualizar precios y seleccionar `imagePath` desde una allowlist local de assets `.webp` existentes. La UI muestra preview cuando hay imagen y marca rutas heredadas con `yacket` o doble punto como observación visual. No se implementó upload, no se modificó `/catalogo`, no se crearon migraciones y no se tocó backend.
 
 ## Propósito Futuro
 
@@ -76,11 +78,8 @@ Antes de implementar se debe definir:
 
 ## Fuera De Alcance Actual
 
-Después de Fase 3.5.1, sigue fuera de alcance:
+Después de Fase 3.5.2, sigue fuera de alcance:
 
-- No se crean pantallas admin todavía.
-- No se crea ruta `/app/admin/catalogo` todavía.
-- No se modifica frontend funcional.
 - No se modifica `AuthService`.
 - No se modifican guards.
 - No se implementa upload de imágenes.
@@ -95,7 +94,7 @@ Después de Fase 3.5.1, sigue fuera de alcance:
 La secuencia sugerida después de Fase 3.5.0 es:
 
 1. Fase 3.5.1: backend catálogo administrable + migración + seed inicial desde `catalog-data.ts`. Implementada.
-2. Fase 3.5.2: UI admin de catálogo/precios con selección de imagen existente.
+2. Fase 3.5.2: UI admin de catálogo/precios con selección de imagen existente. Implementada.
 3. Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición.
 4. Fase 3.5.4: carga/reemplazo de imágenes desde admin con política de almacenamiento y backup.
 

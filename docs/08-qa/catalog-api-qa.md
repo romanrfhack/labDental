@@ -101,7 +101,7 @@ Cobertura:
 ## Exclusiones Confirmadas
 
 - No se modificó `/catalogo` para consumir API.
-- No se creó UI admin.
+- La UI admin se implementó después, en Fase 3.5.2, consumiendo estos endpoints existentes.
 - No se implementó upload de imágenes.
 - No se borró `catalog-data.ts`.
 - No se movieron assets.
@@ -109,3 +109,7 @@ Cobertura:
 - No se tocó `AuthService`, guards, cookies ni XSRF.
 - No se tocó deploy.
 - No se instalaron dependencias.
+
+## Relación Con Fase 3.5.2
+
+La UI privada `/app/admin/catalogo` usa los endpoints admin documentados aquí. La validación API de autorización sigue siendo la autoridad: `catalog.view` o `catalog.manage` para lectura y `catalog.manage` para mutaciones. `/catalogo` público sigue pendiente de transición a `GET /api/catalog/public` en Fase 3.5.3.

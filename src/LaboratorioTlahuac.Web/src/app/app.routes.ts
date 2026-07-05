@@ -213,6 +213,16 @@ export const routes: Routes = [
         data: { permission: 'users.manage' },
       },
       {
+        path: 'admin/catalogo',
+        loadComponent: () =>
+          import('./features/catalog/pages/admin-catalog-page.component').then(
+            (m) => m.AdminCatalogPageComponent,
+          ),
+        canActivate: [permissionGuard],
+        data: { permission: 'catalog.view' },
+        title: 'Catalogo',
+      },
+      {
         path: 'admin/roles',
         loadComponent: () =>
           import('./admin/pages/roles/roles-page.component').then((m) => m.RolesPageComponent),

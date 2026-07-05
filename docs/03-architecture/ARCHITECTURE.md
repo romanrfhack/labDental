@@ -85,6 +85,7 @@ Rutas existentes bajo `/app`:
 - `/app/inventario`
 - `/app/proveedores`
 - `/app/admin/usuarios`
+- `/app/admin/catalogo`
 - `/app/admin/roles`
 - `/app/access-denied`
 
@@ -145,6 +146,15 @@ Catálogo administrable Fase 3.5.1:
 - Endpoint público implementado: `GET /api/catalog/public`, sin auth, solo activos y sin campos administrativos.
 - Endpoints privados implementados: `GET/POST/PUT/PATCH /api/admin/catalog/sections` y `GET/POST/PUT/PATCH /api/admin/catalog/products`; lectura requiere `catalog.view` o `catalog.manage`, mutaciones requieren `catalog.manage`.
 - Estrategia MVP de imágenes: conservar assets estáticos existentes y guardar rutas relativas seguras en `ImagePath`; upload queda para Fase 3.5.4.
+
+UI catálogo administrable Fase 3.5.2:
+
+- Ruta privada: `/app/admin/catalogo`.
+- Navegación privada: `Catálogo`, visible con `catalog.view` o `catalog.manage`.
+- Protección frontend: `permissionGuard` con `catalog.view`, porque el guard actual soporta un permiso por ruta.
+- Acciones mutables en UI: visibles solo con `catalog.manage`; backend sigue siendo autoridad.
+- Selección de imágenes: allowlist local de assets `.webp` existentes bajo `assets/catalog/products`, sin upload.
+- `/catalogo` público sigue usando `catalog-data.ts` hasta Fase 3.5.3.
 
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
 
@@ -223,6 +233,7 @@ Assets públicos del catálogo:
 - Ruta servida por Angular: `/assets/catalog/products/`.
 - `angular.json` copia `src/assets/**/*.webp` para el catálogo público.
 - Fase 3.5.1 mantiene estos assets como rutas `ImagePath` del MVP administrable y difiere upload desde `/app` hasta definir almacenamiento, validación y backup.
+- Fase 3.5.2 agrega `features/catalog/catalog-image-options.ts` como allowlist frontend de imágenes `.webp` existentes para la UI admin.
 
 Assets públicos de marca:
 

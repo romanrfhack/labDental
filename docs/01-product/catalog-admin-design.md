@@ -2,7 +2,9 @@
 
 Fase 3.5.0 - análisis y documentación para administración de catálogo, precios e imágenes bajo `/app`.
 
-Actualización Fase 3.5.1, 2026-07-05: el backend del catálogo administrable ya quedó implementado con migración, seed inicial, permisos y endpoints, y quedó cerrado en DEV en commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8`. La UI admin, el consumo de `/catalogo` desde API y el upload de imágenes siguen fuera de esta fase.
+Actualización Fase 3.5.1, 2026-07-05: el backend del catálogo administrable ya quedó implementado con migración, seed inicial, permisos y endpoints, y quedó cerrado en DEV en commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8`.
+
+Actualización Fase 3.5.2, 2026-07-05: la UI admin quedó implementada bajo `/app/admin/catalogo` con selección de imágenes existentes, preview y modo readonly. El consumo de `/catalogo` desde API y el upload de imágenes siguen fuera de esta fase.
 
 ## Resumen Ejecutivo
 
@@ -10,7 +12,7 @@ El catálogo público actual de `/catalogo` ya funciona y no debe romperse. Hoy 
 
 La recomendación para el MVP administrable es migrar secciones y productos a backend/base de datos, sembrar la información inicial desde `catalog-data.ts`, exponer un endpoint público de solo lectura y crear endpoints privados de administración bajo `/api/admin/catalog`. Para reducir riesgo, el MVP debe permitir seleccionar una imagen existente por `imagePath`/`assetPath`, sin carga de archivos desde UI todavía. La carga/reemplazo de imágenes debe quedar para una fase posterior con política explícita de almacenamiento, validación y backup.
 
-Siguiente fase implementable recomendada: Fase 3.5.2 - UI admin catálogo/precios con selección de imagen existente.
+Siguiente fase implementable recomendada: Fase 3.5.3 - `/catalogo` público consume `GET /api/catalog/public` con manejo de error/fallback.
 
 ## Estado Actual
 
@@ -19,11 +21,11 @@ Siguiente fase implementable recomendada: Fase 3.5.2 - UI admin catálogo/precio
 - `/catalogo` público usa datos frontend estáticos desde `catalog-data.ts`.
 - Existe backend de catálogo desde Fase 3.5.1.
 - Existen entidades `CatalogSection` y `CatalogProduct`, migración `20260705054221_AddCatalogManagement` y endpoints de catálogo.
-- No existe todavía UI de administración de precios o imágenes bajo `/app`.
+- Existe UI de administración de precios e imágenes existentes bajo `/app/admin/catalogo` desde Fase 3.5.2.
 - No existe carga de imágenes desde `/app`.
 - Las imágenes del catálogo viven como assets locales.
 - La app privada actual vive bajo `/app`.
-- Los módulos admin actuales son `/app/admin/usuarios` y `/app/admin/roles`.
+- Los módulos admin actuales son `/app/admin/usuarios`, `/app/admin/catalogo` y `/app/admin/roles`.
 - `/login` sigue siendo la entrada pública al sistema privado.
 - `/app/dashboard` es la ruta privada real del dashboard; `/dashboard` no es ruta privada real.
 
@@ -462,6 +464,20 @@ Alcance:
 - Permitir actualizar precios.
 - Permitir seleccionar `imagePath` existente desde allowlist.
 
+Implementación Fase 3.5.2:
+
+- Ruta privada `/app/admin/catalogo` con `permissionGuard` usando `catalog.view`, porque el guard frontend actual soporta un permiso por ruta.
+- Navegación privada `Catálogo` visible para usuarios con `catalog.view` o `catalog.manage`.
+- Servicio frontend `AdminCatalogService` para consumir `/api/admin/catalog/sections` y `/api/admin/catalog/products`.
+- Modelos frontend `CatalogSection`, `CatalogProduct` y DTOs de create/update/status/price.
+- UI mobile-first para listar, crear, editar, activar/desactivar secciones y productos.
+- Filtros de productos por sección y estado.
+- Actualización rápida de precio mediante `PATCH /api/admin/catalog/products/{id}/price`.
+- Allowlist local `catalog-image-options.ts` basada en assets `.webp` existentes bajo `assets/catalog/products`.
+- Preview de imagen y opción de limpiar `imagePath`.
+- Modo solo lectura para usuarios con `catalog.view` sin `catalog.manage`.
+- Rutas heredadas `provisionales-yacket-*` y `protesis-removible-unidad-metalica..webp` se marcan como observación visual y no se renombran.
+
 Exclusiones:
 
 - No cambiar `/catalogo` público todavía.
@@ -555,6 +571,21 @@ Para Fase 3.5.1:
 - `/catalogo` público sigue funcionando con data estática porque aún no se migra el frontend público.
 - QA DEV cerrado el 2026-07-05: GitHub Actions `success`, `/health` `200`, `/api/catalog/public` sin sesión `200`, endpoints admin sin sesión `401` y `/catalogo` público `200`.
 
+Para Fase 3.5.2:
+
+- `/app/admin/catalogo` existe bajo `/app`.
+- La navegación privada muestra `Catálogo` solo a usuarios con `catalog.view` o `catalog.manage`.
+- La ruta usa `catalog.view`; acciones mutables se muestran solo con `catalog.manage`.
+- Admin puede listar secciones y productos, crear, editar, activar/desactivar y actualizar precios.
+- Admin puede seleccionar `imagePath` desde assets existentes y ver preview.
+- Usuario con `catalog.view` sin `catalog.manage` queda en solo lectura.
+- `Repartidor` no ve navegación de catálogo y queda sin acceso por falta de permiso.
+- Usuario sin sesión sigue redirigido a `/login`.
+- Usuario sin permiso sigue redirigido a `/app/access-denied`.
+- `/catalogo` público sigue usando `catalog-data.ts`.
+- No hay upload de imágenes.
+- No hay migraciones ni cambios backend.
+
 ## Qué No Implementar Todavía
 
 - Upload de imágenes en MVP inicial.
@@ -581,6 +612,6 @@ Antes de exponer cambios administrables al público, validar:
 
 ## Siguiente Fase Implementable
 
-Fase 3.5.2 - UI admin catálogo/precios con selección de imagen existente.
+Fase 3.5.3 - `/catalogo` público consume `GET /api/catalog/public` con manejo de error/fallback.
 
-La implementación debe crear la UI privada bajo `/app/admin/catalogo`, consumir los endpoints admin existentes, proteger la ruta con `catalog.view`, restringir mutaciones a `catalog.manage` y mantener `/catalogo` público sin cambios hasta Fase 3.5.3.
+La implementación debe mantener el layout público actual, manejar errores de API de forma controlada y conservar fallback o plan de reversa con `catalog-data.ts` hasta cerrar validación DEV.

@@ -145,6 +145,7 @@ Permisos por ruta privada:
 - `/app/inventario`: `inventory.view`
 - `/app/proveedores`: `suppliers.view`
 - `/app/admin/usuarios`: `users.manage`
+- `/app/admin/catalogo`: `catalog.view`
 - `/app/admin/roles`: `roles.manage`
 
 Permisos por endpoints administrativos:
@@ -175,6 +176,13 @@ Permisos por endpoints catálogo:
 - `PUT /api/admin/catalog/products/{id}`: `catalog.manage`.
 - `PATCH /api/admin/catalog/products/{id}/status`: `catalog.manage`.
 - `PATCH /api/admin/catalog/products/{id}/price`: `catalog.manage`.
+
+Permisos frontend Fase 3.5.2:
+
+- La navegación privada `Catálogo` se muestra con `catalog.view` o `catalog.manage`.
+- La ruta `/app/admin/catalogo` usa `catalog.view` por limitación actual de `permissionGuard` a un permiso por ruta.
+- Las acciones de crear, editar, activar/desactivar y actualizar precio se ocultan si falta `catalog.manage`.
+- El backend mantiene la autorización real para lectura y mutaciones.
 
 Validación Fase 3.3.1:
 
