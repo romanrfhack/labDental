@@ -11,7 +11,7 @@ import { AuthService } from '../../core/auth/auth.service';
     <div class="private-shell">
       <aside class="private-sidebar">
         <div class="sidebar-brand-block">
-          <a routerLink="/app/dashboard" class="brand">LDT Admin</a>
+          <a [routerLink]="authService.getDefaultPrivateRoute()" class="brand">LDT Admin</a>
           <p class="brand-caption">Operacion interna del laboratorio</p>
         </div>
         <nav class="private-nav">

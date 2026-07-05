@@ -74,3 +74,7 @@ export interface DeliveryFailedRequest {
   failedReason: string;
   deliveryNotes?: string | null;
 }
+
+export interface DeliveryRetryRequest {
+  deliveryNotes?: string | null;
+}

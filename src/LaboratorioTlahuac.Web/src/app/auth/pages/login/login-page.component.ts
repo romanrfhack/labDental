@@ -4,13 +4,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 
+import { AuthUser } from '../../../core/auth/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
-
-const defaultPrivateReturnUrl = '/app/dashboard';
 
 export function getSafePrivateReturnUrl(returnUrl: string | null) {
   if (!returnUrl) {
-    return defaultPrivateReturnUrl;
+    return null;
   }
 
   const value = returnUrl.trim();
@@ -21,7 +20,7 @@ export function getSafePrivateReturnUrl(returnUrl: string | null) {
     /^[a-z][a-z0-9+.-]*:/i.test(value) ||
     value.startsWith('//')
   ) {
-    return defaultPrivateReturnUrl;
+    return null;
   }
 
   const isPrivateRoute =
@@ -30,7 +29,7 @@ export function getSafePrivateReturnUrl(returnUrl: string | null) {
     value.startsWith('/app?') ||
     value.startsWith('/app#');
 
-  return isPrivateRoute ? value : defaultPrivateReturnUrl;
+  return isPrivateRoute ? value : null;
 }
 
 @Component({
@@ -110,7 +109,7 @@ export class LoginPageComponent {
       .login(this.form.controls.email.value, this.form.controls.password.value)
       .pipe(finalize(() => (this.isSubmitting = false)))
       .subscribe({
-        next: () => this.router.navigateByUrl(this.getReturnUrl()),
+        next: (user) => this.router.navigateByUrl(this.getReturnUrl(user)),
         error: (error: HttpErrorResponse) => {
           this.errorMessage =
             error.status === 423
@@ -120,9 +119,9 @@ export class LoginPageComponent {
       });
   }
 
-  private getReturnUrl() {
+  private getReturnUrl(user: AuthUser) {
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
-    return getSafePrivateReturnUrl(returnUrl);
+    return getSafePrivateReturnUrl(returnUrl) ?? this.authService.getDefaultPrivateRoute(user);
   }
 }

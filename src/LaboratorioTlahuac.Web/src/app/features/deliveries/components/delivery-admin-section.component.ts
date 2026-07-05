@@ -10,7 +10,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { DeliveryResponse, DeliveryStatus } from '../delivery.models';
 import { DeliveryService } from '../delivery.service';
 
-type DeliveryAction = 'create' | 'assign' | 'outForDelivery' | 'complete' | 'failed';
+type DeliveryAction = 'create' | 'assign' | 'outForDelivery' | 'complete' | 'failed' | 'retry';
 
 @Component({
   selector: 'app-delivery-admin-section',
@@ -155,6 +155,25 @@ type DeliveryAction = 'create' | 'assign' | 'outForDelivery' | 'complete' | 'fai
                 </section>
               }
 
+              @if (canUpdateDelivery && canRetryDelivery(delivery)) {
+                <section class="delivery-action-panel">
+                  <header>
+                    <h3>Reintentar entrega</h3>
+                    <p>La entrega volverá a marcarse como En ruta.</p>
+                  </header>
+                  <div class="page-actions">
+                    <button
+                      class="secondary-button"
+                      type="button"
+                      [disabled]="isActionBusy()"
+                      (click)="retryDelivery(delivery)"
+                    >
+                      {{ activeAction() === 'retry' ? 'Reintentando...' : 'Reintentar entrega' }}
+                    </button>
+                  </div>
+                </section>
+              }
+
               @if (canCompleteDelivery && canMarkDelivered(delivery)) {
                 <section class="delivery-action-panel">
                   <header>
@@ -283,6 +302,12 @@ type DeliveryAction = 'create' | 'assign' | 'outForDelivery' | 'complete' | 'fai
     }
 
     .delivery-action-panel h3 {
+      margin: 0;
+    }
+
+    .delivery-action-panel p {
+      color: var(--color-neutral-600);
+      line-height: 1.45;
       margin: 0;
     }
 
@@ -442,9 +467,22 @@ export class DeliveryAdminSectionComponent implements OnInit {
     );
   }
 
+  retryDelivery(delivery: DeliveryResponse): void {
+    if (!window.confirm('Reintentar esta entrega y volver a ponerla en ruta?')) {
+      return;
+    }
+
+    this.runDeliveryAction(
+      'retry',
+      () => this.deliveryService.retry(delivery.id, { deliveryNotes: null }),
+      'Entrega marcada como En ruta.'
+    );
+  }
+
   hasAnyAction(delivery: DeliveryResponse): boolean {
     return (this.canAssignDelivery && this.canAssignCurrentDelivery(delivery))
       || (this.canUpdateDelivery && this.canMarkOutForDelivery(delivery))
+      || (this.canUpdateDelivery && this.canRetryDelivery(delivery))
       || (this.canCompleteDelivery && this.canMarkDelivered(delivery))
       || (this.canCompleteDelivery && this.canMarkFailed(delivery));
   }
@@ -455,6 +493,10 @@ export class DeliveryAdminSectionComponent implements OnInit {
 
   canMarkOutForDelivery(delivery: DeliveryResponse): boolean {
     return delivery.status === 'Assigned';
+  }
+
+  canRetryDelivery(delivery: DeliveryResponse): boolean {
+    return delivery.status === 'FailedDelivery';
   }
 
   canMarkDelivered(delivery: DeliveryResponse): boolean {
@@ -665,6 +707,18 @@ export class DeliveryAdminSectionComponent implements OnInit {
   }
 
   private toDeliveryActionErrorMessage(error: HttpErrorResponse, action: DeliveryAction): string {
+    if (action === 'retry') {
+      if (error.status === 403) {
+        return 'No tienes permiso para realizar esta acción.';
+      }
+
+      if (error.status === 404) {
+        return 'Entrega no encontrada.';
+      }
+
+      return 'No se pudo reintentar la entrega.';
+    }
+
     if (error.status === 400) {
       if (action === 'complete') {
         return 'Captura quién recibió la entrega.';

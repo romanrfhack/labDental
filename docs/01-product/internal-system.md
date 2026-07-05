@@ -177,7 +177,7 @@ Estado: validado por código, build, tests y shell Angular; login real quedó pe
 - Usuario sin sesión en `/app/dashboard` debe ser redirigido a `/login?returnUrl=%2Fapp%2Fdashboard`.
 - Usuario autenticado sin `reports.view` debe ir a `/app/access-denied`, no a `/login`.
 - `/dashboard` no es ruta privada real.
-- `returnUrl` posterior al login solo acepta rutas internas seguras bajo `/app`; destinos externos o inválidos usan fallback `/app/dashboard`.
+- `returnUrl` posterior al login solo acepta rutas internas seguras bajo `/app`; destinos externos o inválidos quedan bloqueados y usan la ruta inicial por permisos desde Fase 3.4.3.1.
 - La validación manual posterior confirmó inicio de sesión con Admin local y acceso a `/app/dashboard`; `GET /api/auth/me` autenticado y logout independiente quedan como evidencia opcional para Fase 2.2.
 
 ## Validación De Acceso Fase 2.1

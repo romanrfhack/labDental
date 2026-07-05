@@ -38,4 +38,9 @@ public interface IDeliveryService
         Guid id,
         DeliveryFailedRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<DeliveryServiceResult<DeliveryResponse>> RetryAsync(
+        Guid id,
+        DeliveryRetryRequest request,
+        CancellationToken cancellationToken = default);
 }

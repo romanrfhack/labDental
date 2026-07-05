@@ -6,6 +6,133 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-05 - Fase 3.4.3.1 Redirect Por Permisos Y Reintento De Entrega
+
+### Cambio Realizado
+
+Se corrigió el destino post-login cuando no existe `returnUrl` interno válido explícito y se agregó reintento para entregas en `FailedDelivery`.
+
+### Frontend Auth
+
+- `AuthService` agrega helper de ruta inicial por permisos.
+- Prioridad implementada: `reports.view`, `deliveries.view`, `orders.view`, `customers.view`, `payments.view`, `inventory.view`, `suppliers.view`, `users.manage`, `roles.manage`.
+- `/login` conserva `returnUrl` interno válido.
+- Si no hay `returnUrl` válido, el usuario entra a su ruta inicial por permisos.
+- Un usuario `Repartidor` con `deliveries.view` y sin `reports.view` entra a `/app/entregas`.
+- `returnUrl` externo, protocol-relative, con esquema, backslash, espacios o fuera de `/app` sigue bloqueado.
+- `/app/access-denied` usa la misma ruta inicial por permisos y muestra `Ir a mi inicio`.
+- El enlace de marca del layout privado apunta también a la ruta inicial por permisos.
+
+### Backend Delivery
+
+- `WorkOrderDelivery` agrega transición `Retry`.
+- Se agrega contrato `DeliveryRetryRequest`.
+- Se agrega `IDeliveryService.RetryAsync`.
+- Se agrega `PATCH /api/deliveries/{id}/retry`.
+- Reintento permitido: `FailedDelivery -> OutForDelivery`.
+- Reintento rechazado si la entrega no está en `FailedDelivery`.
+- Reintento rechazado si la orden está `Cancelled`.
+- Reintento mantiene `AssignedToUserId`.
+- Reintento actualiza `OutForDeliveryAtUtc` con hora de servidor.
+- Reintento no cambia `WorkOrder.Status`.
+- Reintento limpia el estado fallido activo; si vuelve a fallar, `failedReason`/`failedAtUtc` representan el último intento fallido.
+
+### Permisos
+
+- Admin/operación puede reintentar con `deliveries.update`.
+- Repartidor asignado puede reintentar su propia entrega fallida con `deliveries.complete`.
+- Repartidor no asignado no puede reintentar entrega ajena.
+- Usuario sin sesión recibe `401`.
+- Usuario sin permisos recibe `403`.
+
+### Frontend Entregas
+
+- `DeliveryService` frontend agrega `retry`.
+- La sección `Entrega` de `/app/ordenes/:id` muestra botón `Reintentar entrega` cuando la entrega está `FailedDelivery` y el usuario tiene `deliveries.update`.
+- El detalle mobile `/app/entregas/:id` muestra botón `Reintentar entrega` cuando la entrega propia está `FailedDelivery` y el usuario tiene `deliveries.complete`.
+- Ambas UIs muestran el texto `La entrega volverá a marcarse como En ruta.`.
+- Ambas UIs deshabilitan botones durante la petición y muestran `No se pudo reintentar la entrega.` ante error de retry.
+- Después de retry, la entrega se refresca y queda como `OutForDelivery`.
+
+### Pruebas
+
+- `DeliveryIntegrationTests` cubre:
+  - Admin puede reintentar entrega fallida.
+  - Repartidor asignado puede reintentar su entrega fallida.
+  - Repartidor no asignado no puede reintentar entrega ajena.
+  - Reintentar entrega no fallida devuelve `400`.
+  - Reintentar entrega de orden cancelada devuelve `409`.
+  - Reintento deja `status = OutForDelivery`.
+  - Entrega reintentada puede cerrarse como `Delivered` con `recipientName`.
+  - Reintento no cambia `WorkOrder.Status`.
+  - Sin sesión devuelve `401`.
+  - Sin permiso devuelve `403`.
+
+### Documentación
+
+- Se documenta que `Repartidor` ahora redirige a `/app/entregas` después del login cuando no hay `returnUrl` explícito.
+- Se documenta que `/app/access-denied` usa ruta inicial por permisos.
+- Se documenta que `FailedDelivery` puede reintentarse.
+- Se documenta que no hay historial completo de intentos todavía.
+- Se documenta que `WorkOrder.Status` no se mezcla con `DeliveryStatus`.
+- Se documentan criterios de validación DEV para redirect/reintento.
+
+### Exclusiones Confirmadas
+
+- No se tocaron cookies.
+- No se tocó XSRF.
+- No se relajaron guards.
+- No se creó migración.
+- No se instalaron dependencias.
+- No se tocó deploy.
+- No se usó `codex-cobranza-sql`.
+- No se imprimieron secretos.
+- No se ejecutó `dotnet user-secrets list`.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 129/129.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `314.59 kB`.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias ejecutadas para `retry`, `Reintentar entrega`, `FailedDelivery`, `deliveries.complete`, `deliveries.update`, `/app/entregas`, `/app/access-denied`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`.
+- Las búsquedas de patrones sensibles se ejecutaron con salida limitada a archivos para no imprimir valores.
+
+### Archivos Modificados
+
+- `src/LaboratorioTlahuac.Api/Endpoints/DeliveryEndpoints.cs`
+- `src/LaboratorioTlahuac.Application/Deliveries/DeliveryContracts.cs`
+- `src/LaboratorioTlahuac.Application/Deliveries/IDeliveryService.cs`
+- `src/LaboratorioTlahuac.Domain/Deliveries/Entities/WorkOrderDelivery.cs`
+- `src/LaboratorioTlahuac.Infrastructure/Deliveries/DeliveryService.cs`
+- `tests/LaboratorioTlahuac.Api.Tests/DeliveryIntegrationTests.cs`
+- `src/LaboratorioTlahuac.Web/src/app/core/auth/auth.service.ts`
+- `src/LaboratorioTlahuac.Web/src/app/auth/pages/login/login-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/admin/pages/access-denied/access-denied-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/admin/layout/private-layout.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/deliveries/delivery.models.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/deliveries/delivery.service.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/deliveries/components/delivery-admin-section.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/features/deliveries/pages/delivery-detail-page.component.ts`
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/driver-mobile-workflow.md`
+- `docs/01-product/delivery-mvp-design.md`
+- `docs/01-product/operations-orders-delivery.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/03-architecture/AUTH_FLOW.md`
+- `docs/08-qa/driver-mobile-qa.md`
+- `docs/08-qa/delivery-admin-ui-qa.md`
+- `docs/08-qa/delivery-api-qa.md`
+
+### Siguiente Fase Recomendada
+
+QA DEV de redirect/reintento con Admin y usuario `Repartidor`; después pulido mobile-first del flujo de reparto.
+
 ## 2026-07-04 - Corrección ARIA Del Carrusel Del Catálogo Público
 
 ### Cambio Realizado

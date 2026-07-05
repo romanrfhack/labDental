@@ -16,6 +16,8 @@ public sealed record DeliveryCompleteRequest(string? RecipientName, string? Deli
 
 public sealed record DeliveryFailedRequest(string? FailedReason, string? DeliveryNotes);
 
+public sealed record DeliveryRetryRequest(string? DeliveryNotes);
+
 public sealed record DeliveryPagedResponse<T>(
     IReadOnlyCollection<T> Items,
     int Page,

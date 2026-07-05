@@ -10,6 +10,8 @@ Actualización Fase 3.4.2: UI admin de entregas implementada desde `/app/ordenes
 
 Actualización Fase 3.4.3: UI mobile-first de repartidor implementada bajo `/app/entregas` y `/app/entregas/:id`. El listado consume `GET /api/deliveries?assignedToMe=true`; el detalle valida que la entrega cargada esté asignada al usuario autenticado antes de mostrar datos; `deliveries.complete` habilita marcar entregada con `recipientName` o no entregada con `failedReason`.
 
+Actualización Fase 3.4.3.1: el repartidor sin `returnUrl` interno válido queda redirigido a `/app/entregas` después del login si tiene `deliveries.view` y no tiene `reports.view`. El detalle mobile permite `Reintentar entrega` cuando la entrega propia está en `FailedDelivery`; la acción vuelve el estado a `OutForDelivery`, actualiza `OutForDeliveryAtUtc` con hora de servidor y mantiene el repartidor asignado.
+
 ## Objetivo
 
 Permitir que el repartidor consulte entregas asignadas desde celular, confirme la información esencial y registre quién recibió la entrega con fecha/hora de servidor.
@@ -110,6 +112,7 @@ Acciones implementadas en UI mobile-first Fase 3.4.3:
 - Capturar `recipientName`.
 - Marcar no entregada cuando la entrega está `Assigned` u `OutForDelivery`.
 - Capturar `failedReason`.
+- Reintentar entrega fallida cuando la entrega propia está `FailedDelivery`.
 - Mostrar lectura sin acciones si falta `deliveries.complete`.
 
 Acciones pendientes de UI mobile-first:
@@ -119,6 +122,7 @@ Acciones pendientes de UI mobile-first:
 - Escanear QR/código.
 - Capturar foto.
 - Capturar firma.
+- Historial completo de intentos de entrega.
 
 ## Validación De Entrega
 
@@ -141,6 +145,10 @@ Resultado implementado en Fase 3.4.3:
 - La entrega queda en `Delivered` cuando el backend acepta el cierre.
 - La orden cambia a `Delivered` en la misma operación si el backend completa la entrega correctamente.
 - Una no entrega queda como `FailedDelivery` sin convertir `WorkOrder.Status` a otro estado.
+- Una entrega `FailedDelivery` puede reintentarse y volver a `OutForDelivery` sin cambiar `WorkOrder.Status`.
+- Si el reintento se cierra como entregado, `WorkOrder.Status` pasa a `Delivered`.
+- Si el reintento vuelve a fallar, `failedReason` y `failedAtUtc` se actualizan al último intento fallido.
+- No existe historial completo de intentos todavía; queda como fase futura.
 
 ## Modelo Recomendado Fase 3.4.0
 

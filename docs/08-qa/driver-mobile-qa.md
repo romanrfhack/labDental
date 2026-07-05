@@ -2,9 +2,9 @@
 
 ## Alcance
 
-Fase 3.4.3 agrega la UI mobile-first del repartidor bajo `/app/entregas` y `/app/entregas/:id`.
+Fase 3.4.3 agrega la UI mobile-first del repartidor bajo `/app/entregas` y `/app/entregas/:id`. Fase 3.4.3.1 agrega redirect post-login por permisos y reintento de entrega fallida.
 
-No agrega backend, migraciones, endpoints, dependencias, deploy, cambios en `AuthService`, guards, cookies ni XSRF. No permite asignar repartidor desde la UI mobile.
+Fase 3.4.3 no agregó backend, migraciones, endpoints, dependencias, deploy, cambios en `AuthService`, guards, cookies ni XSRF. Fase 3.4.3.1 agrega endpoint de retry y ajuste de redirect en frontend, sin migraciones, dependencias, deploy, guards, cookies ni XSRF. No permite asignar repartidor desde la UI mobile.
 
 ## Rutas
 
@@ -26,36 +26,42 @@ Si falta `deliveries.complete`, la pantalla queda en lectura y no muestra formul
 - `GET /api/deliveries/{id}`
 - `PATCH /api/deliveries/{id}/complete`
 - `PATCH /api/deliveries/{id}/failed`
+- `PATCH /api/deliveries/{id}/retry`
 
 El listado siempre usa `assignedToMe=true`. El detalle valida en frontend que `assignedToUserId` coincida con el usuario autenticado antes de mostrar datos.
 
 ## Checklist Manual
 
 1. Iniciar sesión con usuario `Repartidor` que tenga `deliveries.view` y `deliveries.complete`.
-2. Confirmar que la navegación privada muestra `Entregas`.
-3. Abrir `/app/entregas`.
-4. Confirmar que la lista carga sin quedar en loading infinito.
-5. Confirmar en Network que el listado usa `assignedToMe=true`.
-6. Confirmar que solo aparecen entregas asignadas al usuario autenticado.
-7. Confirmar estado vacío cuando no hay entregas asignadas.
-8. Confirmar que cada card muestra folio, cliente, paciente/referencia, trabajo, estado, fecha de entrega y dirección/contacto si existen.
-9. Abrir `Ver detalle`.
-10. Confirmar que el detalle muestra cliente, dirección, contacto, folio, paciente, referencia, trabajo, fecha de entrega, estado de orden y seguimiento.
-11. Confirmar que no se muestran pagos, saldos ni datos financieros.
-12. Confirmar que no existe acción para asignar o cambiar repartidor.
-13. Con entrega `OutForDelivery`, intentar marcar entregada con `Recibio` vacío y confirmar error controlado.
-14. Capturar `recipientName` y marcar entregada.
-15. Confirmar que el detalle refresca y muestra estado `Entregada`, timestamp y `Recibio`.
-16. Con otra entrega `Assigned` u `OutForDelivery`, intentar marcar no entregada con motivo vacío y confirmar error controlado.
-17. Capturar `failedReason` y marcar no entregada.
-18. Confirmar que el detalle refresca y muestra estado `No entregada`, timestamp y motivo.
-19. Iniciar sesión con usuario que tenga `deliveries.view` pero no `deliveries.complete`.
-20. Confirmar que puede ver sus entregas asignadas pero no ve acciones de cierre.
-21. Intentar abrir una entrega de otro usuario por URL directa y confirmar que no se muestran datos sensibles.
-22. Confirmar que `/app/ordenes`, `/app/clientes`, `/app/pagos`, `/app/admin/usuarios` y `/app/admin/roles` no quedan disponibles para el rol `Repartidor`.
-23. Confirmar que `/login` sigue público.
-24. Confirmar que `/app` y `/app/dashboard` siguen protegidos.
-25. Confirmar que `/dashboard` no se usa como ruta privada real.
+2. Confirmar que, sin `returnUrl` explícito, el login redirige a `/app/entregas` y no a `/app/dashboard`.
+3. Confirmar que la navegación privada muestra `Entregas`.
+4. Abrir `/app/entregas`.
+5. Confirmar que la lista carga sin quedar en loading infinito.
+6. Confirmar en Network que el listado usa `assignedToMe=true`.
+7. Confirmar que solo aparecen entregas asignadas al usuario autenticado.
+8. Confirmar estado vacío cuando no hay entregas asignadas.
+9. Confirmar que cada card muestra folio, cliente, paciente/referencia, trabajo, estado, fecha de entrega y dirección/contacto si existen.
+10. Abrir `Ver detalle`.
+11. Confirmar que el detalle muestra cliente, dirección, contacto, folio, paciente, referencia, trabajo, fecha de entrega, estado de orden y seguimiento.
+12. Confirmar que no se muestran pagos, saldos ni datos financieros.
+13. Confirmar que no existe acción para asignar o cambiar repartidor.
+14. Con entrega `FailedDelivery` asignada al usuario, confirmar botón `Reintentar entrega` y texto `La entrega volverá a marcarse como En ruta.`.
+15. Reintentar entrega y confirmar que el detalle refresca a `En ruta` / `OutForDelivery`.
+16. Confirmar que `WorkOrder.Status` no cambió por el reintento.
+17. Con entrega reintentada, capturar `recipientName` y marcar entregada.
+18. Confirmar que el detalle refresca y muestra estado `Entregada`, timestamp y `Recibio`.
+19. Con otra entrega reintentada, marcar no entregada con nuevo `failedReason`.
+20. Confirmar que el detalle refresca y muestra estado `No entregada`, timestamp y motivo del último intento fallido.
+21. Con entrega `OutForDelivery`, intentar marcar entregada con `Recibio` vacío y confirmar error controlado.
+22. Con entrega `Assigned` u `OutForDelivery`, intentar marcar no entregada con motivo vacío y confirmar error controlado.
+23. Iniciar sesión con usuario que tenga `deliveries.view` pero no `deliveries.complete`.
+24. Confirmar que puede ver sus entregas asignadas pero no ve acciones de cierre ni reintento.
+25. Intentar abrir una entrega de otro usuario por URL directa y confirmar que no se muestran datos sensibles.
+26. Abrir `/app/access-denied` y confirmar que el enlace principal dice `Ir a mi inicio` y apunta a `/app/entregas`.
+27. Confirmar que `/app/ordenes`, `/app/clientes`, `/app/pagos`, `/app/admin/usuarios` y `/app/admin/roles` no quedan disponibles para el rol `Repartidor`.
+28. Confirmar que `/login` sigue público.
+29. Confirmar que `/app` y `/app/dashboard` siguen protegidos.
+30. Confirmar que `/dashboard` no se usa como ruta privada real.
 
 ## Responsive
 
@@ -81,6 +87,7 @@ Puntos visuales:
 - `403`: mostrar falta de permiso sin redirigir a login.
 - `404`: mostrar entrega no encontrada.
 - `409`: mostrar estado no permitido.
+- Retry fallido: mostrar `No se pudo reintentar la entrega.`.
 - `401`: el interceptor global debe redirigir a `/login`.
 
 ## Limitaciones
@@ -88,5 +95,7 @@ Puntos visuales:
 - El rol `Repartidor` no tiene `deliveries.update`, por lo que no registra salida a ruta desde móvil en esta fase.
 - Marcar entregada requiere que la entrega esté `OutForDelivery`.
 - Marcar no entregada está disponible para `Assigned` u `OutForDelivery`.
+- Reintentar entrega solo aplica para `FailedDelivery`.
+- El historial completo de intentos queda pendiente para fase futura.
 - No hay firma, foto, geolocalización, QR/barcode, offline/PWA ni evidencia adjunta.
 - La validación final debe ejecutarse en DEV con usuario real `Repartidor`.

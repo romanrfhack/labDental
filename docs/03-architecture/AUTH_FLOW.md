@@ -47,6 +47,7 @@ Endpoints delivery Fase 3.4.1:
 - `PATCH /api/deliveries/{id}/out-for-delivery`
 - `PATCH /api/deliveries/{id}/complete`
 - `PATCH /api/deliveries/{id}/failed`
+- `PATCH /api/deliveries/{id}/retry`
 
 Seed tecnico solo en Development:
 
@@ -147,6 +148,7 @@ Permisos por endpoints delivery:
 - `PATCH /api/deliveries/{id}/out-for-delivery`: `deliveries.update`
 - `PATCH /api/deliveries/{id}/complete`: `deliveries.complete`
 - `PATCH /api/deliveries/{id}/failed`: `deliveries.complete`
+- `PATCH /api/deliveries/{id}/retry`: `deliveries.update` para Admin/operación o `deliveries.complete` si el repartidor asignado reintenta su propia entrega
 
 Validación Fase 3.3.1:
 
@@ -164,12 +166,16 @@ Rol `Repartidor`:
 - Permisos implementados: `deliveries.view` y `deliveries.complete`.
 - No recibe `deliveries.assign`, `deliveries.update`, `customers.view`, `payments.view`, `users.manage` ni `roles.manage`.
 - El backend filtra detalles/listas para que un usuario sin permiso administrativo solo vea entregas asignadas a su usuario.
+- Desde Fase 3.4.3.1 puede reintentar una entrega propia en `FailedDelivery` usando `deliveries.complete`; no puede reintentar entregas ajenas ni operar retry global sin `deliveries.update`.
 
 ## Redirecciones
 
 - Usuario sin sesión en `/app/*`: redirección frontend a `/login?returnUrl=...`.
+- Login exitoso sin `returnUrl` interno válido explícito: redirección frontend a ruta inicial por permisos.
+- Prioridad de ruta inicial: `reports.view -> /app/dashboard`, `deliveries.view -> /app/entregas`, `orders.view -> /app/ordenes`, `customers.view -> /app/clientes`, `payments.view -> /app/pagos`, `inventory.view -> /app/inventario`, `suppliers.view -> /app/proveedores`, `users.manage -> /app/admin/usuarios`, `roles.manage -> /app/admin/roles`, fallback `/app/access-denied`.
 - Si la verificación frontend de sesión falla por error de red/API durante la navegación a `/app/*`, el guard debe tratarlo como sesión no autenticada y redirigir a `/login?returnUrl=...` para evitar una pantalla en blanco.
 - Usuario autenticado sin permiso: redirección frontend a `/app/access-denied`.
+- `/app/access-denied` usa la misma ruta inicial por permisos para su enlace principal `Ir a mi inicio`.
 - API sin sesión: responde `401`.
 - API sin permiso: responde `403`.
 - Endpoints `/api` no redirigen con `302` a `/login`.
@@ -199,7 +205,7 @@ El usuario QA validado en DEV tiene acceso a dashboard; por lo tanto, esta evide
 
 ## ReturnUrl Seguro
 
-`returnUrl` se usa solo para regresar a una ruta privada interna después de login correcto.
+`returnUrl` se usa solo para regresar a una ruta privada interna después de login correcto. Si no existe un `returnUrl` interno válido explícito, el frontend usa la ruta inicial por permisos del usuario autenticado.
 
 Valores aceptados:
 
@@ -208,7 +214,7 @@ Valores aceptados:
 - `/app?...`
 - `/app#...`
 
-Valores rechazados o normalizados al fallback seguro `/app/dashboard`:
+Valores rechazados y bloqueados para navegación directa:
 
 - Rutas externas como `https://example.com` o `http://example.com`.
 - URLs protocol-relative como `//example.com`.
@@ -217,7 +223,7 @@ Valores rechazados o normalizados al fallback seguro `/app/dashboard`:
 - Valores con backslash.
 - Rutas que solo parecen privadas pero no pertenecen a `/app`, por ejemplo `/application`.
 
-La sanitización vive en el componente de login antes de ejecutar `router.navigateByUrl(...)`.
+La sanitización vive en el componente de login antes de ejecutar `router.navigateByUrl(...)`. En Fase 3.4.3.1 los valores externos o inválidos ya no fuerzan `/app/dashboard`; usan la misma ruta inicial por permisos. Esto mantiene bloqueado el open redirect y evita mandar a `Repartidor` al dashboard cuando no tiene `reports.view`.
 
 ## Diferencia Entre Sin Sesión Y Sin Permiso
 
@@ -249,7 +255,7 @@ Resultado de `returnUrl`:
 
 - `/login?returnUrl=%2Fapp%2Fdashboard` conserva el destino interno seguro `/app/dashboard`.
 - `https://example.com`, `//example.com` y `javascript:alert(1)` no se usan como destino de navegación posterior al login.
-- Valores externos, valores con esquema, protocol-relative, espacios, backslash o rutas fuera de `/app` usan fallback seguro `/app/dashboard`.
+- Valores externos, valores con esquema, protocol-relative, espacios, backslash o rutas fuera de `/app` usan fallback seguro a la ruta inicial por permisos desde Fase 3.4.3.1; en Fase 2.0 el fallback era `/app/dashboard`.
 
 Resultado de `/app/dashboard` sin sesión:
 
@@ -417,7 +423,7 @@ Resultado de rutas y `returnUrl`:
 - `/dashboard` no es ruta privada real.
 - Por código, `authGuard` y `permissionGuard` construyen `/login?returnUrl=...` para usuario sin sesión o error al verificar sesión.
 - Por código, `permissionGuard` conserva la diferencia entre usuario sin sesión y usuario autenticado sin permiso; si hay sesión pero falta permiso, redirige a `/app/access-denied`.
-- Por código, `getSafePrivateReturnUrl()` conserva solo rutas internas seguras bajo `/app` y normaliza destinos externos o inválidos a `/app/dashboard`.
+- Por código, `getSafePrivateReturnUrl()` conserva solo rutas internas seguras bajo `/app`; si el valor no es válido, el login usa `AuthService.getDefaultPrivateRoute()` para resolver la ruta inicial por permisos.
 
 Limitaciones:
 
@@ -521,7 +527,7 @@ Resultado de rutas y redirecciones:
 - `/app/dashboard` sigue protegido por `permissionGuard` y requiere `reports.view`.
 - `/dashboard` no es ruta privada real; no se cambió el router para convertirla en privada.
 - Por código, usuario sin sesión en `/app/*` sigue redirigiendo a `/login?returnUrl=...`.
-- Por código, `getSafePrivateReturnUrl()` conserva solo rutas internas seguras bajo `/app` y normaliza destinos externos o inválidos a `/app/dashboard`.
+- Por código, `getSafePrivateReturnUrl()` conserva solo rutas internas seguras bajo `/app`; si el valor no es válido, el login usa `AuthService.getDefaultPrivateRoute()` para resolver la ruta inicial por permisos.
 - La redirección visual real en navegador no se pudo ejecutar porque no hay navegador/headless local disponible sin instalar dependencias.
 
 Resultado de permisos:

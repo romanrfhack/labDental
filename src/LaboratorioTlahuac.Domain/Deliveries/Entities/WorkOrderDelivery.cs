@@ -134,6 +134,26 @@ public sealed class WorkOrderDelivery
         Touch(failedAtUtc);
     }
 
+    public void Retry(string? deliveryNotes, DateTimeOffset outForDeliveryAtUtc)
+    {
+        if (Status != DeliveryStatus.FailedDelivery)
+        {
+            throw new InvalidOperationException("Delivery can only be retried after a failed delivery.");
+        }
+
+        if (!AssignedToUserId.HasValue)
+        {
+            throw new InvalidOperationException("Delivery requires an assigned driver before retry.");
+        }
+
+        FailedReason = null;
+        FailedAtUtc = null;
+        OutForDeliveryAtUtc = outForDeliveryAtUtc;
+        Status = DeliveryStatus.OutForDelivery;
+        SetNotes(deliveryNotes);
+        Touch(outForDeliveryAtUtc);
+    }
+
     private void SetNotes(string? deliveryNotes)
     {
         DeliveryNotes = TrimOptional(deliveryNotes);

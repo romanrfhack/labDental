@@ -1,6 +1,6 @@
 # Operación De Órdenes, Etiquetas Y Entrega
 
-Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI, Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id`, Fase 3.4.2.1 agregó estado de entrega al listado `/app/ordenes` y Fase 3.4.3 implementó la UI mobile-first de repartidor bajo `/app/entregas`.
+Fuente funcional para órdenes, etiquetas y reparto. Fase 3.1 documentó el análisis operativo; Fase 3.2 implementó el MVP de impresión de etiquetas desde órdenes existentes sin base de datos nueva, endpoints nuevos ni migraciones. Fase 3.4.0 documentó el análisis técnico previo del flujo de entregas/repartidor, Fase 3.4.1 implementó el backend delivery MVP + permisos sin UI, Fase 3.4.2 implementó la UI admin de entregas desde `/app/ordenes/:id`, Fase 3.4.2.1 agregó estado de entrega al listado `/app/ordenes`, Fase 3.4.3 implementó la UI mobile-first de repartidor bajo `/app/entregas` y Fase 3.4.3.1 corrigió redirect post-login por permisos y agregó reintento de entrega fallida.
 
 Diseño técnico Fase 3.4.0: `docs/01-product/delivery-mvp-design.md`.
 
@@ -147,6 +147,42 @@ Exclusiones:
 - No se otorga acceso amplio a órdenes, clientes, pagos, usuarios ni roles.
 - No se crean endpoints, migraciones ni cambios backend.
 - No se toca `AuthService`, guards, cookies, XSRF ni deploy.
+
+### Implementación Fase 3.4.3.1
+
+El login ahora conserva `returnUrl` interno válido explícito; si no existe, calcula una ruta inicial por permisos:
+
+- `reports.view`: `/app/dashboard`.
+- `deliveries.view`: `/app/entregas`.
+- `orders.view`: `/app/ordenes`.
+- `customers.view`: `/app/clientes`.
+- `payments.view`: `/app/pagos`.
+- `inventory.view`: `/app/inventario`.
+- `suppliers.view`: `/app/proveedores`.
+- `users.manage`: `/app/admin/usuarios`.
+- `roles.manage`: `/app/admin/roles`.
+- Sin permisos conocidos: `/app/access-denied`.
+
+Esto corrige el caso donde un `Repartidor` sin `reports.view` iniciaba sesión y caía en `/app/dashboard` o `/app/access-denied`. El `permissionGuard` no se relaja: si el usuario trae `returnUrl=/app/dashboard` pero no tiene `reports.view`, sigue terminando en `/app/access-denied`. La página `/app/access-denied` usa la misma ruta inicial por permisos para su enlace principal `Ir a mi inicio`.
+
+Reintento de entrega fallida:
+
+- `PATCH /api/deliveries/{id}/retry` cambia `FailedDelivery` a `OutForDelivery`.
+- Admin/operación puede reintentar con `deliveries.update`.
+- El repartidor asignado puede reintentar su propia entrega fallida con `deliveries.complete`.
+- El reintento actualiza `OutForDeliveryAtUtc` con hora de servidor.
+- El reintento mantiene `AssignedToUserId`.
+- El reintento no cambia `WorkOrder.Status`.
+- Después del reintento, la entrega puede cerrarse como `Delivered` con `recipientName`.
+- Después del reintento, la entrega puede volver a `FailedDelivery` con `failedReason`; `failedReason`/`failedAtUtc` representan el último intento fallido.
+- No se crea historial completo de intentos todavía; queda como fase futura.
+
+Exclusiones:
+
+- Sin migraciones nuevas.
+- Sin geolocalización, firma, foto, QR ni dependencias.
+- Sin cambios de deploy.
+- Sin cambios de cookies ni XSRF.
 
 ### Modelo Actual De Orden
 
@@ -445,6 +481,7 @@ MVP implementado:
 - `PATCH /api/deliveries/{id}/out-for-delivery`: registrar salida.
 - `PATCH /api/deliveries/{id}/complete`: registrar entrega, `RecipientName` obligatorio.
 - `PATCH /api/deliveries/{id}/failed`: registrar no entrega, `FailedReason` obligatorio.
+- `PATCH /api/deliveries/{id}/retry`: reintentar una entrega `FailedDelivery` y volverla a `OutForDelivery`.
 
 El endpoint de repartidor debe devolver un DTO mínimo de entrega con cliente, dirección/contacto necesarios, folio, paciente/referencia, trabajo e indicaciones, sin información financiera en MVP.
 
@@ -484,7 +521,8 @@ Fase 3.5 catálogo:
 5. Fase 3.4.2: UI admin desde órdenes. Implementada.
 6. Fase 3.4.2.1: estado de entrega en listado `/app/ordenes`. Implementada.
 7. Fase 3.4.3: UI repartidor mobile-first. Implementada.
-8. Fase 3.4.4: QA DEV y ajustes.
-9. Fase 3.5: administración de catálogo, precios e imágenes.
+8. Fase 3.4.3.1: redirect post-login por permisos y reintento de entrega fallida. Implementada.
+9. Fase 3.4.4: QA DEV y ajustes.
+10. Fase 3.5: administración de catálogo, precios e imágenes.
 
-La siguiente fase implementable mayor es Fase 3.4.4 - QA DEV y ajustes del flujo de entregas. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.
+La siguiente fase implementable mayor es QA DEV de redirect/reintento y pulido mobile-first del flujo de reparto. La prueba física de etiquetas puede seguir en paralelo porque no bloquea la UI de entregas.

@@ -1,8 +1,8 @@
-# QA UI Admin Entregas - Fase 3.4.2 y 3.4.2.1
+# QA UI Admin Entregas - Fase 3.4.2, 3.4.2.1 y 3.4.3.1
 
 ## Alcance
 
-Fase 3.4.2 agrega UI administrativa de entregas dentro del detalle de orden existente. Fase 3.4.2.1 agrega estado de entrega al listado `/app/ordenes`.
+Fase 3.4.2 agrega UI administrativa de entregas dentro del detalle de orden existente. Fase 3.4.2.1 agrega estado de entrega al listado `/app/ordenes`. Fase 3.4.3.1 agrega reintento de entregas fallidas desde la sección `Entrega`.
 
 Esta pantalla admin no asigna alcance a la UI mobile-first del repartidor. La UI de repartidor quedó implementada después en Fase 3.4.3 bajo `/app/entregas` y tiene QA propio en `docs/08-qa/driver-mobile-qa.md`.
 
@@ -68,6 +68,7 @@ En `/app/ordenes/:id`, la sección `Entrega` permite:
 - Marcar salida a entrega.
 - Marcar entregada con `recipientName`.
 - Marcar no entregada con `failedReason`.
+- Reintentar entrega cuando está `FailedDelivery`.
 - Ver timestamps de asignación, salida, entrega y falla.
 - Ver `Recibió` o motivo de falla cuando aplica.
 
@@ -85,6 +86,7 @@ Estados mostrados en UI:
 - Crear entrega: `deliveries.assign`.
 - Asignar repartidor: `deliveries.assign`.
 - Marcar salida: `deliveries.update`.
+- Reintentar entrega fallida: `deliveries.update`.
 - Marcar entregada: `deliveries.complete`.
 - Marcar no entregada: `deliveries.complete`.
 
@@ -121,10 +123,15 @@ Si el usuario no puede listar roles o usuarios, la UI muestra error controlado y
 22. Confirmar estado `No entregada`, timestamp de falla y motivo.
 23. Volver a `/app/ordenes` y confirmar `Entrega = No entregada`.
 24. Confirmar que la columna `Estado` conserva `WorkOrder.Status`; si la orden estaba `Recibida`, debe seguir mostrando `Recibida`.
-25. Confirmar que pagos, historial, etiquetas y datos de orden siguen cargando.
-26. Confirmar que `/login` sigue público.
-27. Confirmar que `/app` y `/app/dashboard` siguen privados.
-28. Confirmar que `/dashboard` no se usa como ruta privada real.
+25. En esa entrega `FailedDelivery`, confirmar botón `Reintentar entrega` y texto `La entrega volverá a marcarse como En ruta.`.
+26. Reintentar entrega y confirmar estado `En ruta`, timestamp de salida actualizado y mismo repartidor asignado.
+27. Confirmar que `WorkOrder.Status` no cambia al reintentar.
+28. Desde el reintento, marcar entregada con `Recibió` y confirmar `WorkOrder.Status = Delivered`.
+29. Repetir otro reintento y volver a marcar no entregada con nuevo motivo; confirmar que motivo/timestamp de falla reflejan el último intento fallido.
+30. Confirmar que pagos, historial, etiquetas y datos de orden siguen cargando.
+31. Confirmar que `/login` sigue público.
+32. Confirmar que `/app` y `/app/dashboard` siguen privados.
+33. Confirmar que `/dashboard` no se usa como ruta privada real.
 
 ## Errores Esperados
 
@@ -132,6 +139,7 @@ Si el usuario no puede listar roles o usuarios, la UI muestra error controlado y
 - `403`: mostrar mensaje local de falta de permiso, sin redirigir a login.
 - `404`: mostrar entrega no encontrada o estado sin entrega cuando aplica.
 - `409`: mostrar que la entrega no permite la acción en su estado actual.
+- Retry fallido: mostrar `No se pudo reintentar la entrega.`.
 
 ## Limitaciones
 
@@ -139,6 +147,7 @@ Si el usuario no puede listar roles o usuarios, la UI muestra error controlado y
 - La salida a entrega desde móvil sigue pendiente; el rol `Repartidor` no recibe `deliveries.update` en el MVP actual.
 - La sección admin no agrega firma, foto, geolocalización, QR/barcode ni evidencia.
 - La asignación depende de los endpoints admin existentes para listar usuarios/roles; no se agregó endpoint específico de repartidores.
+- No hay historial completo de intentos de entrega; queda como fase futura.
 - La validación visual con navegador real/DEV queda pendiente si no se ejecuta manualmente.
 
 ## Relación Con Fase 3.4.3

@@ -10,6 +10,8 @@ Actualización Fase 3.4.2, 2026-07-04: la UI admin de entregas desde `/app/orden
 
 Actualización operativa Fase 3.4.2, 2026-07-04: GitHub Actions para commit `97d46e9` falló durante health check con `502`, el rollback dejó activo `dev-23-eea8f39`, y el release nuevo `dev-24-97d46e9` fue validado manualmente y activado mediante ajuste de `backend/current` y restart del servicio. La validación final confirmó `GET /health` `200` y `GET /api/deliveries` sin sesión `401` en DEV. No se imprimieron secretos ni se usó `codex-cobranza-sql`.
 
+Actualización Fase 3.4.3.1, 2026-07-05: se agrega `PATCH /api/deliveries/{id}/retry` para reintentar entregas en `FailedDelivery`. El endpoint vuelve la entrega a `OutForDelivery`, actualiza `OutForDeliveryAtUtc`, mantiene `AssignedToUserId`, no cambia `WorkOrder.Status` y permite cerrar después como `Delivered` o volver a `FailedDelivery`.
+
 ## Modelo Y Migración
 
 - Entidad: `WorkOrderDelivery`.
@@ -40,6 +42,7 @@ No se implementa `Cancelled` para entrega en este MVP.
 - Registrar salida: `Assigned` -> `OutForDelivery`.
 - Completar: `OutForDelivery` -> `Delivered`; requiere `recipientName`.
 - No entregada: `Assigned` u `OutForDelivery` -> `FailedDelivery`; requiere `failedReason`.
+- Reintento: `FailedDelivery` -> `OutForDelivery`; requiere `deliveries.update` para operación/Admin o `deliveries.complete` si el repartidor asignado reintenta su propia entrega.
 - Transiciones fuera de regla devuelven `400`.
 
 ## Endpoints
@@ -61,13 +64,16 @@ No se implementa `Cancelled` para entrega en este MVP.
   - Permiso: `deliveries.complete`.
 - `PATCH /api/deliveries/{id}/failed`
   - Permiso: `deliveries.complete`.
+- `PATCH /api/deliveries/{id}/retry`
+  - Permiso: `deliveries.update` para Admin/operación.
+  - Permiso equivalente: `deliveries.complete` cuando el usuario autenticado es el repartidor asignado.
 
 ## Permisos Y Roles
 
 - `deliveries.view`: listar/ver entregas permitidas.
 - `deliveries.assign`: crear y asignar repartidor.
 - `deliveries.update`: registrar salida y actualizar notas.
-- `deliveries.complete`: marcar entregada o no entregada.
+- `deliveries.complete`: marcar entregada o no entregada; también reintentar una entrega fallida propia cuando el usuario es el repartidor asignado.
 
 Rol `Admin`:
 
@@ -80,6 +86,7 @@ Rol `Repartidor`:
 - Recibe `deliveries.complete`.
 - No recibe `deliveries.assign`, `deliveries.update`, `orders.view`, `customers.view`, `payments.view`, `users.manage` ni `roles.manage`.
 - El backend limita listados y detalle a entregas asignadas cuando el usuario no tiene permisos administrativos.
+- Puede reintentar una entrega fallida propia con `deliveries.complete`; no puede reintentar entregas ajenas.
 
 ## Pruebas Automatizadas
 
@@ -101,6 +108,13 @@ Cobertura:
 - Transición inválida devuelve `400`.
 - Repartidor ve sus entregas asignadas y puede completar.
 - Repartidor no puede asignar otro repartidor.
+- Admin puede reintentar una entrega fallida.
+- Repartidor asignado puede reintentar su entrega fallida.
+- Repartidor no asignado no puede reintentar una entrega ajena si no tiene permiso operativo.
+- Reintentar una entrega no fallida devuelve `400`.
+- Reintentar entrega de orden cancelada devuelve `409`.
+- Reintento deja la entrega en `OutForDelivery` y no cambia `WorkOrder.Status`.
+- Una entrega reintentada puede cerrarse como `Delivered` con `recipientName`.
 - Permisos `deliveries.*` existen.
 - Admin conserva permisos delivery.
 - `Repartidor` recibe solo permisos esperados.
@@ -117,7 +131,7 @@ Cobertura:
 - Respuestas de delivery no expusieron email, password ni `passwordHash` del usuario asignado; solo `assignedToUserId` y `assignedToUserFullName`.
 - Datos locales creados: usuarios/clientes/órdenes/entregas QA con prefijos de prueba; no se limpiaron.
 - `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` en tests.
-- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 121/121.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 121/121. Actualización Fase 3.4.3.1: correcto con Domain 1/1, Application 1/1 y API 129/129.
 - `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; warning de budget inicial excedido por 26.71 kB.
 - `git diff --check`: correcto.
 - Búsquedas finales solicitadas: correctas; patrones sensibles revisados con salida limitada a archivos para no imprimir valores.
@@ -150,6 +164,11 @@ Queda pendiente la validación manual Admin en DEV:
 8. Iniciar sesión como repartidor y confirmar que solo ve sus entregas.
 9. Completar entrega con `recipientName`.
 10. Confirmar que la entrega queda `Delivered` y la orden queda `Delivered`.
+11. Crear otra entrega, marcarla `FailedDelivery` y reintentar con Admin; confirmar `OutForDelivery`, mismo repartidor y `WorkOrder.Status` sin cambios.
+12. Marcar otra entrega como `FailedDelivery`, iniciar sesión como repartidor asignado y reintentar; confirmar `OutForDelivery`.
+13. Intentar retry con repartidor no asignado y confirmar `403`.
+14. Intentar retry de entrega no fallida y confirmar `400`.
+15. Intentar retry de entrega fallida cuya orden fue cancelada y confirmar `409`.
 
 Para la validación visual/funcional de la UI admin, usar además `docs/08-qa/delivery-admin-ui-qa.md`.
 
@@ -171,7 +190,8 @@ Pendiente técnico: ajustar el workflow para esperar más tiempo o usar reintent
 ## Pendientes
 
 - Fase 3.4.2: UI admin de entregas desde órdenes. Implementada; pendiente validación manual DEV.
-- Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`.
+- Fase 3.4.3: UI repartidor mobile-first bajo `/app/entregas`. Implementada.
+- Fase 3.4.3.1: redirect por permisos y retry de entrega fallida. Implementada; pendiente QA DEV.
 - Fase 3.4.4: QA DEV y ajustes con celular real.
 - Ajustar workflow DEV para reducir falsos negativos de health check `502` después del restart.
 - Validación manual Admin en DEV del flujo delivery desplegado.

@@ -404,6 +404,55 @@ public sealed class DeliveryService(
         return await LoadSavedDeliveryAsync(delivery.Id, cancellationToken);
     }
 
+    public async Task<DeliveryServiceResult<DeliveryResponse>> RetryAsync(
+        Guid id,
+        DeliveryRetryRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        var deliveryNotes = NormalizeAndValidateMax(
+            errors,
+            nameof(request.DeliveryNotes),
+            request.DeliveryNotes,
+            WorkOrderDelivery.DeliveryNotesMaxLength);
+
+        if (errors.Count > 0)
+        {
+            return DeliveryServiceResult.Validation<DeliveryResponse>(errors);
+        }
+
+        var delivery = await LoadDeliveryForMutationAsync(id, cancellationToken);
+
+        if (delivery is null)
+        {
+            return DeliveryServiceResult.NotFound<DeliveryResponse>("Delivery was not found.");
+        }
+
+        if (!CanRetryDelivery(delivery))
+        {
+            return DeliveryServiceResult.Forbidden<DeliveryResponse>("Delivery is not assigned to the current user.");
+        }
+
+        if (delivery.WorkOrder?.Status == WorkOrderStatus.Cancelled)
+        {
+            return DeliveryServiceResult.Conflict<DeliveryResponse>(
+                "Cancelled work orders cannot retry delivery.");
+        }
+
+        try
+        {
+            delivery.Retry(deliveryNotes, clock.UtcNow);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return InvalidTransition<DeliveryResponse>(ex.Message);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return await LoadSavedDeliveryAsync(delivery.Id, cancellationToken);
+    }
+
     private IQueryable<WorkOrderDelivery> LoadDeliveryQuery()
     {
         return dbContext.WorkOrderDeliveries
@@ -460,6 +509,18 @@ public sealed class DeliveryService(
     {
         return CanViewAllDeliveries()
             || (currentUser.UserId.HasValue && delivery.AssignedToUserId == currentUser.UserId.Value);
+    }
+
+    private bool CanRetryDelivery(WorkOrderDelivery delivery)
+    {
+        if (currentUser.Permissions.Contains(Permissions.DeliveriesUpdate, StringComparer.Ordinal))
+        {
+            return true;
+        }
+
+        return currentUser.Permissions.Contains(Permissions.DeliveriesComplete, StringComparer.Ordinal)
+            && currentUser.UserId.HasValue
+            && delivery.AssignedToUserId == currentUser.UserId.Value;
     }
 
     private async Task<User?> LoadUserWithPermissionsAsync(Guid userId, CancellationToken cancellationToken)

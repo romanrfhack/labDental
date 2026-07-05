@@ -125,6 +125,7 @@ API de entregas implementada en Fase 3.4.1:
 - `PATCH /api/deliveries/{id}/out-for-delivery`
 - `PATCH /api/deliveries/{id}/complete`
 - `PATCH /api/deliveries/{id}/failed`
+- `PATCH /api/deliveries/{id}/retry`
 
 Fase 3.4.1 crea una entidad separada `WorkOrderDelivery` con `DeliveryStatus` propio, en lugar de mezclar asignación, salida, entrega real y receptor dentro de `WorkOrder`. Fuente: `docs/01-product/delivery-mvp-design.md`.
 

@@ -10,7 +10,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { DeliveryResponse, DeliveryStatus } from '../delivery.models';
 import { DeliveryService } from '../delivery.service';
 
-type DriverDeliveryAction = 'complete' | 'failed';
+type DriverDeliveryAction = 'complete' | 'failed' | 'retry';
 
 @Component({
   selector: 'app-delivery-detail-page',
@@ -136,6 +136,18 @@ type DriverDeliveryAction = 'complete' | 'failed';
           <p class="empty-state">No tienes permiso para cerrar entregas.</p>
         } @else if (canShowCloseActions(delivery)) {
           <section class="driver-action-stack">
+            @if (canRetryDelivery(delivery)) {
+              <section class="driver-action-panel">
+                <header>
+                  <h2>Reintentar entrega</h2>
+                  <p>La entrega volverá a marcarse como En ruta.</p>
+                </header>
+                <button class="secondary-button" type="button" [disabled]="isActionBusy()" (click)="retryDelivery(delivery)">
+                  {{ activeAction() === 'retry' ? 'Reintentando...' : 'Reintentar entrega' }}
+                </button>
+              </section>
+            }
+
             @if (canMarkDelivered(delivery)) {
               <form class="driver-action-panel" novalidate (ngSubmit)="markDelivered(delivery)">
                 <header>
@@ -325,6 +337,17 @@ type DriverDeliveryAction = 'complete' | 'failed';
       padding: var(--space-5);
     }
 
+    .driver-action-panel header {
+      display: grid;
+      gap: var(--space-2);
+    }
+
+    .driver-action-panel p {
+      color: var(--color-neutral-600);
+      line-height: 1.45;
+      margin: 0;
+    }
+
     .driver-action-panel textarea {
       min-height: 112px;
       resize: vertical;
@@ -455,8 +478,24 @@ export class DeliveryDetailPageComponent implements OnInit {
     );
   }
 
+  retryDelivery(delivery: DeliveryResponse): void {
+    if (!this.canCompleteDelivery || !this.canRetryDelivery(delivery) || this.isActionBusy()) {
+      return;
+    }
+
+    this.runDeliveryAction(
+      'retry',
+      () => this.deliveryService.retry(delivery.id, { deliveryNotes: null }),
+      'Entrega marcada como En ruta.'
+    );
+  }
+
   canShowCloseActions(delivery: DeliveryResponse): boolean {
-    return this.canMarkDelivered(delivery) || this.canMarkFailed(delivery);
+    return this.canRetryDelivery(delivery) || this.canMarkDelivered(delivery) || this.canMarkFailed(delivery);
+  }
+
+  canRetryDelivery(delivery: DeliveryResponse): boolean {
+    return delivery.status === 'FailedDelivery';
   }
 
   canMarkDelivered(delivery: DeliveryResponse): boolean {
@@ -588,6 +627,18 @@ export class DeliveryDetailPageComponent implements OnInit {
   }
 
   private toActionErrorMessage(error: HttpErrorResponse, action: DriverDeliveryAction): string {
+    if (action === 'retry') {
+      if (error.status === 403) {
+        return 'No tienes permiso para cerrar esta entrega.';
+      }
+
+      if (error.status === 404) {
+        return 'Entrega no encontrada.';
+      }
+
+      return 'No se pudo reintentar la entrega.';
+    }
+
     if (error.status === 400) {
       return action === 'complete'
         ? 'Captura quien recibio la entrega.'

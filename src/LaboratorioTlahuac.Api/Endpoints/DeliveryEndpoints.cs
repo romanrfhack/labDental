@@ -80,6 +80,23 @@ public static class DeliveryEndpoints
             .RequireAuthorization(Permissions.DeliveriesComplete)
             .WithName("DeliveriesFailed");
 
+        deliveriesGroup.MapPatch(
+                "/{id:guid}/retry",
+                async (
+                    Guid id,
+                    DeliveryRetryRequest request,
+                    IDeliveryService deliveryService,
+                    CancellationToken cancellationToken) =>
+                    ToResult(await deliveryService.RetryAsync(id, request, cancellationToken)))
+            .RequireAuthorization(policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireAssertion(context =>
+                    context.User.HasClaim(PermissionClaimTypes.Permission, Permissions.DeliveriesUpdate)
+                    || context.User.HasClaim(PermissionClaimTypes.Permission, Permissions.DeliveriesComplete));
+            })
+            .WithName("DeliveriesRetry");
+
         var workOrdersGroup = endpoints
             .MapGroup("/api/work-orders")
             .WithTags("Deliveries");

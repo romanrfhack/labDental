@@ -12,6 +12,8 @@ Actualización Fase 3.4.2.1, 2026-07-04: `/app/ordenes` muestra estado operativo
 
 Actualización Fase 3.4.3, 2026-07-04: UI mobile-first de repartidor implementada bajo `/app/entregas` y `/app/entregas/:id`. La ruta requiere `deliveries.view`, el listado usa `assignedToMe=true`, el detalle no muestra entregas ajenas al usuario autenticado y las acciones de cierre requieren `deliveries.complete`.
 
+Actualización Fase 3.4.3.1, 2026-07-05: se corrige el redirect post-login para usar ruta inicial por permisos cuando no hay `returnUrl` interno válido, de modo que `Repartidor` entra a `/app/entregas`. También se agrega reintento de entrega fallida: `FailedDelivery -> OutForDelivery` vía `PATCH /api/deliveries/{id}/retry`, sin migración, sin historial de intentos y sin cambiar `WorkOrder.Status`.
+
 ## Objetivo
 
 Habilitar en la siguiente fase un flujo mobile-first para que el repartidor entre desde celular, vea entregas asignadas, consulte a dónde ir y a quién entregar, y registre la entrega con nombre de quien recibió y fecha/hora tomada del servidor.
@@ -326,6 +328,13 @@ Implementado para Fase 3.4.1:
 - `PATCH /api/deliveries/{id}/failed`
   - Marca no entregada, requiere `failedReason`.
   - Requiere `deliveries.complete`.
+- `PATCH /api/deliveries/{id}/retry`
+  - Reintenta una entrega `FailedDelivery`.
+  - Cambia el estado a `OutForDelivery`.
+  - Actualiza `OutForDeliveryAtUtc` con hora de servidor.
+  - Mantiene `AssignedToUserId`.
+  - No cambia `WorkOrder.Status`.
+  - Requiere `deliveries.update` para Admin/operación o `deliveries.complete` si el repartidor asignado reintenta su propia entrega.
 
 No se implementó `GET /api/deliveries/mine`; el equivalente MVP es `GET /api/deliveries?assignedToMe=true`.
 
@@ -428,6 +437,10 @@ Detalle móvil:
 - `FailedReason` es obligatorio para `FailedDelivery`.
 - Una orden `Cancelled` no puede salir ni completarse.
 - Una entrega `Delivered` no se modifica en MVP.
+- Una entrega `FailedDelivery` puede reintentarse y volver a `OutForDelivery`.
+- Reintentar una entrega de una orden `Cancelled` se rechaza con error controlado.
+- Reintentar una entrega que no está en `FailedDelivery` se rechaza con `400`.
+- El historial completo de intentos no existe en esta fase; queda para una fase posterior.
 - El repartidor no ve pagos, saldos ni datos financieros.
 - No capturar foto, firma, ubicación ni QR hasta documentar almacenamiento, retención y permisos.
 
@@ -494,6 +507,20 @@ Decisión 3.4.1: no se implementa estado `Cancelled` para entrega en este MVP. S
 - No permite asignar repartidor desde la UI del repartidor.
 - No muestra información financiera.
 - No toca backend, migraciones, endpoints, auth, guards, cookies, XSRF, deploy ni dependencias.
+
+### Fase 3.4.3.1 - Redirect Por Permisos Y Reintento
+
+- Estado: implementada el 2026-07-05.
+- Si login no recibe `returnUrl` interno válido, la ruta inicial se calcula por permisos.
+- Prioridad implementada: `reports.view`, `deliveries.view`, `orders.view`, `customers.view`, `payments.view`, `inventory.view`, `suppliers.view`, `users.manage`, `roles.manage`.
+- Un `Repartidor` con `deliveries.view` y sin `reports.view` entra a `/app/entregas`.
+- `/app/access-denied` usa la misma ruta inicial por permisos y muestra `Ir a mi inicio`.
+- `PATCH /api/deliveries/{id}/retry` permite `FailedDelivery -> OutForDelivery`.
+- Admin/operación usa `deliveries.update` para reintentar.
+- Repartidor asignado usa `deliveries.complete` para reintentar su propia entrega fallida.
+- Reintento mantiene `AssignedToUserId`, actualiza `OutForDeliveryAtUtc`, limpia el estado fallido actual y no cambia `WorkOrder.Status`.
+- Después del reintento se puede marcar `Delivered` con `recipientName` o volver a `FailedDelivery` con nuevo `failedReason`.
+- No se crea tabla de historial de intentos; queda como fase futura.
 
 ### Fase 3.4.4 - QA DEV Y Ajustes
 

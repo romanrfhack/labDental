@@ -27,12 +27,17 @@ public sealed class DeliveryIntegrationTests(TestApplicationFactory factory)
             $"/api/deliveries/{Guid.NewGuid()}/assign",
             xsrfToken,
             new { assignedToUserId = Guid.NewGuid() });
+        var retryResponse = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{Guid.NewGuid()}/retry",
+            xsrfToken,
+            new { deliveryNotes = "Reintento sin sesion" });
 
         Assert.Equal(HttpStatusCode.Unauthorized, listResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, detailResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, orderDeliveryResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, createResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, assignResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, retryResponse.StatusCode);
     }
 
     [Fact]
@@ -50,10 +55,15 @@ public sealed class DeliveryIntegrationTests(TestApplicationFactory factory)
             $"/api/deliveries/{Guid.NewGuid()}/complete",
             xsrfToken,
             new { recipientName = "Recepcion" });
+        var retryResponse = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{Guid.NewGuid()}/retry",
+            xsrfToken,
+            new { deliveryNotes = "Sin permiso" });
 
         Assert.Equal(HttpStatusCode.Forbidden, listResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, createResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, completeResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, retryResponse.StatusCode);
     }
 
     [Fact]
@@ -144,6 +154,118 @@ public sealed class DeliveryIntegrationTests(TestApplicationFactory factory)
         Assert.Equal("FailedDelivery", failed.GetProperty("status").GetString());
         Assert.Equal("Cliente no disponible", failed.GetProperty("failedReason").GetString());
         Assert.Equal(JsonValueKind.String, failed.GetProperty("failedAtUtc").ValueKind);
+    }
+
+    [Fact]
+    public async Task AdminCanRetryFailedDelivery()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var driver = await CreateDriverAsync(client, xsrfToken);
+        var assigned = await CreateAssignedDeliveryAsync(client, xsrfToken, driver.UserId);
+        var deliveryId = assigned.GetProperty("id").GetGuid();
+
+        await MarkFailedAsync(client, xsrfToken, deliveryId, "Cliente no estaba disponible");
+
+        var response = await RetryDeliveryAsync(client, xsrfToken, deliveryId);
+
+        Assert.Equal("OutForDelivery", response.GetProperty("status").GetString());
+        Assert.Equal("Received", response.GetProperty("workOrderStatus").GetString());
+        Assert.Equal(driver.UserId, response.GetProperty("assignedToUserId").GetGuid());
+        Assert.Equal(JsonValueKind.String, response.GetProperty("outForDeliveryAtUtc").ValueKind);
+        Assert.Equal(JsonValueKind.Null, response.GetProperty("failedAtUtc").ValueKind);
+        Assert.Equal(JsonValueKind.Null, response.GetProperty("failedReason").ValueKind);
+    }
+
+    [Fact]
+    public async Task AssignedDriverCanRetryFailedDeliveryAndCompleteIt()
+    {
+        var adminClient = factory.CreateClientWithoutRedirects();
+        var adminXsrfToken = await adminClient.LoginAsAdminAsync();
+        var driver = await CreateDriverAsync(adminClient, adminXsrfToken);
+        var assigned = await CreateAssignedDeliveryAsync(adminClient, adminXsrfToken, driver.UserId);
+        var deliveryId = assigned.GetProperty("id").GetGuid();
+
+        await MarkFailedAsync(adminClient, adminXsrfToken, deliveryId, "Consultorio cerrado");
+
+        var driverClient = factory.CreateClientWithoutRedirects();
+        var driverXsrfToken = await LoginAsAsync(driverClient, driver.Email, driver.Password);
+
+        var retried = await RetryDeliveryAsync(driverClient, driverXsrfToken, deliveryId);
+
+        Assert.Equal("OutForDelivery", retried.GetProperty("status").GetString());
+        Assert.Equal(driver.UserId, retried.GetProperty("assignedToUserId").GetGuid());
+
+        var completeResponse = await driverClient.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{deliveryId}/complete",
+            driverXsrfToken,
+            new { recipientName = "Recepcion segundo intento" });
+        var completed = await completeResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, completeResponse.StatusCode);
+        Assert.Equal("Delivered", completed.GetProperty("status").GetString());
+        Assert.Equal("Delivered", completed.GetProperty("workOrderStatus").GetString());
+        Assert.Equal("Recepcion segundo intento", completed.GetProperty("recipientName").GetString());
+    }
+
+    [Fact]
+    public async Task UnassignedDriverCannotRetryAssignedFailedDelivery()
+    {
+        var adminClient = factory.CreateClientWithoutRedirects();
+        var adminXsrfToken = await adminClient.LoginAsAdminAsync();
+        var driver = await CreateDriverAsync(adminClient, adminXsrfToken);
+        var otherDriver = await CreateDriverAsync(adminClient, adminXsrfToken);
+        var assigned = await CreateAssignedDeliveryAsync(adminClient, adminXsrfToken, driver.UserId);
+        var deliveryId = assigned.GetProperty("id").GetGuid();
+
+        await MarkFailedAsync(adminClient, adminXsrfToken, deliveryId, "No habia responsable");
+
+        var otherDriverClient = factory.CreateClientWithoutRedirects();
+        var otherDriverXsrfToken = await LoginAsAsync(otherDriverClient, otherDriver.Email, otherDriver.Password);
+
+        var response = await otherDriverClient.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{deliveryId}/retry",
+            otherDriverXsrfToken,
+            new { deliveryNotes = "Intento ajeno" });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RetryNonFailedDeliveryReturnsBadRequest()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var driver = await CreateDriverAsync(client, xsrfToken);
+        var assigned = await CreateAssignedDeliveryAsync(client, xsrfToken, driver.UserId);
+
+        var response = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{assigned.GetProperty("id").GetGuid()}/retry",
+            xsrfToken,
+            new { deliveryNotes = "No esta fallida" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RetryCancelledWorkOrderReturnsConflict()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var driver = await CreateDriverAsync(client, xsrfToken);
+        var assigned = await CreateAssignedDeliveryAsync(client, xsrfToken, driver.UserId);
+        var deliveryId = assigned.GetProperty("id").GetGuid();
+        var workOrderId = assigned.GetProperty("workOrderId").GetGuid();
+
+        await MarkFailedAsync(client, xsrfToken, deliveryId, "Cancelada despues del intento");
+        await ChangeWorkOrderStatusAsync(client, xsrfToken, workOrderId, "Cancelled", "Cancelada para retry");
+
+        var response = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{deliveryId}/retry",
+            xsrfToken,
+            new { deliveryNotes = "Reintento cancelado" });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
     [Fact]
@@ -306,6 +428,54 @@ public sealed class DeliveryIntegrationTests(TestApplicationFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         return payload;
+    }
+
+    private static async Task<JsonElement> MarkFailedAsync(
+        HttpClient client,
+        string xsrfToken,
+        Guid deliveryId,
+        string failedReason)
+    {
+        var response = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{deliveryId}/failed",
+            xsrfToken,
+            new { failedReason });
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        return payload;
+    }
+
+    private static async Task<JsonElement> RetryDeliveryAsync(
+        HttpClient client,
+        string xsrfToken,
+        Guid deliveryId)
+    {
+        var response = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/deliveries/{deliveryId}/retry",
+            xsrfToken,
+            new { deliveryNotes = "Reintento QA" });
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        return payload;
+    }
+
+    private static async Task ChangeWorkOrderStatusAsync(
+        HttpClient client,
+        string xsrfToken,
+        Guid workOrderId,
+        string status,
+        string notes)
+    {
+        var response = await client.PatchAsJsonWithXsrfAsync(
+            $"/api/work-orders/{workOrderId}/status",
+            xsrfToken,
+            new { status, notes });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     private static async Task<JsonElement> CreateWorkOrderWithCustomerAsync(HttpClient client, string xsrfToken)

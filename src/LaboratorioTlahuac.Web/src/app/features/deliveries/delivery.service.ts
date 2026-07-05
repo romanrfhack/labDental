@@ -12,7 +12,8 @@ import {
   DeliveryListParams,
   DeliveryOutForDeliveryRequest,
   DeliveryPagedResponse,
-  DeliveryResponse
+  DeliveryResponse,
+  DeliveryRetryRequest
 } from './delivery.models';
 
 @Injectable({ providedIn: 'root' })
@@ -102,6 +103,20 @@ export class DeliveryService {
     return this.authService.getCsrfHeaders().pipe(
       switchMap((headers) =>
         this.http.patch<DeliveryResponse>(this.apiClient.getUrl(`/api/deliveries/${id}/failed`), request, {
+          headers,
+          withCredentials: true
+        })
+      )
+    );
+  }
+
+  retry(
+    id: string,
+    request: DeliveryRetryRequest = { deliveryNotes: null }
+  ): Observable<DeliveryResponse> {
+    return this.authService.getCsrfHeaders().pipe(
+      switchMap((headers) =>
+        this.http.patch<DeliveryResponse>(this.apiClient.getUrl(`/api/deliveries/${id}/retry`), request, {
           headers,
           withCredentials: true
         })

@@ -8,6 +8,18 @@ import { AuthUser, LoginRequest } from './auth.models';
 
 type AuthState = AuthUser | null | undefined;
 
+const defaultPrivateRoutesByPermission = [
+  { permission: 'reports.view', route: '/app/dashboard' },
+  { permission: 'deliveries.view', route: '/app/entregas' },
+  { permission: 'orders.view', route: '/app/ordenes' },
+  { permission: 'customers.view', route: '/app/clientes' },
+  { permission: 'payments.view', route: '/app/pagos' },
+  { permission: 'inventory.view', route: '/app/inventario' },
+  { permission: 'suppliers.view', route: '/app/proveedores' },
+  { permission: 'users.manage', route: '/app/admin/usuarios' },
+  { permission: 'roles.manage', route: '/app/admin/roles' }
+] as const;
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -103,6 +115,13 @@ export class AuthService {
 
   hasPermission(permission: string): boolean {
     return this.currentUserSubject.value?.permissions.includes(permission) ?? false;
+  }
+
+  getDefaultPrivateRoute(user: AuthUser | null | undefined = this.currentUserSubject.value): string {
+    const permissions = new Set(user?.permissions ?? []);
+    const route = defaultPrivateRoutesByPermission.find((item) => permissions.has(item.permission));
+
+    return route?.route ?? '/app/access-denied';
   }
 
   private getCsrfToken(): Observable<string> {
