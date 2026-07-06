@@ -2,6 +2,47 @@
 
 Fase 3.5.2 - UI admin catálogo/precios con selección de imagen existente.
 
+## Cierre QA DEV - 2026-07-05
+
+Validación manual reportada en DEV para la UI admin de catálogo/precios. Este cierre documenta el reporte del responsable del proyecto; Codex no re-ejecutó login ni pruebas autenticadas con credenciales reales.
+
+Deploy validado:
+
+| Punto | Resultado |
+| --- | --- |
+| Commit desplegado | `e89d1f0b872d253838dc77f5df5fafb61522f9db` |
+| GitHub Actions | `success` |
+| `GET /health` | `200` |
+| `GET /api/admin/catalog/sections` sin sesión | `401` esperado para endpoint protegido |
+| `GET /api/admin/catalog/products` sin sesión | `401` esperado para endpoint protegido |
+
+Resultados funcionales reportados:
+
+| Caso | Resultado |
+| --- | --- |
+| Login Admin | OK |
+| Navegación privada muestra `Catálogo` para Admin | OK |
+| `/app/admin/catalogo` carga correctamente | OK |
+| Lista secciones | OK |
+| Lista productos | OK |
+| Filtro por sección | OK |
+| Crear sección | OK |
+| Editar sección | OK |
+| Activar/desactivar sección | OK |
+| Crear producto | OK |
+| Editar producto | OK |
+| Actualizar precio | OK |
+| Precio negativo bloqueado | OK |
+| Activar/desactivar producto | OK |
+| Selección de `imagePath` existente | OK |
+| Preview de imagen | OK |
+| Limpiar imagen | OK |
+| `/catalogo` público sigue funcionando | OK |
+| `Repartidor` no ve `Catálogo` | OK |
+| `Repartidor` no accede a `/app/admin/catalogo` | OK |
+
+Observaciones reportadas: sin hallazgos ni bug claro. No se modificó código, backend, migraciones, `AuthService`, guards, cookies, XSRF, deploy ni dependencias para este cierre documental.
+
 ## Alcance Validado Por Código
 
 - Ruta privada: `/app/admin/catalogo`.

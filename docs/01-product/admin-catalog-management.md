@@ -18,6 +18,8 @@ QA DEV Fase 3.5.1, 2026-07-05: commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8`
 
 Actualización Fase 3.5.2: la UI admin quedó implementada como ruta privada `/app/admin/catalogo`, protegida por `catalog.view` en el router actual. La navegación privada muestra `Catálogo` a usuarios con `catalog.view` o `catalog.manage`. Usuarios con `catalog.view` pueden listar secciones/productos en modo solo lectura; usuarios con `catalog.manage` pueden crear, editar, activar/desactivar, actualizar precios y seleccionar `imagePath` desde una allowlist local de assets `.webp` existentes. La UI muestra preview cuando hay imagen y marca rutas heredadas con `yacket` o doble punto como observación visual. No se implementó upload, no se modificó `/catalogo`, no se crearon migraciones y no se tocó backend.
 
+QA DEV Fase 3.5.2, 2026-07-05: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db` desplegado con GitHub Actions `success`; `/health` respondió `200`; los endpoints admin `/api/admin/catalog/sections` y `/api/admin/catalog/products` sin sesión respondieron `401`. Admin quedó validado para login, navegación `Catálogo`, carga de `/app/admin/catalogo`, listado de secciones/productos, filtro por sección, creación/edición/activación de secciones y productos, actualización de precio, bloqueo de precio negativo, selección/preview/limpieza de `imagePath` existente. `/catalogo` público siguió funcionando y `Repartidor` quedó validado sin navegación ni acceso a `/app/admin/catalogo`. Observaciones: sin hallazgos ni bug claro reportado.
+
 ## Propósito Futuro
 
 Permitir que usuarios autorizados administren secciones, productos, precios e imágenes del catálogo desde la app privada, sin exponer edición en el sitio público.

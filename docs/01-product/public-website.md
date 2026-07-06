@@ -156,6 +156,7 @@ Backlog futuro relacionado:
 - Fase 3.5.1 implementa `GET /api/catalog/public` y endpoints admin de catálogo, pero `/catalogo` no los consume todavía. La transición pública queda para Fase 3.5.3.
 - Fase 3.5.2 permite administrar secciones/productos/precios e imágenes existentes desde `/app/admin/catalogo`; no modifica la fuente actual de `/catalogo`.
 - QA DEV Fase 3.5.1 confirmó que `/catalogo` sigue respondiendo `200` y que la API pública de catálogo también responde `200` sin sesión. No se cambió la fuente de datos visible del catálogo público.
+- QA DEV Fase 3.5.2 confirmó que la administración privada de catálogo no rompió `/catalogo` público; la ruta pública sigue funcionando y conserva `catalog-data.ts` como fuente visible hasta Fase 3.5.3.
 
 Assets:
 

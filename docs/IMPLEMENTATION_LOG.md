@@ -6,6 +6,70 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-05 - QA DEV Fase 3.5.2 UI Admin Catálogo
+
+### Cierre QA DEV
+
+Se documentó el cierre QA DEV de Fase 3.5.2 para la UI privada de administración de catálogo/precios bajo `/app/admin/catalogo`.
+
+Validación manual reportada por el responsable del proyecto:
+
+- Commit desplegado: `e89d1f0b872d253838dc77f5df5fafb61522f9db`.
+- GitHub Actions: `success`.
+- `GET /health`: `200`.
+- `GET /api/admin/catalog/sections` sin sesión: `401`.
+- `GET /api/admin/catalog/products` sin sesión: `401`.
+- Login Admin: OK.
+- Navegación privada muestra `Catálogo` para Admin: OK.
+- `/app/admin/catalogo` carga: OK.
+- Listado de secciones/productos y filtro por sección: OK.
+- Crear, editar y activar/desactivar secciones: OK.
+- Crear, editar, activar/desactivar productos y actualizar precio: OK.
+- Precio negativo bloqueado: OK.
+- Selección de `imagePath` existente, preview y limpiar imagen: OK.
+- `/catalogo` público sigue funcionando: OK.
+- `Repartidor` no ve `Catálogo` y no accede a `/app/admin/catalogo`: OK.
+- Observaciones: sin hallazgos ni bug claro reportado.
+
+### Cambio Realizado
+
+Solo documentación para registrar cierre QA DEV. No se modificó código de aplicación.
+
+### Documentación Actualizada
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/admin-catalog-management.md`
+- `docs/01-product/catalog-admin-design.md`
+- `docs/01-product/public-website.md`
+- `docs/08-qa/catalog-admin-ui-qa.md`
+
+### Exclusiones Confirmadas
+
+- No se modificó backend.
+- No se modificaron migraciones.
+- No se tocó `AuthService`.
+- No se modificaron guards.
+- No se tocaron cookies ni XSRF.
+- No se tocó deploy.
+- No se instalaron dependencias.
+- No se imprimieron secretos.
+- No se usó `codex-cobranza-sql`.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `317.27 kB`, sin warning de budget.
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 140/140.
+- `git diff --check`: correcto.
+
+### Siguiente Fase Recomendada
+
+Fase 3.5.3 - `/catalogo` público consume `GET /api/catalog/public` con manejo de error/fallback de transición.
+
 ## 2026-07-05 - Fase 3.5.2 UI Admin Catálogo
 
 ### Cambio Realizado

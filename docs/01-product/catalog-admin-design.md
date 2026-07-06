@@ -4,7 +4,7 @@ Fase 3.5.0 - análisis y documentación para administración de catálogo, preci
 
 Actualización Fase 3.5.1, 2026-07-05: el backend del catálogo administrable ya quedó implementado con migración, seed inicial, permisos y endpoints, y quedó cerrado en DEV en commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8`.
 
-Actualización Fase 3.5.2, 2026-07-05: la UI admin quedó implementada bajo `/app/admin/catalogo` con selección de imágenes existentes, preview y modo readonly. El consumo de `/catalogo` desde API y el upload de imágenes siguen fuera de esta fase.
+Actualización Fase 3.5.2, 2026-07-05: la UI admin quedó implementada y cerrada en DEV bajo `/app/admin/catalogo` con selección de imágenes existentes, preview y modo readonly. El consumo de `/catalogo` desde API y el upload de imágenes siguen fuera de esta fase.
 
 ## Resumen Ejecutivo
 
@@ -585,6 +585,7 @@ Para Fase 3.5.2:
 - `/catalogo` público sigue usando `catalog-data.ts`.
 - No hay upload de imágenes.
 - No hay migraciones ni cambios backend.
+- QA DEV cerrado el 2026-07-05: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db`, GitHub Actions `success`, `/health` `200`, endpoints admin sin sesión `401`, flujo Admin OK, bloqueo de precio negativo OK, selección/preview/limpieza de imagen OK, `/catalogo` público OK y `Repartidor` sin navegación/acceso OK.
 
 ## Qué No Implementar Todavía
 
