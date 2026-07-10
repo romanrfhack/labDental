@@ -4,9 +4,9 @@ Backlog futuro para Laboratorio Dental Tláhuac.
 
 ## Estado
 
-Fase 3.5.2 ya implementó la UI privada de administración de catálogo y precios bajo `/app/admin/catalogo`, consumiendo endpoints admin existentes.
+Fase 3.5.2 ya implementó la UI privada de administración de catálogo y precios bajo `/app/admin/catalogo`, consumiendo endpoints admin existentes. Fase 3.5.3 conectó localmente `/catalogo` público a `GET /api/catalog/public` con fallback a `catalog-data.ts`.
 
-El catálogo público actual en `/catalogo` sigue funcionando con datos estructurados del frontend en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` hasta Fase 3.5.3. No debe cambiarse a consumo de API antes de validar la transición.
+El catálogo público actual en `/catalogo` consulta la API pública cuando la respuesta contiene secciones y productos válidos. Si la API falla, tarda demasiado, devuelve respuesta nula, secciones vacías, catálogo sin productos o datos con forma inválida, la UI conserva el catálogo estructurado del frontend en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
 
 Actualización Fase 3.2: la administración de catálogo permanece como backlog. No debe bloquear el flujo operativo de órdenes, etiquetas y reparto. El MVP de etiquetas desde órdenes existentes ya quedó implementado; antes del catálogo sigue conviniendo validar impresión real y, si el cliente lo prioriza, avanzar flujo mobile-first de entrega/repartidor.
 
@@ -19,6 +19,8 @@ QA DEV Fase 3.5.1, 2026-07-05: commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8`
 Actualización Fase 3.5.2: la UI admin quedó implementada como ruta privada `/app/admin/catalogo`, protegida por `catalog.view` en el router actual. La navegación privada muestra `Catálogo` a usuarios con `catalog.view` o `catalog.manage`. Usuarios con `catalog.view` pueden listar secciones/productos en modo solo lectura; usuarios con `catalog.manage` pueden crear, editar, activar/desactivar, actualizar precios y seleccionar `imagePath` desde una allowlist local de assets `.webp` existentes. La UI muestra preview cuando hay imagen y marca rutas heredadas con `yacket` o doble punto como observación visual. No se implementó upload, no se modificó `/catalogo`, no se crearon migraciones y no se tocó backend.
 
 QA DEV Fase 3.5.2, 2026-07-05: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db` desplegado con GitHub Actions `success`; `/health` respondió `200`; los endpoints admin `/api/admin/catalog/sections` y `/api/admin/catalog/products` sin sesión respondieron `401`. Admin quedó validado para login, navegación `Catálogo`, carga de `/app/admin/catalogo`, listado de secciones/productos, filtro por sección, creación/edición/activación de secciones y productos, actualización de precio, bloqueo de precio negativo, selección/preview/limpieza de `imagePath` existente. `/catalogo` público siguió funcionando y `Repartidor` quedó validado sin navegación ni acceso a `/app/admin/catalogo`. Observaciones: sin hallazgos ni bug claro reportado.
+
+Actualización Fase 3.5.3, 2026-07-10: `/catalogo` público queda preparado para reflejar cambios administrados desde `/app/admin/catalogo` mediante `GET /api/catalog/public`, siempre que el endpoint responda con datos válidos. `catalog-data.ts` no se elimina y queda como fallback de transición. No se implementa upload, no se modifica UI admin, no se crean migraciones y no se toca auth, guards, cookies, XSRF ni deploy.
 
 ## Propósito Futuro
 
@@ -80,14 +82,13 @@ Antes de implementar se debe definir:
 
 ## Fuera De Alcance Actual
 
-Después de Fase 3.5.2, sigue fuera de alcance:
+Después de Fase 3.5.3, sigue fuera de alcance:
 
 - No se modifica `AuthService`.
 - No se modifican guards.
 - No se implementa upload de imágenes.
 - No se instalan dependencias.
 - No se cambia deploy.
-- No se modifica el catálogo público actual.
 - No se elimina `catalog-data.ts`.
 - No se mueve ningún asset.
 
@@ -97,7 +98,7 @@ La secuencia sugerida después de Fase 3.5.0 es:
 
 1. Fase 3.5.1: backend catálogo administrable + migración + seed inicial desde `catalog-data.ts`. Implementada.
 2. Fase 3.5.2: UI admin de catálogo/precios con selección de imagen existente. Implementada.
-3. Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición.
+3. Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición. Implementada localmente.
 4. Fase 3.5.4: carga/reemplazo de imágenes desde admin con política de almacenamiento y backup.
 
 El catálogo requiere modelo de datos, endpoints, almacenamiento de imágenes, permisos y reglas de publicación; por eso no conviene mezclarlo con el MVP operativo de entrega.

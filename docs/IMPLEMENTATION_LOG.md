@@ -6,6 +6,66 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-07-10 - Fase 3.5.3 Catálogo Público Consume API
+
+### Cambio Realizado
+
+Se conectó `/catalogo` público a `GET /api/catalog/public` manteniendo `catalog-data.ts` como fallback local para evitar que la página quede vacía si la API falla, tarda demasiado o devuelve una respuesta inválida.
+
+### Frontend
+
+- Nuevo `PublicCatalogService` en `src/LaboratorioTlahuac.Web/src/app/public/services/public-catalog.service.ts`.
+- `getPublicCatalog()` consulta `GET /api/catalog/public` sin `withCredentials` explícito y mapea la respuesta pública al modelo que ya usa la vista.
+- El mapper valida que existan secciones, que haya al menos un producto total y que `key`, `name`, `priceAmount`, `products`, `imagePath` y `altText` tengan forma esperada.
+- `catalog-page.component.ts` inicia con `catalogSections` desde `catalog-data.ts`, muestra loading breve, reemplaza por API válida y vuelve al fallback ante HTTP error, timeout, respuesta nula, secciones vacías, catálogo sin productos o error de mapeo.
+- Se conserva el layout público actual, carrusel, galería, precios MXN, placeholders, `imagePath` y `altText` cuando existe.
+- El mensaje de fallback es no técnico: `Mostrando catálogo de referencia disponible.`.
+
+### Documentación Actualizada
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/public-website.md`
+- `docs/01-product/catalog-admin-design.md`
+- `docs/01-product/admin-catalog-management.md`
+- `docs/03-architecture/ARCHITECTURE.md`
+- `docs/08-qa/catalog-api-qa.md`
+- `docs/08-qa/catalog-admin-ui-qa.md`
+
+### Documentación Creada
+
+- `docs/08-qa/public-catalog-api-qa.md`
+
+### Exclusiones Confirmadas
+
+- No se modificó UI admin.
+- No se modificó backend.
+- No se crearon migraciones.
+- No se implementó upload de imágenes.
+- No se eliminó `catalog-data.ts`.
+- No se movieron assets.
+- No se tocó `AuthService`.
+- No se modificaron guards.
+- No se tocaron cookies ni XSRF.
+- No se tocó deploy.
+- No se instalaron dependencias.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `317.77 kB`, sin warning de budget.
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 140/140.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias de catálogo, rutas públicas/privadas, permisos, upload, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql`: ejecutadas. Las búsquedas de patrones sensibles se limitaron a nombres de archivo para no imprimir valores.
+
+### Siguiente Fase Recomendada
+
+Fase 3.5.4 - carga/reemplazo de imágenes desde admin, o pulido QA de catálogo público si hay hallazgos en DEV.
+
 ## 2026-07-05 - QA DEV Fase 3.5.2 UI Admin Catálogo
 
 ### Cierre QA DEV

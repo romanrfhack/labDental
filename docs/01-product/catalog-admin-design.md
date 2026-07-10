@@ -6,19 +6,21 @@ Actualización Fase 3.5.1, 2026-07-05: el backend del catálogo administrable ya
 
 Actualización Fase 3.5.2, 2026-07-05: la UI admin quedó implementada y cerrada en DEV bajo `/app/admin/catalogo` con selección de imágenes existentes, preview y modo readonly. El consumo de `/catalogo` desde API y el upload de imágenes siguen fuera de esta fase.
 
+Actualización Fase 3.5.3, 2026-07-10: `/catalogo` público queda implementado localmente para consumir `GET /api/catalog/public` y conservar `catalog-data.ts` como fallback ante error HTTP, timeout, respuesta nula, secciones vacías, catálogo sin productos o error de mapeo. No se implementa upload ni se modifica UI admin.
+
 ## Resumen Ejecutivo
 
-El catálogo público actual de `/catalogo` ya funciona y no debe romperse. Hoy se renderiza desde datos estructurados estáticos en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` y usa assets locales en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
+El catálogo público actual de `/catalogo` ya funciona y no debe romperse. Desde Fase 3.5.3 consume `GET /api/catalog/public` cuando la respuesta es válida, conserva datos estructurados estáticos en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` como fallback y usa assets locales en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
 
 La recomendación para el MVP administrable es migrar secciones y productos a backend/base de datos, sembrar la información inicial desde `catalog-data.ts`, exponer un endpoint público de solo lectura y crear endpoints privados de administración bajo `/api/admin/catalog`. Para reducir riesgo, el MVP debe permitir seleccionar una imagen existente por `imagePath`/`assetPath`, sin carga de archivos desde UI todavía. La carga/reemplazo de imágenes debe quedar para una fase posterior con política explícita de almacenamiento, validación y backup.
 
-Siguiente fase implementable recomendada: Fase 3.5.3 - `/catalogo` público consume `GET /api/catalog/public` con manejo de error/fallback.
+Siguiente fase implementable recomendada: Fase 3.5.4 - carga/reemplazo de imágenes desde admin, o pulido QA de catálogo público si DEV reporta hallazgos.
 
 ## Estado Actual
 
 ### Confirmaciones
 
-- `/catalogo` público usa datos frontend estáticos desde `catalog-data.ts`.
+- `/catalogo` público consume `GET /api/catalog/public` cuando la respuesta es válida y usa `catalog-data.ts` como fallback local.
 - Existe backend de catálogo desde Fase 3.5.1.
 - Existen entidades `CatalogSection` y `CatalogProduct`, migración `20260705054221_AddCatalogManagement` y endpoints de catálogo.
 - Existe UI de administración de precios e imágenes existentes bajo `/app/admin/catalogo` desde Fase 3.5.2.
@@ -38,7 +40,7 @@ Siguiente fase implementable recomendada: Fase 3.5.3 - `/catalogo` público cons
 - Configuración Angular: hoy copia `src/assets/**/*.webp` hacia `assets`.
 - API pública implementada: `GET /api/catalog/public`.
 - API admin implementada: `/api/admin/catalog/sections` y `/api/admin/catalog/products`.
-- `/catalogo` público todavía no consume la API; sigue usando `catalog-data.ts`.
+- `/catalogo` público ya consume la API pública con fallback a `catalog-data.ts`.
 
 ### Inventario Del Catálogo Actual
 
@@ -490,8 +492,19 @@ Alcance:
 - Cambiar `/catalogo` para consumir `GET /api/catalog/public`.
 - Mantener layout y comportamiento visual actual.
 - Manejar error de API con estado controlado.
-- Evaluar fallback temporal a `catalog-data.ts` durante transición DEV, si se quiere reducir riesgo UAT.
+- Mantener fallback temporal a `catalog-data.ts` durante transición DEV para reducir riesgo UAT.
 - Validar DEV en móvil y desktop.
+
+Implementación Fase 3.5.3:
+
+- Servicio público `PublicCatalogService` para `GET /api/catalog/public`.
+- Mapper frontend de contrato público a `CatalogSection`/`CatalogProduct` de la vista pública.
+- Validación de respuesta: requiere arreglo de secciones no vacío, productos por sección como arreglo y al menos un producto total.
+- Fallback ante error HTTP, timeout de carga, respuesta nula, secciones vacías, catálogo sin productos o error de parseo/mapeo.
+- `catalog-data.ts` queda como fallback y plan de reversa; no se borran assets.
+- Se conserva `imagePath`, `altText`, precios MXN, carrusel, galería y placeholders actuales.
+- Aviso público no técnico cuando se usa fallback.
+- No se usa `withCredentials` explícito en el GET público.
 
 Exclusiones:
 
@@ -587,6 +600,17 @@ Para Fase 3.5.2:
 - No hay migraciones ni cambios backend.
 - QA DEV cerrado el 2026-07-05: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db`, GitHub Actions `success`, `/health` `200`, endpoints admin sin sesión `401`, flujo Admin OK, bloqueo de precio negativo OK, selección/preview/limpieza de imagen OK, `/catalogo` público OK y `Repartidor` sin navegación/acceso OK.
 
+Para Fase 3.5.3:
+
+- `/catalogo` consume `GET /api/catalog/public`.
+- Si la API responde con secciones y productos activos válidos, la vista usa datos de API.
+- Si la API falla, tarda demasiado, devuelve respuesta nula, secciones vacías, catálogo sin productos o forma inválida, la vista usa `catalog-data.ts`.
+- El sitio público no queda vacío ante errores de API.
+- El layout, rutas públicas, precios MXN, imágenes por `imagePath`, placeholders y comportamiento responsive se mantienen.
+- UI admin `/app/admin/catalogo` no se modifica.
+- No se modifica backend, migraciones, auth, guards, cookies, XSRF, deploy ni dependencias.
+- Validación local 2026-07-10: `npm run build`, `dotnet build` y `dotnet test` correctos; QA manual DEV queda en `docs/08-qa/public-catalog-api-qa.md`.
+
 ## Qué No Implementar Todavía
 
 - Upload de imágenes en MVP inicial.
@@ -613,6 +637,6 @@ Antes de exponer cambios administrables al público, validar:
 
 ## Siguiente Fase Implementable
 
-Fase 3.5.3 - `/catalogo` público consume `GET /api/catalog/public` con manejo de error/fallback.
+Fase 3.5.4 - carga/reemplazo de imágenes desde admin con política de almacenamiento, validación y backup.
 
-La implementación debe mantener el layout público actual, manejar errores de API de forma controlada y conservar fallback o plan de reversa con `catalog-data.ts` hasta cerrar validación DEV.
+Si DEV reporta hallazgos sobre Fase 3.5.3, antes de iniciar upload conviene hacer pulido QA del catálogo público y conservar `catalog-data.ts` como fallback hasta cerrar la transición.

@@ -3,12 +3,14 @@ export interface CatalogProduct {
   name: string;
   price: number;
   imageUrl?: string;
+  altText?: string;
 }
 
 export interface CatalogSection {
   id: string;
   name: string;
   imageUrl?: string;
+  altText?: string;
   products: CatalogProduct[];
 }
 

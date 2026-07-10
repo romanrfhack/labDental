@@ -112,4 +112,10 @@ Cobertura:
 
 ## Relación Con Fase 3.5.2
 
-La UI privada `/app/admin/catalogo` usa los endpoints admin documentados aquí. La validación API de autorización sigue siendo la autoridad: `catalog.view` o `catalog.manage` para lectura y `catalog.manage` para mutaciones. `/catalogo` público sigue pendiente de transición a `GET /api/catalog/public` en Fase 3.5.3.
+La UI privada `/app/admin/catalogo` usa los endpoints admin documentados aquí. La validación API de autorización sigue siendo la autoridad: `catalog.view` o `catalog.manage` para lectura y `catalog.manage` para mutaciones. La transición pública de `/catalogo` a `GET /api/catalog/public` se implementa en Fase 3.5.3 sin cambiar este contrato backend.
+
+## Relación Con Fase 3.5.3
+
+Fase 3.5.3 conecta `/catalogo` público a `GET /api/catalog/public` sin cambiar el contrato backend. El frontend valida la forma de la respuesta y usa `catalog-data.ts` como fallback si el endpoint devuelve error HTTP, tarda demasiado, responde nulo, no trae secciones, no trae ningún producto total o rompe el mapeo esperado.
+
+La API sigue siendo pública y no requiere sesión. Los endpoints admin siguen protegidos y no se exponen desde la UI pública.

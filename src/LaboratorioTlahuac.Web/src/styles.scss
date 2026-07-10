@@ -168,6 +168,25 @@
   max-width: 720px;
 }
 
+.catalog-page .catalog-data-status {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(166, 223, 247, 0.34);
+  border-radius: 999px;
+  color: #eef9ff;
+  display: inline-flex;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-top: 16px;
+  max-width: min(100%, 520px);
+  padding: 8px 12px;
+}
+
+.catalog-page .catalog-data-status.is-fallback {
+  background: rgba(166, 223, 247, 0.16);
+}
+
 .home-page .section-heading p,
 .home-page .contact-band p,
 .catalog-page .catalog-contact p:not(.eyebrow),

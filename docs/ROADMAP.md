@@ -37,6 +37,7 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Pendiente técnico de despliegue DEV: ajustar el workflow para esperar más o validar health con reintentos más tolerantes después del restart.
 - Fase 3.5.1: backend catálogo administrable + migración + seed inicial. Implementada y cerrada en DEV el 2026-07-05; agrega `CatalogSection`, `CatalogProduct`, migración `AddCatalogManagement`, seed idempotente desde `catalog-data.ts`, permisos `catalog.view`/`catalog.manage`, `GET /api/catalog/public` sin autenticación y endpoints admin bajo `/api/admin/catalog`. QA DEV: commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8`, GitHub Actions `success`, `/health` `200`, `/api/catalog/public` sin sesión `200`, `/catalogo` `200` y endpoints admin sin sesión `401`. No cambia `/catalogo`, no crea UI admin y no implementa upload.
 - Fase 3.5.2: UI admin catálogo/precios con selección de imagen existente. Implementada y validada en DEV el 2026-07-05 bajo `/app/admin/catalogo`; agrega modelos y servicio frontend de catálogo, navegación privada `Catálogo`, lectura de secciones/productos, filtros por sección/estado, creación/edición/activación de secciones y productos, actualización rápida de precio, selección de `imagePath` desde assets `.webp` existentes, preview y modo readonly para `catalog.view` sin `catalog.manage`. QA DEV: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db`, GitHub Actions `success`, `/health` `200`, endpoints admin sin sesión `401`, flujo Admin OK, precio negativo bloqueado OK, selección/preview/limpieza de imagen OK, `/catalogo` público OK y `Repartidor` sin navegación/acceso OK. No cambia `/catalogo`, no implementa upload, no crea migraciones, no toca backend, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
+- Fase 3.5.3: catálogo público consume API con fallback. Implementada localmente el 2026-07-10; `/catalogo` consulta `GET /api/catalog/public`, valida la respuesta y usa `catalog-data.ts` como fallback ante HTTP error, timeout, respuesta nula, secciones vacías, catálogo sin productos o error de mapeo. Mantiene layout, rutas públicas, precios MXN, assets por `imagePath`, placeholders y aviso no técnico de fallback. No cambia UI admin, backend, migraciones, upload, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
 
 ## Sitio Público Institucional
 
@@ -50,7 +51,7 @@ Fuente funcional: `docs/01-product/public-website.md`.
 - Fase sitio 1.3.1: cierre técnico del catálogo, limpieza de assets `:Zone.Identifier`, documentación de placeholders y preparación para revisión visual del cliente. Implementada por código/documentación; revisión visual real cubierta posteriormente por Fase 1.6.
 - Fase sitio 1.5: identidad visual LDT, logo, tokens de marca y datos de contacto del cartel/catálogo. Implementada; validación visual cubierta posteriormente por Fase 1.6 y aprobación comercial del cliente pendiente.
 - Fase sitio 1.6: pulido visual premium del sitio público con CSS/IntersectionObserver, reveal sutil, parallax ligero, microinteracciones y mejoras de composición en home, servicios, catálogo, contacto y login visual. Completada y validada visualmente por el responsable del proyecto.
-- Backlog relacionado: administración privada de catálogo, precios e imágenes. Fase 3.5.2 ya dejó UI admin bajo `/app/admin/catalogo` y quedó validada en DEV; `/catalogo` sigue usando data frontend hasta Fase 3.5.3. Fuente: `docs/01-product/admin-catalog-management.md`.
+- Backlog relacionado: administración privada de catálogo, precios e imágenes. Fase 3.5.2 ya dejó UI admin bajo `/app/admin/catalogo` y quedó validada en DEV; Fase 3.5.3 conecta `/catalogo` con `GET /api/catalog/public` y conserva `catalog-data.ts` como fallback. Fuente: `docs/01-product/admin-catalog-management.md`.
 - Fase sitio/sistema 2.0: validación real del flujo de `/login`, sesión, `returnUrl` y acceso a `/app/dashboard`, sin rediseñar pantallas ni implementar módulos nuevos. Ejecutada por código/build/tests/curl; login real con Admin local y dashboard autenticado fueron cerrados posteriormente en Fase 2.1d.
 - Fase sitio 3: QA mobile-first completo y preparación de contenido final. Pendiente.
 - Fase sitio 4: publicación productiva en `laboratoriodentaltlahuac.com` cuando deploy/DNS estén definidos. Pendiente; DEV ya está publicado en `https://dev.laboratoriodentaltlahuac.com` como baseline UAT inicial.
@@ -70,11 +71,11 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Fase 3.5.3, `/catalogo` público consume `GET /api/catalog/public` con manejo de error/fallback de transición.
+Fase 3.5.4, carga/reemplazo de imágenes desde admin con política de almacenamiento, validación y backup, o pulido QA de catálogo público si DEV reporta hallazgos de Fase 3.5.3.
 
-Fase 3.5.2 queda implementada y cerrada en DEV como UI privada de administración de catálogo y precios bajo `/app/admin/catalogo`, consumiendo endpoints admin existentes y sin cambiar todavía `/catalogo` público.
+Fase 3.5.3 queda implementada localmente como transición pública: `/catalogo` consume `GET /api/catalog/public` y conserva fallback local con `catalog-data.ts`.
 
-El consumo público de API queda para Fase 3.5.3 y la carga/reemplazo de imágenes desde admin para Fase 3.5.4. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
+La carga/reemplazo de imágenes desde admin queda para Fase 3.5.4. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
 ## Regla De Actualización
 

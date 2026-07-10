@@ -80,7 +80,8 @@ Data del catálogo:
 
 - Archivo: `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
 - Interfaces: `CatalogSection` y `CatalogProduct`.
-- La UI renderiza secciones y productos dinámicamente desde esa estructura.
+- Desde Fase 3.5.3, la UI consulta `GET /api/catalog/public` y mapea la respuesta al mismo modelo de vista.
+- `catalog-data.ts` permanece como fallback local para no dejar `/catalogo` vacío si la API falla, tarda demasiado o responde con datos inválidos.
 - Los precios se formatean en MXN desde valores numéricos.
 
 Imágenes:
@@ -149,14 +150,15 @@ Backlog futuro relacionado:
 
 - La administración de catálogo, precios e imágenes queda documentada como fase futura separada en `docs/01-product/admin-catalog-management.md`.
 - No pertenece a la fase actual del sitio público.
-- Fase 3.5.1 ya implementó backend/API/seed de catálogo y Fase 3.5.2 ya implementó UI admin bajo `/app/admin/catalogo`, pero `/catalogo` no consume todavía la API.
-- El catálogo público actual sigue funcionando desde `catalog-data.ts` hasta que se diseñe la fase privada.
+- Fase 3.5.1 ya implementó backend/API/seed de catálogo, Fase 3.5.2 ya implementó UI admin bajo `/app/admin/catalogo` y Fase 3.5.3 conectó `/catalogo` a `GET /api/catalog/public`.
+- El catálogo público actual consume API cuando la respuesta contiene secciones y productos válidos; si hay error HTTP, timeout, respuesta nula, secciones vacías, catálogo sin productos o error de mapeo, vuelve a `catalog-data.ts`.
 - La edición futura deberá vivir bajo `/app`, requerir permisos administrativos y no exponerse en el sitio público.
-- Fase 3.5.0 documenta el diseño técnico en `docs/01-product/catalog-admin-design.md`. Hasta que se implemente y valide Fase 3.5.3, `/catalogo` debe seguir funcionando con `catalog-data.ts` para no romper la experiencia pública.
-- Fase 3.5.1 implementa `GET /api/catalog/public` y endpoints admin de catálogo, pero `/catalogo` no los consume todavía. La transición pública queda para Fase 3.5.3.
-- Fase 3.5.2 permite administrar secciones/productos/precios e imágenes existentes desde `/app/admin/catalogo`; no modifica la fuente actual de `/catalogo`.
+- Fase 3.5.0 documenta el diseño técnico en `docs/01-product/catalog-admin-design.md`; Fase 3.5.3 mantiene `catalog-data.ts` como plan de reversa durante transición DEV.
+- Fase 3.5.1 implementa `GET /api/catalog/public` y endpoints admin de catálogo.
+- Fase 3.5.2 permite administrar secciones/productos/precios e imágenes existentes desde `/app/admin/catalogo`; esos cambios ya pueden alimentar el catálogo público cuando la API responde correctamente.
 - QA DEV Fase 3.5.1 confirmó que `/catalogo` sigue respondiendo `200` y que la API pública de catálogo también responde `200` sin sesión. No se cambió la fuente de datos visible del catálogo público.
-- QA DEV Fase 3.5.2 confirmó que la administración privada de catálogo no rompió `/catalogo` público; la ruta pública sigue funcionando y conserva `catalog-data.ts` como fuente visible hasta Fase 3.5.3.
+- QA DEV Fase 3.5.2 confirmó que la administración privada de catálogo no rompió `/catalogo` público; en ese cierre la ruta pública seguía funcionando con `catalog-data.ts`.
+- Validación local Fase 3.5.3 confirmó `npm run build`, `dotnet build` y `dotnet test`; el pase manual DEV debe confirmar API OK, API caída/timeout y respuesta vacía inválida con fallback visible.
 
 Assets:
 
@@ -348,7 +350,7 @@ Las capacidades publicadas en Fase 1 son descripciones generales provisionales, 
 - Crear una app o repo nuevo.
 - Implementar módulos privados nuevos.
 - Implementar administración de catálogo, precios o imágenes.
-- Migrar `/catalogo` de `catalog-data.ts` a `GET /api/catalog/public` antes de Fase 3.5.3.
+- Eliminar `catalog-data.ts` como fallback antes de cerrar la transición pública.
 - Implementar upload de imágenes desde la UI admin de catálogo antes de Fase 3.5.4.
 
 ## Secciones Faltantes O Pendientes

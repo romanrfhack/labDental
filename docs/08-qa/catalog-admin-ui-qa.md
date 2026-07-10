@@ -102,4 +102,5 @@ Observaciones reportadas: sin hallazgos ni bug claro. No se modificó código, b
 
 - El asset `protesis-removible-unidad-acrilica.jpg` existe en carpeta fuente, pero la configuración Angular actual copia `src/assets/**/*.webp`; por eso la allowlist UI usa los assets `.webp` existentes.
 - Las rutas `provisionales-yacket-*` y `protesis-removible-unidad-metalica..webp` se conservan por compatibilidad con assets existentes y se marcan visualmente como heredadas.
-- Fase siguiente recomendada: Fase 3.5.3 - `/catalogo` público consume `GET /api/catalog/public` con manejo de error/fallback.
+- Fase 3.5.3 se implementó localmente sin modificar esta UI admin: `/catalogo` público consume `GET /api/catalog/public` y conserva fallback a `catalog-data.ts`.
+- Fase siguiente recomendada: Fase 3.5.4 - carga/reemplazo de imágenes desde admin, o pulido QA de catálogo público si DEV reporta hallazgos.

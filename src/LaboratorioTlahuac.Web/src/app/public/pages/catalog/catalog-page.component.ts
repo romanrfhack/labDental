@@ -1,10 +1,13 @@
 import { Component, DestroyRef, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { finalize, timeout } from 'rxjs';
 
 import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-animations.directive';
 import { CatalogProduct, CatalogSection, catalogSections } from '../../data/catalog-data';
+import { PublicCatalogService } from '../../services/public-catalog.service';
 
 type CatalogPauseReason = 'focus' | 'hover' | 'manual';
+type CatalogLoadState = 'api' | 'fallback' | 'loading';
 
 type CatalogGalleryImage = {
   alt: string;
@@ -25,6 +28,15 @@ type CatalogGalleryImage = {
             existen; si falta una imagen específica, se usa una referencia de sección o un placeholder. Precios de
             referencia 2026 sujetos a confirmación.
           </p>
+          @if (catalogNoticeText(); as catalogNoticeText) {
+            <p
+              class="catalog-data-status"
+              [class.is-fallback]="catalogLoadState() === 'fallback'"
+              aria-live="polite"
+            >
+              {{ catalogNoticeText }}
+            </p>
+          }
         </div>
         <a class="login-action" routerLink="/contacto" data-animate="fade-in">Contactar</a>
       </section>
@@ -68,7 +80,7 @@ type CatalogGalleryImage = {
                       @if (getSectionThumbnail(section); as thumbnailUrl) {
                         <img
                           [src]="thumbnailUrl"
-                          [alt]="section.name"
+                          [alt]="getSectionThumbnailAlt(section)"
                           [attr.loading]="sectionIndex === selectedSectionIndex() ? 'eager' : 'lazy'"
                           decoding="async"
                           (error)="markImageMissing(thumbnailUrl)"
@@ -178,7 +190,7 @@ type CatalogGalleryImage = {
                   @if (getProductImage(selectedSection(), product); as productImage) {
                     <img
                       [src]="productImage"
-                      [alt]="product.name + ' - ' + selectedSection().name"
+                      [alt]="getProductImageAlt(selectedSection(), product)"
                       loading="lazy"
                       decoding="async"
                       (error)="markImageMissing(productImage)"
@@ -230,6 +242,7 @@ export class CatalogPageComponent {
   readonly sections = signal<readonly CatalogSection[]>(catalogSections);
   readonly selectedSectionIndex = signal(0);
   readonly selectedImageIndex = signal(0);
+  readonly catalogLoadState = signal<CatalogLoadState>('loading');
   readonly isSectionCarouselPaused = signal(false);
   readonly prefersReducedMotion = signal(false);
   readonly missingImageUrls = signal<ReadonlySet<string>>(new Set<string>());
@@ -261,8 +274,20 @@ export class CatalogPageComponent {
 
     return `${this.selectedImageIndex() + 1} de ${images.length}`;
   });
+  readonly catalogNoticeText = computed(() => {
+    if (this.catalogLoadState() === 'loading') {
+      return 'Actualizando catálogo...';
+    }
+
+    if (this.catalogLoadState() === 'fallback') {
+      return 'Mostrando catálogo de referencia disponible.';
+    }
+
+    return '';
+  });
 
   private readonly destroyRef = inject(DestroyRef);
+  private readonly publicCatalogService = inject(PublicCatalogService);
   private readonly pauseReasons = new Set<CatalogPauseReason>();
   private readonly priceFormatter = new Intl.NumberFormat('es-MX', {
     currency: 'MXN',
@@ -286,6 +311,7 @@ export class CatalogPageComponent {
     this.setupMotionPreference();
     this.selectSectionFromHash();
     this.startAutoplay();
+    this.loadPublicCatalog();
 
     if (typeof window !== 'undefined') {
       window.addEventListener('hashchange', this.onHashChange);
@@ -324,6 +350,24 @@ export class CatalogPageComponent {
     }
 
     return section.products.find((product) => product.imageUrl && !this.isImageMissing(product.imageUrl))?.imageUrl ?? '';
+  }
+
+  getSectionThumbnailAlt(section: CatalogSection) {
+    if (section.imageUrl && !this.isImageMissing(section.imageUrl)) {
+      return section.altText ?? section.name;
+    }
+
+    const productWithImage = section.products.find((product) => product.imageUrl && !this.isImageMissing(product.imageUrl));
+
+    return productWithImage?.altText ?? productWithImage?.name ?? section.name;
+  }
+
+  getProductImageAlt(section: CatalogSection, product: CatalogProduct) {
+    if (product.imageUrl && !this.isImageMissing(product.imageUrl)) {
+      return product.altText ?? `${product.name} - ${section.name}`;
+    }
+
+    return section.altText ?? `${product.name} - ${section.name}`;
   }
 
   markImageMissing(imageUrl: string) {
@@ -470,6 +514,52 @@ export class CatalogPageComponent {
     this.scrollSelectedSectionIntoView();
   }
 
+  private loadPublicCatalog() {
+    this.catalogLoadState.set('loading');
+
+    this.publicCatalogService
+      .getPublicCatalog()
+      .pipe(
+        timeout(2500),
+        finalize(() => {
+          if (this.catalogLoadState() === 'loading') {
+            this.useFallbackCatalog();
+          }
+        })
+      )
+      .subscribe({
+        next: (sections) => {
+          this.applyCatalogSections(sections);
+          this.catalogLoadState.set('api');
+        },
+        error: () => this.useFallbackCatalog()
+      });
+  }
+
+  private useFallbackCatalog() {
+    this.applyCatalogSections(catalogSections);
+    this.catalogLoadState.set('fallback');
+  }
+
+  private applyCatalogSections(sections: readonly CatalogSection[]) {
+    const selectedSectionId = this.selectedSection().id;
+    const currentIndex = this.selectedSectionIndex();
+
+    this.sections.set(sections);
+
+    const hashIndex = this.getHashSectionIndex(sections);
+    const selectedIdIndex = sections.findIndex((section) => section.id === selectedSectionId);
+    const nextIndex =
+      hashIndex >= 0
+        ? hashIndex
+        : selectedIdIndex >= 0
+          ? selectedIdIndex
+          : Math.min(currentIndex, sections.length - 1);
+
+    this.setSelectedSection(Math.max(0, nextIndex));
+    this.keepSelectedImageInRange();
+  }
+
   private selectSectionFromHash() {
     if (typeof window === 'undefined') {
       return;
@@ -477,25 +567,37 @@ export class CatalogPageComponent {
 
     const sectionId = window.location.hash.replace('#', '');
 
-    if (!sectionId) {
-      return;
-    }
-
-    const sectionIndex = this.sections().findIndex((section) => section.id === sectionId);
+    const sectionIndex = this.getHashSectionIndex(this.sections(), sectionId);
 
     if (sectionIndex >= 0) {
       this.setSelectedSection(sectionIndex);
     }
   }
 
+  private getHashSectionIndex(sections: readonly CatalogSection[], sectionId = this.getCurrentHashSectionId()) {
+    if (!sectionId) {
+      return -1;
+    }
+
+    return sections.findIndex((section) => section.id === sectionId);
+  }
+
+  private getCurrentHashSectionId() {
+    if (typeof window === 'undefined') {
+      return '';
+    }
+
+    return window.location.hash.replace('#', '');
+  }
+
   private getSectionImages(section: CatalogSection): CatalogGalleryImage[] {
     const images: CatalogGalleryImage[] = [];
     const imageUrls = new Set<string>();
 
-    this.addSectionImage(images, imageUrls, section.imageUrl, `Imagen representativa de ${section.name}`);
+    this.addSectionImage(images, imageUrls, section.imageUrl, section.altText ?? `Imagen representativa de ${section.name}`);
 
     for (const product of section.products) {
-      this.addSectionImage(images, imageUrls, product.imageUrl, `${product.name} - ${section.name}`);
+      this.addSectionImage(images, imageUrls, product.imageUrl, product.altText ?? `${product.name} - ${section.name}`);
     }
 
     return images;

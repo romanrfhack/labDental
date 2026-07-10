@@ -36,8 +36,8 @@ Fuente canónica de arquitectura para Laboratorio Dental Tláhuac.
 ## Separación Sitio Público Vs App Privada
 
 - Sitio público: rutas públicas dentro de `src/LaboratorioTlahuac.Web/src/app/public`.
-- Catálogo público: ruta `/catalogo`, renderizada desde data tipada local.
-- Diseño Fase 3.5.0: el catálogo administrable se documenta en `docs/01-product/catalog-admin-design.md`; Fase 3.5.1 ya implementa backend/API/seed. Hasta Fase 3.5.3, `/catalogo` debe seguir funcionando desde `catalog-data.ts`.
+- Catálogo público: ruta `/catalogo`, renderizada desde `GET /api/catalog/public` con fallback a data tipada local.
+- Diseño Fase 3.5.0: el catálogo administrable se documenta en `docs/01-product/catalog-admin-design.md`; Fase 3.5.1 ya implementa backend/API/seed, Fase 3.5.2 implementa UI admin y Fase 3.5.3 conecta `/catalogo` a la API pública con fallback.
 - Logo público: asset local en `src/LaboratorioTlahuac.Web/src/assets/brand/logo-ldt.webp`, servido como `/assets/brand/logo-ldt.webp`.
 - Login: ruta pública `/login`, fuera del layout privado.
 - App privada: rutas bajo `/app`, renderizadas por `PrivateLayoutComponent`.
@@ -154,7 +154,7 @@ UI catálogo administrable Fase 3.5.2:
 - Protección frontend: `permissionGuard` con `catalog.view`, porque el guard actual soporta un permiso por ruta.
 - Acciones mutables en UI: visibles solo con `catalog.manage`; backend sigue siendo autoridad.
 - Selección de imágenes: allowlist local de assets `.webp` existentes bajo `assets/catalog/products`, sin upload.
-- `/catalogo` público sigue usando `catalog-data.ts` hasta Fase 3.5.3.
+- Desde Fase 3.5.3, `/catalogo` público consume `GET /api/catalog/public` y conserva `catalog-data.ts` como fallback local si la API falla o responde con datos inválidos.
 
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
 
@@ -221,7 +221,7 @@ Estructura pública implementada en Fase 1:
 - `public/layout/public-layout.component.ts`: header, navegación pública y footer.
 - `public/pages/home/home-page.component.ts`: landing de `/`.
 - `public/pages/home/home-page.component.scss`: estilos mobile-first de la landing.
-- `public/data/catalog-data.ts`: data tipada del catálogo público.
+- `public/data/catalog-data.ts`: fallback local tipado del catálogo público.
 - `public/pages/catalog/catalog-page.component.ts`: página pública `/catalogo`.
 - `public/pages/catalog/catalog-page.component.scss`: estilos mobile-first del catálogo.
 - `public/pages/services/services-page.component.ts`: página pública `/servicios`.
