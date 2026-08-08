@@ -94,7 +94,11 @@ type CatalogLoadState = 'api' | 'fallback' | 'loading';
           </div>
 
           <article class="category-content" [id]="selectedSection().id">
-            <header class="category-header" data-animate="fade-up">
+            <header
+              class="category-header"
+              [class.has-image]="selectedSectionImage()"
+              data-animate="fade-up"
+            >
               <div class="category-copy">
                 <p class="eyebrow">Sección seleccionada</p>
                 <h2>{{ selectedSection().name }}</h2>
@@ -108,7 +112,7 @@ type CatalogLoadState = 'api' | 'fallback' | 'loading';
                 </div>
               </div>
 
-              @if (getSectionImage(selectedSection()); as sectionImage) {
+              @if (selectedSectionImage(); as sectionImage) {
                 <figure class="category-image">
                   <img
                     [src]="sectionImage"
@@ -185,6 +189,7 @@ export class CatalogPageComponent {
     return sections.find((section) => section.id === this.selectedSectionKey()) ?? sections[0] ?? catalogSections[0];
   });
   readonly currentProducts = computed(() => this.selectedSection().products);
+  readonly selectedSectionImage = computed(() => this.getSectionImage(this.selectedSection()));
   readonly catalogNoticeText = computed(() => {
     if (this.catalogLoadState() === 'loading') {
       return 'Actualizando catálogo...';
