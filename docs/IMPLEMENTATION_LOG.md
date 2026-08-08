@@ -6,6 +6,65 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-08-08 - Fase 3.5.4.0 Diseño Operativo De Almacenamiento De Imágenes
+
+### Análisis De Deploy
+
+- Se revisaron `.github/workflows/deploy.yml` y `.github/scripts/deploy-lab.sh` sin modificarlos.
+- El deploy instala backend y frontend en `releases/{releaseId}`, mueve `backend/current` y `frontend/current`, conserva cinco releases y crea un directorio `shared` genérico fuera de la poda.
+- Los uploads no deben vivir dentro de releases ni de `frontend/current`, porque los symlinks cambian y los releases antiguos se eliminan.
+- La configuración exacta de Nginx no está versionada. Como DEV ya expone `/api/catalog/public`, se documenta el supuesto verificable de que el proxy cubre `/api`; el endpoint propuesto no requerirá cambio Nginx si ese supuesto se confirma.
+- No se inspeccionó ni modificó el VPS. La ruta DEV esperada se marcó pendiente de confirmación contra el `LDT_APP_ROOT` real.
+
+### Diseño Definido
+
+- Almacenamiento persistente: `${LDT_APP_ROOT}/shared/catalog-images`; ruta DEV esperada `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` sin hardcodearla en aplicación.
+- Lectura pública: `GET /api/catalog/images/{fileName}`.
+- Upload/reemplazo: `POST /api/admin/catalog/products/{id}/image` con `multipart/form-data`.
+- Desasociación: `DELETE /api/admin/catalog/products/{id}/image`; establece `ImagePath` en `null` y no borra el archivo físico.
+- El producto guarda `/api/catalog/images/{fileName}` en `ImagePath`; los assets heredados `assets/catalog/products/...` siguen funcionando.
+- Formatos permitidos: `.webp`, `.jpg`, `.jpeg` y `.png`; máximo 2 MB; extensión, MIME y firma coherentes.
+- Nombre único generado por servidor, comprobación canónica de raíz, bloqueo de path traversal y rechazo de URLs externas.
+- Se prefiere WebP, pero no se convierte ni agrega una dependencia en esta fase.
+- Upload y desasociación requieren `catalog.manage` y XSRF; lectura de imagen es pública; `catalog.view` no permite mutar y `Repartidor` queda sin acceso.
+- El archivo anterior no se borra automáticamente. La limpieza de huérfanos se difiere hasta contar con backup, inventario de referencias y retención.
+- Backup recomendado: base de datos y `shared/catalog-images` del mismo punto temporal, fuera de releases y preferentemente fuera del VPS, con restauración de muestra antes de producción.
+
+### Documentación Creada
+
+- `docs/01-product/catalog-image-upload-design.md`
+
+### Documentación Actualizada
+
+- `docs/01-product/catalog-admin-design.md`
+- `docs/01-product/admin-catalog-management.md`
+- `docs/05-delivery/DEPLOYMENT.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Exclusiones Confirmadas
+
+- No se implementó código funcional.
+- No se modificaron frontend ni backend funcional.
+- No se crearon migraciones ni dependencias.
+- No se modificaron scripts, workflow, Nginx, systemd ni VPS.
+- No se tocaron autenticación, guards, cookies, sesión ni XSRF.
+- No se imprimieron secretos ni se ejecutó `dotnet user-secrets list`.
+- No se usó `codex-cobranza-sql`.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `git diff --check`: correcto.
+- `rg "catalog-images" docs README.md .github src`: referencias nuevas presentes en los documentos de diseño, deploy y roadmap.
+- `rg "catalog.manage" docs README.md src tests`: permiso existente y reglas propuestas consistentes.
+- `rg "upload" docs README.md src`: alcance previo, exclusiones y diseño 3.5.4.0 revisados.
+- `rg "codex-cobranza-sql" docs README.md AGENTS.md`: solo menciones documentales/históricas de no uso; no se invocó el contenedor.
+
+### Siguiente Fase Recomendada
+
+Fase 3.5.4.1 — backend upload/reemplazo de imágenes de catálogo.
+
 ## 2026-08-08 - Cierre QA DEV Fase 3.5.3 Y Deploy Resiliente
 
 ### Cierre QA DEV

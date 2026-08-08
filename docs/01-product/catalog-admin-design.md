@@ -10,13 +10,15 @@ Actualización Fase 3.5.3, 2026-07-10: `/catalogo` público queda implementado l
 
 Cierre QA DEV Fase 3.5.3, 2026-08-08: commit `8be9e14ec8cda5e8486770a77733a4413e456e96` desplegado con GitHub Actions `success`; `/health`, `/catalogo` y `/api/catalog/public` sin sesión respondieron `200`. Activar/desactivar productos y cambiar nombre/precio desde `/app/admin/catalogo` se reflejó correctamente en `/catalogo`. El fallback forzado con API bloqueada/offline no se probó en DEV y queda como cobertura manual opcional. No se modificó código funcional para este cierre.
 
+Actualización Fase 3.5.4.0, 2026-08-08: quedó definido el diseño operativo previo al upload en `docs/01-product/catalog-image-upload-design.md`. La estrategia MVP usa `${LDT_APP_ROOT}/shared/catalog-images`, fuera de releases, sirve archivos mediante `GET /api/catalog/images/{fileName}` y guarda `/api/catalog/images/{fileName}` en el `ImagePath` del producto. Esta subfase no implementa código, migraciones, frontend ni cambios de deploy.
+
 ## Resumen Ejecutivo
 
 El catálogo público actual de `/catalogo` ya funciona y no debe romperse. Desde Fase 3.5.3 consume `GET /api/catalog/public` cuando la respuesta es válida, conserva datos estructurados estáticos en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` como fallback y usa assets locales en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
 
 La recomendación para el MVP administrable es migrar secciones y productos a backend/base de datos, sembrar la información inicial desde `catalog-data.ts`, exponer un endpoint público de solo lectura y crear endpoints privados de administración bajo `/api/admin/catalog`. Para reducir riesgo, el MVP debe permitir seleccionar una imagen existente por `imagePath`/`assetPath`, sin carga de archivos desde UI todavía. La carga/reemplazo de imágenes debe quedar para una fase posterior con política explícita de almacenamiento, validación y backup.
 
-Siguiente fase implementable recomendada: Fase 3.5.4 - carga/reemplazo de imágenes desde admin, o una fase corta de pulido QA del catálogo público si aparecen hallazgos visuales.
+Siguiente fase implementable recomendada: Fase 3.5.4.1 - backend upload/reemplazo de imágenes de catálogo.
 
 ## Estado Actual
 
@@ -353,8 +355,10 @@ Imágenes existentes en MVP:
 
 Upload futuro:
 
-- `POST /api/admin/catalog/images`
-- `DELETE /api/admin/catalog/images/{id}` o endpoint de desasociación si se implementa tabla de imágenes.
+- `POST /api/admin/catalog/products/{id}/image` para subir una imagen y reemplazar el `ImagePath` del producto.
+- `DELETE /api/admin/catalog/products/{id}/image` para desasociar la imagen sin borrar el archivo físico en el MVP.
+- `GET /api/catalog/images/{fileName}` para lectura pública sin autenticación.
+- Contrato y reglas completos: `docs/01-product/catalog-image-upload-design.md`.
 
 Autorización:
 
@@ -421,16 +425,18 @@ Riesgos y esfuerzo:
 
 Usar Opción A en Fases 3.5.1 a 3.5.3.
 
-La carga de imágenes desde admin debe quedar para Fase 3.5.4, cuando se defina:
+La Fase 3.5.4.0 ya definió:
 
-- Carpeta real de almacenamiento en VPS.
-- Ruta pública servida.
-- Tamaño máximo.
-- Formatos aceptados.
-- Conversión o preferencia WebP.
-- Política de backup.
-- Limpieza de huérfanos.
-- Permisos y auditoría.
+- Carpeta persistente `${LDT_APP_ROOT}/shared/catalog-images`, con ruta DEV esperada `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` pendiente de verificación operativa.
+- Ruta pública `GET /api/catalog/images/{fileName}` y `ImagePath` `/api/catalog/images/{fileName}`.
+- Máximo 2 MB; `.webp`, `.jpg`, `.jpeg` y `.png`; validación de extensión, MIME y firma.
+- Naming único generado por servidor, bloqueo de path traversal y rechazo de URLs externas.
+- Preferencia WebP sin conversión todavía.
+- Upload/desasociación con `catalog.manage`; lectura de imagen pública sin auth; Repartidor sin acceso.
+- Backup conjunto de base de datos y `shared/catalog-images` y restauración de muestra antes de producción.
+- Conservación de archivos anteriores/huérfanos en el MVP; no se borran automáticamente.
+
+El detalle canónico y los supuestos de deploy están en `docs/01-product/catalog-image-upload-design.md`.
 
 ## Fases Recomendadas
 
@@ -513,22 +519,32 @@ Exclusiones:
 - No implementar upload.
 - No eliminar `catalog-data.ts` hasta cerrar transición y rollback plan.
 
-### Fase 3.5.4 - Carga/Reemplazo De Imágenes Desde Admin
+### Fase 3.5.4.0 - Diseño Operativo De Almacenamiento
+
+Estado: documentada el 2026-08-08.
 
 Alcance:
 
-- Definir almacenamiento local controlado en VPS.
-- Implementar endpoint upload.
-- Validar extensión, MIME real, peso y dimensiones.
-- Preferir WebP.
-- Servir imágenes subidas como assets públicos.
-- Asociar imágenes a sección/producto.
-- Definir backup.
-- Definir limpieza de huérfanos.
+- Auditar releases, symlinks `current`, carpeta `shared` y proxy esperado a partir de scripts versionados.
+- Definir almacenamiento persistente, endpoints, validaciones, permisos, backup y política de huérfanos.
+- No implementar código, migraciones, frontend ni cambios de deploy.
+
+### Fase 3.5.4.1 - Backend Upload/Reemplazo De Imágenes
+
+Alcance:
+
+- Configurar almacenamiento local persistente fuera de releases.
+- Implementar POST y DELETE de imagen para productos.
+- Implementar GET público de imagen.
+- Validar extensión, MIME, firma y máximo de 2 MB.
+- Persistir el `ImagePath` público en el producto.
+- Mantener archivos anteriores sin borrado automático.
+- Agregar pruebas de autorización, XSRF, validación y path traversal.
 
 Exclusiones:
 
 - No mezclar con migración inicial ni con primer cambio de `/catalogo` público.
+- No convertir a WebP ni implementar limpieza automática de huérfanos.
 
 ## Riesgos
 
@@ -540,6 +556,8 @@ Exclusiones:
 - Dejar imágenes huérfanas cuando exista upload.
 - Guardar rutas de imagen no permitidas o manipuladas.
 - No respaldar imágenes subidas en VPS.
+- Configurar almacenamiento dentro de un release o de `frontend/current` y perder uploads al desplegar/podar.
+- Restaurar la base sin restaurar los archivos persistentes del mismo punto temporal.
 - Ejecutar migraciones en DEV/producción sin plan y sin respaldo.
 - Romper assets por la diferencia actual entre `.webp` publicado y `.jpg` no publicado.
 - Exponer campos internos en endpoint público.
@@ -552,6 +570,8 @@ Mitigaciones recomendadas:
 - Endpoint público solo con activos y DTO público reducido.
 - Admin recibe permisos por `Permissions.All`; `Repartidor` queda con allowlist explícita sin `catalog.*`.
 - Fase upload separada con backup antes de activar.
+- Carpeta compartida fuera de releases, permisos mínimos para el usuario real del servicio y sin fallback a almacenamiento efímero.
+- Nombre generado por servidor, validación de firma y comprobación canónica de que el archivo queda bajo la raíz configurada.
 - Validar DEV antes de producción.
 - Documentar aprobación de precios 2026 y condiciones comerciales antes de publicación formal.
 
@@ -613,6 +633,16 @@ Para Fase 3.5.3:
 - No se modifica backend, migraciones, auth, guards, cookies, XSRF, deploy ni dependencias.
 - Validación local 2026-07-10: `npm run build`, `dotnet build` y `dotnet test` correctos; QA manual DEV queda en `docs/08-qa/public-catalog-api-qa.md`.
 
+Para Fase 3.5.4.0:
+
+- Estrategia persistente fuera de releases definida.
+- Endpoints POST, DELETE y GET propuestos.
+- Formatos, máximo de 2 MB, MIME/firma, naming y path traversal definidos.
+- Permisos `catalog.manage`, lectura pública y exclusión de Repartidor definidos.
+- Impacto operativo, permisos de filesystem, backup y restore documentados.
+- Se conserva compatibilidad con `assets/catalog/products/...`.
+- No se modifica código funcional, migraciones, frontend ni deploy.
+
 ## Qué No Implementar Todavía
 
 - Upload de imágenes en MVP inicial.
@@ -639,6 +669,4 @@ Antes de exponer cambios administrables al público, validar:
 
 ## Siguiente Fase Implementable
 
-Fase 3.5.4 - carga/reemplazo de imágenes desde admin con política de almacenamiento, validación y backup.
-
-Si DEV reporta hallazgos sobre Fase 3.5.3, antes de iniciar upload conviene hacer pulido QA del catálogo público y conservar `catalog-data.ts` como fallback hasta cerrar la transición.
+Fase 3.5.4.1 — backend upload/reemplazo de imágenes de catálogo, siguiendo `docs/01-product/catalog-image-upload-design.md`.

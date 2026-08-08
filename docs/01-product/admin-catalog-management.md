@@ -24,6 +24,8 @@ QA DEV Fase 3.5.2, 2026-07-05: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db`
 
 Actualización Fase 3.5.3, 2026-07-10: `/catalogo` público queda preparado para reflejar cambios administrados desde `/app/admin/catalogo` mediante `GET /api/catalog/public`, siempre que el endpoint responda con datos válidos. `catalog-data.ts` no se elimina y queda como fallback de transición. No se implementa upload, no se modifica UI admin, no se crean migraciones y no se toca auth, guards, cookies, XSRF ni deploy.
 
+Actualización Fase 3.5.4.0, 2026-08-08: el diseño operativo de almacenamiento quedó definido en `docs/01-product/catalog-image-upload-design.md`. Los uploads futuros vivirán en `${LDT_APP_ROOT}/shared/catalog-images`, fuera de releases, se leerán mediante `GET /api/catalog/images/{fileName}` y el producto guardará `/api/catalog/images/{fileName}` en `ImagePath`. Esta subfase es solo documental.
+
 ## Propósito Futuro
 
 Permitir que usuarios autorizados administren secciones, productos, precios e imágenes del catálogo desde la app privada, sin exponer edición en el sitio público.
@@ -49,18 +51,19 @@ Permitir que usuarios autorizados administren secciones, productos, precios e im
 
 ### Administración De Imágenes
 
-- Subir imagen.
-- Reemplazar imagen.
-- Eliminar imagen.
+- Subir/reemplazar imagen de producto mediante `POST /api/admin/catalog/products/{id}/image`.
+- Desasociar imagen mediante `DELETE /api/admin/catalog/products/{id}/image`, sin borrar el archivo físico en el MVP.
 - Definir imagen específica de producto.
 - Definir imagen representativa de sección.
-- Validar peso, formato y tamaño.
-- Preferir WebP cuando aplique.
+- Validar máximo 2 MB, extensión, MIME y firma para `.webp`, `.jpg`, `.jpeg` y `.png`.
+- Preferir WebP sin convertir todavía.
 
 ## Seguridad
 
 - Acceso solo para usuarios autorizados.
 - Permisos implementados: `catalog.view` para lectura admin y `catalog.manage` para mutaciones.
+- Upload, reemplazo y desasociación requieren `catalog.manage` y XSRF; `catalog.view` no basta.
+- `GET /api/catalog/images/{fileName}` es público; el rol `Repartidor` no accede a administración ni mutaciones.
 - La edición no debe exponerse en el sitio público.
 - Cualquier definición de permisos, guards, sesión o autorización debe revisar `docs/03-architecture/AUTH_FLOW.md` y `docs/03-architecture/ARCHITECTURE.md` antes de implementar.
 
@@ -71,8 +74,11 @@ Antes de implementar se debe definir:
 - Migración del catálogo desde `catalog-data.ts` a backend/base de datos. Implementado en Fase 3.5.1 con seed inicial idempotente.
 - Modelo de datos para secciones, productos, precios, imágenes, estados y ordenamiento. Implementado en Fase 3.5.1 con `CatalogSection` y `CatalogProduct` con `ImagePath` simple para MVP.
 - Endpoints requeridos y reglas de autorización. Implementado en Fase 3.5.1: `GET /api/catalog/public` y endpoints privados bajo `/api/admin/catalog`.
-- Almacenamiento de imágenes: local, cloud storage o CDN. Recomendación Fase 3.5.0: mantener assets estáticos existentes para MVP y diferir upload.
-- Reglas de validación de imagen: peso, formato, dimensiones y nombres. Recomendación Fase 3.5.0: aplicar cuando se implemente Fase 3.5.4 de carga de imágenes.
+- Almacenamiento de imágenes: definido en Fase 3.5.4.0 como `${LDT_APP_ROOT}/shared/catalog-images`, configurado por ambiente y fuera de releases. La ruta DEV esperada `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` debe verificarse antes de activar upload.
+- Entrega pública: definida como `GET /api/catalog/images/{fileName}` para reutilizar el proxy de `/api`, sin requerir cambio Nginx si el prefijo completo ya se enruta al backend.
+- Reglas de validación: máximo 2 MB, extensiones `.webp`, `.jpg`, `.jpeg`, `.png`, MIME/firma coherentes, nombre único generado por servidor, bloqueo de path traversal y rechazo de URLs externas.
+- Persistencia: `ImagePath` acepta assets actuales y `/api/catalog/images/{fileName}`; reemplazo no borra el archivo anterior en el MVP.
+- Backup: archivos y base deben respaldarse/restaurarse como un mismo punto temporal; limpieza de huérfanos queda diferida.
 - Historial de cambios de precios, si el cliente lo requiere.
 - Flujo de aprobación antes de publicar cambios, si aplica.
 
@@ -84,11 +90,11 @@ Antes de implementar se debe definir:
 
 ## Fuera De Alcance Actual
 
-Después de Fase 3.5.3, sigue fuera de alcance:
+Durante Fase 3.5.4.0 queda fuera de alcance:
 
 - No se modifica `AuthService`.
 - No se modifican guards.
-- No se implementa upload de imágenes.
+- No se implementa todavía upload de imágenes; solo se define su diseño.
 - No se instalan dependencias.
 - No se cambia deploy.
 - No se elimina `catalog-data.ts`.
@@ -101,6 +107,7 @@ La secuencia sugerida después de Fase 3.5.0 es:
 1. Fase 3.5.1: backend catálogo administrable + migración + seed inicial desde `catalog-data.ts`. Implementada.
 2. Fase 3.5.2: UI admin de catálogo/precios con selección de imagen existente. Implementada.
 3. Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición. Implementada localmente.
-4. Fase 3.5.4: carga/reemplazo de imágenes desde admin con política de almacenamiento y backup.
+4. Fase 3.5.4.0: diseño operativo de almacenamiento persistente, endpoints, seguridad y backup. Documentada.
+5. Fase 3.5.4.1: backend upload/reemplazo de imágenes de catálogo. Siguiente fase recomendada.
 
 El catálogo requiere modelo de datos, endpoints, almacenamiento de imágenes, permisos y reglas de publicación; por eso no conviene mezclarlo con el MVP operativo de entrega.
