@@ -1,6 +1,7 @@
 export interface CatalogProduct {
   id: string;
   name: string;
+  description?: string;
   price: number;
   imageUrl?: string;
   altText?: string;
@@ -9,6 +10,7 @@ export interface CatalogProduct {
 export interface CatalogSection {
   id: string;
   name: string;
+  description?: string;
   imageUrl?: string;
   altText?: string;
   products: CatalogProduct[];
