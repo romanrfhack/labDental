@@ -1,9 +1,6 @@
 name: Smoke DEV PUB-UX-2
 
 on:
-  push:
-    branches:
-      - agent/pub-ux-2-dev-smoke
   pull_request:
     branches:
       - dev
@@ -17,7 +14,7 @@ permissions:
 
 concurrency:
   group: pub-ux-2-dev-smoke
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   smoke-dev:
@@ -115,6 +112,43 @@ jobs:
           cat "$REPORT"
           exit 1
 
+      - name: Capture desktop and mobile screenshots
+        if: success()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE_URL="https://dev.laboratoriodentaltlahuac.com/catalogo"
+          WORK_DIR="$RUNNER_TEMP/pub-ux-2-smoke"
+          CHROME="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+
+          if [ -z "$CHROME" ]; then
+            echo 'Chrome/Chromium is unavailable; screenshot capture skipped.'
+            exit 0
+          fi
+
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --hide-scrollbars \
+            --virtual-time-budget=5000 \
+            --window-size=1440,1200 \
+            --screenshot="$WORK_DIR/catalog-desktop-1440.png" \
+            "$BASE_URL"
+
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --hide-scrollbars \
+            --virtual-time-budget=5000 \
+            --window-size=390,1200 \
+            --screenshot="$WORK_DIR/catalog-mobile-390.png" \
+            "$BASE_URL"
+
+          test -s "$WORK_DIR/catalog-desktop-1440.png"
+          test -s "$WORK_DIR/catalog-mobile-390.png"
+
       - name: Upload smoke evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -125,5 +159,7 @@ jobs:
             ${{ runner.temp }}/pub-ux-2-smoke/health.txt
             ${{ runner.temp }}/pub-ux-2-smoke/catalog.html
             ${{ runner.temp }}/pub-ux-2-smoke/catalog.json
+            ${{ runner.temp }}/pub-ux-2-smoke/catalog-desktop-1440.png
+            ${{ runner.temp }}/pub-ux-2-smoke/catalog-mobile-390.png
           if-no-files-found: warn
           retention-days: 3
