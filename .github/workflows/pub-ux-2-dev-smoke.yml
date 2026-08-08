@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Wait for DEV and validate public catalog
+      - name: Wait for DEV and validate rendered public catalog
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -29,11 +29,17 @@ jobs:
           BASE_URL="https://dev.laboratoriodentaltlahuac.com"
           REPORT="$RUNNER_TEMP/pub-ux-2-dev-smoke.txt"
           WORK_DIR="$RUNNER_TEMP/pub-ux-2-smoke"
+          CHROME="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
           mkdir -p "$WORK_DIR"
           : > "$REPORT"
 
-          for attempt in $(seq 1 45); do
-            echo "Attempt ${attempt}/45" | tee -a "$REPORT"
+          if [ -z "$CHROME" ]; then
+            echo 'Chrome/Chromium is required for rendered DOM validation.' | tee -a "$REPORT"
+            exit 1
+          fi
+
+          for attempt in $(seq 1 20); do
+            echo "Attempt ${attempt}/20" | tee -a "$REPORT"
 
             health_code="$(curl -sS -L --connect-timeout 3 --max-time 12 -o "$WORK_DIR/health.txt" -w '%{http_code}' "$BASE_URL/health" || true)"
             catalog_code="$(curl -sS -L --connect-timeout 3 --max-time 15 -o "$WORK_DIR/catalog.html" -w '%{http_code}' "$BASE_URL/catalogo" || true)"
@@ -42,7 +48,7 @@ jobs:
             printf 'health=%s catalog=%s api=%s\n' "$health_code" "$catalog_code" "$api_code" | tee -a "$REPORT"
 
             api_valid="false"
-            bundle_valid="false"
+            dom_valid="false"
 
             if [ "$api_code" = "200" ]; then
               if python3 - "$WORK_DIR/catalog.json" >> "$REPORT" 2>&1 <<'PY'
@@ -68,30 +74,27 @@ jobs:
               fi
             fi
 
-            if [ "$catalog_code" = "200" ]; then
-              rm -f "$WORK_DIR"/bundle-*.js "$WORK_DIR/all-bundles.js"
-              mapfile -t scripts < <(grep -oE 'src="[^"]+\.js"' "$WORK_DIR/catalog.html" | sed -E 's/^src="|"$//g')
+            if [ "$health_code" = "200" ] && [ "$catalog_code" = "200" ] && [ "$api_valid" = "true" ]; then
+              "$CHROME" \
+                --headless=new \
+                --no-sandbox \
+                --disable-gpu \
+                --disable-dev-shm-usage \
+                --hide-scrollbars \
+                --virtual-time-budget=8000 \
+                --dump-dom \
+                "$BASE_URL/catalogo" \
+                > "$WORK_DIR/catalog-rendered.html" \
+                2> "$WORK_DIR/chrome-render.log" || true
 
-              for script in "${scripts[@]:-}"; do
-                case "$script" in
-                  http://*|https://*) script_url="$script" ;;
-                  /*) script_url="$BASE_URL$script" ;;
-                  *) script_url="$BASE_URL/$script" ;;
-                esac
-
-                target="$WORK_DIR/bundle-$(basename "$script")"
-                curl -fsS -L --connect-timeout 3 --max-time 20 "$script_url" -o "$target" || true
-              done
-
-              cat "$WORK_DIR"/bundle-*.js > "$WORK_DIR/all-bundles.js" 2>/dev/null || true
-
-              if grep -Fq 'Soluciones dentales organizadas para consultar con claridad' "$WORK_DIR/all-bundles.js" \
-                && grep -Fq 'Explora por material o tipo de trabajo' "$WORK_DIR/all-bundles.js" \
-                && grep -Fq 'Contactar al laboratorio' "$WORK_DIR/all-bundles.js"; then
-                bundle_valid="true"
-                echo 'bundle_markers=ok' | tee -a "$REPORT"
+              if grep -Fq 'Soluciones dentales organizadas para consultar con claridad' "$WORK_DIR/catalog-rendered.html" \
+                && grep -Fq 'Explora por material o tipo de trabajo' "$WORK_DIR/catalog-rendered.html" \
+                && grep -Fq 'Contactar al laboratorio' "$WORK_DIR/catalog-rendered.html" \
+                && grep -Fq 'catalog-product-card' "$WORK_DIR/catalog-rendered.html"; then
+                dom_valid="true"
+                echo 'rendered_dom=ok' | tee -a "$REPORT"
               else
-                echo 'bundle_markers=pending' | tee -a "$REPORT"
+                echo 'rendered_dom=pending' | tee -a "$REPORT"
               fi
             fi
 
@@ -99,13 +102,13 @@ jobs:
               && [ "$catalog_code" = "200" ] \
               && [ "$api_code" = "200" ] \
               && [ "$api_valid" = "true" ] \
-              && [ "$bundle_valid" = "true" ]; then
+              && [ "$dom_valid" = "true" ]; then
               echo "PUB-UX-2 DEV smoke passed on attempt ${attempt}." | tee -a "$REPORT"
               cat "$REPORT"
               exit 0
             fi
 
-            sleep 5
+            sleep 6
           done
 
           echo 'PUB-UX-2 DEV smoke did not pass within the retry window.' | tee -a "$REPORT"
@@ -119,19 +122,16 @@ jobs:
           set -Eeuo pipefail
           BASE_URL="https://dev.laboratoriodentaltlahuac.com/catalogo"
           WORK_DIR="$RUNNER_TEMP/pub-ux-2-smoke"
-          CHROME="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
-
-          if [ -z "$CHROME" ]; then
-            echo 'Chrome/Chromium is unavailable; screenshot capture skipped.'
-            exit 0
-          fi
+          CHROME="$(command -v google-chrome || command -v chromium-browser || command -v chromium)"
 
           "$CHROME" \
             --headless=new \
             --no-sandbox \
             --disable-gpu \
+            --disable-dev-shm-usage \
             --hide-scrollbars \
-            --virtual-time-budget=5000 \
+            --force-device-scale-factor=1 \
+            --virtual-time-budget=8000 \
             --window-size=1440,1200 \
             --screenshot="$WORK_DIR/catalog-desktop-1440.png" \
             "$BASE_URL"
@@ -140,8 +140,10 @@ jobs:
             --headless=new \
             --no-sandbox \
             --disable-gpu \
+            --disable-dev-shm-usage \
             --hide-scrollbars \
-            --virtual-time-budget=5000 \
+            --force-device-scale-factor=1 \
+            --virtual-time-budget=8000 \
             --window-size=390,1200 \
             --screenshot="$WORK_DIR/catalog-mobile-390.png" \
             "$BASE_URL"
@@ -159,6 +161,8 @@ jobs:
             ${{ runner.temp }}/pub-ux-2-smoke/health.txt
             ${{ runner.temp }}/pub-ux-2-smoke/catalog.html
             ${{ runner.temp }}/pub-ux-2-smoke/catalog.json
+            ${{ runner.temp }}/pub-ux-2-smoke/catalog-rendered.html
+            ${{ runner.temp }}/pub-ux-2-smoke/chrome-render.log
             ${{ runner.temp }}/pub-ux-2-smoke/catalog-desktop-1440.png
             ${{ runner.temp }}/pub-ux-2-smoke/catalog-mobile-390.png
           if-no-files-found: warn
