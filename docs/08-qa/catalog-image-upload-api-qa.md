@@ -1,0 +1,71 @@
+# QA API Upload De Imágenes De Catálogo
+
+Fase 3.5.4.1 — backend upload/reemplazo/desasociación, 2026-08-08.
+
+## Alcance Automatizado
+
+- `POST /api/admin/catalog/products/{id}/image` con `multipart/form-data` y una sola parte `file`.
+- `DELETE /api/admin/catalog/products/{id}/image` para establecer `ImagePath = null` sin borrar archivo.
+- `GET /api/catalog/images/{fileName}` público.
+- Persistencia del producto y propagación a `GET /api/catalog/public`.
+- Compatibilidad del validador con `assets/catalog/products/...` y `/api/catalog/images/{fileName}`.
+
+## Matriz De Respuesta
+
+| Caso | Esperado |
+| --- | ---: |
+| POST sin sesión, con XSRF válido | `401` |
+| POST autenticado sin `catalog.manage` / Repartidor | `403` |
+| POST producto inexistente | `404` |
+| POST sin archivo, vacío o con múltiples archivos | `400` |
+| Extensión/MIME/coherencia/firma inválida | `400` |
+| Archivo mayor a 2,097,152 bytes | `413` |
+| Storage vacío, inexistente o inaccesible | `503` genérico, sin ruta interna |
+| Upload WebP/JPG/JPEG/PNG válido | `200` + producto actualizado |
+| GET nombre inválido o archivo inexistente | `404` |
+| GET imagen existente | `200`, MIME correcto y `nosniff` |
+| DELETE sin sesión / sin permiso / producto inexistente | `401` / `403` / `404` |
+| DELETE válido | `200`, `imagePath: null`; archivo aún legible por URL previa |
+
+La decisión de la fase es usar `413 Payload Too Large` para el máximo de archivo y `503 Service Unavailable` para configuración/carpeta/permisos de almacenamiento no disponibles.
+
+## Aislamiento De Pruebas
+
+`TestApplicationFactory` crea una carpeta temporal con nombre GUID por instancia, sobreescribe `CatalogImages:StoragePath`, no usa assets del frontend ni `/var/www`, y elimina recursivamente solo esa carpeta aislada al disponer la factory. No se imprimen rutas sensibles en respuestas.
+
+## Seguridad Cubierta
+
+- Nombre físico independiente del original: GUID lowercase de 32 hex + extensión normalizada.
+- Extensiones permitidas: `.webp`, `.jpg`, `.jpeg`, `.png`.
+- MIME permitidos: `image/webp`, `image/jpeg`, `image/png`.
+- Firma mínima: PNG, JPEG y RIFF/WEBP.
+- Copia por streaming con comprobación de límite durante la escritura.
+- Temporal exclusivo y rename final dentro del mismo `StoragePath`.
+- Nombre público de un solo segmento y resolución canónica dentro de la raíz.
+- URLs externas, otras rutas `/api`, query, traversal y nombres no generados rechazados.
+- `catalog.manage` no se asigna a `Repartidor`; XSRF global se conserva para POST/DELETE.
+
+## Checklist Operativo DEV Antes De Upload Real
+
+- [ ] Confirmar `${LDT_APP_ROOT}` sin imprimir secretos.
+- [ ] Crear `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` fuera de releases.
+- [ ] Confirmar usuario/grupo efectivo de la API y asignar permisos mínimos de lectura/escritura; no usar `777`.
+- [ ] Configurar `CatalogImages__StoragePath` fuera del repositorio.
+- [ ] Confirmar que Nginx/proxy admite 2 MB más overhead multipart y enruta `/api/catalog/images/*`.
+- [ ] Probar POST, GET, reemplazo y DELETE con Admin; confirmar `403` con Repartidor.
+- [ ] Confirmar que el archivo sigue disponible tras otro deploy y rollback controlado.
+- [ ] Respaldar/restaurar base y `shared/catalog-images` como un mismo punto temporal.
+
+## Exclusiones
+
+- Sin UI de upload todavía; queda para Fase 3.5.4.2.
+- Sin migración, conversión WebP, recomprensión, limpieza de huérfanos ni borrado físico en DELETE.
+- Sin cambios de `AuthService`, guards, cookies, política XSRF, deploy o dependencias.
+
+## Resultado Local
+
+- `CatalogIntegrationTests`: 27/27.
+- Suite completa: Domain 1/1, Application 1/1 y API 156/156.
+- `dotnet build`: 0 errores; permanecen 2 warnings `NU1903` conocidos en tests.
+- `npm run build`: correcto, initial total `317.77 kB`.
+- QA real DEV: pendiente hasta preparar carpeta, permisos y `CatalogImages__StoragePath`.

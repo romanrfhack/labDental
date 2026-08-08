@@ -12,8 +12,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using LaboratorioTlahuac.Application.Abstractions.Time;
+using LaboratorioTlahuac.Application.Catalog;
 using LaboratorioTlahuac.Domain.Security;
 using LaboratorioTlahuac.Domain.Security.Entities;
+using LaboratorioTlahuac.Infrastructure.Catalog;
 using LaboratorioTlahuac.Infrastructure.Persistence;
 
 namespace LaboratorioTlahuac.Api.Tests;
@@ -449,6 +451,9 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
     private readonly IReadOnlyDictionary<string, string?> extraSettings;
     private readonly string environmentName;
     private readonly bool seedDatabase;
+    private readonly string catalogImagesStoragePath = Path.Combine(
+        Path.GetTempPath(),
+        $"ldt-catalog-images-tests-{Guid.NewGuid():N}");
     private SqliteConnection? connection;
 
     public TestApplicationFactory()
@@ -468,6 +473,7 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
         this.extraSettings = extraSettings ?? new Dictionary<string, string?>();
         this.environmentName = environmentName;
         this.seedDatabase = seedDatabase;
+        Directory.CreateDirectory(catalogImagesStoragePath);
     }
 
     public HttpClient CreateClientWithoutRedirects()
@@ -479,6 +485,11 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
+    internal string CatalogImagesStoragePath => catalogImagesStoragePath;
+
+    internal string ConfiguredCatalogImagesStoragePath =>
+        Services.GetRequiredService<CatalogImagesOptions>().StoragePath;
+
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
         builder.UseEnvironment(environmentName);
@@ -487,7 +498,8 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
             var settings = new Dictionary<string, string?>
             {
                 ["ConnectionStrings:DefaultConnection"] = "Data Source=:memory:",
-                ["SecuritySeed:RunOnStartup"] = "false"
+                ["SecuritySeed:RunOnStartup"] = "false",
+                ["CatalogImages:StoragePath"] = catalogImagesStoragePath
             };
 
             if (!string.IsNullOrWhiteSpace(dashboardBusinessTimeZone))
@@ -510,6 +522,8 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IDbContextOptionsConfiguration<LaboratorioTlahuacDbContext>>();
             services.RemoveAll<LaboratorioTlahuacDbContext>();
             services.RemoveAll<IClock>();
+            services.RemoveAll<CatalogImagesOptions>();
+            services.RemoveAll<ICatalogImageStorage>();
 
             connection = new SqliteConnection("Data Source=:memory:");
             connection.Open();
@@ -520,6 +534,16 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
                 options.UseSqlite(serviceProvider.GetRequiredService<DbConnection>());
             });
             services.AddSingleton<IClock>(new TestClock(utcNow));
+            var configuredCatalogImagesStoragePath = extraSettings.TryGetValue(
+                "CatalogImages:StoragePath",
+                out var overriddenStoragePath)
+                ? overriddenStoragePath ?? string.Empty
+                : catalogImagesStoragePath;
+            services.AddSingleton(new CatalogImagesOptions
+            {
+                StoragePath = configuredCatalogImagesStoragePath
+            });
+            services.AddSingleton<ICatalogImageStorage, CatalogImageStorage>();
 
             using var serviceProvider = services.BuildServiceProvider();
             using var scope = serviceProvider.CreateScope();
@@ -542,6 +566,11 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
         if (disposing)
         {
             connection?.Dispose();
+
+            if (Directory.Exists(catalogImagesStoragePath))
+            {
+                Directory.Delete(catalogImagesStoragePath, recursive: true);
+            }
         }
     }
 

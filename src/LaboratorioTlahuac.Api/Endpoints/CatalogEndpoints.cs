@@ -20,6 +20,34 @@ public static class CatalogEndpoints
                     ToResult(await catalogService.GetPublicCatalogAsync(cancellationToken)))
             .WithName("CatalogPublic");
 
+        publicGroup.MapGet(
+                "/images/{fileName}",
+                async (
+                    string fileName,
+                    HttpRequest request,
+                    HttpResponse response,
+                    ICatalogService catalogService,
+                    CancellationToken cancellationToken) =>
+                {
+                    if (request.QueryString.HasValue)
+                    {
+                        return Results.NotFound();
+                    }
+
+                    var result = await catalogService.GetCatalogImageAsync(fileName, cancellationToken);
+
+                    if (result.Status != CatalogServiceStatus.Success || result.Value is null)
+                    {
+                        return ToResult(result);
+                    }
+
+                    response.Headers.CacheControl = "public, max-age=31536000, immutable";
+                    response.Headers.XContentTypeOptions = "nosniff";
+
+                    return Results.Stream(result.Value.Content, result.Value.ContentType);
+                })
+            .WithName("CatalogImagePublic");
+
         var adminGroup = endpoints
             .MapGroup("/api/admin/catalog")
             .WithTags("AdminCatalog");
@@ -120,6 +148,23 @@ public static class CatalogEndpoints
             .RequireAuthorization(Permissions.CatalogManage)
             .WithName("AdminCatalogProductsUpdatePrice");
 
+        adminGroup.MapPost(
+                "/products/{id:guid}/image",
+                UploadProductImageAsync)
+            .Accepts<IFormFile>("multipart/form-data")
+            .RequireAuthorization(Permissions.CatalogManage)
+            .WithName("AdminCatalogProductsUploadImage");
+
+        adminGroup.MapDelete(
+                "/products/{id:guid}/image",
+                async (
+                    Guid id,
+                    ICatalogService catalogService,
+                    CancellationToken cancellationToken) =>
+                    ToResult(await catalogService.ClearProductImageAsync(id, cancellationToken)))
+            .RequireAuthorization(Permissions.CatalogManage)
+            .WithName("AdminCatalogProductsClearImage");
+
         return endpoints;
     }
 
@@ -136,6 +181,63 @@ public static class CatalogEndpoints
         return result.Status == CatalogServiceStatus.Success && result.Value is not null
             ? Results.Created($"/api/admin/catalog/sections/{result.Value.Id}", result.Value)
             : ToResult(result);
+    }
+
+    private static async Task<IResult> UploadProductImageAsync(
+        Guid id,
+        HttpRequest request,
+        ICatalogService catalogService,
+        CancellationToken cancellationToken)
+    {
+        if (!request.HasFormContentType)
+        {
+            return MissingFileResult();
+        }
+
+        IFormCollection form;
+
+        try
+        {
+            form = await request.ReadFormAsync(cancellationToken);
+        }
+        catch (Exception exception) when (
+            exception is InvalidDataException or IOException or BadHttpRequestException)
+        {
+            return MissingFileResult();
+        }
+
+        var files = form.Files.GetFiles("file");
+
+        if (files.Count == 0)
+        {
+            return MissingFileResult();
+        }
+
+        if (files.Count != 1 || form.Files.Count != 1)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["file"] = ["Exactly one file part named 'file' is required."]
+            });
+        }
+
+        var file = files[0];
+        await using var content = file.OpenReadStream();
+        var uploadRequest = new CatalogImageUploadRequest(
+            file.FileName,
+            file.ContentType,
+            file.Length,
+            content);
+
+        return ToResult(await catalogService.UploadProductImageAsync(id, uploadRequest, cancellationToken));
+    }
+
+    private static IResult MissingFileResult()
+    {
+        return Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["file"] = ["A multipart file part named 'file' is required."]
+        });
     }
 
     private static IResult ToCreatedProductResult(CatalogServiceResult<CatalogAdminProductResponse> result)
@@ -157,6 +259,12 @@ public static class CatalogEndpoints
             CatalogServiceStatus.Conflict => Results.Problem(
                 title: result.Message ?? "The request conflicts with the current state.",
                 statusCode: StatusCodes.Status409Conflict),
+            CatalogServiceStatus.PayloadTooLarge => Results.Problem(
+                title: result.Message ?? "The request body is too large.",
+                statusCode: StatusCodes.Status413PayloadTooLarge),
+            CatalogServiceStatus.ServiceUnavailable => Results.Problem(
+                title: result.Message ?? "Catalog image storage is unavailable.",
+                statusCode: StatusCodes.Status503ServiceUnavailable),
             _ => Results.Problem(
                 title: "Unexpected catalog service result.",
                 statusCode: StatusCodes.Status500InternalServerError)

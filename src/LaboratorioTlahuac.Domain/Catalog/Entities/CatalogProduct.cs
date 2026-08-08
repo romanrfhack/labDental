@@ -141,6 +141,12 @@ public sealed class CatalogProduct
         Touch(updatedAtUtc);
     }
 
+    public void UpdateImage(string? imagePath, DateTimeOffset updatedAtUtc)
+    {
+        ImagePath = TrimOptional(imagePath);
+        Touch(updatedAtUtc);
+    }
+
     public void BackfillSeedData(
         string? imagePath,
         string? altText,

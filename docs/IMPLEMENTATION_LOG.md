@@ -6,6 +6,56 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-08-08 - Fase 3.5.4.1 Backend Upload De Imágenes De Catálogo
+
+### Backend Implementado
+
+- Se agregaron `POST /api/admin/catalog/products/{id}/image`, `DELETE /api/admin/catalog/products/{id}/image` y `GET /api/catalog/images/{fileName}`.
+- POST/DELETE requieren `catalog.manage` y conservan la política XSRF global; GET es público.
+- `CatalogImagesOptions.StoragePath` se configura mediante `CatalogImages__StoragePath`; appsettings deja el valor vacío para evitar rutas productivas falsas.
+- `ICatalogImageStorage`/`CatalogImageStorage` encapsulan validación y filesystem; Application recibe un `Stream` y no depende de `IFormFile`.
+- Se validan archivo único `file`, no vacío, máximo 2,097,152 bytes, extensiones `.webp`/`.jpg`/`.jpeg`/`.png`, MIME permitido/coherente y firmas mínimas PNG/JPEG/RIFF-WEBP.
+- El nombre físico ignora el original y usa GUID lowercase de 32 hex + extensión normalizada.
+- La escritura usa temporal exclusivo dentro del storage, copia por streaming, rename final sin overwrite y comprobación canónica de raíz.
+- El producto debe existir antes de escribir; se guarda `/api/catalog/images/{fileName}` y se toca `UpdatedAtUtc`.
+- Si falla la base después de crear el archivo, se intenta retirar solo el archivo nuevo. Reemplazo y DELETE no borran la imagen anterior.
+- Storage no configurado/no disponible responde `503` genérico; exceso de tamaño responde `413`; validaciones responden `400`.
+- GET devuelve `404` seguro para nombre inválido/inexistente, MIME correcto, cache inmutable y `X-Content-Type-Options: nosniff`.
+- `CatalogImagePathValidator` conserva `assets/catalog/products/...` y acepta exactamente rutas nuevas con nombre generado; rechaza otras rutas `/api`, URLs externas y path traversal.
+
+### Pruebas
+
+- `CatalogIntegrationTests` cubre autorización `401`/`403`, producto `404`, archivo faltante/vacío/múltiple, extensión, MIME, coherencia, firma, tamaño, storage no disponible y formatos válidos WebP/JPG/JPEG/PNG.
+- Se cubren GET público, nombre inválido/inexistente/query, propagación a `/api/catalog/public`, DELETE sin borrado físico y exclusión de `catalog.manage` para `Repartidor`.
+- Cada `TestApplicationFactory` usa una carpeta temporal GUID aislada, sobreescribe la configuración y elimina solo esa carpeta al terminar.
+- Suite focalizada de catálogo: 27/27 correcta.
+
+### Documentación
+
+- Se creó `docs/08-qa/catalog-image-upload-api-qa.md`.
+- Se actualizaron fuentes de producto, arquitectura/auth, deploy, QA, estado, roadmap, índices y README.
+
+### Exclusiones Confirmadas
+
+- No se modificó UI admin ni `/catalogo` público.
+- No se crearon migraciones ni dependencias.
+- No se modificaron `AuthService`, guards, cookies, política XSRF, scripts, workflow, Nginx, systemd ni VPS.
+- No se borran archivos anteriores ni se implementa limpieza de huérfanos.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos.
+- `dotnet test --no-build`: correcto; Domain 1/1, Application 1/1 y API 156/156.
+- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto; initial total `317.77 kB`, sin warning de budget.
+- Suite focalizada `CatalogIntegrationTests`: 27/27 correcta.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias de endpoints, configuración, storage, permisos, `IFormFile`, multipart, path traversal, assets, rutas y patrones sensibles ejecutadas; patrones sensibles limitados a nombres de archivo.
+
+### Siguiente Fase Recomendada
+
+Preparar almacenamiento DEV y ejecutar Fase 3.5.4.2 — UI upload/reemplazo desde `/app/admin/catalogo`.
+
 ## 2026-08-08 - Fase 3.5.4.0 Diseño Operativo De Almacenamiento De Imágenes
 
 ### Análisis De Deploy

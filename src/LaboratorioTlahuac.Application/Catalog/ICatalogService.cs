@@ -44,4 +44,17 @@ public interface ICatalogService
         Guid id,
         CatalogPriceRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<CatalogServiceResult<CatalogAdminProductResponse>> UploadProductImageAsync(
+        Guid id,
+        CatalogImageUploadRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<CatalogServiceResult<CatalogAdminProductResponse>> ClearProductImageAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<CatalogServiceResult<CatalogImageContent>> GetCatalogImageAsync(
+        string fileName,
+        CancellationToken cancellationToken = default);
 }

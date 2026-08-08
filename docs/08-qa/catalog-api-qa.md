@@ -2,6 +2,8 @@
 
 Fase 3.5.1 - backend catálogo administrable + migración + seed inicial.
 
+Actualización Fase 3.5.4.1, 2026-08-08: se agregaron pruebas API para POST/DELETE de imagen y GET público con almacenamiento temporal aislado. La matriz detallada, status codes y checklist DEV están en `docs/08-qa/catalog-image-upload-api-qa.md`.
+
 ## Cierre QA DEV
 
 Fecha: 2026-07-05.
@@ -54,6 +56,12 @@ Admin:
 - `PUT /api/admin/catalog/products/{id}`: requiere `catalog.manage`.
 - `PATCH /api/admin/catalog/products/{id}/status`: requiere `catalog.manage`.
 - `PATCH /api/admin/catalog/products/{id}/price`: requiere `catalog.manage`.
+- `POST /api/admin/catalog/products/{id}/image`: `multipart/form-data`, parte `file`, requiere `catalog.manage` y XSRF.
+- `DELETE /api/admin/catalog/products/{id}/image`: requiere `catalog.manage` y XSRF; no borra el archivo físico.
+
+Imagen pública:
+
+- `GET /api/catalog/images/{fileName}`: público; solo nombres generados, `404` para inválido/inexistente.
 
 ## Permisos
 
@@ -97,6 +105,10 @@ Cobertura:
 - Precio negativo devuelve `400`.
 - `ImagePath` externo/inseguro devuelve `400`.
 - Usuario `Repartidor` no puede listar ni crear catálogo admin.
+- Upload cubre `401`, `403`, `404`, archivo faltante/vacío/múltiple, extensión, MIME, coherencia, firma, límite de 2 MB y storage no disponible.
+- Upload válido cubre WebP, JPG, JPEG y PNG; GET valida bytes, MIME y `nosniff`.
+- DELETE desasocia sin borrar; el catálogo público devuelve el nuevo `imagePath`.
+- El validador acepta assets heredados y rutas nuevas generadas; rechaza URL externa y path traversal.
 
 ## Exclusiones Confirmadas
 

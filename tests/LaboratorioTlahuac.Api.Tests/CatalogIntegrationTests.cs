@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -333,9 +334,403 @@ public sealed class CatalogIntegrationTests(TestApplicationFactory factory)
                 sortOrder = 1004,
                 isActive = true
             });
+        var uploadResponse = await UploadImageAsync(
+            driverClient,
+            driverXsrfToken,
+            Guid.NewGuid(),
+            "image.webp",
+            "image/webp",
+            ValidWebp());
 
         Assert.Equal(HttpStatusCode.Forbidden, listResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, createResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, uploadResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadImageWithoutSessionReturnsUnauthorized()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.GetXsrfTokenAsync();
+
+        var response = await UploadImageAsync(
+            client,
+            xsrfToken,
+            Guid.NewGuid(),
+            "image.webp",
+            "image/webp",
+            ValidWebp());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadImageForMissingProductReturnsNotFound()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+
+        var response = await UploadImageAsync(
+            client,
+            xsrfToken,
+            Guid.NewGuid(),
+            "image.webp",
+            "image/webp",
+            ValidWebp());
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadImageWithoutFileReturnsBadRequest()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var section = await GetSectionByKeyAsync(client, "zirconia");
+        var product = await CreateProductAsync(client, xsrfToken, section.GetProperty("id").GetGuid());
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"/api/admin/catalog/products/{product.GetProperty("id").GetGuid()}/image")
+        {
+            Content = new MultipartFormDataContent()
+        };
+        request.Headers.Add("X-XSRF-TOKEN", xsrfToken);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadImageRejectsEmptyFileAndMultipleFileParts()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var section = await GetSectionByKeyAsync(client, "zirconia");
+        var product = await CreateProductAsync(client, xsrfToken, section.GetProperty("id").GetGuid());
+        var productId = product.GetProperty("id").GetGuid();
+
+        var emptyResponse = await UploadImageAsync(
+            client,
+            xsrfToken,
+            productId,
+            "empty.png",
+            "image/png",
+            []);
+
+        using var multipart = new MultipartFormDataContent();
+        AddFile(multipart, "first.png", "image/png", ValidPng());
+        AddFile(multipart, "second.png", "image/png", ValidPng());
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"/api/admin/catalog/products/{productId}/image")
+        {
+            Content = multipart
+        };
+        request.Headers.Add("X-XSRF-TOKEN", xsrfToken);
+        var multipleResponse = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, emptyResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, multipleResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadImageRejectsInvalidExtensionMimeMismatchAndSignature()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var section = await GetSectionByKeyAsync(client, "emax");
+        var product = await CreateProductAsync(client, xsrfToken, section.GetProperty("id").GetGuid());
+        var productId = product.GetProperty("id").GetGuid();
+
+        var extensionResponse = await UploadImageAsync(
+            client,
+            xsrfToken,
+            productId,
+            "image.gif",
+            "image/png",
+            ValidPng());
+        var mimeResponse = await UploadImageAsync(
+            client,
+            xsrfToken,
+            productId,
+            "image.png",
+            "application/octet-stream",
+            ValidPng());
+        var mismatchResponse = await UploadImageAsync(
+            client,
+            xsrfToken,
+            productId,
+            "image.png",
+            "image/jpeg",
+            ValidPng());
+        var signatureResponse = await UploadImageAsync(
+            client,
+            xsrfToken,
+            productId,
+            "image.png",
+            "image/png",
+            [0x50, 0x4B, 0x03, 0x04]);
+
+        Assert.Equal(HttpStatusCode.BadRequest, extensionResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, mimeResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, mismatchResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, signatureResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task ClearImageEnforcesAuthorizationAndMissingProductReturnsNotFound()
+    {
+        var anonymousClient = factory.CreateClientWithoutRedirects();
+        var anonymousXsrfToken = await anonymousClient.GetXsrfTokenAsync();
+        var anonymousResponse = await DeleteImageAsync(
+            anonymousClient,
+            anonymousXsrfToken,
+            Guid.NewGuid());
+
+        var noPermissionClient = factory.CreateClientWithoutRedirects();
+        var noPermissionXsrfToken = await noPermissionClient.LoginAsNoPermissionsUserAsync();
+        var forbiddenResponse = await DeleteImageAsync(
+            noPermissionClient,
+            noPermissionXsrfToken,
+            Guid.NewGuid());
+
+        var adminClient = factory.CreateClientWithoutRedirects();
+        var adminXsrfToken = await adminClient.LoginAsAdminAsync();
+        var notFoundResponse = await DeleteImageAsync(
+            adminClient,
+            adminXsrfToken,
+            Guid.NewGuid());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymousResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, notFoundResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task UploadImageLargerThanTwoMegabytesReturnsPayloadTooLarge()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var section = await GetSectionByKeyAsync(client, "signum");
+        var product = await CreateProductAsync(client, xsrfToken, section.GetProperty("id").GetGuid());
+        var content = new byte[2_097_153];
+        ValidPng().CopyTo(content, 0);
+
+        var response = await UploadImageAsync(
+            client,
+            xsrfToken,
+            product.GetProperty("id").GetGuid(),
+            "large.png",
+            "image/png",
+            content);
+
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(".webp", "image/webp")]
+    [InlineData(".jpg", "image/jpeg")]
+    [InlineData(".jpeg", "image/jpeg")]
+    [InlineData(".png", "image/png")]
+    public async Task AdminCanUploadSupportedImageAndReadItPublicly(
+        string extension,
+        string contentType)
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var section = await GetSectionByKeyAsync(client, "zirconia");
+        var product = await CreateProductAsync(client, xsrfToken, section.GetProperty("id").GetGuid());
+        var productId = product.GetProperty("id").GetGuid();
+        var bytes = ValidImage(extension);
+
+        var uploadResponse = await UploadImageAsync(
+            client,
+            xsrfToken,
+            productId,
+            $"original{extension}",
+            contentType,
+            bytes);
+
+        Assert.True(Directory.Exists(factory.CatalogImagesStoragePath));
+        Assert.Equal(factory.CatalogImagesStoragePath, factory.ConfiguredCatalogImagesStoragePath);
+        Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
+
+        var uploaded = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var imagePath = uploaded.GetProperty("imagePath").GetString();
+
+        Assert.NotNull(imagePath);
+        Assert.Matches($"^/api/catalog/images/[0-9a-f]{{32}}\\{extension}$", imagePath);
+
+        var imageResponse = await client.GetAsync(imagePath);
+        var servedBytes = await imageResponse.Content.ReadAsByteArrayAsync();
+
+        Assert.Equal(HttpStatusCode.OK, imageResponse.StatusCode);
+        Assert.Equal(contentType, imageResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(bytes, servedBytes);
+        Assert.Equal("nosniff", imageResponse.Headers.GetValues("X-Content-Type-Options").Single());
+    }
+
+    [Fact]
+    public async Task PublicImageReturnsNotFoundForInvalidMissingOrQueriedName()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+
+        var invalidResponse = await client.GetAsync("/api/catalog/images/not-generated.png");
+        var missingResponse = await client.GetAsync(
+            "/api/catalog/images/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png");
+        var queriedResponse = await client.GetAsync(
+            "/api/catalog/images/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png?download=true");
+
+        Assert.Equal(HttpStatusCode.NotFound, invalidResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, missingResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, queriedResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task ClearImageDisassociatesWithoutDeletingPhysicalFile()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var section = await GetSectionByKeyAsync(client, "emax");
+        var product = await CreateProductAsync(client, xsrfToken, section.GetProperty("id").GetGuid());
+        var productId = product.GetProperty("id").GetGuid();
+        var uploadResponse = await UploadImageAsync(
+            client,
+            xsrfToken,
+            productId,
+            "image.webp",
+            "image/webp",
+            ValidWebp());
+        var uploaded = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var imagePath = uploaded.GetProperty("imagePath").GetString()!;
+
+        using var deleteRequest = new HttpRequestMessage(
+            HttpMethod.Delete,
+            $"/api/admin/catalog/products/{productId}/image");
+        deleteRequest.Headers.Add("X-XSRF-TOKEN", xsrfToken);
+        var deleteResponse = await client.SendAsync(deleteRequest);
+        var cleared = await deleteResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var imageAfterClear = await client.GetAsync(imagePath);
+
+        Assert.Equal(HttpStatusCode.OK, deleteResponse.StatusCode);
+        Assert.Equal(JsonValueKind.Null, cleared.GetProperty("imagePath").ValueKind);
+        Assert.Equal(HttpStatusCode.OK, imageAfterClear.StatusCode);
+    }
+
+    [Fact]
+    public async Task PublicCatalogReturnsUploadedImagePath()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var section = await GetSectionByKeyAsync(client, "signum");
+        var product = await CreateProductAsync(client, xsrfToken, section.GetProperty("id").GetGuid());
+        var productId = product.GetProperty("id").GetGuid();
+        var productKey = product.GetProperty("key").GetString();
+        var uploadResponse = await UploadImageAsync(
+            client,
+            xsrfToken,
+            productId,
+            "image.png",
+            "image/png",
+            ValidPng());
+        var uploaded = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var imagePath = uploaded.GetProperty("imagePath").GetString();
+
+        var publicResponse = await client.GetAsync("/api/catalog/public");
+        var catalog = await publicResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var publicProduct = catalog.GetProperty("sections")
+            .EnumerateArray()
+            .SelectMany(currentSection => currentSection.GetProperty("products").EnumerateArray())
+            .Single(currentProduct => currentProduct.GetProperty("key").GetString() == productKey);
+
+        Assert.Equal(HttpStatusCode.OK, publicResponse.StatusCode);
+        Assert.Equal(imagePath, publicProduct.GetProperty("imagePath").GetString());
+    }
+
+    [Fact]
+    public async Task UploadImageReturnsServiceUnavailableWhenStorageIsNotConfigured()
+    {
+        using var unavailableFactory = new TestApplicationFactory(
+            new DateTimeOffset(2026, 5, 9, 12, 0, 0, TimeSpan.Zero),
+            extraSettings: new Dictionary<string, string?>
+            {
+                ["CatalogImages:StoragePath"] = ""
+            });
+        var client = unavailableFactory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var section = await GetSectionByKeyAsync(client, "zirconia");
+        var product = await CreateProductAsync(client, xsrfToken, section.GetProperty("id").GetGuid());
+
+        var response = await UploadImageAsync(
+            client,
+            xsrfToken,
+            product.GetProperty("id").GetGuid(),
+            "image.webp",
+            "image/webp",
+            ValidWebp());
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.DoesNotContain("StoragePath", responseBody, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("catalog-images-tests", responseBody, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CatalogImagePathAcceptsLegacyAndGeneratedPathsAndRejectsTraversal()
+    {
+        var client = factory.CreateClientWithoutRedirects();
+        var xsrfToken = await client.LoginAsAdminAsync();
+        var section = await GetSectionByKeyAsync(client, "zirconia");
+        var sectionId = section.GetProperty("id").GetGuid();
+        var generatedPath = "/api/catalog/images/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp";
+
+        var generatedResponse = await client.PostAsJsonWithXsrfAsync(
+            "/api/admin/catalog/products",
+            xsrfToken,
+            new
+            {
+                catalogSectionId = sectionId,
+                key = UniqueKey("generated-image"),
+                name = "Producto con imagen generada",
+                priceAmount = 100m,
+                currency = "MXN",
+                imagePath = generatedPath,
+                sortOrder = 1100,
+                isActive = true
+            });
+        var traversalResponse = await client.PostAsJsonWithXsrfAsync(
+            "/api/admin/catalog/products",
+            xsrfToken,
+            new
+            {
+                catalogSectionId = sectionId,
+                key = UniqueKey("traversal-image"),
+                name = "Producto con traversal",
+                priceAmount = 100m,
+                currency = "MXN",
+                imagePath = "/api/catalog/images/../x.png",
+                sortOrder = 1101,
+                isActive = true
+            });
+        var externalResponse = await client.PostAsJsonWithXsrfAsync(
+            "/api/admin/catalog/products",
+            xsrfToken,
+            new
+            {
+                catalogSectionId = sectionId,
+                key = UniqueKey("external-image"),
+                name = "Producto con URL externa",
+                priceAmount = 100m,
+                currency = "MXN",
+                imagePath = "https://example.com/image.png",
+                sortOrder = 1102,
+                isActive = true
+            });
+
+        Assert.Equal(HttpStatusCode.Created, generatedResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, traversalResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, externalResponse.StatusCode);
     }
 
     private static async Task<JsonElement> CreateSectionAsync(
@@ -361,6 +756,78 @@ public sealed class CatalogIntegrationTests(TestApplicationFactory factory)
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         return payload;
+    }
+
+    private static async Task<HttpResponseMessage> UploadImageAsync(
+        HttpClient client,
+        string xsrfToken,
+        Guid productId,
+        string fileName,
+        string contentType,
+        byte[] content)
+    {
+        using var multipart = new MultipartFormDataContent();
+        AddFile(multipart, fileName, contentType, content);
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"/api/admin/catalog/products/{productId}/image")
+        {
+            Content = multipart
+        };
+        request.Headers.Add("X-XSRF-TOKEN", xsrfToken);
+
+        return await client.SendAsync(request);
+    }
+
+    private static async Task<HttpResponseMessage> DeleteImageAsync(
+        HttpClient client,
+        string xsrfToken,
+        Guid productId)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Delete,
+            $"/api/admin/catalog/products/{productId}/image");
+        request.Headers.Add("X-XSRF-TOKEN", xsrfToken);
+
+        return await client.SendAsync(request);
+    }
+
+    private static void AddFile(
+        MultipartFormDataContent multipart,
+        string fileName,
+        string contentType,
+        byte[] content)
+    {
+        var fileContent = new ByteArrayContent(content);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        multipart.Add(fileContent, "file", fileName);
+    }
+
+    private static byte[] ValidImage(string extension)
+    {
+        return extension switch
+        {
+            ".webp" => ValidWebp(),
+            ".jpg" or ".jpeg" => [0xFF, 0xD8, 0xFF, 0xD9],
+            ".png" => ValidPng(),
+            _ => throw new ArgumentOutOfRangeException(nameof(extension))
+        };
+    }
+
+    private static byte[] ValidWebp()
+    {
+        return
+        [
+            0x52, 0x49, 0x46, 0x46,
+            0x04, 0x00, 0x00, 0x00,
+            0x57, 0x45, 0x42, 0x50,
+            0x56, 0x50, 0x38, 0x20
+        ];
+    }
+
+    private static byte[] ValidPng()
+    {
+        return [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00];
     }
 
     private static async Task<JsonElement> CreateProductAsync(

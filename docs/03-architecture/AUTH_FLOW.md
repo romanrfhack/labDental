@@ -62,6 +62,12 @@ Endpoints catálogo Fase 3.5.1:
 - `PATCH /api/admin/catalog/products/{id}/status`
 - `PATCH /api/admin/catalog/products/{id}/price`
 
+Endpoints imágenes catálogo Fase 3.5.4.1:
+
+- `POST /api/admin/catalog/products/{id}/image`
+- `DELETE /api/admin/catalog/products/{id}/image`
+- `GET /api/catalog/images/{fileName}`
+
 Seed tecnico solo en Development:
 
 - `SecuritySeed:EnsureBaselineOnStartup`
@@ -176,6 +182,11 @@ Permisos por endpoints catálogo:
 - `PUT /api/admin/catalog/products/{id}`: `catalog.manage`.
 - `PATCH /api/admin/catalog/products/{id}/status`: `catalog.manage`.
 - `PATCH /api/admin/catalog/products/{id}/price`: `catalog.manage`.
+- `POST /api/admin/catalog/products/{id}/image`: `catalog.manage`.
+- `DELETE /api/admin/catalog/products/{id}/image`: `catalog.manage`.
+- `GET /api/catalog/images/{fileName}`: público, sin autenticación.
+
+POST y DELETE de imagen conservan la protección XSRF global para métodos mutables bajo `/api`. El GET público no usa XSRF. `Repartidor` continúa sin `catalog.view` ni `catalog.manage`.
 
 Permisos frontend Fase 3.5.2:
 

@@ -2,6 +2,8 @@
 
 Fase 3.5.2 - UI admin catálogo/precios con selección de imagen existente.
 
+Actualización Fase 3.5.4.1, 2026-08-08: no se modificó esta UI. El backend de POST/DELETE/GET de imágenes ya existe, pero `/app/admin/catalogo` continúa con selección de `imagePath` existente; selector de archivo, reemplazo y desasociación vía endpoints nuevos quedan para Fase 3.5.4.2.
+
 ## Cierre QA DEV - 2026-07-05
 
 Validación manual reportada en DEV para la UI admin de catálogo/precios. Este cierre documenta el reporte del responsable del proyecto; Codex no re-ejecutó login ni pruebas autenticadas con credenciales reales.
@@ -64,7 +66,7 @@ Resultado: integración admin → API pública → catálogo público OK, sin bu
 - Usuario sin sesión debe seguir redirigido a `/login`.
 - Usuario autenticado sin permiso debe seguir redirigido a `/app/access-denied`.
 - `/catalogo` público consume `GET /api/catalog/public` desde Fase 3.5.3 y conserva `catalog-data.ts` como fallback.
-- No se implementó upload de imágenes.
+- No se implementó upload de imágenes en esta UI; el backend se agregó después en Fase 3.5.4.1.
 - No se crearon migraciones.
 - No se modificó backend, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
 
@@ -114,4 +116,4 @@ Resultado: integración admin → API pública → catálogo público OK, sin bu
 - El asset `protesis-removible-unidad-acrilica.jpg` existe en carpeta fuente, pero la configuración Angular actual copia `src/assets/**/*.webp`; por eso la allowlist UI usa los assets `.webp` existentes.
 - Las rutas `provisionales-yacket-*` y `protesis-removible-unidad-metalica..webp` se conservan por compatibilidad con assets existentes y se marcan visualmente como heredadas.
 - Fase 3.5.3 se implementó localmente sin modificar esta UI admin: `/catalogo` público consume `GET /api/catalog/public` y conserva fallback a `catalog-data.ts`.
-- Fase siguiente recomendada: Fase 3.5.4 - carga/reemplazo de imágenes desde admin, o pulido QA de catálogo público si DEV reporta hallazgos.
+- Fase siguiente recomendada: Fase 3.5.4.2 - UI upload/reemplazo de imágenes desde `/app/admin/catalogo`.

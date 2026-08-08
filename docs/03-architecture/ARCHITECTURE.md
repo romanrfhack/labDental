@@ -109,6 +109,7 @@ Módulos API principales:
 - `GET /health`
 - `/api/auth`
 - `/api/catalog/public`
+- `/api/catalog/images/{fileName}`
 - `/api/customers`
 - `/api/work-orders`
 - `/api/payments`
@@ -146,6 +147,15 @@ Catálogo administrable Fase 3.5.1:
 - Endpoint público implementado: `GET /api/catalog/public`, sin auth, solo activos y sin campos administrativos.
 - Endpoints privados implementados: `GET/POST/PUT/PATCH /api/admin/catalog/sections` y `GET/POST/PUT/PATCH /api/admin/catalog/products`; lectura requiere `catalog.view` o `catalog.manage`, mutaciones requieren `catalog.manage`.
 - Estrategia MVP de imágenes: conservar assets estáticos existentes y guardar rutas relativas seguras en `ImagePath`; upload queda para Fase 3.5.4.
+
+Imágenes persistentes Fase 3.5.4.1:
+
+- `POST /api/admin/catalog/products/{id}/image` y `DELETE /api/admin/catalog/products/{id}/image` requieren `catalog.manage`; GET `/api/catalog/images/{fileName}` es público.
+- API mapea `IFormFile` a `CatalogImageUploadRequest` con `Stream`; Application no depende de tipos ASP.NET.
+- `CatalogService` confirma producto y coordina persistencia de `ImagePath`; `ICatalogImageStorage`/`CatalogImageStorage` encapsulan filesystem.
+- `CatalogImagesOptions.StoragePath` se configura por `CatalogImages__StoragePath`; no deriva del content root ni de symlinks `current`.
+- Escritura por streaming a temporal exclusivo, rename dentro de la misma raíz y compensación del archivo nuevo si falla la base.
+- `ImagePath` acepta assets heredados y `/api/catalog/images/{fileName}` generado. No hay migración ni cambio de modelo.
 
 UI catálogo administrable Fase 3.5.2:
 

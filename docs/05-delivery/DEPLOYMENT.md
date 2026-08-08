@@ -59,11 +59,11 @@ El valor efectivo de `LDT_APP_ROOT` se mantiene fuera del repositorio. No se ley
 
 ## Almacenamiento De Imágenes De Catálogo
 
-Diseño aprobado para implementar en Fase 3.5.4.1:
+Backend implementado localmente en Fase 3.5.4.1; preparación operativa DEV pendiente:
 
 - Carpeta persistente: `${LDT_APP_ROOT}/shared/catalog-images`.
 - Ruta DEV esperada: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, pendiente de confirmar contra el `LDT_APP_ROOT` real antes de activar upload.
-- Configuración backend sugerida: `CatalogImages__StoragePath`, definida fuera del repositorio y sin hardcodear la ruta DEV.
+- Configuración backend requerida: `CatalogImages__StoragePath`, ruta absoluta definida fuera del repositorio y sin hardcodear la ruta DEV. Si falta, está vacía, es relativa o la carpeta no existe/no es accesible, POST responde `503` controlado.
 - Escritura: únicamente por el usuario efectivo del servicio API, con ownership/grupo y permisos mínimos; no usar permisos globales `777`.
 - Lectura pública: `GET /api/catalog/images/{fileName}` desde ASP.NET Core.
 - Persistencia en base: `ImagePath` igual a `/api/catalog/images/{fileName}`.
@@ -83,7 +83,7 @@ Preparación operativa requerida antes de habilitar upload:
 6. Confirmar que el proxy admite el tamaño máximo más overhead multipart.
 7. Validar que una imagen siga disponible después de otro deploy y de un rollback de prueba controlado.
 
-Esta fase no ejecutó esos pasos ni modificó scripts, workflow, Nginx, systemd o VPS.
+La implementación local de Fase 3.5.4.1 no ejecutó esos pasos ni modificó scripts, workflow, Nginx, systemd o VPS. Hasta completarlos, no debe habilitarse una prueba real de upload en DEV.
 
 ### Backup Manual/Recomendado
 
@@ -153,7 +153,7 @@ Detectadas o documentadas:
 - `LT_ADMIN_PASSWORD`
 - `LT_ADMIN_FULL_NAME`
 - `Cors__AllowedOrigins` si frontend y API quedan en orígenes distintos
-- `CatalogImages__StoragePath` cuando se implemente Fase 3.5.4.1
+- `CatalogImages__StoragePath` para el backend implementado en Fase 3.5.4.1
 
 Pendientes de producción:
 

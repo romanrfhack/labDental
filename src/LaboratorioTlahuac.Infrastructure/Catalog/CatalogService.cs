@@ -8,7 +8,8 @@ namespace LaboratorioTlahuac.Infrastructure.Catalog;
 
 public sealed class CatalogService(
     LaboratorioTlahuacDbContext dbContext,
-    IClock clock)
+    IClock clock,
+    ICatalogImageStorage catalogImageStorage)
     : ICatalogService
 {
     public async Task<CatalogServiceResult<CatalogPublicResponse>> GetPublicCatalogAsync(
@@ -292,6 +293,84 @@ public sealed class CatalogService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await LoadSavedProductAsync(product.Id, cancellationToken);
+    }
+
+    public async Task<CatalogServiceResult<CatalogAdminProductResponse>> UploadProductImageAsync(
+        Guid id,
+        CatalogImageUploadRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var product = await dbContext.CatalogProducts
+            .FirstOrDefaultAsync(currentProduct => currentProduct.Id == id, cancellationToken);
+
+        if (product is null)
+        {
+            return CatalogServiceResult.NotFound<CatalogAdminProductResponse>("Catalog product was not found.");
+        }
+
+        var storedImage = await catalogImageStorage.StoreAsync(request, cancellationToken);
+
+        if (storedImage.Status == CatalogImageStoreStatus.ValidationError)
+        {
+            return CatalogServiceResult.Validation<CatalogAdminProductResponse>(storedImage.Errors);
+        }
+
+        if (storedImage.Status == CatalogImageStoreStatus.PayloadTooLarge)
+        {
+            return CatalogServiceResult.PayloadTooLarge<CatalogAdminProductResponse>(
+                "Catalog images cannot exceed 2 MB.");
+        }
+
+        if (storedImage.Status == CatalogImageStoreStatus.ServiceUnavailable
+            || string.IsNullOrEmpty(storedImage.FileName))
+        {
+            return CatalogServiceResult.ServiceUnavailable<CatalogAdminProductResponse>(
+                "Catalog image storage is unavailable.");
+        }
+
+        var imagePath = $"/api/catalog/images/{storedImage.FileName}";
+        product.UpdateImage(imagePath, clock.UtcNow);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            await catalogImageStorage.TryDeleteAsync(storedImage.FileName, CancellationToken.None);
+            throw;
+        }
+
+        return await LoadSavedProductAsync(product.Id, cancellationToken);
+    }
+
+    public async Task<CatalogServiceResult<CatalogAdminProductResponse>> ClearProductImageAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var product = await dbContext.CatalogProducts
+            .FirstOrDefaultAsync(currentProduct => currentProduct.Id == id, cancellationToken);
+
+        if (product is null)
+        {
+            return CatalogServiceResult.NotFound<CatalogAdminProductResponse>("Catalog product was not found.");
+        }
+
+        product.UpdateImage(null, clock.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return await LoadSavedProductAsync(product.Id, cancellationToken);
+    }
+
+    public async Task<CatalogServiceResult<CatalogImageContent>> GetCatalogImageAsync(
+        string fileName,
+        CancellationToken cancellationToken = default)
+    {
+        var image = await catalogImageStorage.OpenReadAsync(fileName, cancellationToken);
+
+        return image is null
+            ? CatalogServiceResult.NotFound<CatalogImageContent>("Catalog image was not found.")
+            : CatalogServiceResult.Success(image);
     }
 
     private async Task<CatalogServiceResult<CatalogAdminProductResponse>> LoadSavedProductAsync(

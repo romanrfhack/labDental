@@ -5,6 +5,7 @@ namespace LaboratorioTlahuac.Infrastructure.Catalog;
 internal static class CatalogImagePathValidator
 {
     private const string CatalogProductsPrefix = "assets/catalog/products/";
+    private const string CatalogImagesApiPrefix = "/api/catalog/images/";
     private static readonly HashSet<string> AllowedExtensions =
         new(StringComparer.OrdinalIgnoreCase) { ".webp", ".jpg", ".jpeg", ".png" };
 
@@ -26,15 +27,20 @@ internal static class CatalogImagePathValidator
             return normalized;
         }
 
-        if (!IsSafeCatalogAssetPath(normalized))
+        if (!IsSafeCatalogImagePath(normalized))
         {
-            AddError(errors, fieldName, $"{fieldName} must be a safe relative catalog asset path.");
+            AddError(errors, fieldName, $"{fieldName} must be a safe catalog image path.");
         }
 
         return normalized;
     }
 
     public static bool IsSafeCatalogAssetPath(string path)
+    {
+        return IsSafeCatalogImagePath(path);
+    }
+
+    public static bool IsSafeCatalogImagePath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
         {
@@ -44,11 +50,21 @@ internal static class CatalogImagePathValidator
         var trimmed = path.Trim();
 
         if (!string.Equals(trimmed, path, StringComparison.Ordinal)
-            || trimmed[0] == '/'
-            || trimmed[0] == '\\'
             || trimmed.Contains('\\')
             || trimmed.Contains('?')
             || trimmed.Contains('#')
+            || trimmed.StartsWith("//", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (trimmed.StartsWith(CatalogImagesApiPrefix, StringComparison.Ordinal))
+        {
+            return CatalogImageFileName.IsGeneratedName(trimmed[CatalogImagesApiPrefix.Length..]);
+        }
+
+        if (trimmed[0] == '/'
+            || trimmed[0] == '\\'
             || Uri.TryCreate(trimmed, UriKind.Absolute, out _)
             || !trimmed.StartsWith(CatalogProductsPrefix, StringComparison.Ordinal))
         {

@@ -2,6 +2,8 @@
 
 Fase 3.5.4.0, 2026-08-08. Esta fase define el almacenamiento persistente y el contrato operativo previo a implementar carga/reemplazo de imágenes desde `/app/admin/catalogo`.
 
+Actualización Fase 3.5.4.1, 2026-08-08: el backend descrito aquí ya quedó implementado localmente. Existen POST/DELETE por producto, GET público, almacenamiento tipado mediante `CatalogImages:StoragePath`, validación hasta 2 MB por extensión/MIME/firma, nombres GUID, escritura temporal + rename, compensación ante fallo de base y pruebas API aisladas. No se modificó la UI admin, no se creó migración y la activación operativa en DEV sigue pendiente.
+
 ## Resultado De La Fase
 
 Se adopta como estrategia MVP una carpeta persistente del ambiente, fuera de los releases de backend y frontend, y lectura pública a través de la API existente:
@@ -242,6 +244,22 @@ No se define todavía una retención automatizada. Como baseline operativo se re
 - Un deploy posterior no pierde la imagen cargada.
 - Existe backup manual documentado y una restauración de muestra antes de producción.
 
+## Implementación Fase 3.5.4.1
+
+- Opciones tipadas: `CatalogImagesOptions`, sección `CatalogImages`, propiedad `StoragePath` y variable de ambiente `CatalogImages__StoragePath`; el valor efectivo debe ser una ruta absoluta existente para no resolver contra content root/releases.
+- Almacenamiento: `ICatalogImageStorage`/`CatalogImageStorage`; Application recibe `Stream` y metadatos seguros, sin depender de `IFormFile`.
+- Upload: `POST /api/admin/catalog/products/{id}/image`, `multipart/form-data`, una sola parte `file`, `catalog.manage` y XSRF global.
+- Desasociación: `DELETE /api/admin/catalog/products/{id}/image`; responde con el producto actualizado, toca `UpdatedAtUtc` y no borra el archivo.
+- Lectura: `GET /api/catalog/images/{fileName}` público, solo nombre lowercase de 32 hex + extensión permitida, `404` seguro para nombre/archivo inválido, `X-Content-Type-Options: nosniff` y cache inmutable.
+- Límite: `2,097,152` bytes. Exceso responde `413`; validación de archivo responde `400`; almacenamiento sin configuración/carpeta/acceso responde `503` sin revelar la ruta.
+- Escritura: producto existente antes de almacenar; temporal exclusivo en la misma raíz; rename final sin overwrite; si falla `SaveChangesAsync`, se intenta borrar solo el archivo nuevo.
+- Compatibilidad: `CatalogImagePathValidator` acepta `assets/catalog/products/...` y exactamente `/api/catalog/images/{fileName}`; continúa rechazando URLs externas, otras rutas `/api` y path traversal.
+- Pruebas: carpeta temporal GUID aislada por factory y limpieza al terminar; cobertura de autorización, formatos, tamaño, firma, GET, DELETE, catálogo público y rol `Repartidor`.
+
+## Pendiente Operativo DEV
+
+Antes de probar un upload real en DEV se debe completar el checklist de `docs/05-delivery/DEPLOYMENT.md`: crear/verificar `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, asignar permisos al usuario real del servicio, configurar `CatalogImages__StoragePath`, confirmar límite multipart del proxy y validar persistencia después de otro deploy. La ruta concreta no está hardcodeada en aplicación.
+
 ## Siguiente Fase Recomendada
 
-Fase 3.5.4.1 — backend upload/reemplazo de imágenes de catálogo.
+Fase 3.5.4.2 — UI upload/reemplazo de imágenes desde `/app/admin/catalogo`, después de preparar y validar el almacenamiento DEV.

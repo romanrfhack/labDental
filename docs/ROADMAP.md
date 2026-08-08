@@ -39,6 +39,8 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.5.2: UI admin catálogo/precios con selección de imagen existente. Implementada y validada en DEV el 2026-07-05 bajo `/app/admin/catalogo`; agrega modelos y servicio frontend de catálogo, navegación privada `Catálogo`, lectura de secciones/productos, filtros por sección/estado, creación/edición/activación de secciones y productos, actualización rápida de precio, selección de `imagePath` desde assets `.webp` existentes, preview y modo readonly para `catalog.view` sin `catalog.manage`. QA DEV: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db`, GitHub Actions `success`, `/health` `200`, endpoints admin sin sesión `401`, flujo Admin OK, precio negativo bloqueado OK, selección/preview/limpieza de imagen OK, `/catalogo` público OK y `Repartidor` sin navegación/acceso OK. No cambia `/catalogo`, no implementa upload, no crea migraciones, no toca backend, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
 - Fase 3.5.3: catálogo público consume API con fallback. Implementada el 2026-07-10 y cerrada en DEV el 2026-08-08 con commit `8be9e14ec8cda5e8486770a77733a4413e456e96`, GitHub Actions `success`, `/health` `200`, `/catalogo` `200` y `/api/catalog/public` sin sesión `200`. Activar/desactivar productos y cambiar nombre/precio desde admin se reflejó correctamente en `/catalogo`. El fallback forzado offline no se probó en DEV y queda como cobertura manual opcional. No cambia UI admin, backend, migraciones, upload, `AuthService`, guards, cookies, XSRF ni dependencias.
 - Fase 3.5.4.0: diseño operativo de almacenamiento de imágenes del catálogo. Documentada el 2026-08-08; define `${LDT_APP_ROOT}/shared/catalog-images` fuera de releases, ruta pública `GET /api/catalog/images/{fileName}`, `ImagePath` `/api/catalog/images/{fileName}`, POST/DELETE de imagen por producto, máximo 2 MB, formatos `.webp`/`.jpg`/`.jpeg`/`.png`, validación de extensión/MIME/firma, nombre único, bloqueo de path traversal, `catalog.manage`, lectura pública, exclusión de Repartidor, permisos de filesystem y backup/restore. No implementa código, migraciones, frontend ni cambios de deploy.
+- Fase 3.5.4.1: backend upload/reemplazo/desasociación de imágenes. Implementada localmente el 2026-08-08; agrega POST/DELETE con `catalog.manage` y XSRF, GET público, almacenamiento configurable por `CatalogImages__StoragePath`, máximo 2 MB, validación de extensión/MIME/firma, GUID seguro, escritura temporal/rename, compensación DB, compatibilidad con assets heredados y pruebas API en carpeta temporal aislada. No crea migración, UI, dependencias ni cambios de deploy; preparación/QA DEV pendiente.
+- Fase 3.5.4.2: UI upload/reemplazo desde `/app/admin/catalogo`. Siguiente fase recomendada después de preparar y validar storage DEV.
 
 ## Sitio Público Institucional
 
@@ -72,11 +74,11 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Fase 3.5.4.1 — backend upload/reemplazo de imágenes de catálogo, siguiendo el diseño operativo de `docs/01-product/catalog-image-upload-design.md`.
+Fase 3.5.4.2 — UI upload/reemplazo de imágenes desde `/app/admin/catalogo`, siguiendo el backend y diseño de `docs/01-product/catalog-image-upload-design.md`.
 
 Fase 3.5.3 queda cerrada en DEV: `/catalogo` consume `GET /api/catalog/public`, refleja cambios administrados y conserva fallback local con `catalog-data.ts`.
 
-Fase 3.5.4.0 deja cerradas las decisiones de almacenamiento, endpoints, validación, permisos y backup. La implementación empieza en backend en Fase 3.5.4.1; frontend de upload y activación operativa DEV deben continuar como incrementos controlados. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
+Fase 3.5.4.1 deja implementado el backend. La preparación operativa DEV y el frontend de upload deben continuar como incrementos controlados. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
 ## Regla De Actualización
 

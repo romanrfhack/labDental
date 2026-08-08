@@ -47,6 +47,16 @@ public sealed record CatalogStatusRequest(bool IsActive);
 
 public sealed record CatalogPriceRequest(decimal PriceAmount, string? Currency);
 
+public sealed record CatalogImageUploadRequest(
+    string FileName,
+    string ContentType,
+    long Length,
+    Stream Content);
+
+public sealed record CatalogImageContent(
+    Stream Content,
+    string ContentType);
+
 public sealed record CatalogAdminSectionResponse(
     Guid Id,
     string Key,

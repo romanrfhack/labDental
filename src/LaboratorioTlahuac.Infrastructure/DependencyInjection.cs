@@ -41,6 +41,9 @@ public static class DependencyInjection
         var dashboardOptions = configuration
             .GetSection(DashboardOptions.SectionName)
             .Get<DashboardOptions>() ?? new DashboardOptions();
+        var catalogImagesOptions = configuration
+            .GetSection(CatalogImagesOptions.SectionName)
+            .Get<CatalogImagesOptions>() ?? new CatalogImagesOptions();
 
         var connectionString = configuration.GetConnectionString(databaseOptions.ConnectionStringName);
 
@@ -63,10 +66,12 @@ public static class DependencyInjection
         services.AddSingleton<IPermissionChecker, ClaimsPermissionChecker>();
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton(dashboardOptions);
+        services.AddSingleton(catalogImagesOptions);
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IAuthSessionService, AuthSessionService>();
         services.AddScoped<IAdminSecurityService, AdminSecurityService>();
         services.AddScoped<ICatalogService, CatalogService>();
+        services.AddSingleton<ICatalogImageStorage, CatalogImageStorage>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IDeliveryService, DeliveryService>();
         services.AddScoped<IWorkOrderService, WorkOrderService>();

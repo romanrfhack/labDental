@@ -5,7 +5,9 @@ public enum CatalogServiceStatus
     Success = 1,
     ValidationError = 2,
     NotFound = 3,
-    Conflict = 4
+    Conflict = 4,
+    PayloadTooLarge = 5,
+    ServiceUnavailable = 6
 }
 
 public sealed record CatalogServiceResult<T>(
@@ -47,6 +49,24 @@ public static class CatalogServiceResult
     {
         return new CatalogServiceResult<T>(
             CatalogServiceStatus.Conflict,
+            default,
+            new Dictionary<string, string[]>(),
+            message);
+    }
+
+    public static CatalogServiceResult<T> PayloadTooLarge<T>(string message)
+    {
+        return new CatalogServiceResult<T>(
+            CatalogServiceStatus.PayloadTooLarge,
+            default,
+            new Dictionary<string, string[]>(),
+            message);
+    }
+
+    public static CatalogServiceResult<T> ServiceUnavailable<T>(string message)
+    {
+        return new CatalogServiceResult<T>(
+            CatalogServiceStatus.ServiceUnavailable,
             default,
             new Dictionary<string, string[]>(),
             message);

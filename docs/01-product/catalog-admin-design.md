@@ -12,13 +12,15 @@ Cierre QA DEV Fase 3.5.3, 2026-08-08: commit `8be9e14ec8cda5e8486770a77733a4413e
 
 Actualización Fase 3.5.4.0, 2026-08-08: quedó definido el diseño operativo previo al upload en `docs/01-product/catalog-image-upload-design.md`. La estrategia MVP usa `${LDT_APP_ROOT}/shared/catalog-images`, fuera de releases, sirve archivos mediante `GET /api/catalog/images/{fileName}` y guarda `/api/catalog/images/{fileName}` en el `ImagePath` del producto. Esta subfase no implementa código, migraciones, frontend ni cambios de deploy.
 
+Actualización Fase 3.5.4.1, 2026-08-08: backend upload/reemplazo/desasociación implementado localmente con almacenamiento configurable, GET público, validación de archivo, naming GUID, bloqueo de path traversal y pruebas API. La UI `/app/admin/catalogo` todavía no ofrece upload; queda para Fase 3.5.4.2.
+
 ## Resumen Ejecutivo
 
 El catálogo público actual de `/catalogo` ya funciona y no debe romperse. Desde Fase 3.5.3 consume `GET /api/catalog/public` cuando la respuesta es válida, conserva datos estructurados estáticos en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` como fallback y usa assets locales en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
 
 La recomendación para el MVP administrable es migrar secciones y productos a backend/base de datos, sembrar la información inicial desde `catalog-data.ts`, exponer un endpoint público de solo lectura y crear endpoints privados de administración bajo `/api/admin/catalog`. Para reducir riesgo, el MVP debe permitir seleccionar una imagen existente por `imagePath`/`assetPath`, sin carga de archivos desde UI todavía. La carga/reemplazo de imágenes debe quedar para una fase posterior con política explícita de almacenamiento, validación y backup.
 
-Siguiente fase implementable recomendada: Fase 3.5.4.1 - backend upload/reemplazo de imágenes de catálogo.
+Siguiente fase implementable recomendada: Fase 3.5.4.2 - UI upload/reemplazo de imágenes desde `/app/admin/catalogo`.
 
 ## Estado Actual
 
@@ -28,7 +30,7 @@ Siguiente fase implementable recomendada: Fase 3.5.4.1 - backend upload/reemplaz
 - Existe backend de catálogo desde Fase 3.5.1.
 - Existen entidades `CatalogSection` y `CatalogProduct`, migración `20260705054221_AddCatalogManagement` y endpoints de catálogo.
 - Existe UI de administración de precios e imágenes existentes bajo `/app/admin/catalogo` desde Fase 3.5.2.
-- No existe carga de imágenes desde `/app`.
+- El backend ya permite carga/desasociación por API; todavía no existe control de upload en `/app/admin/catalogo`.
 - Las imágenes del catálogo viven como assets locales.
 - La app privada actual vive bajo `/app`.
 - Los módulos admin actuales son `/app/admin/usuarios`, `/app/admin/catalogo` y `/app/admin/roles`.
@@ -360,6 +362,14 @@ Upload futuro:
 - `GET /api/catalog/images/{fileName}` para lectura pública sin autenticación.
 - Contrato y reglas completos: `docs/01-product/catalog-image-upload-design.md`.
 
+Implementación Fase 3.5.4.1:
+
+- Los tres endpoints anteriores ya existen.
+- POST y DELETE requieren `catalog.manage`; GET es público.
+- POST responde `413` para más de 2 MB, `400` para archivo inválido y `503` si el storage no está disponible.
+- El archivo anterior se conserva al reemplazar y DELETE solo desasocia.
+- `CatalogImagePathValidator` acepta assets heredados y nombres generados bajo `/api/catalog/images/`.
+
 Autorización:
 
 - `GET` privados: `catalog.view`.
@@ -531,6 +541,8 @@ Alcance:
 
 ### Fase 3.5.4.1 - Backend Upload/Reemplazo De Imágenes
 
+Estado: implementada localmente el 2026-08-08; preparación/QA DEV pendiente.
+
 Alcance:
 
 - Configurar almacenamiento local persistente fuera de releases.
@@ -545,6 +557,20 @@ Exclusiones:
 
 - No mezclar con migración inicial ni con primer cambio de `/catalogo` público.
 - No convertir a WebP ni implementar limpieza automática de huérfanos.
+
+### Fase 3.5.4.2 - UI Upload/Reemplazo De Imágenes
+
+Alcance recomendado:
+
+- Agregar selector de archivo y acciones de subir/reemplazar/desasociar en `/app/admin/catalogo`.
+- Mantener controles visibles solo con `catalog.manage` y modo readonly con `catalog.view`.
+- Mostrar preview y estados de validación/error sin exponer detalles internos.
+- Validar mobile-first, XSRF, progreso/estado de envío y actualización de `/catalogo`.
+
+Exclusiones:
+
+- No borrar físicamente archivos anteriores.
+- No convertir/recomprimir imágenes ni agregar dependencias.
 
 ## Riesgos
 
@@ -669,4 +695,4 @@ Antes de exponer cambios administrables al público, validar:
 
 ## Siguiente Fase Implementable
 
-Fase 3.5.4.1 — backend upload/reemplazo de imágenes de catálogo, siguiendo `docs/01-product/catalog-image-upload-design.md`.
+Fase 3.5.4.2 — UI upload/reemplazo de imágenes desde `/app/admin/catalogo`, siguiendo `docs/01-product/catalog-image-upload-design.md`.
