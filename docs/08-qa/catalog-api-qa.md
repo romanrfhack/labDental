@@ -119,3 +119,11 @@ La UI privada `/app/admin/catalogo` usa los endpoints admin documentados aquí. 
 Fase 3.5.3 conecta `/catalogo` público a `GET /api/catalog/public` sin cambiar el contrato backend. El frontend valida la forma de la respuesta y usa `catalog-data.ts` como fallback si el endpoint devuelve error HTTP, tarda demasiado, responde nulo, no trae secciones, no trae ningún producto total o rompe el mapeo esperado.
 
 La API sigue siendo pública y no requiere sesión. Los endpoints admin siguen protegidos y no se exponen desde la UI pública.
+
+### Cierre QA DEV Fase 3.5.3 - 2026-08-08
+
+- Commit desplegado: `8be9e14ec8cda5e8486770a77733a4413e456e96`.
+- GitHub Actions: `success`.
+- `GET /health`, `GET /catalogo` y `GET /api/catalog/public` sin sesión respondieron `200`.
+- El responsable del proyecto activó y desactivó productos, cambió nombre y precio desde `/app/admin/catalogo`, y confirmó que esos cambios se reflejaron correctamente en `/catalogo`.
+- No se modificó el contrato del endpoint, backend, migraciones, permisos, auth, cookies ni XSRF para este cierre.

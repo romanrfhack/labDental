@@ -4,9 +4,11 @@ Backlog futuro para Laboratorio Dental Tláhuac.
 
 ## Estado
 
-Fase 3.5.2 ya implementó la UI privada de administración de catálogo y precios bajo `/app/admin/catalogo`, consumiendo endpoints admin existentes. Fase 3.5.3 conectó localmente `/catalogo` público a `GET /api/catalog/public` con fallback a `catalog-data.ts`.
+Fase 3.5.2 implementó y cerró en DEV la UI privada de administración de catálogo y precios bajo `/app/admin/catalogo`, consumiendo endpoints admin existentes. Fase 3.5.3 conectó `/catalogo` público a `GET /api/catalog/public` con fallback a `catalog-data.ts` y quedó cerrada en DEV el 2026-08-08.
 
 El catálogo público actual en `/catalogo` consulta la API pública cuando la respuesta contiene secciones y productos válidos. Si la API falla, tarda demasiado, devuelve respuesta nula, secciones vacías, catálogo sin productos o datos con forma inválida, la UI conserva el catálogo estructurado del frontend en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
+
+QA DEV Fase 3.5.3: commit `8be9e14ec8cda5e8486770a77733a4413e456e96`, GitHub Actions `success`, `/health` `200`, `/catalogo` `200` y `/api/catalog/public` sin sesión `200`. La activación/desactivación de productos y los cambios de nombre/precio realizados desde `/app/admin/catalogo` se reflejaron correctamente en `/catalogo`. No se ejecutó una prueba forzada del fallback con API bloqueada/offline en DEV.
 
 Actualización Fase 3.2: la administración de catálogo permanece como backlog. No debe bloquear el flujo operativo de órdenes, etiquetas y reparto. El MVP de etiquetas desde órdenes existentes ya quedó implementado; antes del catálogo sigue conviniendo validar impresión real y, si el cliente lo prioriza, avanzar flujo mobile-first de entrega/repartidor.
 

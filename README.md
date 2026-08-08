@@ -5,8 +5,8 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 ## Estado Actual
 
 - Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4.0 documentada como análisis técnico previo de entregas/repartidor mobile-first, Fase 3.4.1 implementada para backend delivery MVP + permisos, Fase 3.4.2 implementada para UI admin de entregas desde órdenes, Fase 3.4.3 implementada para UI mobile-first de repartidor bajo `/app/entregas`, Fase 3.4.3.1 implementada para redirect post-login por permisos y reintento de `FailedDelivery`, Fase 3.5.1 implementada y cerrada en DEV como backend catálogo administrable + migración + seed inicial, y Fase 3.5.2 implementada y cerrada en DEV como UI admin de catálogo/precios bajo `/app/admin/catalogo`.
-- Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; Fase 3.5.3 implementada localmente para que `/catalogo` consuma `GET /api/catalog/public` con fallback a `catalog-data.ts`; contenido final del cliente pendiente.
-- Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev` y validado como baseline UAT inicial en Fase 3.0 para sitio público, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login`.
+- Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; Fase 3.5.3 cerrada en DEV con `/catalogo` consumiendo `GET /api/catalog/public`, reflejando cambios administrados y conservando fallback a `catalog-data.ts`; contenido final del cliente pendiente.
+- Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev`; commit `8be9e14ec8cda5e8486770a77733a4413e456e96` desplegado con GitHub Actions `success`, health check resiliente validado y `/health`, `/catalogo` y `/api/catalog/public` en `200`.
 - Deploy productivo: pendiente de plataforma, DNS, HTTPS, variables y base productiva.
 
 La Fase 1 / Etapa 7 corresponde al MVP administrativo. La Fase 0/Fase 1 del sitio público corresponde a un frente separado.
@@ -112,6 +112,6 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
 ## Próximos Pasos
 
-1. Validar Fase 3.5.3 en DEV: `/catalogo` público consume `GET /api/catalog/public` y conserva fallback local si la API falla.
+1. Implementar Fase 3.5.4: carga/reemplazo de imágenes desde admin, o una fase corta de pulido QA del catálogo público si aparecen hallazgos visuales.
 2. Validar Fase 3.2 en DEV con impresora térmica real y ajustar escala/márgenes del navegador si hace falta.
-3. Implementar Fase 3.5.4: carga/reemplazo de imágenes desde admin, o pulido QA de catálogo público si hay hallazgos.
+3. Ejecutar de forma opcional la prueba forzada del fallback de `/catalogo` con la API bloqueada/offline.

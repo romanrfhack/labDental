@@ -2,6 +2,37 @@
 
 Fase 3.5.3 - `/catalogo` público consume `GET /api/catalog/public` con fallback local.
 
+## Cierre QA DEV - 2026-08-08
+
+Validación manual reportada por el responsable del proyecto y comprobación HTTP pública de cierre:
+
+| Punto | Resultado |
+| --- | --- |
+| Commit desplegado | `8be9e14ec8cda5e8486770a77733a4413e456e96` |
+| GitHub Actions | `success` |
+| `GET /health` | `200` |
+| `GET /catalogo` sin sesión | `200` |
+| `GET /api/catalog/public` sin sesión | `200` |
+| `/catalogo` carga sin login | OK |
+| Secciones y productos visibles | OK |
+| Precios con formato MXN | OK |
+| Llamada a `/api/catalog/public` y consumo de datos administrados | OK |
+| Activar/desactivar producto desde `/app/admin/catalogo` se refleja en `/catalogo` | OK |
+| Cambiar nombre y precio desde `/app/admin/catalogo` se refleja en `/catalogo` | OK |
+| `/app/admin/catalogo` mantiene edición de productos | OK |
+| Imágenes | Sin falla reportada; no se documentó un pase visual exhaustivo por asset |
+| Fallback con API bloqueada/offline en DEV | No probado de forma forzada |
+
+Observaciones: el flujo principal admin → API pública → `/catalogo` quedó validado sin bug claro. La prueba forzada de degradación con API bloqueada/offline permanece como cobertura manual opcional; el fallback sigue implementado y fue validado localmente por build y revisión técnica. Esta limitación no bloquea el cierre QA DEV del camino principal de Fase 3.5.3.
+
+El intento anterior correspondiente a `11ea0a296253d2e0a2660963430d49482dc4aaee` falló durante el health check posterior al restart, no por evidencia de falla funcional del catálogo. El siguiente commit, que incorporó el health check resiliente, desplegó correctamente.
+
+Validación técnica repetida para el cierre documental:
+
+- `npm run build`: correcto; initial total `317.77 kB`, sin warning de budget.
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos.
+- `dotnet test --no-build --verbosity normal`: correcto; Domain 1/1, Application 1/1 y API 140/140.
+
 ## Alcance
 
 Validar que `/catalogo` use datos administrables cuando la API pública responde correctamente y que nunca quede vacío si la API no está disponible o devuelve una respuesta inválida.

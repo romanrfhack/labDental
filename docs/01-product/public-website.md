@@ -158,7 +158,9 @@ Backlog futuro relacionado:
 - Fase 3.5.2 permite administrar secciones/productos/precios e imágenes existentes desde `/app/admin/catalogo`; esos cambios ya pueden alimentar el catálogo público cuando la API responde correctamente.
 - QA DEV Fase 3.5.1 confirmó que `/catalogo` sigue respondiendo `200` y que la API pública de catálogo también responde `200` sin sesión. No se cambió la fuente de datos visible del catálogo público.
 - QA DEV Fase 3.5.2 confirmó que la administración privada de catálogo no rompió `/catalogo` público; en ese cierre la ruta pública seguía funcionando con `catalog-data.ts`.
-- Validación local Fase 3.5.3 confirmó `npm run build`, `dotnet build` y `dotnet test`; el pase manual DEV debe confirmar API OK, API caída/timeout y respuesta vacía inválida con fallback visible.
+- QA DEV Fase 3.5.3 quedó cerrada el 2026-08-08 con commit `8be9e14ec8cda5e8486770a77733a4413e456e96`, GitHub Actions `success`, `/health` `200`, `/catalogo` `200` y `/api/catalog/public` sin sesión `200`.
+- El responsable del proyecto confirmó que activar/desactivar productos y cambiar nombre/precio desde `/app/admin/catalogo` se refleja correctamente en `/catalogo`, validando el consumo real de datos administrados.
+- La degradación forzada con API bloqueada/offline no se probó en DEV; `catalog-data.ts` permanece implementado como fallback y esa prueba queda como cobertura manual opcional, sin bloquear el cierre del camino principal.
 
 Assets:
 

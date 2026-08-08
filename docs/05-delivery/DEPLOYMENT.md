@@ -32,6 +32,8 @@ Fuente canónica de build, deploy, dominio, DNS, variables de entorno y publicac
 
 El `502` observado al desplegar `dev-38-11ea0a2` se trata como un probable problema de timing: el workflow anterior esperaba solo 5 segundos y hacía una única petición pública, mientras que arranques observados de la API tardaron aproximadamente 15–20 segundos. El rollback mantuvo DEV estable en `dev-37-3dc0347`. Este ajuste modifica solo automatización y documentación; no cambia código funcional de backend o frontend, migraciones ni catálogo.
 
+Cierre 2026-08-08: el ajuste quedó validado en un deploy real. El commit `8be9e14ec8cda5e8486770a77733a4413e456e96` terminó con GitHub Actions `success` y DEV respondió `200` en `/health`, `/catalogo` y `/api/catalog/public`. El intento anterior del commit `11ea0a296253d2e0a2660963430d49482dc4aaee` había fallado durante el health check posterior al restart; sin evidencia de crash del release y con el arranque más lento observado, se mantiene como causa probable la ventana demasiado agresiva del check anterior. El pendiente técnico de hacer resiliente el health check DEV queda cerrado.
+
 ## Ambiente DEV Publicado
 
 - URL: `https://dev.laboratoriodentaltlahuac.com`.

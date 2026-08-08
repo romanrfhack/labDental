@@ -8,13 +8,15 @@ Actualización Fase 3.5.2, 2026-07-05: la UI admin quedó implementada y cerrada
 
 Actualización Fase 3.5.3, 2026-07-10: `/catalogo` público queda implementado localmente para consumir `GET /api/catalog/public` y conservar `catalog-data.ts` como fallback ante error HTTP, timeout, respuesta nula, secciones vacías, catálogo sin productos o error de mapeo. No se implementa upload ni se modifica UI admin.
 
+Cierre QA DEV Fase 3.5.3, 2026-08-08: commit `8be9e14ec8cda5e8486770a77733a4413e456e96` desplegado con GitHub Actions `success`; `/health`, `/catalogo` y `/api/catalog/public` sin sesión respondieron `200`. Activar/desactivar productos y cambiar nombre/precio desde `/app/admin/catalogo` se reflejó correctamente en `/catalogo`. El fallback forzado con API bloqueada/offline no se probó en DEV y queda como cobertura manual opcional. No se modificó código funcional para este cierre.
+
 ## Resumen Ejecutivo
 
 El catálogo público actual de `/catalogo` ya funciona y no debe romperse. Desde Fase 3.5.3 consume `GET /api/catalog/public` cuando la respuesta es válida, conserva datos estructurados estáticos en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` como fallback y usa assets locales en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
 
 La recomendación para el MVP administrable es migrar secciones y productos a backend/base de datos, sembrar la información inicial desde `catalog-data.ts`, exponer un endpoint público de solo lectura y crear endpoints privados de administración bajo `/api/admin/catalog`. Para reducir riesgo, el MVP debe permitir seleccionar una imagen existente por `imagePath`/`assetPath`, sin carga de archivos desde UI todavía. La carga/reemplazo de imágenes debe quedar para una fase posterior con política explícita de almacenamiento, validación y backup.
 
-Siguiente fase implementable recomendada: Fase 3.5.4 - carga/reemplazo de imágenes desde admin, o pulido QA de catálogo público si DEV reporta hallazgos.
+Siguiente fase implementable recomendada: Fase 3.5.4 - carga/reemplazo de imágenes desde admin, o una fase corta de pulido QA del catálogo público si aparecen hallazgos visuales.
 
 ## Estado Actual
 

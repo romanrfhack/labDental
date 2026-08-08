@@ -6,6 +6,64 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-08-08 - Cierre QA DEV Fase 3.5.3 Y Deploy Resiliente
+
+### Cierre QA DEV
+
+- Commit desplegado: `8be9e14ec8cda5e8486770a77733a4413e456e96`.
+- GitHub Actions: `success`.
+- `GET /health`: `200`.
+- `GET /catalogo` sin sesión: `200`.
+- `GET /api/catalog/public` sin sesión: `200`.
+- El responsable del proyecto confirmó que activar y desactivar productos desde `/app/admin/catalogo` se refleja correctamente en `/catalogo`.
+- El responsable del proyecto confirmó que cambiar nombre y precio desde `/app/admin/catalogo` se refleja correctamente en `/catalogo`, conservando precios visibles en MXN.
+- Resultado: camino principal admin → API pública → catálogo público validado sin bug claro.
+- La prueba forzada del fallback con API bloqueada/offline no se ejecutó en DEV y queda como cobertura manual opcional; no bloquea este cierre.
+
+### Cierre Del Ajuste De Deploy
+
+- El intento anterior del commit `11ea0a296253d2e0a2660963430d49482dc4aaee` falló durante el health check posterior al restart.
+- La causa probable se mantiene como timing demasiado agresivo del check anterior, sin evidencia clara de crash del release.
+- El deploy exitoso de `8be9e14ec8cda5e8486770a77733a4413e456e96` validó el health check con reintentos y cerró el pendiente técnico.
+
+### Documentación Actualizada
+
+- `README.md`
+- `docs/README.md`
+- `docs/PROJECT_STATUS.md`
+- `docs/ROADMAP.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `docs/01-product/public-website.md`
+- `docs/01-product/catalog-admin-design.md`
+- `docs/01-product/admin-catalog-management.md`
+- `docs/05-delivery/DEPLOYMENT.md`
+- `docs/08-qa/public-catalog-api-qa.md`
+- `docs/08-qa/catalog-api-qa.md`
+- `docs/08-qa/catalog-admin-ui-qa.md`
+
+### Exclusiones Confirmadas
+
+- No se modificó código funcional.
+- No se modificaron backend, frontend, migraciones ni catálogo.
+- No se tocaron `AuthService`, guards, cookies, XSRF ni permisos.
+- No se modificó deploy.
+- No se instalaron dependencias.
+- No se usó `codex-cobranza-sql`.
+- No se imprimieron secretos.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `npm run build`: correcto; initial total `317.77 kB`, sin warning de budget.
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
+- `dotnet test --no-build --verbosity normal`: correcto; Domain 1/1, Application 1/1 y API 140/140.
+- Verificación HTTP independiente de `/health`, `/catalogo` y `/api/catalog/public`: `200`.
+- `git diff --check`: correcto.
+
+### Siguiente Fase Recomendada
+
+Fase 3.5.4 - carga/reemplazo de imágenes desde admin, o una fase corta de pulido QA del catálogo público si aparecen hallazgos visuales.
+
 ## 2026-08-08 - Health Check Robusto En Deploy DEV
 
 ### Cambio Realizado
@@ -38,7 +96,7 @@ El deploy de `dev-38-11ea0a2` recibió `502` durante una ventana de health check
 
 ### Siguiente Paso Recomendado
 
-Hacer commit/push y validar un nuevo deploy automático de DEV.
+Estado posterior: cerrado con el deploy exitoso del commit `8be9e14ec8cda5e8486770a77733a4413e456e96`, documentado en la entrada de cierre QA DEV de esta misma fecha.
 
 ## 2026-07-10 - Fase 3.5.3 Catálogo Público Consume API
 

@@ -43,6 +43,17 @@ Resultados funcionales reportados:
 
 Observaciones reportadas: sin hallazgos ni bug claro. No se modificó código, backend, migraciones, `AuthService`, guards, cookies, XSRF, deploy ni dependencias para este cierre documental.
 
+## Revalidación En Cierre Fase 3.5.3 - 2026-08-08
+
+Con el commit `8be9e14ec8cda5e8486770a77733a4413e456e96` desplegado mediante GitHub Actions `success`, el responsable del proyecto revalidó `/app/admin/catalogo` y confirmó:
+
+- Activar un producto se refleja correctamente en `/catalogo`.
+- Desactivar un producto se refleja correctamente en `/catalogo`.
+- Cambiar el nombre de un producto se refleja correctamente en `/catalogo`.
+- Cambiar el precio de un producto se refleja correctamente en `/catalogo`, conservando el formato MXN.
+
+Resultado: integración admin → API pública → catálogo público OK, sin bug claro reportado. Esta revalidación no requirió cambios en UI admin, backend, migraciones, auth, guards, cookies, XSRF, permisos, deploy ni dependencias.
+
 ## Alcance Validado Por Código
 
 - Ruta privada: `/app/admin/catalogo`.
@@ -52,7 +63,7 @@ Observaciones reportadas: sin hallazgos ni bug claro. No se modificó código, b
 - `Repartidor` no debe ver navegación de catálogo porque no tiene permisos `catalog.*`.
 - Usuario sin sesión debe seguir redirigido a `/login`.
 - Usuario autenticado sin permiso debe seguir redirigido a `/app/access-denied`.
-- `/catalogo` público no se modificó y sigue usando `catalog-data.ts`.
+- `/catalogo` público consume `GET /api/catalog/public` desde Fase 3.5.3 y conserva `catalog-data.ts` como fallback.
 - No se implementó upload de imágenes.
 - No se crearon migraciones.
 - No se modificó backend, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
