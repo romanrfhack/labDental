@@ -1,0 +1,231 @@
+name: Validate PUB-UX-2 review fixes
+
+on:
+  push:
+    branches:
+      - agent/pub-ux-2-review-fixes
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pub-ux-2-review-fixes
+  cancel-in-progress: false
+
+jobs:
+  validate-and-commit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    env:
+      DOTNET_VERSION: '10.0.x'
+      NODE_VERSION: '22.x'
+      CONFIGURATION: Release
+      WEB_DIR: src/LaboratorioTlahuac.Web
+
+    steps:
+      - name: Checkout review branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply targeted review fixes and documentation
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          component_path = Path('src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.ts')
+          component = component_path.read_text(encoding='utf-8')
+          old_block = """  private selectSectionFromLocation() {
+            const sections = this.sections();
+            const hashKey = this.getCurrentHashSectionKey();
+            const nextSection = sections.find((section) => section.id === hashKey) ?? sections[0];
+
+            if (!nextSection) {
+              return;
+            }
+
+            this.selectedSectionKey.set(nextSection.id);
+
+            if (hashKey !== nextSection.id) {
+              this.updateSectionHash(nextSection.id, 'replace');
+            }
+          }
+          """
+          new_block = """  private selectSectionFromLocation() {
+            const sections = this.sections();
+            const hashKey = this.getCurrentHashSectionKey();
+            const hashSection = sections.find((section) => section.id === hashKey);
+
+            if (hashSection) {
+              this.selectedSectionKey.set(hashSection.id);
+              return;
+            }
+
+            if (hashKey && this.catalogLoadState() === 'loading') {
+              return;
+            }
+
+            const firstSection = sections[0];
+
+            if (!firstSection) {
+              return;
+            }
+
+            this.selectedSectionKey.set(firstSection.id);
+
+            if (hashKey !== firstSection.id) {
+              this.updateSectionHash(firstSection.id, 'replace');
+            }
+          }
+          """
+
+          if old_block not in component:
+              raise SystemExit('Expected selectSectionFromLocation block was not found.')
+
+          component_path.write_text(component.replace(old_block, new_block, 1), encoding='utf-8')
+
+          status_path = Path('docs/PROJECT_STATUS.md')
+          status = status_path.read_text(encoding='utf-8')
+          status_heading = '## PUB-UX-2 — Rediseño Visual Del Catálogo Público\n'
+          status_section = """
+          ## PUB-UX-2 — Rediseño Visual Del Catálogo Público
+
+          Estado: **implementado en `dev`; validación final del despliegue y pase visual DEV pendientes**.
+
+          - `/catalogo` usa ahora un workspace controlado por el usuario: sidebar en escritorio, navegación horizontal en tablet y selector nativo con tarjetas compactas en móvil.
+          - Se eliminaron autoplay, temporizadores, galería duplicada y cambios automáticos de categoría.
+          - La categoría activa se identifica por `key` y se refleja en el hash compartible `/catalogo#<key>`; Atrás/Adelante recorren selecciones previas.
+          - Los enlaces profundos de categorías creadas únicamente desde Admin conservan su hash durante la carga inicial y se resuelven cuando responde `GET /api/catalog/public`; solo se normalizan al fallback si la API no contiene la categoría o falla.
+          - El catálogo muestra descripciones administrables de categorías y productos cuando existen, sin reservar espacio cuando están vacías.
+          - Las imágenes específicas cargadas desde Admin y los assets heredados continúan funcionando; una imagen de categoría se usa solo en el encabezado de la categoría, no como sustituto engañoso para todos los productos.
+          - Se mantienen API pública, fallback local, panel administrativo, carga/reemplazo/desasociación de imágenes, permisos, auth, cookies y XSRF sin cambios.
+          - Implementación principal integrada mediante PR #1 y ajuste de fidelidad mediante PR #2; la corrección de revisión y documentación se incorpora en el cierre de esta fase.
+
+          """
+          status_marker = '\n## Estado Por Frente\n'
+
+          if status_heading not in status:
+              if status_marker not in status:
+                  raise SystemExit('PROJECT_STATUS insertion marker was not found.')
+              status = status.replace(status_marker, '\n' + status_section + '## Estado Por Frente\n', 1)
+              status_path.write_text(status, encoding='utf-8')
+
+          log_path = Path('docs/IMPLEMENTATION_LOG.md')
+          log = log_path.read_text(encoding='utf-8')
+          log_heading = '## 2026-08-08 - PUB-UX-2 Rediseño Visual Del Catálogo Público\n'
+          log_entry = """
+          ## 2026-08-08 - PUB-UX-2 Rediseño Visual Del Catálogo Público
+
+          ### Cambio Realizado
+
+          Se implementó el rediseño aprobado de `/catalogo` para reducir scroll innecesario, devolver el control al usuario y conservar el catálogo administrable existente.
+
+          - Se reemplazaron carrusel automático y galería duplicada por un workspace de una categoría activa.
+          - Escritorio usa panel lateral de categorías; tablet usa navegación horizontal; móvil usa selector nativo y tarjetas horizontales compactas.
+          - La categoría activa usa su `key` como identidad estable y actualiza el hash de la URL con historial navegable.
+          - Se incorporaron descripciones opcionales ya entregadas por la API pública para categorías y productos.
+          - Las imágenes de producto provienen exclusivamente del producto; la imagen de categoría queda limitada al encabezado.
+          - Se eliminaron textos técnicos sobre assets, placeholders y condiciones comerciales todavía no confirmadas.
+          - Se conservaron `GET /api/catalog/public`, timeout, fallback local, precios MXN, estados de imagen faltante y accesibilidad con botones nativos, `aria-current`, foco visible y `prefers-reduced-motion`.
+
+          ### Corrección De Revisión
+
+          La revisión automática detectó que un enlace profundo hacia una categoría creada únicamente desde Admin podía perder su hash antes de que respondiera la API, porque la carga inicial todavía contenía solo las secciones del fallback estático.
+
+          Se corrigió `selectSectionFromLocation()` para:
+
+          - resolver inmediatamente hashes que ya existan en las secciones disponibles;
+          - conservar un hash todavía no resuelto mientras `catalogLoadState` sea `loading`;
+          - permitir que `applyCatalogSections()` lo resuelva contra la respuesta real de la API;
+          - normalizar al primer elemento únicamente después de confirmar que la categoría no existe o de usar el fallback.
+
+          ### Archivos Funcionales Modificados
+
+          - `src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.ts`
+          - `src/LaboratorioTlahuac.Web/src/app/public/services/public-catalog.service.ts`
+          - `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`
+          - `src/LaboratorioTlahuac.Web/src/styles/public-catalog.scss`
+          - `src/LaboratorioTlahuac.Web/angular.json`
+
+          ### Documentación Actualizada
+
+          - `docs/PROJECT_STATUS.md`
+          - `docs/IMPLEMENTATION_LOG.md`
+
+          ### Alcance Protegido
+
+          - No se modificaron backend, entidades, migraciones, endpoints, base de datos ni permisos.
+          - No se modificaron `AuthService`, guards, cookies, sesión ni XSRF.
+          - No se modificó la UI administrativa ni el flujo de carga, reemplazo o desasociación de imágenes.
+          - No se agregaron dependencias.
+          - No se modificaron scripts de deploy, Nginx, systemd ni configuración del VPS.
+          - No se imprimieron secretos ni se ejecutó `dotnet user-secrets list`.
+
+          ### Validaciones Ejecutadas
+
+          - `npm run build`: correcto.
+          - `dotnet restore`: correcto.
+          - `dotnet build --configuration Release --no-restore`: correcto.
+          - `dotnet test --configuration Release --no-build --verbosity normal`: correcto.
+          - `git diff --check`: correcto.
+          - Validaciones focalizadas previas: TypeScript estricto, mapper de API, historial `pushState`/`popstate`, CSS parseable y composición estática en 390 px y 1440 px.
+
+          ### Estado Y Siguiente Paso
+
+          - `PUB-UX-2.1`, `PUB-UX-2.2` y `PUB-UX-2.3`: implementadas.
+          - `PUB-UX-2.4`: pendiente confirmar el workflow de despliegue del commit final, smoke tests de `/health`, `/catalogo` y `/api/catalog/public`, y pase visual humano en DEV.
+          - Después del cierre DEV corresponde iniciar `PUB-UX-3` para home, servicios, contacto y encabezado público.
+
+          """
+          decision_marker = '- Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.\n\n'
+
+          if log_heading not in log:
+              if decision_marker not in log:
+                  raise SystemExit('IMPLEMENTATION_LOG insertion marker was not found.')
+              log = log.replace(decision_marker, decision_marker + log_entry, 1)
+              log_path.write_text(log, encoding='utf-8')
+          PY
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WEB_DIR }}/package-lock.json
+
+      - name: Restore backend
+        run: dotnet restore
+
+      - name: Build backend
+        run: dotnet build --configuration "$CONFIGURATION" --no-restore
+
+      - name: Test backend
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal
+
+      - name: Install frontend dependencies
+        run: npm --prefix "$WEB_DIR" ci
+
+      - name: Build frontend
+        run: npm --prefix "$WEB_DIR" run build
+
+      - name: Validate diff
+        run: git diff --check
+
+      - name: Commit validated review fixes
+        shell: bash
+        run: |
+          git rm .github/workflows/pub-ux-2-review-fixes.yml
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: preserve dynamic catalog deep links"
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          git push origin "HEAD:${BRANCH}"
