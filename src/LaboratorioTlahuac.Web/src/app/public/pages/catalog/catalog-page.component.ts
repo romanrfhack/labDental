@@ -7,69 +7,62 @@ import { CatalogProduct, CatalogSection, catalogSections } from '../../data/cata
 import { PublicCatalogService } from '../../services/public-catalog.service';
 
 type CatalogLoadState = 'api' | 'fallback' | 'loading';
+type CatalogHistoryMode = 'push' | 'replace';
 
 @Component({
   selector: 'app-catalog-page',
   imports: [RouterLink, PublicScrollAnimationsDirective],
   template: `
     <div class="catalog-page public-animation-scope" appPublicScrollAnimations>
-      <section class="catalog-hero">
-        <div class="catalog-hero-copy" data-animate="fade-up">
-          <p class="eyebrow">Catálogo 2026</p>
-          <h1>Soluciones dentales organizadas para consultar con claridad</h1>
-          <p class="catalog-intro">
-            Explora materiales, restauraciones y prótesis. Consulta precios de referencia y confirma indicaciones,
-            disponibilidad y tiempos directamente con el laboratorio.
-          </p>
-          <div class="catalog-hero-meta" aria-label="Resumen del catálogo">
-            <span>{{ sections().length }} categorías</span>
-            <span>{{ totalProducts() }} productos</span>
-            <span>Precios MXN</span>
-          </div>
-          @if (catalogNoticeText(); as catalogNoticeText) {
-            <p
-              class="catalog-data-status"
-              [class.is-fallback]="catalogLoadState() === 'fallback'"
-              aria-live="polite"
-            >
-              {{ catalogNoticeText }}
+      <section class="catalog-v2-hero">
+        <div class="catalog-v2-hero-inner">
+          <div data-animate="fade-up">
+            <p class="eyebrow">Catálogo 2026</p>
+            <h1>Soluciones dentales organizadas para consultar con claridad</h1>
+            <p class="catalog-v2-hero-copy">
+              Explora materiales, restauraciones y prótesis. Consulta precios de referencia y confirma indicaciones,
+              disponibilidad y tiempos directamente con el laboratorio.
             </p>
-          }
+
+            <div class="catalog-v2-meta" aria-label="Resumen del catálogo">
+              <span><strong>{{ sections().length }}</strong> categorías</span>
+              <span><strong>{{ totalProducts() }}</strong> productos</span>
+              <span><strong>MXN</strong> moneda</span>
+            </div>
+
+            @if (catalogNoticeText(); as catalogNoticeText) {
+              <p
+                class="catalog-v2-data-status"
+                [class.is-fallback]="catalogLoadState() === 'fallback'"
+                aria-live="polite"
+              >
+                {{ catalogNoticeText }}
+              </p>
+            }
+          </div>
+
+          <div class="catalog-v2-hero-action" data-animate="fade-in">
+            <a class="login-action" routerLink="/contacto">Contactar</a>
+            <span>Precios sujetos a confirmación.</span>
+          </div>
         </div>
-        <a class="login-action" routerLink="/contacto" data-animate="fade-in">Contactar al laboratorio</a>
       </section>
 
       <section class="catalog-workspace" aria-label="Catálogo de productos y precios">
-        <aside class="catalog-sidebar" aria-label="Categorías del catálogo">
-          <div class="catalog-sidebar-heading">
-            <p class="eyebrow">Categorías</p>
-            <h2>Explora el catálogo</h2>
-            <p>Selecciona un material o tipo de trabajo para consultar únicamente sus productos.</p>
-          </div>
-          <nav class="category-list">
-            @for (section of sections(); track section.id) {
-              <button
-                class="category-button"
-                type="button"
-                [class.is-active]="section.id === selectedSectionKey()"
-                [attr.aria-current]="section.id === selectedSectionKey() ? 'true' : null"
-                (click)="selectSection(section.id)"
-              >
-                <span>
-                  <strong>{{ section.name }}</strong>
-                  <small>{{ productCountLabel(section.products.length) }}</small>
-                </span>
-                <span aria-hidden="true">›</span>
-              </button>
-            }
-          </nav>
-        </aside>
+        <div class="catalog-workspace-inner">
+          <aside class="catalog-category-panel">
+            <div class="catalog-category-heading">
+              <p class="eyebrow">Categorías</p>
+              <h2>Explora por material o tipo de trabajo</h2>
+              <p>Selecciona una categoría para consultar únicamente sus productos.</p>
+            </div>
 
-        <div class="catalog-main">
-          <div class="catalog-mobile-controls">
-            <label class="category-select">
+            <label class="catalog-category-select">
               <span>Selecciona una categoría</span>
-              <select [value]="selectedSectionKey()" (change)="selectSectionFromEvent($event)">
+              <select
+                [value]="selectedSectionKey()"
+                (change)="selectSectionByKey($any($event.target).value)"
+              >
                 @for (section of sections(); track section.id) {
                   <option [value]="section.id">
                     {{ section.name }} · {{ productCountLabel(section.products.length) }}
@@ -78,42 +71,57 @@ type CatalogLoadState = 'api' | 'fallback' | 'loading';
               </select>
             </label>
 
-            <nav class="category-strip" aria-label="Categorías del catálogo">
+            <nav class="catalog-category-list" aria-label="Categorías del catálogo">
               @for (section of sections(); track section.id) {
                 <button
-                  class="category-pill"
+                  class="catalog-category-button"
                   type="button"
                   [class.is-active]="section.id === selectedSectionKey()"
                   [attr.aria-current]="section.id === selectedSectionKey() ? 'true' : null"
-                  (click)="selectSection(section.id)"
+                  (click)="selectSectionByKey(section.id)"
                 >
-                  {{ section.name }}
+                  <span class="catalog-category-marker" aria-hidden="true">
+                    {{ getInitials(section.name) }}
+                  </span>
+                  <span class="catalog-category-copy">
+                    <strong>{{ section.name }}</strong>
+                    <span>{{ productCountLabel(section.products.length) }}</span>
+                  </span>
                 </button>
               }
             </nav>
-          </div>
+          </aside>
 
-          <article class="category-content" [id]="selectedSection().id">
+          <section
+            class="catalog-results"
+            [attr.aria-labelledby]="'catalog-section-title-' + selectedSection().id"
+          >
             <header
-              class="category-header"
-              [class.has-image]="selectedSectionImage()"
-              data-animate="fade-up"
+              class="catalog-section-intro"
+              [class.has-media]="getSectionImage(selectedSection())"
             >
-              <div class="category-copy">
-                <p class="eyebrow">Sección seleccionada</p>
-                <h2>{{ selectedSection().name }}</h2>
-                <p>
-                  Consulta los productos disponibles y sus precios de referencia. Para indicaciones específicas,
-                  materiales o tiempos de entrega, contacta directamente al laboratorio.
-                </p>
-                <div class="category-meta">
+              <div class="catalog-section-copy">
+                <p class="eyebrow">Categoría seleccionada</p>
+                <h2 [id]="'catalog-section-title-' + selectedSection().id">
+                  {{ selectedSection().name }}
+                </h2>
+
+                @if (selectedSection().description; as description) {
+                  <p>{{ description }}</p>
+                } @else {
+                  <p>
+                    Consulta los trabajos disponibles, sus imágenes y precios de referencia en esta categoría.
+                  </p>
+                }
+
+                <div class="catalog-section-meta">
                   <span>{{ productCountLabel(currentProducts().length) }}</span>
                   <span>Precios en MXN</span>
                 </div>
               </div>
 
-              @if (selectedSectionImage(); as sectionImage) {
-                <figure class="category-image">
+              @if (getSectionImage(selectedSection()); as sectionImage) {
+                <figure class="catalog-section-media">
                   <img
                     [src]="sectionImage"
                     [alt]="getSectionImageAlt(selectedSection())"
@@ -126,21 +134,21 @@ type CatalogLoadState = 'api' | 'fallback' | 'loading';
             </header>
 
             @if (currentProducts().length > 0) {
-              <div class="product-grid">
+              <div class="catalog-product-grid">
                 @for (product of currentProducts(); track product.id) {
-                  <article class="product-card">
-                    <div class="image-frame">
+                  <article class="catalog-product-card">
+                    <div class="catalog-product-media">
                       @if (getProductImage(product); as productImage) {
                         <img
                           [src]="productImage"
-                          [alt]="getProductImageAlt(product)"
+                          [alt]="getProductImageAlt(selectedSection(), product)"
                           loading="lazy"
                           decoding="async"
                           (error)="markImageMissing(productImage)"
                         />
                       } @else {
                         <div
-                          class="image-placeholder"
+                          class="catalog-product-placeholder"
                           role="img"
                           [attr.aria-label]="'Sin imagen disponible para ' + product.name"
                         >
@@ -148,26 +156,42 @@ type CatalogLoadState = 'api' | 'fallback' | 'loading';
                         </div>
                       }
                     </div>
-                    <div class="product-info">
+
+                    <div class="catalog-product-content">
                       <h3>{{ product.name }}</h3>
-                      <span class="price">{{ formatPrice(product.price) }}</span>
+
+                      @if (product.description; as description) {
+                        <p>{{ description }}</p>
+                      }
+
+                      <span class="catalog-product-price">{{ formatPrice(product.price) }}</span>
                     </div>
                   </article>
                 }
               </div>
             } @else {
-              <p class="catalog-empty-state">Esta categoría no tiene productos publicados por el momento.</p>
+              <div class="catalog-empty-state" role="status">
+                <strong>No hay productos publicados en esta categoría.</strong>
+                <span>Contacta al laboratorio para consultar disponibilidad.</span>
+              </div>
             }
-          </article>
-
-          <section class="catalog-cta" data-animate="fade-up">
-            <div>
-              <p class="eyebrow">Atención directa</p>
-              <h2>¿Necesitas confirmar un trabajo?</h2>
-              <p>Consulta disponibilidad, indicaciones técnicas y tiempos de entrega con el laboratorio.</p>
-            </div>
-            <a class="login-action" routerLink="/contacto">Ver datos de contacto</a>
           </section>
+        </div>
+      </section>
+
+      <section class="catalog-final-cta" aria-label="Contacto del laboratorio">
+        <div class="catalog-final-cta-inner">
+          <div data-animate="fade-up">
+            <p class="eyebrow">Contacto</p>
+            <h2>¿Necesitas confirmar un trabajo?</h2>
+            <p>
+              Comunícate con el laboratorio para validar indicaciones, tiempos y el precio vigente antes de enviar
+              tu caso.
+            </p>
+          </div>
+          <a class="catalog-final-cta-action" routerLink="/contacto" data-animate="fade-in">
+            Contactar al laboratorio
+          </a>
         </div>
       </section>
     </div>
@@ -176,27 +200,30 @@ type CatalogLoadState = 'api' | 'fallback' | 'loading';
 })
 export class CatalogPageComponent {
   readonly sections = signal<readonly CatalogSection[]>(catalogSections);
-  readonly selectedSectionKey = signal(catalogSections[0].id);
+  readonly selectedSectionKey = signal(catalogSections[0]?.id ?? '');
   readonly catalogLoadState = signal<CatalogLoadState>('loading');
   readonly missingImageUrls = signal<ReadonlySet<string>>(new Set<string>());
 
   readonly totalProducts = computed(() =>
     this.sections().reduce((total, section) => total + section.products.length, 0)
   );
-  readonly selectedSection = computed(() => {
-    const sections = this.sections();
 
-    return sections.find((section) => section.id === this.selectedSectionKey()) ?? sections[0] ?? catalogSections[0];
+  readonly selectedSection = computed<CatalogSection>(() => {
+    const sections = this.sections();
+    const selectedKey = this.selectedSectionKey();
+
+    return sections.find((section) => section.id === selectedKey) ?? sections[0] ?? catalogSections[0]!;
   });
+
   readonly currentProducts = computed(() => this.selectedSection().products);
-  readonly selectedSectionImage = computed(() => this.getSectionImage(this.selectedSection()));
+
   readonly catalogNoticeText = computed(() => {
     if (this.catalogLoadState() === 'loading') {
       return 'Actualizando catálogo...';
     }
 
     if (this.catalogLoadState() === 'fallback') {
-      return 'Mostrando el catálogo de referencia disponible.';
+      return 'Mostrando la versión de referencia del catálogo.';
     }
 
     return '';
@@ -211,21 +238,23 @@ export class CatalogPageComponent {
     style: 'currency'
   });
 
-  private readonly onHashChange = () => {
-    this.selectSectionFromHash();
+  private readonly onLocationChange = () => {
+    this.selectSectionFromLocation();
   };
 
   constructor() {
-    this.selectSectionFromHash();
+    this.selectSectionFromLocation();
     this.loadPublicCatalog();
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('hashchange', this.onHashChange);
+      window.addEventListener('hashchange', this.onLocationChange);
+      window.addEventListener('popstate', this.onLocationChange);
     }
 
     this.destroyRef.onDestroy(() => {
       if (typeof window !== 'undefined') {
-        window.removeEventListener('hashchange', this.onHashChange);
+        window.removeEventListener('hashchange', this.onLocationChange);
+        window.removeEventListener('popstate', this.onLocationChange);
       }
     });
   }
@@ -236,26 +265,6 @@ export class CatalogPageComponent {
 
   productCountLabel(count: number) {
     return `${count} ${count === 1 ? 'producto' : 'productos'}`;
-  }
-
-  selectSection(sectionKey: string, updateUrl = true) {
-    if (!this.sections().some((section) => section.id === sectionKey)) {
-      return;
-    }
-
-    this.selectedSectionKey.set(sectionKey);
-
-    if (updateUrl) {
-      this.updateSectionHash(sectionKey);
-    }
-  }
-
-  selectSectionFromEvent(event: Event) {
-    const target = event.target;
-
-    if (target instanceof HTMLSelectElement) {
-      this.selectSection(target.value);
-    }
   }
 
   getSectionImage(section: CatalogSection) {
@@ -270,22 +279,36 @@ export class CatalogPageComponent {
     return product.imageUrl && !this.isImageMissing(product.imageUrl) ? product.imageUrl : '';
   }
 
-  getProductImageAlt(product: CatalogProduct) {
-    return product.altText ?? `${product.name} - ${this.selectedSection().name}`;
+  getProductImageAlt(section: CatalogSection, product: CatalogProduct) {
+    return product.altText ?? `${product.name} - ${section.name}`;
   }
 
   markImageMissing(imageUrl: string) {
     this.missingImageUrls.update((currentUrls) => new Set(currentUrls).add(imageUrl));
   }
 
-  getInitials(name: string) {
-    return name
+  getInitials(text: string) {
+    return text
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
       .map((word) => word[0])
       .join('')
       .toUpperCase();
+  }
+
+  selectSectionByKey(sectionKey: string) {
+    const section = this.sections().find((candidate) => candidate.id === sectionKey);
+
+    if (!section) {
+      return;
+    }
+
+    this.selectedSectionKey.set(section.id);
+
+    if (this.getCurrentHashSectionKey() !== section.id) {
+      this.updateSectionHash(section.id, 'push');
+    }
   }
 
   private loadPublicCatalog() {
@@ -316,45 +339,73 @@ export class CatalogPageComponent {
   }
 
   private applyCatalogSections(sections: readonly CatalogSection[]) {
-    const currentSectionKey = this.selectedSectionKey();
-    const hashSectionKey = this.getCurrentHashSectionId();
+    const currentKey = this.selectedSectionKey();
+    const hashKey = this.getCurrentHashSectionKey();
 
     this.sections.set(sections);
 
-    const nextSectionKey =
-      [hashSectionKey, currentSectionKey].find((key) => sections.some((section) => section.id === key)) ?? sections[0].id;
+    const nextSection =
+      sections.find((section) => section.id === hashKey) ??
+      sections.find((section) => section.id === currentKey) ??
+      sections[0];
 
-    this.selectedSectionKey.set(nextSectionKey);
-  }
+    if (!nextSection) {
+      return;
+    }
 
-  private selectSectionFromHash() {
-    const sectionKey = this.getCurrentHashSectionId();
+    this.selectedSectionKey.set(nextSection.id);
 
-    if (sectionKey) {
-      this.selectSection(sectionKey, false);
+    if (hashKey !== nextSection.id) {
+      this.updateSectionHash(nextSection.id, 'replace');
     }
   }
 
-  private updateSectionHash(sectionKey: string) {
+  private selectSectionFromLocation() {
+    const sections = this.sections();
+    const hashKey = this.getCurrentHashSectionKey();
+    const nextSection = sections.find((section) => section.id === hashKey) ?? sections[0];
+
+    if (!nextSection) {
+      return;
+    }
+
+    this.selectedSectionKey.set(nextSection.id);
+
+    if (hashKey !== nextSection.id) {
+      this.updateSectionHash(nextSection.id, 'replace');
+    }
+  }
+
+  private updateSectionHash(sectionKey: string, historyMode: CatalogHistoryMode) {
     if (typeof window === 'undefined') {
       return;
     }
 
-    const url = `${window.location.pathname}${window.location.search}#${encodeURIComponent(sectionKey)}`;
-    window.history.replaceState(window.history.state, '', url);
+    const nextUrl = `${window.location.pathname}${window.location.search}#${encodeURIComponent(sectionKey)}`;
+
+    if (historyMode === 'push') {
+      window.history.pushState(window.history.state, '', nextUrl);
+      return;
+    }
+
+    window.history.replaceState(window.history.state, '', nextUrl);
   }
 
-  private getCurrentHashSectionId() {
+  private getCurrentHashSectionKey() {
     if (typeof window === 'undefined') {
       return '';
     }
 
-    const sectionKey = window.location.hash.replace('#', '');
+    const rawHash = window.location.hash.replace(/^#/, '');
+
+    if (!rawHash) {
+      return '';
+    }
 
     try {
-      return decodeURIComponent(sectionKey);
+      return decodeURIComponent(rawHash);
     } catch {
-      return sectionKey;
+      return rawHash;
     }
   }
 
