@@ -78,6 +78,14 @@
     display: none;
   }
 
+  .category-select select:focus-visible,
+  .category-button:focus-visible,
+  .category-pill:focus-visible {
+    border-color: rgba(3, 158, 247, 0.62);
+    box-shadow: 0 0 0 3px var(--ldt-focus, rgba(3, 158, 247, 0.24));
+    outline: 2px solid transparent;
+  }
+
   .category-content {
     min-width: 0;
   }
@@ -101,7 +109,7 @@
   }
 
   .category-copy > p:not(.eyebrow),
-  .catalog-sidebar-heading p,
+  .catalog-sidebar-heading p:not(.eyebrow),
   .catalog-cta p {
     color: var(--ldt-gray, #65738e);
     line-height: 1.58;
@@ -224,7 +232,7 @@
 
 @media (min-width: 760px) {
   .catalog-page {
-    .category-header {
+    .category-header.has-image {
       grid-template-columns: minmax(0, 1fr) 240px;
     }
 
