@@ -363,16 +363,27 @@ export class CatalogPageComponent {
   private selectSectionFromLocation() {
     const sections = this.sections();
     const hashKey = this.getCurrentHashSectionKey();
-    const nextSection = sections.find((section) => section.id === hashKey) ?? sections[0];
+    const hashSection = sections.find((section) => section.id === hashKey);
 
-    if (!nextSection) {
+    if (hashSection) {
+      this.selectedSectionKey.set(hashSection.id);
       return;
     }
 
-    this.selectedSectionKey.set(nextSection.id);
+    if (hashKey && this.catalogLoadState() === 'loading') {
+      return;
+    }
 
-    if (hashKey !== nextSection.id) {
-      this.updateSectionHash(nextSection.id, 'replace');
+    const firstSection = sections[0];
+
+    if (!firstSection) {
+      return;
+    }
+
+    this.selectedSectionKey.set(firstSection.id);
+
+    if (hashKey !== firstSection.id) {
+      this.updateSectionHash(firstSection.id, 'replace');
     }
   }
 

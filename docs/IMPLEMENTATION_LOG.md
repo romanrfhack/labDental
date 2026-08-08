@@ -6,6 +6,69 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+
+## 2026-08-08 - PUB-UX-2 Rediseño Visual Del Catálogo Público
+
+### Cambio Realizado
+
+Se implementó el rediseño aprobado de `/catalogo` para reducir scroll innecesario, devolver el control al usuario y conservar el catálogo administrable existente.
+
+- Se reemplazaron carrusel automático y galería duplicada por un workspace de una categoría activa.
+- Escritorio usa panel lateral de categorías; tablet usa navegación horizontal; móvil usa selector nativo y tarjetas horizontales compactas.
+- La categoría activa usa su `key` como identidad estable y actualiza el hash de la URL con historial navegable.
+- Se incorporaron descripciones opcionales ya entregadas por la API pública para categorías y productos.
+- Las imágenes de producto provienen exclusivamente del producto; la imagen de categoría queda limitada al encabezado.
+- Se eliminaron textos técnicos sobre assets, placeholders y condiciones comerciales todavía no confirmadas.
+- Se conservaron `GET /api/catalog/public`, timeout, fallback local, precios MXN, estados de imagen faltante y accesibilidad con botones nativos, `aria-current`, foco visible y `prefers-reduced-motion`.
+
+### Corrección De Revisión
+
+La revisión automática detectó que un enlace profundo hacia una categoría creada únicamente desde Admin podía perder su hash antes de que respondiera la API, porque la carga inicial todavía contenía solo las secciones del fallback estático.
+
+Se corrigió `selectSectionFromLocation()` para:
+
+- resolver inmediatamente hashes que ya existan en las secciones disponibles;
+- conservar un hash todavía no resuelto mientras `catalogLoadState` sea `loading`;
+- permitir que `applyCatalogSections()` lo resuelva contra la respuesta real de la API;
+- normalizar al primer elemento únicamente después de confirmar que la categoría no existe o de usar el fallback.
+
+### Archivos Funcionales Modificados
+
+- `src/LaboratorioTlahuac.Web/src/app/public/pages/catalog/catalog-page.component.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/services/public-catalog.service.ts`
+- `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`
+- `src/LaboratorioTlahuac.Web/src/styles/public-catalog.scss`
+- `src/LaboratorioTlahuac.Web/angular.json`
+
+### Documentación Actualizada
+
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Alcance Protegido
+
+- No se modificaron backend, entidades, migraciones, endpoints, base de datos ni permisos.
+- No se modificaron `AuthService`, guards, cookies, sesión ni XSRF.
+- No se modificó la UI administrativa ni el flujo de carga, reemplazo o desasociación de imágenes.
+- No se agregaron dependencias.
+- No se modificaron scripts de deploy, Nginx, systemd ni configuración del VPS.
+- No se imprimieron secretos ni se ejecutó `dotnet user-secrets list`.
+
+### Validaciones Ejecutadas
+
+- `npm run build`: correcto.
+- `dotnet restore`: correcto.
+- `dotnet build --configuration Release --no-restore`: correcto.
+- `dotnet test --configuration Release --no-build --verbosity normal`: correcto.
+- `git diff --check`: correcto.
+- Validaciones focalizadas previas: TypeScript estricto, mapper de API, historial `pushState`/`popstate`, CSS parseable y composición estática en 390 px y 1440 px.
+
+### Estado Y Siguiente Paso
+
+- `PUB-UX-2.1`, `PUB-UX-2.2` y `PUB-UX-2.3`: implementadas.
+- `PUB-UX-2.4`: pendiente confirmar el workflow de despliegue del commit final, smoke tests de `/health`, `/catalogo` y `/api/catalog/public`, y pase visual humano en DEV.
+- Después del cierre DEV corresponde iniciar `PUB-UX-3` para home, servicios, contacto y encabezado público.
+
 ## 2026-08-08 - Cierre Documental QA DEV End-To-End Fase 3.5.4
 
 ### Estado Cerrado
