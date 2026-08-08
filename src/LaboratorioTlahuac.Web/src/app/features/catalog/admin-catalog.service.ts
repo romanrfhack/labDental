@@ -122,4 +122,36 @@ export class AdminCatalogService {
       )
     );
   }
+
+  uploadProductImage(productId: string, file: File): Observable<CatalogProduct> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.authService.getCsrfHeaders().pipe(
+      switchMap((headers) =>
+        this.http.post<CatalogProduct>(
+          this.apiClient.getUrl(`/api/admin/catalog/products/${productId}/image`),
+          formData,
+          {
+            headers,
+            withCredentials: true
+          }
+        )
+      )
+    );
+  }
+
+  clearProductImage(productId: string): Observable<CatalogProduct> {
+    return this.authService.getCsrfHeaders().pipe(
+      switchMap((headers) =>
+        this.http.delete<CatalogProduct>(
+          this.apiClient.getUrl(`/api/admin/catalog/products/${productId}/image`),
+          {
+            headers,
+            withCredentials: true
+          }
+        )
+      )
+    );
+  }
 }

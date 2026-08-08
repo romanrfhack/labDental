@@ -6,6 +6,54 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-08-08 - Fase 3.5.4.2 UI Upload De Imágenes De Productos
+
+### Frontend Implementado
+
+- `AdminCatalogService` agrega `uploadProductImage(productId, file)` y `clearProductImage(productId)` usando XSRF y `withCredentials: true`.
+- Upload crea `FormData` con una sola parte exacta `file`; no fija `Content-Type`, por lo que el navegador genera el multipart boundary.
+- El editor de producto agrega el bloque `Imagen del producto` con origen amigable, selector de asset existente, preview definitivo/local, file input, subir/reemplazar y quitar.
+- Productos nuevos no intentan upload sin id y muestran `Guarda el producto antes de subir una imagen personalizada.`.
+- La UI valida archivo no vacío, máximo `2_097_152` bytes, extensión WebP/JPG/JPEG/PNG, MIME permitido y coherencia básica antes del POST; backend conserva autoridad y validación de firma.
+- Preview local usa `URL.createObjectURL()` y revoca la URL al cambiar, cancelar, completar o destruir el componente.
+- POST/DELETE actualizan `products()` y `productForm.imagePath` sin requerir guardar otra vez el formulario.
+- DELETE pide confirmación y comunica desasociación; no afirma ni intenta borrado físico.
+- `catalog.manage` controla upload/quitar; `catalog.view` queda readonly y `Repartidor` conserva falta de acceso.
+- La imagen de sección continúa usando selección de asset existente; no se inventó endpoint de secciones.
+- `isAllowedCatalogImagePath()` acepta solo `CATALOG_IMAGE_OPTIONS` o `/api/catalog/images/{32 hex}.{webp|jpg|jpeg|png}`; otras rutas `/api`, URLs y esquemas arbitrarios permanecen rechazados.
+
+### Contexto DEV Registrado
+
+- Fase 3.5.4.1 desplegada en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`, GitHub Actions `success`.
+- `/health`, `/api/catalog/public` y `/catalogo`: `200`; GET de imagen inexistente: `404`.
+- Storage persistente `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, `www-data:www-data`, permisos `0750` y escritura validada para `www-data`.
+- `CatalogImages__StoragePath` configurado una sola vez fuera del repositorio en `/etc/laboratorio-tlahuac-dev/api.env`.
+
+### Documentación
+
+- Se creó `docs/08-qa/catalog-image-upload-ui-qa.md` con los 25 casos manuales solicitados.
+- Se actualizaron fuentes de producto, sitio público, arquitectura, QA, estado, roadmap, índices y README.
+
+### Exclusiones Confirmadas
+
+- No se modificó backend, `/catalogo` público, upload de secciones, migraciones, dependencias, `AuthService`, guards, cookies, política XSRF ni deploy.
+- No se hizo commit.
+- No se imprimieron secretos, no se ejecutó `dotnet user-secrets list` y no se usó `codex-cobranza-sql`.
+
+### Validaciones Ejecutadas
+
+- `npm run build`: correcto; initial total `318.75 kB`, sin warning de budget.
+- `dotnet build`: correcto con 0 errores; permanecen los warnings `NU1903` conocidos en tests.
+- `dotnet test`: correcto; 158/158 pruebas.
+- El frontend no tiene script `npm test`; no se agregó framework.
+- `git diff --check`: correcto.
+- Búsquedas obligatorias de métodos, endpoints, `FormData`, límite de 2 MB, rutas de imagen, permisos, assets y rutas públicas/privadas: ejecutadas.
+- Búsquedas de `LT_ADMIN_PASSWORD`, `LT_QA_LIMITED_PASSWORD`, `LDT_SQL_SA_PASSWORD` y `ConnectionStrings`: ejecutadas con `rg -l`, mostrando solo nombres de archivo.
+
+### Siguiente Paso Recomendado
+
+Desplegar Fase 3.5.4.2 a DEV y ejecutar la primera prueba real end-to-end de upload, reemplazo, desasociación y persistencia después de otro deploy.
+
 ## 2026-08-08 - Fase 3.5.4.1 Backend Upload De Imágenes De Catálogo
 
 ### Backend Implementado

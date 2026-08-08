@@ -12,15 +12,17 @@ Cierre QA DEV Fase 3.5.3, 2026-08-08: commit `8be9e14ec8cda5e8486770a77733a4413e
 
 Actualización Fase 3.5.4.0, 2026-08-08: quedó definido el diseño operativo previo al upload en `docs/01-product/catalog-image-upload-design.md`. La estrategia MVP usa `${LDT_APP_ROOT}/shared/catalog-images`, fuera de releases, sirve archivos mediante `GET /api/catalog/images/{fileName}` y guarda `/api/catalog/images/{fileName}` en el `ImagePath` del producto. Esta subfase no implementa código, migraciones, frontend ni cambios de deploy.
 
-Actualización Fase 3.5.4.1, 2026-08-08: backend upload/reemplazo/desasociación implementado localmente con almacenamiento configurable, GET público, validación de archivo, naming GUID, bloqueo de path traversal y pruebas API. La UI `/app/admin/catalogo` todavía no ofrece upload; queda para Fase 3.5.4.2.
+Actualización Fase 3.5.4.1, 2026-08-08: backend upload/reemplazo/desasociación desplegado y validado en DEV en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`, con storage persistente preparado para `www-data`.
+
+Actualización Fase 3.5.4.2, 2026-08-08: UI implementada localmente bajo `/app/admin/catalogo` solo para productos existentes, con selector heredado, preview, multipart/XSRF, validación hasta 2 MB, reemplazo y desasociación. Deploy/QA DEV pendientes.
 
 ## Resumen Ejecutivo
 
 El catálogo público actual de `/catalogo` ya funciona y no debe romperse. Desde Fase 3.5.3 consume `GET /api/catalog/public` cuando la respuesta es válida, conserva datos estructurados estáticos en `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts` como fallback y usa assets locales en `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
 
-La recomendación para el MVP administrable es migrar secciones y productos a backend/base de datos, sembrar la información inicial desde `catalog-data.ts`, exponer un endpoint público de solo lectura y crear endpoints privados de administración bajo `/api/admin/catalog`. Para reducir riesgo, el MVP debe permitir seleccionar una imagen existente por `imagePath`/`assetPath`, sin carga de archivos desde UI todavía. La carga/reemplazo de imágenes debe quedar para una fase posterior con política explícita de almacenamiento, validación y backup.
+La estrategia incremental se ejecutó en orden: migración/seed y endpoints, UI con selección de assets, consumo público con fallback, backend de almacenamiento persistente y finalmente UI de upload de productos. Fase 3.5.4.2 conserva el selector heredado y agrega carga/reemplazo/desasociación sin cambiar el modelo ni `/catalogo`.
 
-Siguiente fase implementable recomendada: Fase 3.5.4.2 - UI upload/reemplazo de imágenes desde `/app/admin/catalogo`.
+Siguiente paso recomendado: desplegar Fase 3.5.4.2 y ejecutar QA end-to-end de upload/persistencia en DEV.
 
 ## Estado Actual
 
@@ -541,7 +543,7 @@ Alcance:
 
 ### Fase 3.5.4.1 - Backend Upload/Reemplazo De Imágenes
 
-Estado: implementada localmente el 2026-08-08; preparación/QA DEV pendiente.
+Estado: implementada, desplegada y validada operativamente en DEV el 2026-08-08.
 
 Alcance:
 
@@ -560,7 +562,9 @@ Exclusiones:
 
 ### Fase 3.5.4.2 - UI Upload/Reemplazo De Imágenes
 
-Alcance recomendado:
+Estado: implementada localmente el 2026-08-08; deploy/QA DEV pendiente.
+
+Alcance implementado:
 
 - Agregar selector de archivo y acciones de subir/reemplazar/desasociar en `/app/admin/catalogo`.
 - Mantener controles visibles solo con `catalog.manage` y modo readonly con `catalog.view`.
@@ -671,7 +675,7 @@ Para Fase 3.5.4.0:
 
 ## Qué No Implementar Todavía
 
-- Upload de imágenes en MVP inicial.
+- Upload de imágenes de sección o galerías múltiples.
 - Flujo avanzado de borrador/publicación si el cliente no lo valida.
 - Historial completo de precios.
 - CDN o storage cloud.
@@ -691,8 +695,8 @@ Antes de exponer cambios administrables al público, validar:
 - Qué usuarios podrán administrar precios.
 - Si cambios de precio se publican inmediatamente o requieren aprobación.
 - Qué imágenes faltantes deben reemplazarse primero.
-- Si el cliente acepta un MVP sin upload y con selección de imágenes existentes.
+- Qué productos deben recibir primero imágenes personalizadas desde la UI implementada.
 
 ## Siguiente Fase Implementable
 
-Fase 3.5.4.2 — UI upload/reemplazo de imágenes desde `/app/admin/catalogo`, siguiendo `docs/01-product/catalog-image-upload-design.md`.
+Deploy DEV y primera prueba real end-to-end de Fase 3.5.4.2, siguiendo `docs/08-qa/catalog-image-upload-ui-qa.md`.

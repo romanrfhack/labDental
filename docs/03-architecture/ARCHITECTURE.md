@@ -156,6 +156,15 @@ Imágenes persistentes Fase 3.5.4.1:
 - `CatalogImagesOptions.StoragePath` se configura por `CatalogImages__StoragePath`; no deriva del content root ni de symlinks `current`.
 - Escritura por streaming a temporal exclusivo, rename dentro de la misma raíz y compensación del archivo nuevo si falla la base.
 - `ImagePath` acepta assets heredados y `/api/catalog/images/{fileName}` generado. No hay migración ni cambio de modelo.
+- DEV activo: commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`; storage `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` con `www-data:www-data`, `0750` y escritura del proceso validada.
+
+UI de imágenes Fase 3.5.4.2:
+
+- `AdminCatalogService` usa `FormData` con parte `file`, headers XSRF existentes y credenciales; el navegador genera el multipart boundary.
+- El editor de producto existente permite seleccionar asset heredado, subir/reemplazar y desasociar. No existe upload de `CatalogSection`.
+- El frontend acepta únicamente la allowlist `CATALOG_IMAGE_OPTIONS` o `/api/catalog/images/{32 hex}.{webp|jpg|jpeg|png}`; rechaza otras rutas `/api`, esquemas y URLs arbitrarias.
+- La validación UI limita a `2_097_152` bytes y MIME/extensiones WebP/JPEG/PNG; backend conserva validación de firma y autorización.
+- `catalog.manage` controla acciones; `catalog.view` queda readonly. No cambian auth, guards, cookies ni política XSRF.
 
 UI catálogo administrable Fase 3.5.2:
 
@@ -163,7 +172,7 @@ UI catálogo administrable Fase 3.5.2:
 - Navegación privada: `Catálogo`, visible con `catalog.view` o `catalog.manage`.
 - Protección frontend: `permissionGuard` con `catalog.view`, porque el guard actual soporta un permiso por ruta.
 - Acciones mutables en UI: visibles solo con `catalog.manage`; backend sigue siendo autoridad.
-- Selección de imágenes: allowlist local de assets `.webp` existentes bajo `assets/catalog/products`, sin upload.
+- Baseline Fase 3.5.2: selección de imágenes desde allowlist local de assets `.webp`; Fase 3.5.4.2 extiende el editor de producto con upload.
 - Desde Fase 3.5.3, `/catalogo` público consume `GET /api/catalog/public` y conserva `catalog-data.ts` como fallback local si la API falla o responde con datos inválidos.
 
 Detalle técnico backend: `docs/03-architecture/backend-architecture.md`.
@@ -243,7 +252,7 @@ Assets públicos del catálogo:
 - Ruta servida por Angular: `/assets/catalog/products/`.
 - `angular.json` copia `src/assets/**/*.webp` para el catálogo público.
 - Fase 3.5.1 mantiene estos assets como rutas `ImagePath` del MVP administrable y difiere upload desde `/app` hasta definir almacenamiento, validación y backup.
-- Fase 3.5.2 agrega `features/catalog/catalog-image-options.ts` como allowlist frontend de imágenes `.webp` existentes para la UI admin.
+- `features/catalog/catalog-image-options.ts` conserva la allowlist de assets `.webp` y agrega validación estricta de rutas server-generated para Fase 3.5.4.2.
 
 Assets públicos de marca:
 

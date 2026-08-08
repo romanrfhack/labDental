@@ -32,6 +32,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 | QA API entregas | `docs/08-qa/delivery-api-qa.md` |
 | QA API catálogo | `docs/08-qa/catalog-api-qa.md` |
 | QA API upload imágenes catálogo | `docs/08-qa/catalog-image-upload-api-qa.md` |
+| QA UI upload imágenes catálogo | `docs/08-qa/catalog-image-upload-ui-qa.md` |
 | QA UI admin catálogo | `docs/08-qa/catalog-admin-ui-qa.md` |
 | QA catálogo público API/fallback | `docs/08-qa/public-catalog-api-qa.md` |
 | QA UI admin entregas | `docs/08-qa/delivery-admin-ui-qa.md` |
@@ -54,7 +55,7 @@ Este directorio contiene la documentación viva del proyecto Laboratorio Dental 
 
 ## Separación De Frentes
 
-- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, DEV validado como baseline UAT inicial en Fase 3.0, Fase 3.1 documentada como análisis operativo para órdenes, etiquetas, reparto, usuarios/roles y catálogo, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4.0 documentada como diseño técnico previo de entregas/repartidor, Fase 3.4.1 implementada como backend delivery MVP + permisos, Fase 3.4.2 implementada como UI admin de entregas desde órdenes, Fase 3.4.3 implementada como UI mobile-first de repartidor bajo `/app/entregas`, Fase 3.4.3.1 implementada como redirect post-login por permisos y reintento de entrega fallida, Fase 3.5.1 implementada y cerrada en DEV como backend catálogo administrable + migración + seed inicial, Fase 3.5.2 implementada y cerrada en DEV como UI admin de catálogo/precios bajo `/app/admin/catalogo`, y Fase 3.5.4.1 implementada localmente como backend de imágenes persistentes; la UI de upload queda para 3.5.4.2.
+- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, DEV validado como baseline UAT inicial en Fase 3.0, Fase 3.2 implementada para impresión MVP de etiquetas, Fase 3.3 implementada para usuarios/roles, Fase 3.4 implementada para entregas/repartidor, Fase 3.5.1 cerrada en DEV como backend catálogo, Fase 3.5.2 cerrada en DEV como UI admin de catálogo, Fase 3.5.4.1 desplegada y validada en DEV como backend de imágenes persistentes, y Fase 3.5.4.2 implementada localmente como UI de upload/reemplazo/desasociación para productos.
 - Sitio público institucional: vive en la app Angular existente bajo `src/LaboratorioTlahuac.Web/src/app/public`; la primera versión mobile-first está implementada, Fase 1.6 quedó validada visualmente por el responsable del proyecto y Fase 3.5.3 quedó cerrada en DEV con `/catalogo` consumiendo `GET /api/catalog/public`, reflejando cambios administrados y conservando fallback local en `catalog-data.ts`.
 - Documentación comercial: describe alcance propuesto y fases comerciales, no necesariamente implementación técnica actual.
 

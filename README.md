@@ -4,9 +4,9 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 
 ## Estado Actual
 
-- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4.0 documentada como análisis técnico previo de entregas/repartidor mobile-first, Fase 3.4.1 implementada para backend delivery MVP + permisos, Fase 3.4.2 implementada para UI admin de entregas desde órdenes, Fase 3.4.3 implementada para UI mobile-first de repartidor bajo `/app/entregas`, Fase 3.4.3.1 implementada para redirect post-login por permisos y reintento de `FailedDelivery`, Fase 3.5.1 implementada y cerrada en DEV como backend catálogo administrable + migración + seed inicial, Fase 3.5.2 implementada y cerrada en DEV como UI admin de catálogo/precios bajo `/app/admin/catalogo`, y Fase 3.5.4.1 implementada localmente como backend upload/reemplazo/desasociación de imágenes persistentes. La UI de upload queda para Fase 3.5.4.2.
+- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4.0 documentada como análisis técnico previo de entregas/repartidor mobile-first, Fase 3.4.1 implementada para backend delivery MVP + permisos, Fase 3.4.2 implementada para UI admin de entregas desde órdenes, Fase 3.4.3 implementada para UI mobile-first de repartidor bajo `/app/entregas`, Fase 3.4.3.1 implementada para redirect post-login por permisos y reintento de `FailedDelivery`, Fase 3.5.1 implementada y cerrada en DEV como backend catálogo administrable + migración + seed inicial, Fase 3.5.2 implementada y cerrada en DEV como UI admin de catálogo/precios, Fase 3.5.4.1 desplegada y validada en DEV como backend de imágenes persistentes, y Fase 3.5.4.2 implementada localmente como UI de upload/reemplazo/desasociación bajo `/app/admin/catalogo`.
 - Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; Fase 3.5.3 cerrada en DEV con `/catalogo` consumiendo `GET /api/catalog/public`, reflejando cambios administrados y conservando fallback a `catalog-data.ts`; contenido final del cliente pendiente.
-- Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev`; commit `8be9e14ec8cda5e8486770a77733a4413e456e96` desplegado con GitHub Actions `success`, health check resiliente validado y `/health`, `/catalogo` y `/api/catalog/public` en `200`.
+- Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev`; backend de imágenes en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`, GitHub Actions `success`, y `/health`, `/catalogo` y `/api/catalog/public` en `200`. La UI 3.5.4.2 aún requiere deploy/QA DEV.
 - Deploy productivo: pendiente de plataforma, DNS, HTTPS, variables y base productiva.
 
 La Fase 1 / Etapa 7 corresponde al MVP administrativo. La Fase 0/Fase 1 del sitio público corresponde a un frente separado.
@@ -70,7 +70,7 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 - El seed QA limitado solo corre en `Development`, esta desactivado por default y no debe guardar ni imprimir contrasenas.
 - Baseline de seguridad Development: `SecuritySeed:EnsureBaselineOnStartup=true` asegura permisos existentes, sincroniza permisos faltantes al rol `Admin` existente y mantiene rol `Repartidor` con permisos mínimos de entregas (`deliveries.view` y `deliveries.complete`).
 - Seed catálogo: `CatalogSeed:RunOnStartup=true` siembra de forma idempotente `CatalogSections` y `CatalogProducts` desde el catálogo actual cuando las tablas existen; no aplica migraciones automáticamente.
-- Imágenes de catálogo: `CatalogImages__StoragePath` debe apuntar a una carpeta persistente existente fuera de releases, `${LDT_APP_ROOT}/shared/catalog-images`; DEV espera `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` una vez verificada y preparada operativamente.
+- Imágenes de catálogo: `CatalogImages__StoragePath` apunta en DEV a `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, fuera de releases; la carpeta usa `www-data:www-data`, permisos `0750` y escritura validada para el proceso `www-data`.
 
 ## Rutas Principales
 
@@ -114,6 +114,6 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
 ## Próximos Pasos
 
-1. Preparar storage DEV y continuar con Fase 3.5.4.2: UI upload/reemplazo desde `/app/admin/catalogo`.
+1. Desplegar Fase 3.5.4.2 a DEV y ejecutar la primera prueba real end-to-end de upload, reemplazo, desasociación y persistencia.
 2. Validar Fase 3.2 en DEV con impresora térmica real y ajustar escala/márgenes del navegador si hace falta.
 3. Ejecutar de forma opcional la prueba forzada del fallback de `/catalogo` con la API bloqueada/offline.

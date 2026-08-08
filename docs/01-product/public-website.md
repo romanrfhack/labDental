@@ -161,8 +161,8 @@ Backlog futuro relacionado:
 - QA DEV Fase 3.5.3 quedó cerrada el 2026-08-08 con commit `8be9e14ec8cda5e8486770a77733a4413e456e96`, GitHub Actions `success`, `/health` `200`, `/catalogo` `200` y `/api/catalog/public` sin sesión `200`.
 - El responsable del proyecto confirmó que activar/desactivar productos y cambiar nombre/precio desde `/app/admin/catalogo` se refleja correctamente en `/catalogo`, validando el consumo real de datos administrados.
 - La degradación forzada con API bloqueada/offline no se probó en DEV; `catalog-data.ts` permanece implementado como fallback y esa prueba queda como cobertura manual opcional, sin bloquear el cierre del camino principal.
-- Fase 3.5.4.1 agregó backend para imágenes persistentes: el API público puede devolver `imagePath` `/api/catalog/images/{fileName}` y el navegador lo lee mediante GET público. `/catalogo` no cambió porque ya renderiza el `imagePath` recibido y conserva el mismo fallback.
-- La UI admin todavía no permite upload; Fase 3.5.4.2 agregará esa interacción bajo `/app/admin/catalogo`.
+- Fase 3.5.4.1 agregó y desplegó en DEV el backend para imágenes persistentes: el API público puede devolver `imagePath` `/api/catalog/images/{fileName}` y el navegador lo lee mediante GET público.
+- Fase 3.5.4.2 agrega localmente la interacción de upload/reemplazo/desasociación bajo `/app/admin/catalogo`. `/catalogo` no se modificó: ya renderiza el `imagePath` recibido y conserva el mismo fallback.
 
 Assets:
 
@@ -355,7 +355,7 @@ Las capacidades publicadas en Fase 1 son descripciones generales provisionales, 
 - Implementar módulos privados nuevos.
 - Implementar administración de catálogo, precios o imágenes.
 - Eliminar `catalog-data.ts` como fallback antes de cerrar la transición pública.
-- Implementar upload/reemplazo desde la UI admin en Fase 3.5.4.2; el backend 3.5.4.1 ya existe.
+- Desplegar y validar en DEV el upload/reemplazo/desasociación implementado en la UI admin de Fase 3.5.4.2.
 
 ## Secciones Faltantes O Pendientes
 

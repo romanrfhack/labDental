@@ -2,7 +2,9 @@
 
 Fase 3.5.4.0, 2026-08-08. Esta fase define el almacenamiento persistente y el contrato operativo previo a implementar carga/reemplazo de imágenes desde `/app/admin/catalogo`.
 
-Actualización Fase 3.5.4.1, 2026-08-08: el backend descrito aquí ya quedó implementado localmente. Existen POST/DELETE por producto, GET público, almacenamiento tipado mediante `CatalogImages:StoragePath`, validación hasta 2 MB por extensión/MIME/firma, nombres GUID, escritura temporal + rename, compensación ante fallo de base y pruebas API aisladas. No se modificó la UI admin, no se creó migración y la activación operativa en DEV sigue pendiente.
+Actualización Fase 3.5.4.1, 2026-08-08: el backend quedó implementado, desplegado y validado operativamente en DEV en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`. Existen POST/DELETE por producto, GET público, almacenamiento tipado, validación hasta 2 MB, nombres GUID y pruebas API aisladas. No se creó migración.
+
+Actualización Fase 3.5.4.2, 2026-08-08: la UI quedó implementada localmente solo para productos en `/app/admin/catalogo`. Agrega multipart/XSRF, validación de archivo, preview local, reemplazo y desasociación; conserva assets heredados, modo readonly y el backend como autoridad. Deploy y QA end-to-end DEV quedan pendientes.
 
 ## Resultado De La Fase
 
@@ -15,9 +17,9 @@ ruta pública: GET /api/catalog/images/{fileName}
 imagePath persistido: /api/catalog/images/{fileName}
 ```
 
-La ruta concreta de DEV es una propuesta basada en el layout esperado del ambiente y debe confirmarse contra el valor operativo de `LDT_APP_ROOT` antes de activar upload. No se leyó ni modificó el VPS en esta fase. La aplicación no debe hardcodear `/var/www/laboratorio-tlahuac-dev`; debe recibir la carpeta por configuración de ambiente, por ejemplo `CatalogImages__StoragePath`, sin imprimir su contenido ni otras variables sensibles.
+La ruta concreta de DEV ya fue preparada como `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, con `www-data:www-data`, permisos `0750` y escritura validada para `www-data`. `CatalogImages__StoragePath` está configurado una sola vez en `/etc/laboratorio-tlahuac-dev/api.env`. La aplicación no hardcodea esa ruta ni imprime configuración sensible.
 
-Esta estrategia mantiene funcionando las rutas heredadas `assets/catalog/products/...`. No requiere una tabla ni migración nueva: el `ImagePath` actual admite la ruta pública propuesta dentro de su límite de 300 caracteres. Sí requiere que Fase 3.5.4.1 extienda el validador actual, que hoy solo permite `assets/catalog/products/...`, para aceptar exactamente el nuevo prefijo público y no URLs arbitrarias.
+Esta estrategia mantiene funcionando las rutas heredadas `assets/catalog/products/...`. No requiere una tabla ni migración nueva: el `ImagePath` actual admite la ruta pública dentro de su límite de 300 caracteres. Backend y frontend aceptan exactamente la allowlist heredada o `/api/catalog/images/{32 hex}.{webp|jpg|jpeg|png}` y rechazan URLs/rutas arbitrarias.
 
 ## Alcance Y Exclusiones
 
@@ -256,10 +258,21 @@ No se define todavía una retención automatizada. Como baseline operativo se re
 - Compatibilidad: `CatalogImagePathValidator` acepta `assets/catalog/products/...` y exactamente `/api/catalog/images/{fileName}`; continúa rechazando URLs externas, otras rutas `/api` y path traversal.
 - Pruebas: carpeta temporal GUID aislada por factory y limpieza al terminar; cobertura de autorización, formatos, tamaño, firma, GET, DELETE, catálogo público y rol `Repartidor`.
 
+## Implementación Fase 3.5.4.2
+
+- `AdminCatalogService.uploadProductImage()` crea `FormData`, agrega una parte exacta `file`, obtiene headers XSRF y usa POST con credenciales sin fijar `Content-Type`.
+- `clearProductImage()` usa DELETE con XSRF y credenciales.
+- Solo productos existentes muestran file input; productos nuevos deben guardarse antes. Secciones conservan selección de asset existente.
+- Validación UI: archivo no vacío, máximo `2_097_152` bytes, extensiones WebP/JPG/JPEG/PNG, MIME permitido y coherencia básica extensión/MIME. Backend conserva validación de firma.
+- Preview local usa `URL.createObjectURL()` y revoca URLs al cambiar, cancelar, completar o destruir el componente.
+- Upload y DELETE actualizan el producto local y el formulario sin un guardado adicional.
+- `catalog.manage` ve controles mutables; `catalog.view` queda readonly.
+- DELETE significa desasociar. Los archivos anteriores y huérfanos no se borran; cleanup queda para una fase futura.
+
 ## Pendiente Operativo DEV
 
-Antes de probar un upload real en DEV se debe completar el checklist de `docs/05-delivery/DEPLOYMENT.md`: crear/verificar `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, asignar permisos al usuario real del servicio, configurar `CatalogImages__StoragePath`, confirmar límite multipart del proxy y validar persistencia después de otro deploy. La ruta concreta no está hardcodeada en aplicación.
+El storage y backend DEV ya están preparados y activos. Falta desplegar 3.5.4.2, ejecutar el checklist de `docs/08-qa/catalog-image-upload-ui-qa.md` y confirmar que una imagen cargada sobrevive a otro deploy.
 
 ## Siguiente Fase Recomendada
 
-Fase 3.5.4.2 — UI upload/reemplazo de imágenes desde `/app/admin/catalogo`, después de preparar y validar el almacenamiento DEV.
+Deploy DEV y primera prueba real end-to-end de upload/persistencia para Fase 3.5.4.2.

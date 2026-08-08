@@ -95,3 +95,19 @@ export const CATALOG_IMAGE_OPTIONS: readonly CatalogImageOption[] = [
     label: 'Protesis inmediata provisional'
   }
 ];
+
+const SERVER_CATALOG_IMAGE_PATH = /^\/api\/catalog\/images\/[a-f0-9]{32}\.([A-Za-z]+)$/;
+const SERVER_CATALOG_IMAGE_EXTENSIONS = new Set(['webp', 'jpg', 'jpeg', 'png']);
+const CATALOG_ASSET_IMAGE_PATHS = new Set(CATALOG_IMAGE_OPTIONS.map((option) => option.path));
+
+export function isServerGeneratedCatalogImagePath(path: string): boolean {
+  const match = SERVER_CATALOG_IMAGE_PATH.exec(path);
+
+  return match !== null
+    && path.startsWith('/api/catalog/images/')
+    && SERVER_CATALOG_IMAGE_EXTENSIONS.has(match[1].toLowerCase());
+}
+
+export function isAllowedCatalogImagePath(path: string): boolean {
+  return CATALOG_ASSET_IMAGE_PATHS.has(path) || isServerGeneratedCatalogImagePath(path);
+}

@@ -26,7 +26,9 @@ Actualización Fase 3.5.3, 2026-07-10: `/catalogo` público queda preparado para
 
 Actualización Fase 3.5.4.0, 2026-08-08: el diseño operativo de almacenamiento quedó definido en `docs/01-product/catalog-image-upload-design.md`. Los uploads futuros vivirán en `${LDT_APP_ROOT}/shared/catalog-images`, fuera de releases, se leerán mediante `GET /api/catalog/images/{fileName}` y el producto guardará `/api/catalog/images/{fileName}` en `ImagePath`. Esta subfase es solo documental.
 
-Actualización Fase 3.5.4.1, 2026-08-08: el backend de upload/reemplazo/desasociación ya está implementado localmente. POST/DELETE requieren `catalog.manage`, GET de imagen es público, los archivos usan almacenamiento configurable y el validador mantiene compatibilidad con assets heredados. La UI de `/app/admin/catalogo` no cambió y todavía no permite seleccionar archivos.
+Actualización Fase 3.5.4.1, 2026-08-08: el backend de upload/reemplazo/desasociación está desplegado y validado en DEV en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`; el storage persistente está preparado para `www-data`.
+
+Actualización Fase 3.5.4.2, 2026-08-08: `/app/admin/catalogo` agrega localmente upload, reemplazo y desasociación solo para productos existentes. Mantiene selección de assets, preview, `catalog.view` readonly y autoridad backend. Deploy/QA DEV pendientes.
 
 ## Propósito Futuro
 
@@ -92,11 +94,11 @@ Antes de implementar se debe definir:
 
 ## Fuera De Alcance Actual
 
-Durante Fase 3.5.4.1 queda fuera de alcance:
+Durante Fase 3.5.4.2 queda fuera de alcance:
 
 - No se modifica `AuthService`.
 - No se modifican guards.
-- No se implementa todavía la UI de upload en `/app/admin/catalogo`; el contrato backend ya existe.
+- No se implementa upload de secciones; conservan selección de asset existente.
 - No se instalan dependencias.
 - No se cambia deploy.
 - No se elimina `catalog-data.ts`.
@@ -110,7 +112,7 @@ La secuencia sugerida después de Fase 3.5.0 es:
 2. Fase 3.5.2: UI admin de catálogo/precios con selección de imagen existente. Implementada.
 3. Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición. Implementada localmente.
 4. Fase 3.5.4.0: diseño operativo de almacenamiento persistente, endpoints, seguridad y backup. Documentada.
-5. Fase 3.5.4.1: backend upload/reemplazo/desasociación de imágenes de catálogo. Implementada localmente.
-6. Fase 3.5.4.2: UI upload/reemplazo desde `/app/admin/catalogo`. Siguiente fase recomendada.
+5. Fase 3.5.4.1: backend upload/reemplazo/desasociación de imágenes de catálogo. Desplegada y validada en DEV.
+6. Fase 3.5.4.2: UI upload/reemplazo/desasociación desde `/app/admin/catalogo`. Implementada localmente; deploy/QA DEV pendientes.
 
 El catálogo requiere modelo de datos, endpoints, almacenamiento de imágenes, permisos y reglas de publicación; por eso no conviene mezclarlo con el MVP operativo de entrega.

@@ -1,12 +1,16 @@
 import { CurrencyPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { AdminCatalogService } from '../admin-catalog.service';
-import { CATALOG_IMAGE_OPTIONS } from '../catalog-image-options';
+import {
+  CATALOG_IMAGE_OPTIONS,
+  isAllowedCatalogImagePath,
+  isServerGeneratedCatalogImagePath
+} from '../catalog-image-options';
 import {
   CatalogProduct,
   CatalogProductUpsertRequest,
@@ -15,6 +19,14 @@ import {
 } from '../catalog.models';
 
 type CatalogStatusFilter = 'all' | 'active' | 'inactive';
+
+const MAX_CATALOG_IMAGE_BYTES = 2_097_152;
+const CATALOG_IMAGE_MIME_BY_EXTENSION: Readonly<Record<string, string>> = {
+  webp: 'image/webp',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png'
+};
 
 interface CatalogSectionForm {
   key: string;
@@ -375,35 +387,105 @@ interface CatalogProductForm {
                   <textarea name="productDescription" rows="3" [(ngModel)]="productForm.description"></textarea>
                 </label>
                 <label class="form-field">
-                  <span>Imagen</span>
-                  <select name="productImagePath" [(ngModel)]="productForm.imagePath">
-                    <option value="">Sin imagen</option>
-                    @for (option of imageOptions; track option.path) {
-                      <option [value]="option.path">{{ option.label }}</option>
-                    }
-                  </select>
-                </label>
-                <label class="form-field">
                   <span>Texto alternativo</span>
                   <input name="productAltText" type="text" [(ngModel)]="productForm.altText" />
                 </label>
               </div>
 
-              @if (productForm.imagePath) {
-                <figure class="catalog-image-preview">
-                  <img [src]="previewSrc(productForm.imagePath)" [alt]="productForm.altText || productForm.name" />
-                  <figcaption>{{ productForm.imagePath }}</figcaption>
-                </figure>
+              <section class="catalog-product-image-editor" aria-labelledby="product-image-editor-title">
+                <header>
+                  <div>
+                    <h3 id="product-image-editor-title">Imagen del producto</h3>
+                    <p>{{ productImageOrigin(productForm.imagePath) }}</p>
+                  </div>
+                </header>
+
+                <label class="form-field">
+                  <span>Imagen existente del catálogo</span>
+                  <select
+                    name="productImagePath"
+                    [ngModel]="productForm.imagePath"
+                    (ngModelChange)="onProductAssetImageChange($event)"
+                  >
+                    <option value="">Sin imagen</option>
+                    @if (isServerGeneratedImagePath(productForm.imagePath)) {
+                      <option [value]="productForm.imagePath">Imagen cargada actual</option>
+                    }
+                    @for (option of imageOptions; track option.path) {
+                      <option [value]="option.path">{{ option.label }}</option>
+                    }
+                  </select>
+                </label>
+
+                @if (localProductImagePreviewUrl() || productForm.imagePath) {
+                  <figure class="catalog-image-preview catalog-product-image-preview">
+                    <img
+                      [src]="localProductImagePreviewUrl() || previewSrc(productForm.imagePath)"
+                      [alt]="productForm.altText || productForm.name || 'Vista previa del producto'"
+                    />
+                    <figcaption>
+                      {{ localProductImagePreviewUrl() ? 'Vista previa del archivo seleccionado' : productImageOrigin(productForm.imagePath) }}
+                    </figcaption>
+                  </figure>
+                } @else {
+                  <p class="catalog-image-empty">Sin imagen</p>
+                }
+
                 @if (imageNote(productForm.imagePath); as note) {
                   <p class="catalog-image-note">{{ note }}</p>
                 }
-              }
+
+                @if (canManage) {
+                  @if (editingProductId()) {
+                    <div class="catalog-image-upload-controls">
+                      <label class="form-field">
+                        <span>Archivo nuevo</span>
+                        <input
+                          #productImageInput
+                          type="file"
+                          accept=".webp,.jpg,.jpeg,.png,image/webp,image/jpeg,image/png"
+                          [disabled]="isImageBusy() || isSaving()"
+                          (change)="onProductImageFileSelected($event)"
+                        />
+                        <small>WebP, JPG o PNG. Máximo 2 MB.</small>
+                      </label>
+
+                      <div class="page-actions catalog-image-actions">
+                        <button
+                          class="primary-button"
+                          type="button"
+                          [disabled]="isImageBusy() || isSaving()"
+                          (click)="uploadSelectedProductImage()"
+                        >
+                          @if (isUploadingImage()) {
+                            Subiendo imagen...
+                          } @else {
+                            {{ productForm.imagePath ? 'Reemplazar imagen' : 'Subir imagen' }}
+                          }
+                        </button>
+                        @if (productForm.imagePath) {
+                          <button
+                            class="danger-button"
+                            type="button"
+                            [disabled]="isImageBusy() || isSaving()"
+                            (click)="clearCurrentProductImage()"
+                          >
+                            {{ isClearingImage() ? 'Quitando imagen...' : 'Quitar imagen' }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  } @else {
+                    <p class="catalog-image-guidance">Guarda el producto antes de subir una imagen personalizada.</p>
+                  }
+                }
+              </section>
 
               <div class="page-actions">
-                <button class="primary-button" type="submit" [disabled]="isSaving()">
+                <button class="primary-button" type="submit" [disabled]="isSaving() || isImageBusy()">
                   {{ isSaving() ? 'Guardando...' : 'Guardar producto' }}
                 </button>
-                <button class="ghost-button" type="button" [disabled]="isSaving()" (click)="cancelProductForm()">
+                <button class="ghost-button" type="button" [disabled]="isSaving() || isImageBusy()" (click)="cancelProductForm()">
                   Cancelar
                 </button>
               </div>
@@ -569,7 +651,9 @@ interface CatalogProductForm {
     </section>
   `
 })
-export class AdminCatalogPageComponent implements OnInit {
+export class AdminCatalogPageComponent implements OnInit, OnDestroy {
+  @ViewChild('productImageInput') private productImageInput?: ElementRef<HTMLInputElement>;
+
   readonly imageOptions = CATALOG_IMAGE_OPTIONS;
   readonly sections = signal<CatalogSection[]>([]);
   readonly products = signal<CatalogProduct[]>([]);
@@ -582,6 +666,11 @@ export class AdminCatalogPageComponent implements OnInit {
   readonly priceProductId = signal<string | null>(null);
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
+  readonly isUploadingImage = signal(false);
+  readonly isClearingImage = signal(false);
+  readonly selectedProductImageFile = signal<File | null>(null);
+  readonly localProductImagePreviewUrl = signal<string | null>(null);
+  readonly isImageBusy = computed(() => this.isUploadingImage() || this.isClearingImage());
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   readonly activeSectionsCount = computed(() => this.sections().filter((section) => section.isActive).length);
@@ -605,8 +694,6 @@ export class AdminCatalogPageComponent implements OnInit {
   productForm: CatalogProductForm = this.emptyProductForm();
   priceAmount: number | null = null;
 
-  private readonly imagePaths = new Set(CATALOG_IMAGE_OPTIONS.map((option) => option.path));
-
   constructor(
     private readonly adminCatalogService: AdminCatalogService,
     private readonly authService: AuthService
@@ -618,6 +705,10 @@ export class AdminCatalogPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    this.resetProductImageSelection(false);
   }
 
   load(): void {
@@ -754,6 +845,7 @@ export class AdminCatalogPageComponent implements OnInit {
       return;
     }
 
+    this.resetProductImageSelection();
     this.productForm = this.emptyProductForm(sectionId, this.nextProductSortOrder(sectionId));
     this.editingProductId.set(null);
     this.showProductForm.set(true);
@@ -766,6 +858,7 @@ export class AdminCatalogPageComponent implements OnInit {
       return;
     }
 
+    this.resetProductImageSelection();
     this.productForm = {
       catalogSectionId: product.catalogSectionId,
       key: product.key,
@@ -785,6 +878,7 @@ export class AdminCatalogPageComponent implements OnInit {
   }
 
   cancelProductForm(): void {
+    this.resetProductImageSelection();
     this.showProductForm.set(false);
     this.editingProductId.set(null);
     this.productForm = this.emptyProductForm();
@@ -914,6 +1008,111 @@ export class AdminCatalogPageComponent implements OnInit {
     }
   }
 
+  onProductAssetImageChange(value: string): void {
+    this.resetProductImageSelection();
+    this.productForm.imagePath = value;
+    this.errorMessage.set(null);
+  }
+
+  onProductImageFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    this.resetProductImageSelection(false);
+    this.successMessage.set(null);
+
+    const validationMessage = this.validateProductImageFile(file);
+
+    if (validationMessage) {
+      input.value = '';
+      this.errorMessage.set(validationMessage);
+      return;
+    }
+
+    this.selectedProductImageFile.set(file);
+    this.localProductImagePreviewUrl.set(URL.createObjectURL(file!));
+    this.errorMessage.set(null);
+  }
+
+  uploadSelectedProductImage(): void {
+    if (!this.canManage || this.isImageBusy()) {
+      return;
+    }
+
+    const productId = this.editingProductId();
+
+    if (!productId) {
+      this.errorMessage.set('Guarda el producto antes de subir una imagen personalizada.');
+      return;
+    }
+
+    const file = this.selectedProductImageFile();
+    const validationMessage = this.validateProductImageFile(file);
+
+    if (validationMessage) {
+      this.errorMessage.set(validationMessage);
+      return;
+    }
+
+    this.isUploadingImage.set(true);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    this.adminCatalogService
+      .uploadProductImage(productId, file!)
+      .pipe(finalize(() => this.isUploadingImage.set(false)))
+      .subscribe({
+        next: (updated) => {
+          this.updateProductLocally(updated);
+          this.productForm.imagePath = updated.imagePath ?? '';
+          this.resetProductImageSelection();
+          this.successMessage.set('Imagen actualizada.');
+        },
+        error: (error: HttpErrorResponse) => this.errorMessage.set(this.toImageUploadErrorMessage(error))
+      });
+  }
+
+  clearCurrentProductImage(): void {
+    if (!this.canManage || this.isImageBusy() || !this.productForm.imagePath) {
+      return;
+    }
+
+    const productId = this.editingProductId();
+
+    if (!productId || !window.confirm('¿Quitar la imagen de este producto?')) {
+      return;
+    }
+
+    this.isClearingImage.set(true);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    this.adminCatalogService
+      .clearProductImage(productId)
+      .pipe(finalize(() => this.isClearingImage.set(false)))
+      .subscribe({
+        next: (updated) => {
+          this.updateProductLocally(updated);
+          this.productForm.imagePath = '';
+          this.resetProductImageSelection();
+          this.successMessage.set('Imagen desasociada.');
+        },
+        error: (error: HttpErrorResponse) => this.errorMessage.set(this.toClearImageErrorMessage(error))
+      });
+  }
+
+  productImageOrigin(path: string | null): string {
+    if (!path) {
+      return 'Sin imagen';
+    }
+
+    return isServerGeneratedCatalogImagePath(path) ? 'Imagen cargada' : 'Imagen del catálogo';
+  }
+
+  isServerGeneratedImagePath(path: string | null): boolean {
+    return path ? isServerGeneratedCatalogImagePath(path) : false;
+  }
+
   previewSrc(path: string | null): string {
     return path ? `/${path.replace(/^\/+/, '')}` : '';
   }
@@ -938,10 +1137,16 @@ export class AdminCatalogPageComponent implements OnInit {
       });
   }
 
+  private updateProductLocally(updated: CatalogProduct): void {
+    this.products.update((products) =>
+      products.map((product) => product.id === updated.id ? updated : product)
+    );
+  }
+
   private buildSectionRequest(): CatalogSectionUpsertRequest | null {
     const key = (this.sectionForm.key.trim() || this.slugify(this.sectionForm.name)).trim();
     const name = this.sectionForm.name.trim();
-    const imagePath = this.toOptionalImagePath(this.sectionForm.imagePath);
+    const imagePath = this.toOptionalSectionImagePath(this.sectionForm.imagePath);
 
     if (!name) {
       this.errorMessage.set('Captura el nombre de la seccion.');
@@ -1032,7 +1237,52 @@ export class AdminCatalogPageComponent implements OnInit {
       return null;
     }
 
-    return this.imagePaths.has(trimmed) ? trimmed : undefined;
+    return isAllowedCatalogImagePath(trimmed) ? trimmed : undefined;
+  }
+
+  private toOptionalSectionImagePath(value: string): string | null | undefined {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return null;
+    }
+
+    return CATALOG_IMAGE_OPTIONS.some((option) => option.path === trimmed) ? trimmed : undefined;
+  }
+
+  private validateProductImageFile(file: File | null): string | null {
+    if (!file || file.size <= 0) {
+      return 'Selecciona una imagen.';
+    }
+
+    if (file.size > MAX_CATALOG_IMAGE_BYTES) {
+      return 'La imagen no puede superar 2 MB.';
+    }
+
+    const extension = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : '';
+    const expectedMime = CATALOG_IMAGE_MIME_BY_EXTENSION[extension];
+    const actualMime = file.type.toLowerCase();
+
+    if (!expectedMime || actualMime !== expectedMime) {
+      return 'Formato no permitido. Usa WebP, JPG o PNG.';
+    }
+
+    return null;
+  }
+
+  private resetProductImageSelection(resetInput = true): void {
+    const previewUrl = this.localProductImagePreviewUrl();
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    this.localProductImagePreviewUrl.set(null);
+    this.selectedProductImageFile.set(null);
+
+    if (resetInput && this.productImageInput) {
+      this.productImageInput.nativeElement.value = '';
+    }
   }
 
   private nextSectionSortOrder(): number {
@@ -1097,6 +1347,42 @@ export class AdminCatalogPageComponent implements OnInit {
     }
 
     return 'No fue posible completar la operacion.';
+  }
+
+  private toImageUploadErrorMessage(error: HttpErrorResponse): string {
+    if (error.status === 400) {
+      return 'El archivo o sus datos no son válidos.';
+    }
+
+    if (error.status === 403) {
+      return 'No tienes permiso para administrar el catálogo.';
+    }
+
+    if (error.status === 404) {
+      return 'El producto ya no existe.';
+    }
+
+    if (error.status === 413) {
+      return 'La imagen no puede superar 2 MB.';
+    }
+
+    if (error.status === 503) {
+      return 'El almacenamiento de imágenes no está disponible temporalmente.';
+    }
+
+    return 'No fue posible subir la imagen.';
+  }
+
+  private toClearImageErrorMessage(error: HttpErrorResponse): string {
+    if (error.status === 403) {
+      return 'No tienes permiso para administrar el catálogo.';
+    }
+
+    if (error.status === 404) {
+      return 'El producto ya no existe.';
+    }
+
+    return 'No fue posible quitar la imagen.';
   }
 
   private getValidationMessage(error: HttpErrorResponse): string | null {
