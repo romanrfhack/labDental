@@ -1,0 +1,129 @@
+name: Smoke DEV PUB-UX-2
+
+on:
+  push:
+    branches:
+      - agent/pub-ux-2-dev-smoke
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pub-ux-2-dev-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke-dev:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Wait for DEV and validate public catalog
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          BASE_URL="https://dev.laboratoriodentaltlahuac.com"
+          REPORT="$RUNNER_TEMP/pub-ux-2-dev-smoke.txt"
+          WORK_DIR="$RUNNER_TEMP/pub-ux-2-smoke"
+          mkdir -p "$WORK_DIR"
+          : > "$REPORT"
+
+          for attempt in $(seq 1 45); do
+            echo "Attempt ${attempt}/45" | tee -a "$REPORT"
+
+            health_code="$(curl -sS -L --connect-timeout 3 --max-time 12 -o "$WORK_DIR/health.txt" -w '%{http_code}' "$BASE_URL/health" || true)"
+            catalog_code="$(curl -sS -L --connect-timeout 3 --max-time 15 -o "$WORK_DIR/catalog.html" -w '%{http_code}' "$BASE_URL/catalogo" || true)"
+            api_code="$(curl -sS -L --connect-timeout 3 --max-time 15 -o "$WORK_DIR/catalog.json" -w '%{http_code}' "$BASE_URL/api/catalog/public" || true)"
+
+            printf 'health=%s catalog=%s api=%s\n' "$health_code" "$catalog_code" "$api_code" | tee -a "$REPORT"
+
+            api_valid="false"
+            bundle_valid="false"
+
+            if [ "$api_code" = "200" ]; then
+              if python3 - "$WORK_DIR/catalog.json" >> "$REPORT" 2>&1 <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          payload = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+          sections = payload.get('sections')
+          assert isinstance(sections, list) and sections, 'sections must be a non-empty list'
+          product_count = 0
+          for section in sections:
+              assert isinstance(section.get('key'), str) and section['key'].strip(), 'invalid section key'
+              assert isinstance(section.get('name'), str) and section['name'].strip(), 'invalid section name'
+              products = section.get('products')
+              assert isinstance(products, list), 'section products must be a list'
+              product_count += len(products)
+          assert product_count > 0, 'catalog must contain products'
+          print(f'api_sections={len(sections)} api_products={product_count}')
+          PY
+              then
+                api_valid="true"
+              fi
+            fi
+
+            if [ "$catalog_code" = "200" ]; then
+              rm -f "$WORK_DIR"/bundle-*.js "$WORK_DIR/all-bundles.js"
+              mapfile -t scripts < <(grep -oE 'src="[^"]+\.js"' "$WORK_DIR/catalog.html" | sed -E 's/^src="|"$//g')
+
+              for script in "${scripts[@]:-}"; do
+                case "$script" in
+                  http://*|https://*) script_url="$script" ;;
+                  /*) script_url="$BASE_URL$script" ;;
+                  *) script_url="$BASE_URL/$script" ;;
+                esac
+
+                target="$WORK_DIR/bundle-$(basename "$script")"
+                curl -fsS -L --connect-timeout 3 --max-time 20 "$script_url" -o "$target" || true
+              done
+
+              cat "$WORK_DIR"/bundle-*.js > "$WORK_DIR/all-bundles.js" 2>/dev/null || true
+
+              if grep -Fq 'Soluciones dentales organizadas para consultar con claridad' "$WORK_DIR/all-bundles.js" \
+                && grep -Fq 'Explora por material o tipo de trabajo' "$WORK_DIR/all-bundles.js" \
+                && grep -Fq 'Contactar al laboratorio' "$WORK_DIR/all-bundles.js"; then
+                bundle_valid="true"
+                echo 'bundle_markers=ok' | tee -a "$REPORT"
+              else
+                echo 'bundle_markers=pending' | tee -a "$REPORT"
+              fi
+            fi
+
+            if [ "$health_code" = "200" ] \
+              && [ "$catalog_code" = "200" ] \
+              && [ "$api_code" = "200" ] \
+              && [ "$api_valid" = "true" ] \
+              && [ "$bundle_valid" = "true" ]; then
+              echo "PUB-UX-2 DEV smoke passed on attempt ${attempt}." | tee -a "$REPORT"
+              cat "$REPORT"
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          echo 'PUB-UX-2 DEV smoke did not pass within the retry window.' | tee -a "$REPORT"
+          cat "$REPORT"
+          exit 1
+
+      - name: Upload smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pub-ux-2-dev-smoke
+          path: |
+            ${{ runner.temp }}/pub-ux-2-dev-smoke.txt
+            ${{ runner.temp }}/pub-ux-2-smoke/health.txt
+            ${{ runner.temp }}/pub-ux-2-smoke/catalog.html
+            ${{ runner.temp }}/pub-ux-2-smoke/catalog.json
+          if-no-files-found: warn
+          retention-days: 3
