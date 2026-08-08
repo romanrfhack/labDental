@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Wait for DEV and validate rendered public catalog
+      - name: Validate rendered public catalog
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -29,29 +29,19 @@ jobs:
           BASE_URL="https://dev.laboratoriodentaltlahuac.com"
           REPORT="$RUNNER_TEMP/pub-ux-2-dev-smoke.txt"
           WORK_DIR="$RUNNER_TEMP/pub-ux-2-smoke"
-          CHROME="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          CHROME="$(command -v google-chrome || command -v chromium-browser || command -v chromium)"
           mkdir -p "$WORK_DIR"
           : > "$REPORT"
 
-          if [ -z "$CHROME" ]; then
-            echo 'Chrome/Chromium is required for rendered DOM validation.' | tee -a "$REPORT"
-            exit 1
-          fi
+          health_code="$(curl -sS -L --connect-timeout 3 --max-time 12 -o "$WORK_DIR/health.txt" -w '%{http_code}' "$BASE_URL/health")"
+          catalog_code="$(curl -sS -L --connect-timeout 3 --max-time 15 -o "$WORK_DIR/catalog.html" -w '%{http_code}' "$BASE_URL/catalogo")"
+          api_code="$(curl -sS -L --connect-timeout 3 --max-time 15 -o "$WORK_DIR/catalog.json" -w '%{http_code}' "$BASE_URL/api/catalog/public")"
+          printf 'health=%s catalog=%s api=%s\n' "$health_code" "$catalog_code" "$api_code" | tee -a "$REPORT"
+          test "$health_code" = "200"
+          test "$catalog_code" = "200"
+          test "$api_code" = "200"
 
-          for attempt in $(seq 1 20); do
-            echo "Attempt ${attempt}/20" | tee -a "$REPORT"
-
-            health_code="$(curl -sS -L --connect-timeout 3 --max-time 12 -o "$WORK_DIR/health.txt" -w '%{http_code}' "$BASE_URL/health" || true)"
-            catalog_code="$(curl -sS -L --connect-timeout 3 --max-time 15 -o "$WORK_DIR/catalog.html" -w '%{http_code}' "$BASE_URL/catalogo" || true)"
-            api_code="$(curl -sS -L --connect-timeout 3 --max-time 15 -o "$WORK_DIR/catalog.json" -w '%{http_code}' "$BASE_URL/api/catalog/public" || true)"
-
-            printf 'health=%s catalog=%s api=%s\n' "$health_code" "$catalog_code" "$api_code" | tee -a "$REPORT"
-
-            api_valid="false"
-            dom_valid="false"
-
-            if [ "$api_code" = "200" ]; then
-              if python3 - "$WORK_DIR/catalog.json" >> "$REPORT" 2>&1 <<'PY'
+          python3 - "$WORK_DIR/catalog.json" | tee -a "$REPORT" <<'PY'
           import json
           import pathlib
           import sys
@@ -69,54 +59,27 @@ jobs:
           assert product_count > 0, 'catalog must contain products'
           print(f'api_sections={len(sections)} api_products={product_count}')
           PY
-              then
-                api_valid="true"
-              fi
-            fi
 
-            if [ "$health_code" = "200" ] && [ "$catalog_code" = "200" ] && [ "$api_valid" = "true" ]; then
-              "$CHROME" \
-                --headless=new \
-                --no-sandbox \
-                --disable-gpu \
-                --disable-dev-shm-usage \
-                --hide-scrollbars \
-                --virtual-time-budget=8000 \
-                --dump-dom \
-                "$BASE_URL/catalogo" \
-                > "$WORK_DIR/catalog-rendered.html" \
-                2> "$WORK_DIR/chrome-render.log" || true
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --disable-dev-shm-usage \
+            --hide-scrollbars \
+            --force-prefers-reduced-motion \
+            --virtual-time-budget=8000 \
+            --dump-dom \
+            "$BASE_URL/catalogo" \
+            > "$WORK_DIR/catalog-rendered.html" \
+            2> "$WORK_DIR/chrome-render.log"
 
-              if grep -Fq 'Soluciones dentales organizadas para consultar con claridad' "$WORK_DIR/catalog-rendered.html" \
-                && grep -Fq 'Explora por material o tipo de trabajo' "$WORK_DIR/catalog-rendered.html" \
-                && grep -Fq 'Contactar al laboratorio' "$WORK_DIR/catalog-rendered.html" \
-                && grep -Fq 'catalog-product-card' "$WORK_DIR/catalog-rendered.html"; then
-                dom_valid="true"
-                echo 'rendered_dom=ok' | tee -a "$REPORT"
-              else
-                echo 'rendered_dom=pending' | tee -a "$REPORT"
-              fi
-            fi
+          grep -Fq 'Soluciones dentales organizadas para consultar con claridad' "$WORK_DIR/catalog-rendered.html"
+          grep -Fq 'Explora por material o tipo de trabajo' "$WORK_DIR/catalog-rendered.html"
+          grep -Fq 'Contactar al laboratorio' "$WORK_DIR/catalog-rendered.html"
+          grep -Fq 'catalog-product-card' "$WORK_DIR/catalog-rendered.html"
+          echo 'rendered_dom=ok' | tee -a "$REPORT"
 
-            if [ "$health_code" = "200" ] \
-              && [ "$catalog_code" = "200" ] \
-              && [ "$api_code" = "200" ] \
-              && [ "$api_valid" = "true" ] \
-              && [ "$dom_valid" = "true" ]; then
-              echo "PUB-UX-2 DEV smoke passed on attempt ${attempt}." | tee -a "$REPORT"
-              cat "$REPORT"
-              exit 0
-            fi
-
-            sleep 6
-          done
-
-          echo 'PUB-UX-2 DEV smoke did not pass within the retry window.' | tee -a "$REPORT"
-          cat "$REPORT"
-          exit 1
-
-      - name: Capture desktop and mobile screenshots
-        if: success()
+      - name: Capture reduced-motion desktop and mobile screenshots
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -130,6 +93,7 @@ jobs:
             --disable-gpu \
             --disable-dev-shm-usage \
             --hide-scrollbars \
+            --force-prefers-reduced-motion \
             --force-device-scale-factor=1 \
             --virtual-time-budget=8000 \
             --window-size=1440,1200 \
@@ -142,6 +106,7 @@ jobs:
             --disable-gpu \
             --disable-dev-shm-usage \
             --hide-scrollbars \
+            --force-prefers-reduced-motion \
             --force-device-scale-factor=1 \
             --virtual-time-budget=8000 \
             --window-size=390,1200 \
