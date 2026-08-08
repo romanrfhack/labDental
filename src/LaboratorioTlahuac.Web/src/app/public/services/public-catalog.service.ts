@@ -45,6 +45,7 @@ function mapPublicCatalogSection(section: unknown): CatalogSection {
   return {
     id: requireText(payload['key'], 'section key'),
     name: requireText(payload['name'], 'section name'),
+    description: optionalText(payload['description'], 'section description'),
     imageUrl: optionalText(payload['imagePath'], 'section imagePath'),
     altText: optionalText(payload['altText'], 'section altText'),
     products: rawProducts.map(mapPublicCatalogProduct)
@@ -57,6 +58,7 @@ function mapPublicCatalogProduct(product: unknown): CatalogProduct {
   return {
     id: requireText(payload['key'], 'product key'),
     name: requireText(payload['name'], 'product name'),
+    description: optionalText(payload['description'], 'product description'),
     price: requirePrice(payload['priceAmount'], 'product priceAmount'),
     imageUrl: optionalText(payload['imagePath'], 'product imagePath'),
     altText: optionalText(payload['altText'], 'product altText')
