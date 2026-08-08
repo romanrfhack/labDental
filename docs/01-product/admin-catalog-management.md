@@ -1,6 +1,6 @@
 # Administración De Catálogo, Precios E Imágenes
 
-Backlog futuro para Laboratorio Dental Tláhuac.
+Definición funcional y estado de la administración de catálogo de Laboratorio Dental Tláhuac.
 
 ## Estado
 
@@ -24,17 +24,19 @@ QA DEV Fase 3.5.2, 2026-07-05: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db`
 
 Actualización Fase 3.5.3, 2026-07-10: `/catalogo` público queda preparado para reflejar cambios administrados desde `/app/admin/catalogo` mediante `GET /api/catalog/public`, siempre que el endpoint responda con datos válidos. `catalog-data.ts` no se elimina y queda como fallback de transición. No se implementa upload, no se modifica UI admin, no se crean migraciones y no se toca auth, guards, cookies, XSRF ni deploy.
 
-Actualización Fase 3.5.4.0, 2026-08-08: el diseño operativo de almacenamiento quedó definido en `docs/01-product/catalog-image-upload-design.md`. Los uploads futuros vivirán en `${LDT_APP_ROOT}/shared/catalog-images`, fuera de releases, se leerán mediante `GET /api/catalog/images/{fileName}` y el producto guardará `/api/catalog/images/{fileName}` en `ImagePath`. Esta subfase es solo documental.
+Actualización Fase 3.5.4.0, 2026-08-08: **CERRADA**. El diseño operativo de almacenamiento quedó definido en `docs/01-product/catalog-image-upload-design.md`; los uploads viven en `${LDT_APP_ROOT}/shared/catalog-images`, fuera de releases, se leen mediante `GET /api/catalog/images/{fileName}` y el producto guarda esa ruta pública en `ImagePath`.
 
-Actualización Fase 3.5.4.1, 2026-08-08: el backend de upload/reemplazo/desasociación está desplegado y validado en DEV en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`; el storage persistente está preparado para `www-data`.
+Actualización Fase 3.5.4.1, 2026-08-08: **CERRADA EN DEV**. El backend de upload/reemplazo/desasociación está desplegado en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`; el storage persistente está preparado para `www-data` y el flujo POST/GET/DELETE quedó validado end-to-end.
 
-Actualización Fase 3.5.4.2, 2026-08-08: `/app/admin/catalogo` está desplegado en DEV en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`. Admin puede crear/editar producto; upload, preview y render público quedaron aprobados. La imagen real continúa asociada al producto. Estado: desplegada en DEV y QA funcional de upload/render público aprobado; persistencia entre releases y desasociación final pendientes.
+Actualización Fase 3.5.4.2, 2026-08-08: **CERRADA EN DEV**. `/app/admin/catalogo` está desplegado en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`. Admin puede crear/editar producto; selección, preview, upload, reemplazo, render público y quitar imagen quedaron aprobados.
 
-## Propósito Futuro
+Fase 3.5.4 completa: **QA end-to-end APROBADO EN DEV**. La persistencia se confirmó después del release backend `dev-44-8c2f92b`. Después de desasociar, API y catálogo público dejaron de referenciar/mostrar la imagen, mientras el archivo físico y su GET directo permanecieron disponibles, conforme a la decisión de no borrar físicamente en DELETE.
+
+## Propósito
 
 Permitir que usuarios autorizados administren secciones, productos, precios e imágenes del catálogo desde la app privada, sin exponer edición en el sitio público.
 
-## Alcance Tentativo
+## Alcance Implementado
 
 ### Administración De Secciones
 
@@ -58,7 +60,7 @@ Permitir que usuarios autorizados administren secciones, productos, precios e im
 - Subir/reemplazar imagen de producto mediante `POST /api/admin/catalog/products/{id}/image`.
 - Desasociar imagen mediante `DELETE /api/admin/catalog/products/{id}/image`, sin borrar el archivo físico en el MVP.
 - Definir imagen específica de producto.
-- Definir imagen representativa de sección.
+- Mantener selección de asset existente para imagen representativa de sección; su upload queda en backlog.
 - Validar máximo 2 MB, extensión, MIME y firma para `.webp`, `.jpg`, `.jpeg` y `.png`.
 - Preferir WebP sin convertir todavía.
 
@@ -92,7 +94,7 @@ Antes de implementar se debe definir:
 - Documentar que los precios públicos requieren aprobación del cliente.
 - Definir reglas para publicar, retirar o programar cambios visibles en `/catalogo`.
 
-## Fuera De Alcance Actual
+## Fuera De Alcance De Fase 3.5.4
 
 Durante Fase 3.5.4.2 queda fuera de alcance:
 
@@ -111,8 +113,10 @@ La secuencia sugerida después de Fase 3.5.0 es:
 1. Fase 3.5.1: backend catálogo administrable + migración + seed inicial desde `catalog-data.ts`. Implementada.
 2. Fase 3.5.2: UI admin de catálogo/precios con selección de imagen existente. Implementada.
 3. Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición. Implementada localmente.
-4. Fase 3.5.4.0: diseño operativo de almacenamiento persistente, endpoints, seguridad y backup. Documentada.
-5. Fase 3.5.4.1: backend upload/reemplazo/desasociación de imágenes de catálogo. Desplegada y validada en DEV.
-6. Fase 3.5.4.2: UI upload/reemplazo/desasociación desde `/app/admin/catalogo`. Desplegada en DEV; QA funcional de upload/render público aprobado, con persistencia entre releases y desasociación final pendientes.
+4. Fase 3.5.4.0: diseño operativo de almacenamiento persistente, endpoints, seguridad y backup. Cerrada.
+5. Fase 3.5.4.1: backend upload/reemplazo/desasociación de imágenes de catálogo. Cerrada en DEV.
+6. Fase 3.5.4.2: UI upload/reemplazo/desasociación desde `/app/admin/catalogo`. Cerrada en DEV; QA end-to-end completo aprobado.
 
 El catálogo requiere modelo de datos, endpoints, almacenamiento de imágenes, permisos y reglas de publicación; por eso no conviene mezclarlo con el MVP operativo de entrega.
+
+Backlog futuro, no bugs: inventario de huérfanos, política de retención, limpieza segura de no referenciados, backup automatizado, posible conversión/recompresión WebP, upload de sección y galería múltiple/CDN/cloud storage.

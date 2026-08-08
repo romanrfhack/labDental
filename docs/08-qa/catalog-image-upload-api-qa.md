@@ -12,17 +12,21 @@ Fase 3.5.4.1 — backend upload/reemplazo/desasociación, 2026-08-08.
 - Storage: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, owner/group `www-data:www-data`, permisos `0750`, escritura de `www-data` validada.
 - `CatalogImages__StoragePath` configurado una sola vez en `/etc/laboratorio-tlahuac-dev/api.env`.
 
-## QA Real Parcial Con UI Fase 3.5.4.2 — 2026-08-08
+## QA Real End-To-End Con UI Fase 3.5.4.2 — 2026-08-08
 
 - Commit UI desplegado: `f9acb0dfa973bd131ab2850c69105c4a90d84470`; GitHub Actions `success`.
 - `/health`, `/api/catalog/public` y `/catalogo`: `200`.
 - POST real desde `/app/admin/catalogo`: OK; el producto público renderiza la imagen cargada.
 - Archivo creado: `29b1d5f129af436a80b0c951555299d2.jpg`, `86688` bytes, `www-data:www-data`, modo `0644`.
 - Storage: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, `www-data:www-data`, modo `0750`.
-- La imagen continúa asociada al producto para la prueba posterior a otro deploy.
-- Estado: desplegada en DEV y QA funcional de upload/render público aprobado; persistencia entre releases y desasociación final pendientes.
+- GET público real: `200`, `Content-Type: image/jpeg`, `86688` bytes.
+- Reemplazo real desde admin y reflejo en `/catalogo`: OK.
+- Persistencia validada después del release backend `dev-44-8c2f92b`: archivo físico, GET `200` y render público permanecieron.
+- DELETE/desasociación real desde UI: OK; `/api/catalog/public` dejó de referenciar el archivo y `/catalogo` dejó de mostrarlo.
+- Después de DELETE, el archivo físico permaneció y su GET directo siguió en `200`, conforme al contrato de desasociación sin borrado.
+- Estado: Fase 3.5.4.1 **CERRADA EN DEV**; Fase 3.5.4 completa con QA end-to-end **APROBADO**.
 
-Esta evidencia valida un POST/GET real y el almacenamiento físico actual. No valida todavía reemplazo, DELETE/desasociación ni supervivencia del archivo y su asociación después de cambiar de release.
+El GUID concreto se conserva únicamente como evidencia reproducible de QA; no constituye un requisito permanente ni debe reutilizarse como dato canónico de producto.
 
 ## Alcance Automatizado
 
@@ -69,18 +73,20 @@ La decisión de la fase es usar `413 Payload Too Large` para el máximo de archi
 
 ## Checklist Operativo DEV Antes De Upload Real
 
-- [ ] Confirmar `${LDT_APP_ROOT}` sin imprimir secretos.
+- [x] Confirmar la ubicación operativa efectiva mediante la ruta de storage validada, sin imprimir secretos.
 - [x] Crear `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` fuera de releases.
 - [x] Confirmar usuario/grupo efectivo de la API y asignar permisos mínimos de lectura/escritura; no usar `777`.
 - [x] Configurar `CatalogImages__StoragePath` fuera del repositorio.
 - [x] Confirmar con el archivo probado que Nginx/proxy admite el multipart usado y enruta `/api/catalog/images/*`.
-- [ ] Probar POST, GET, reemplazo y DELETE con Admin; confirmar `403` con Repartidor.
-- [ ] Confirmar que el archivo sigue disponible tras otro deploy y rollback controlado.
+- [x] Probar POST, GET, reemplazo y DELETE con Admin.
+- [x] Confirmar que el archivo sigue disponible tras otro deploy.
+- [ ] Ejecutar rollback controlado, como validación operativa independiente no bloqueante para 3.5.4.
+- [x] Confirmar `403` con Repartidor mediante cobertura automatizada; una repetición manual queda opcional.
 - [ ] Respaldar/restaurar base y `shared/catalog-images` como un mismo punto temporal.
 
 ## Exclusiones
 
-- La UI de Fase 3.5.4.2 está desplegada; su QA DEV parcial se documenta aparte.
+- La UI de Fase 3.5.4.2 está desplegada y cerrada en DEV; su QA end-to-end se documenta aparte.
 - Sin migración, conversión WebP, recomprensión, limpieza de huérfanos ni borrado físico en DELETE.
 - Sin cambios de `AuthService`, guards, cookies, política XSRF, deploy o dependencias.
 
@@ -90,4 +96,11 @@ La decisión de la fase es usar `413 Payload Too Large` para el máximo de archi
 - Suite completa: Domain 1/1, Application 1/1 y API 156/156.
 - `dotnet build`: 0 errores; permanecen 2 warnings `NU1903` conocidos en tests.
 - `npm run build`: correcto, initial total `317.77 kB`.
-- Backend y UI DEV desplegados; POST/GET real y render público aprobados. Persistencia entre releases, reemplazo y DELETE/desasociación final permanecen pendientes.
+- Backend y UI DEV desplegados; POST/GET real, reemplazo, persistencia entre releases, render público y DELETE/desasociación aprobados end-to-end.
+
+## Backlog Futuro, No Bugs
+
+- Inventario de archivos huérfanos, política de retención y limpieza segura.
+- Backup automatizado de `shared/catalog-images`.
+- Posible conversión/recompresión WebP.
+- Upload de imagen de sección y galería múltiple/CDN/cloud storage.

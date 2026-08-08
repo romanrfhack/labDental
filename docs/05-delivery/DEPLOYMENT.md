@@ -59,21 +59,21 @@ El valor efectivo de `LDT_APP_ROOT` se mantiene fuera del repositorio. No se ley
 
 ## Almacenamiento De Imágenes De Catálogo
 
-Backend implementado localmente en Fase 3.5.4.1; preparación operativa DEV pendiente:
+Fase 3.5.4.1 **CERRADA EN DEV** y Fase 3.5.4 completa con QA end-to-end aprobado:
 
 - Carpeta persistente: `${LDT_APP_ROOT}/shared/catalog-images`.
-- Ruta DEV esperada: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, pendiente de confirmar contra el `LDT_APP_ROOT` real antes de activar upload.
+- Ruta DEV validada: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`.
 - Configuración backend requerida: `CatalogImages__StoragePath`, ruta absoluta definida fuera del repositorio y sin hardcodear la ruta DEV. Si falta, está vacía, es relativa o la carpeta no existe/no es accesible, POST responde `503` controlado.
 - Escritura: únicamente por el usuario efectivo del servicio API, con ownership/grupo y permisos mínimos; no usar permisos globales `777`.
 - Lectura pública: `GET /api/catalog/images/{fileName}` desde ASP.NET Core.
 - Persistencia en base: `ImagePath` igual a `/api/catalog/images/{fileName}`.
 - Compatibilidad: los assets existentes `assets/catalog/products/...` continúan sirviéndose desde el frontend.
 
-DEV ya publica `/api/catalog/public` en el mismo origen, por lo que se espera que el reverse proxy cubra el prefijo `/api`. La configuración exacta de Nginx no está versionada. Si el proxy cubre todo `/api`, el endpoint de imágenes no requiere cambio Nginx; este supuesto debe validarse en DEV antes del cierre de 3.5.4.1. Si existe una allowlist de rutas, el ajuste de proxy será un cambio separado, revisado y documentado.
+DEV publica `/api/catalog/public` y `/api/catalog/images/{fileName}` en el mismo origen. El GET real de imagen respondió `200` con `Content-Type: image/jpeg`, lo que valida el enrutamiento requerido sin exponer directamente la carpeta del filesystem. La configuración exacta de Nginx no está versionada.
 
 El límite de request body del proxy debe admitir 2 MB más el overhead de `multipart/form-data`. No se requiere un alias/ruta Nginx nuevo, pero si el límite actual es menor debe ajustarse y documentarse antes de validar upload.
 
-Preparación operativa requerida antes de habilitar upload:
+Preparación operativa ejecutada/validada en DEV:
 
 1. Confirmar `LDT_APP_ROOT` y el usuario/grupo efectivos del servicio sin imprimir secretos ni el archivo de ambiente.
 2. Crear `${LDT_APP_ROOT}/shared/catalog-images` si no existe.
@@ -81,9 +81,11 @@ Preparación operativa requerida antes de habilitar upload:
 4. Configurar `CatalogImages__StoragePath` fuera del repo.
 5. Confirmar espacio libre, escritura controlada y lectura por API.
 6. Confirmar que el proxy admite el tamaño máximo más overhead multipart.
-7. Validar que una imagen siga disponible después de otro deploy y de un rollback de prueba controlado.
+7. Validar que una imagen siga disponible después de otro deploy. Un rollback controlado permanece como validación operativa independiente, no bloqueante para el cierre funcional de 3.5.4.
 
-La implementación local de Fase 3.5.4.1 no ejecutó esos pasos ni modificó scripts, workflow, Nginx, systemd o VPS. Hasta completarlos, no debe habilitarse una prueba real de upload en DEV.
+Los pasos necesarios para upload real quedaron cubiertos en DEV: carpeta `www-data:www-data` modo `0750`, escritura por `www-data`, `CatalogImages__StoragePath` configurado, multipart aceptado, lectura pública correcta y persistencia confirmada después de `dev-44-8c2f92b`. La fase no modificó scripts, workflow, Nginx ni systemd.
+
+Al desasociar desde la UI, `/api/catalog/public` dejó de referenciar el archivo y `/catalogo` dejó de mostrarlo; el archivo físico permaneció y su GET directo siguió en `200`. Es intencional: DELETE desasocia y no elimina físicamente.
 
 ### Backup Manual/Recomendado
 
@@ -93,6 +95,8 @@ La implementación local de Fase 3.5.4.1 no ejecutó esos pasos ni modificó scr
 - Restaurar conservando nombres y permisos; después comprobar una muestra de `ImagePath` mediante el GET público.
 - Antes de producción se requiere una restauración probada, destino protegido y política acordada de frecuencia/retención.
 - Baseline recomendado cuando haya uploads reales: copia diaria más copia previa a cambios operativos/deploy relevantes. La automatización final queda pendiente.
+
+Backlog futuro, no bug de Fase 3.5.4: automatizar backup, inventariar archivos huérfanos, definir retención y limpiar imágenes no referenciadas de forma segura. Conversión/recompresión WebP, upload de imagen de sección y galería múltiple/CDN/cloud storage también quedan fuera del MVP cerrado.
 
 Diseño canónico de validación, endpoints, autorización y consistencia: `docs/01-product/catalog-image-upload-design.md`.
 

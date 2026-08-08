@@ -37,7 +37,7 @@ Fuente canónica de arquitectura para Laboratorio Dental Tláhuac.
 
 - Sitio público: rutas públicas dentro de `src/LaboratorioTlahuac.Web/src/app/public`.
 - Catálogo público: ruta `/catalogo`, renderizada desde `GET /api/catalog/public` con fallback a data tipada local.
-- Diseño Fase 3.5.0: el catálogo administrable se documenta en `docs/01-product/catalog-admin-design.md`; Fase 3.5.1 ya implementa backend/API/seed, Fase 3.5.2 implementa UI admin y Fase 3.5.3 conecta `/catalogo` a la API pública con fallback.
+- Diseño Fase 3.5.0: el catálogo administrable se documenta en `docs/01-product/catalog-admin-design.md`; Fase 3.5.1 implementa backend/API/seed, Fase 3.5.2 implementa UI admin, Fase 3.5.3 conecta `/catalogo` a la API pública con fallback y Fase 3.5.4 queda cerrada en DEV con QA end-to-end de imágenes aprobado.
 - Logo público: asset local en `src/LaboratorioTlahuac.Web/src/assets/brand/logo-ldt.webp`, servido como `/assets/brand/logo-ldt.webp`.
 - Login: ruta pública `/login`, fuera del layout privado.
 - App privada: rutas bajo `/app`, renderizadas por `PrivateLayoutComponent`.
@@ -157,6 +157,7 @@ Imágenes persistentes Fase 3.5.4.1:
 - Escritura por streaming a temporal exclusivo, rename dentro de la misma raíz y compensación del archivo nuevo si falla la base.
 - `ImagePath` acepta assets heredados y `/api/catalog/images/{fileName}` generado. No hay migración ni cambio de modelo.
 - DEV activo: commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`; storage `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` con `www-data:www-data`, `0750` y escritura del proceso validada.
+- Estado: **CERRADA EN DEV**. El archivo probado sobrevivió al release posterior `dev-44-8c2f92b`; GET público y render continuaron disponibles.
 
 UI de imágenes Fase 3.5.4.2:
 
@@ -165,6 +166,9 @@ UI de imágenes Fase 3.5.4.2:
 - El frontend acepta únicamente la allowlist `CATALOG_IMAGE_OPTIONS` o `/api/catalog/images/{32 hex}.{webp|jpg|jpeg|png}`; rechaza otras rutas `/api`, esquemas y URLs arbitrarias.
 - La validación UI limita a `2_097_152` bytes y MIME/extensiones WebP/JPEG/PNG; backend conserva validación de firma y autorización.
 - `catalog.manage` controla acciones; `catalog.view` queda readonly. No cambian auth, guards, cookies ni política XSRF.
+- Estado: **CERRADA EN DEV**. QA end-to-end aprobó selección, preview, upload multipart/XSRF, reemplazo, render público y desasociación.
+
+Semántica de ciclo de vida: DELETE establece `ImagePath = null` y no borra el archivo físico. Por ello, después de desasociar, `/api/catalog/public` y `/catalogo` dejan de referenciar/mostrar la imagen, pero el GET directo puede seguir respondiendo `200`. Inventario de huérfanos, retención, limpieza segura, backup automatizado, WebP, upload de sección y galería/CDN/cloud storage son backlog futuro, no fallas arquitectónicas de 3.5.4.
 
 UI catálogo administrable Fase 3.5.2:
 

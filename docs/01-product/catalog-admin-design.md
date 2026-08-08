@@ -10,11 +10,13 @@ Actualización Fase 3.5.3, 2026-07-10: `/catalogo` público queda implementado l
 
 Cierre QA DEV Fase 3.5.3, 2026-08-08: commit `8be9e14ec8cda5e8486770a77733a4413e456e96` desplegado con GitHub Actions `success`; `/health`, `/catalogo` y `/api/catalog/public` sin sesión respondieron `200`. Activar/desactivar productos y cambiar nombre/precio desde `/app/admin/catalogo` se reflejó correctamente en `/catalogo`. El fallback forzado con API bloqueada/offline no se probó en DEV y queda como cobertura manual opcional. No se modificó código funcional para este cierre.
 
-Actualización Fase 3.5.4.0, 2026-08-08: quedó definido el diseño operativo previo al upload en `docs/01-product/catalog-image-upload-design.md`. La estrategia MVP usa `${LDT_APP_ROOT}/shared/catalog-images`, fuera de releases, sirve archivos mediante `GET /api/catalog/images/{fileName}` y guarda `/api/catalog/images/{fileName}` en el `ImagePath` del producto. Esta subfase no implementa código, migraciones, frontend ni cambios de deploy.
+Actualización Fase 3.5.4.0, 2026-08-08: **CERRADA**. Quedó definido el diseño operativo en `docs/01-product/catalog-image-upload-design.md`. La estrategia MVP usa `${LDT_APP_ROOT}/shared/catalog-images`, fuera de releases, sirve archivos mediante `GET /api/catalog/images/{fileName}` y guarda esa ruta en el `ImagePath` del producto.
 
-Actualización Fase 3.5.4.1, 2026-08-08: backend upload/reemplazo/desasociación desplegado y validado en DEV en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`, con storage persistente preparado para `www-data`.
+Actualización Fase 3.5.4.1, 2026-08-08: **CERRADA EN DEV**. Backend upload/reemplazo/desasociación desplegado en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, con storage persistente preparado para `www-data` y flujo POST/GET/DELETE validado.
 
-Actualización Fase 3.5.4.2, 2026-08-08: UI implementada localmente bajo `/app/admin/catalogo` solo para productos existentes, con selector heredado, preview, multipart/XSRF, validación hasta 2 MB, reemplazo y desasociación. Deploy/QA DEV pendientes.
+Actualización Fase 3.5.4.2, 2026-08-08: **CERRADA EN DEV**. UI desplegada bajo `/app/admin/catalogo` en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con selector heredado, preview, multipart/XSRF, validación hasta 2 MB, reemplazo y desasociación.
+
+Fase 3.5.4 completa: **QA end-to-end APROBADO EN DEV**. La persistencia se confirmó después de `dev-44-8c2f92b`; DELETE quitó la referencia pública sin borrar el archivo físico, conforme al diseño.
 
 ## Resumen Ejecutivo
 
@@ -22,7 +24,7 @@ El catálogo público actual de `/catalogo` ya funciona y no debe romperse. Desd
 
 La estrategia incremental se ejecutó en orden: migración/seed y endpoints, UI con selección de assets, consumo público con fallback, backend de almacenamiento persistente y finalmente UI de upload de productos. Fase 3.5.4.2 conserva el selector heredado y agrega carga/reemplazo/desasociación sin cambiar el modelo ni `/catalogo`.
 
-Siguiente paso recomendado: desplegar Fase 3.5.4.2 y ejecutar QA end-to-end de upload/persistencia en DEV.
+Siguiente paso canónico fuera del catálogo: validar Fase 3.2 con impresora térmica real en DEV, según `docs/ROADMAP.md`.
 
 ## Estado Actual
 
@@ -32,8 +34,8 @@ Siguiente paso recomendado: desplegar Fase 3.5.4.2 y ejecutar QA end-to-end de u
 - Existe backend de catálogo desde Fase 3.5.1.
 - Existen entidades `CatalogSection` y `CatalogProduct`, migración `20260705054221_AddCatalogManagement` y endpoints de catálogo.
 - Existe UI de administración de precios e imágenes existentes bajo `/app/admin/catalogo` desde Fase 3.5.2.
-- El backend ya permite carga/desasociación por API; todavía no existe control de upload en `/app/admin/catalogo`.
-- Las imágenes del catálogo viven como assets locales.
+- Backend y UI permiten carga, reemplazo y desasociación de producto desde `/app/admin/catalogo`.
+- Las imágenes del catálogo pueden ser assets locales heredados o archivos persistentes servidos por `/api/catalog/images/{fileName}`.
 - La app privada actual vive bajo `/app`.
 - Los módulos admin actuales son `/app/admin/usuarios`, `/app/admin/catalogo` y `/app/admin/roles`.
 - `/login` sigue siendo la entrada pública al sistema privado.
@@ -439,7 +441,7 @@ Usar Opción A en Fases 3.5.1 a 3.5.3.
 
 La Fase 3.5.4.0 ya definió:
 
-- Carpeta persistente `${LDT_APP_ROOT}/shared/catalog-images`, con ruta DEV esperada `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` pendiente de verificación operativa.
+- Carpeta persistente `${LDT_APP_ROOT}/shared/catalog-images`, con ruta DEV verificada `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`.
 - Ruta pública `GET /api/catalog/images/{fileName}` y `ImagePath` `/api/catalog/images/{fileName}`.
 - Máximo 2 MB; `.webp`, `.jpg`, `.jpeg` y `.png`; validación de extensión, MIME y firma.
 - Naming único generado por servidor, bloqueo de path traversal y rechazo de URLs externas.
@@ -533,7 +535,7 @@ Exclusiones:
 
 ### Fase 3.5.4.0 - Diseño Operativo De Almacenamiento
 
-Estado: documentada el 2026-08-08.
+Estado: **CERRADA** el 2026-08-08.
 
 Alcance:
 
@@ -543,7 +545,7 @@ Alcance:
 
 ### Fase 3.5.4.1 - Backend Upload/Reemplazo De Imágenes
 
-Estado: implementada, desplegada y validada operativamente en DEV el 2026-08-08.
+Estado: **CERRADA EN DEV** el 2026-08-08.
 
 Alcance:
 
@@ -562,7 +564,7 @@ Exclusiones:
 
 ### Fase 3.5.4.2 - UI Upload/Reemplazo De Imágenes
 
-Estado: implementada localmente el 2026-08-08; deploy/QA DEV pendiente.
+Estado: **CERRADA EN DEV** el 2026-08-08; QA end-to-end aprobado.
 
 Alcance implementado:
 
@@ -683,6 +685,8 @@ Para Fase 3.5.4.0:
 - Eliminación de `catalog-data.ts` antes de cerrar la transición pública.
 - Cambios de deploy.
 - Cambios de auth/cookies/XSRF fuera de registrar nuevos permisos.
+- Inventario/limpieza automática de archivos huérfanos o política de retención sin backup probado.
+- Conversión/recompresión WebP, CDN o cloud storage.
 
 ## Validaciones Con Cliente
 
@@ -699,4 +703,4 @@ Antes de exponer cambios administrables al público, validar:
 
 ## Siguiente Fase Implementable
 
-Deploy DEV y primera prueba real end-to-end de Fase 3.5.4.2, siguiendo `docs/08-qa/catalog-image-upload-ui-qa.md`.
+Fase 3.5.4 no requiere otra subfase para su cierre: su QA end-to-end está aprobado. La siguiente prioridad técnica canónica es validar Fase 3.2 con impresora térmica real en DEV. Las mejoras de ciclo de vida y almacenamiento de imágenes permanecen como backlog futuro, no bugs.

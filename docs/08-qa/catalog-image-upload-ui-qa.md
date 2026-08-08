@@ -4,7 +4,7 @@ Fase 3.5.4.2 — UI para subir, reemplazar y desasociar imágenes de productos d
 
 ## Estado
 
-Fase 3.5.4.2 desplegada en DEV y QA funcional parcial aprobado para upload, preview y render público. La persistencia entre releases y la desasociación final permanecen pendientes.
+Fase 3.5.4.2 **CERRADA EN DEV** y Fase 3.5.4 completa con QA end-to-end **APROBADO** para upload, preview, reemplazo, persistencia entre releases, render público y desasociación.
 
 Commit UI desplegado: `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`.
 
@@ -21,7 +21,7 @@ Backend DEV disponible y validado operativamente:
 
 No se registran valores secretos en este documento.
 
-## QA Funcional Parcial DEV — 2026-08-08
+## QA Funcional End-To-End DEV — 2026-08-08
 
 | Caso | Resultado |
 | --- | --- |
@@ -38,8 +38,16 @@ No se registran valores secretos en este documento.
 | Owner/group y modo del archivo | `www-data:www-data`, `0644` |
 | Storage | `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` |
 | Owner/group y modo del directorio | `www-data:www-data`, `0750` |
+| GET público del archivo | `200`, `image/jpeg`, `86688` bytes |
+| Reemplazo desde admin | OK |
+| Catálogo público muestra reemplazo | OK |
+| Persistencia después de `dev-44-8c2f92b` | OK |
+| Quitar/desasociar desde UI | OK |
+| API pública deja de referenciar el archivo | OK |
+| Catálogo público deja de mostrar la imagen | OK |
+| Archivo físico y GET directo tras desasociar | Permanecen; GET `200` intencional |
 
-La imagen continúa asociada al producto para ejecutar la prueba posterior a otro deploy. Esto confirma la asociación y lectura actuales, pero todavía no confirma persistencia entre releases.
+El nombre concreto del archivo se conserva solo como evidencia efímera de QA, no como requisito permanente. DELETE desasocia el producto y no elimina físicamente el archivo.
 
 ## Cobertura Implementada
 
@@ -63,16 +71,16 @@ La imagen continúa asociada al producto para ejecutar la prueba posterior a otr
 - [x] 4. Confirmar preview local antes de enviar.
 - [x] 5. Pulsar `Subir imagen` o `Reemplazar imagen`.
 - [x] 6. Confirmar preview servido desde `/api/catalog/images/...` después del upload.
-- [ ] 7. Recargar `/app/admin/catalogo`.
-- [ ] 8. Confirmar que la imagen persiste.
+- [x] 7. Recargar `/app/admin/catalogo`.
+- [x] 8. Confirmar que la imagen persiste.
 - [x] 9. Abrir `/catalogo`.
 - [x] 10. Confirmar que la imagen nueva aparece públicamente.
-- [ ] 11. Reemplazarla con otra imagen válida.
-- [ ] 12. Confirmar que `imagePath` cambia a otro GUID.
-- [ ] 13. Confirmar que la imagen nueva aparece en admin y público.
-- [ ] 14. Pulsar `Quitar imagen` y aceptar `¿Quitar la imagen de este producto?`.
-- [ ] 15. Confirmar `Imagen desasociada.` y estado `Sin imagen`.
-- [ ] 16. Confirmar que `/catalogo` actualiza su comportamiento visual/placeholder.
+- [x] 11. Reemplazarla con otra imagen válida.
+- [x] 12. Confirmar que `imagePath` cambia a otro GUID.
+- [x] 13. Confirmar que la imagen nueva aparece en admin y público.
+- [x] 14. Pulsar `Quitar imagen` y aceptar `¿Quitar la imagen de este producto?`.
+- [x] 15. Confirmar `Imagen desasociada.` y estado `Sin imagen`.
+- [x] 16. Confirmar que `/catalogo` deja de mostrar la imagen desasociada.
 
 ## Checklist Manual DEV — Errores
 
@@ -90,7 +98,7 @@ La imagen continúa asociada al producto para ejecutar la prueba posterior a otr
 ## Checklist Manual DEV — Persistencia
 
 - [x] 24. Después de upload, verificar que el archivo existe en `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` sin imprimir contenido sensible ni rutas adicionales.
-- [ ] 25. Ejecutar otro deploy DEV y confirmar que la URL sigue sirviendo la imagen; si no se ejecuta ahora, conservar esta prueba como paso obligatorio posterior.
+- [x] 25. Después del release backend `dev-44-8c2f92b`, confirmar que archivo, URL pública e imagen visible persisten.
 
 ## Estados HTTP Esperados En UI
 
@@ -114,6 +122,11 @@ La imagen continúa asociada al producto para ejecutar la prueba posterior a otr
 - `git diff --check`: correcto.
 - Búsquedas obligatorias ejecutadas; patrones sensibles limitados a nombres de archivo.
 
-## Siguiente Paso
+## Backlog Futuro, No Bugs
 
-Ejecutar otro deploy DEV y confirmar que `29b1d5f129af436a80b0c951555299d2.jpg` continúa asociado y servido. Después, validar por separado la desasociación/DELETE final y su comportamiento público. Ninguno de esos dos puntos se considera aprobado todavía.
+- Inventario de archivos huérfanos y política de retención.
+- Limpieza segura de imágenes no referenciadas.
+- Backup automatizado de `shared/catalog-images`.
+- Posible conversión/recompresión WebP.
+- Upload de imagen de sección.
+- Galería múltiple, CDN o cloud storage.

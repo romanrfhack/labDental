@@ -6,7 +6,52 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
-## 2026-08-08 - Registro QA DEV Parcial Fase 3.5.4.2
+## 2026-08-08 - Cierre Documental QA DEV End-To-End Fase 3.5.4
+
+### Estado Cerrado
+
+- Fase 3.5.4.0: **CERRADA**.
+- Fase 3.5.4.1: **CERRADA EN DEV**; backend desplegado en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`.
+- Fase 3.5.4.2: **CERRADA EN DEV**; UI desplegada en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, GitHub Actions `success`.
+- Fase 3.5.4 completa: **QA end-to-end APROBADO EN DEV**.
+
+### Evidencia De Cierre
+
+- Crear/editar producto, selección de imagen, preview antes/después, upload multipart/XSRF y almacenamiento físico: OK.
+- Archivo de evidencia: `29b1d5f129af436a80b0c951555299d2.jpg`, `86688` bytes, `www-data:www-data`, modo `0644`; se registra aquí como evidencia efímera de QA, no como requisito permanente.
+- GET público: `200`, `Content-Type: image/jpeg`, `86688` bytes; `/catalogo` mostró la imagen.
+- Reemplazo desde admin y actualización en catálogo público: OK.
+- Persistencia entre releases: OK después del release backend posterior `dev-44-8c2f92b`; archivo, GET público y render siguieron disponibles.
+- Desasociación desde UI: OK; `/api/catalog/public` dejó de referenciar el archivo y `/catalogo` dejó de mostrarlo.
+- El archivo físico permaneció y su GET directo siguió en `200`. Es el comportamiento intencional del MVP: DELETE desasocia y no elimina físicamente.
+
+### Alcance De Esta Tarea
+
+- Solo documentación; no se modificó código funcional, frontend/backend, migraciones, auth, guards, cookies, XSRF, permisos, deploy ni dependencias.
+- No se imprimieron secretos, no se ejecutó `dotnet user-secrets list`, no se usó `codex-cobranza-sql` y no se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `npm run build`: correcto; initial total `318.75 kB`, sin warning de budget.
+- `dotnet build`: correcto; 0 errores y 2 warnings `NU1903` conocidos en tests.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 156/156.
+- `git diff --check`: correcto.
+- Búsquedas solicitadas de `3.5.4`, `persistencia entre releases`, `desasoci`, `catalog-images` y el GUID de evidencia: ejecutadas.
+
+### Backlog Futuro, No Bugs
+
+- Inventario de archivos huérfanos y política de retención.
+- Limpieza segura de imágenes no referenciadas.
+- Backup automatizado de `shared/catalog-images`.
+- Posible conversión/recompresión WebP.
+- Upload de imagen de sección.
+- Galería múltiple, CDN o cloud storage.
+
+### Siguiente Fase Canónica Recomendada
+
+Validar Fase 3.2 con impresora térmica real en DEV, según `docs/ROADMAP.md`.
+
+## 2026-08-08 - Registro QA DEV Intermedio Fase 3.5.4.2
 
 ### Evidencia Registrada
 
@@ -15,8 +60,7 @@
 - Admin puede crear/editar producto; upload desde `/app/admin/catalogo`, preview y render público de la imagen: OK.
 - Archivo persistente creado: `29b1d5f129af436a80b0c951555299d2.jpg`, `86688` bytes, `www-data:www-data`, modo `0644`.
 - Storage: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, `www-data:www-data`, modo `0750`.
-- La imagen continúa asociada al producto para la prueba posterior a otro deploy.
-- Estado: desplegada en DEV y QA funcional de upload/render público aprobado; persistencia entre releases y desasociación final pendientes.
+- En este corte intermedio la imagen continuaba asociada para la prueba posterior; el cierre end-to-end registrado arriba ya aprobó persistencia, reemplazo y desasociación.
 
 ### Alcance Del Registro
 
@@ -25,10 +69,10 @@
 - No se hicieron cambios funcionales para forzar la prueba.
 - No se imprimieron secretos, no se usó `codex-cobranza-sql` y no se hizo commit.
 
-### Pendientes Exactos
+### Pendientes De Ese Corte, Cerrados Posteriormente
 
-1. Ejecutar otro deploy DEV y confirmar que el archivo, su asociación y su URL pública sobreviven al cambio de release.
-2. Ejecutar la prueba final de desasociación/DELETE y confirmar el resultado en admin y `/catalogo`, recordando que DELETE no borra físicamente el archivo.
+1. Cerrado: el release `dev-44-8c2f92b` confirmó que archivo, asociación y URL pública sobrevivían al cambio de release.
+2. Cerrado: la desasociación/DELETE se confirmó en admin, API pública y `/catalogo`; DELETE no borró físicamente el archivo.
 
 ### Validaciones Solicitadas
 
@@ -83,7 +127,7 @@
 
 ### Siguiente Paso Recomendado
 
-Ejecutar otro deploy DEV para validar persistencia entre releases de la imagen asociada y, después, cerrar la desasociación/DELETE final.
+Paso histórico ya completado por el cierre end-to-end registrado al inicio de la bitácora.
 
 ## 2026-08-08 - Fase 3.5.4.1 Backend Upload De Imágenes De Catálogo
 

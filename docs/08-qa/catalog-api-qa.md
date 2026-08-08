@@ -4,6 +4,8 @@ Fase 3.5.1 - backend catálogo administrable + migración + seed inicial.
 
 Actualización Fase 3.5.4.1, 2026-08-08: se agregaron pruebas API para POST/DELETE de imagen y GET público con almacenamiento temporal aislado. La matriz detallada, status codes y checklist DEV están en `docs/08-qa/catalog-image-upload-api-qa.md`.
 
+Cierre Fase 3.5.4, 2026-08-08: Fase 3.5.4.0 **CERRADA**, 3.5.4.1 **CERRADA EN DEV**, 3.5.4.2 **CERRADA EN DEV** y QA end-to-end completo **APROBADO**. POST multipart/XSRF, GET público, reemplazo, persistencia después de `dev-44-8c2f92b` y DELETE/desasociación quedaron validados. DELETE quitó `imagePath` de la API pública sin borrar el archivo físico.
+
 ## Cierre QA DEV
 
 Fecha: 2026-07-05.
@@ -110,11 +112,11 @@ Cobertura:
 - DELETE desasocia sin borrar; el catálogo público devuelve el nuevo `imagePath`.
 - El validador acepta assets heredados y rutas nuevas generadas; rechaza URL externa y path traversal.
 
-## Exclusiones Confirmadas
+## Exclusiones Confirmadas De Fase 3.5.1
 
 - No se modificó `/catalogo` para consumir API.
 - La UI admin se implementó después, en Fase 3.5.2, consumiendo estos endpoints existentes.
-- No se implementó upload de imágenes.
+- En Fase 3.5.1 no se implementó upload de imágenes; se agregó y cerró posteriormente en Fase 3.5.4.
 - No se borró `catalog-data.ts`.
 - No se movieron assets.
 - No se cambiaron rutas públicas.

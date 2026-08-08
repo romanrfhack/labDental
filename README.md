@@ -4,9 +4,9 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 
 ## Estado Actual
 
-- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4.0 documentada como análisis técnico previo de entregas/repartidor mobile-first, Fase 3.4.1 implementada para backend delivery MVP + permisos, Fase 3.4.2 implementada para UI admin de entregas desde órdenes, Fase 3.4.3 implementada para UI mobile-first de repartidor bajo `/app/entregas`, Fase 3.4.3.1 implementada para redirect post-login por permisos y reintento de `FailedDelivery`, Fase 3.5.1 implementada y cerrada en DEV como backend catálogo administrable + migración + seed inicial, Fase 3.5.2 implementada y cerrada en DEV como UI admin de catálogo/precios, Fase 3.5.4.1 desplegada y validada en DEV como backend de imágenes persistentes, y Fase 3.5.4.2 implementada localmente como UI de upload/reemplazo/desasociación bajo `/app/admin/catalogo`.
+- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4 implementada para entregas/repartidor mobile-first y Fase 3.5 cerrada en DEV hasta 3.5.4: diseño 3.5.4.0 cerrado, backend 3.5.4.1 cerrado en DEV, UI 3.5.4.2 cerrada en DEV y QA end-to-end completo aprobado para upload, reemplazo, persistencia entre releases y desasociación.
 - Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; Fase 3.5.3 cerrada en DEV con `/catalogo` consumiendo `GET /api/catalog/public`, reflejando cambios administrados y conservando fallback a `catalog-data.ts`; contenido final del cliente pendiente.
-- Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev`; backend de imágenes en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`, GitHub Actions `success`, y `/health`, `/catalogo` y `/api/catalog/public` en `200`. La UI 3.5.4.2 aún requiere deploy/QA DEV.
+- Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev`; backend de imágenes en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, UI en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, GitHub Actions `success`, y `/health`, `/catalogo`, `/api/catalog/public` y GET público de la imagen probada en `200`. La persistencia se confirmó después del release backend `dev-44-8c2f92b`; la desasociación dejó de publicar la imagen sin eliminar el archivo físico, conforme al diseño.
 - Deploy productivo: pendiente de plataforma, DNS, HTTPS, variables y base productiva.
 
 La Fase 1 / Etapa 7 corresponde al MVP administrativo. La Fase 0/Fase 1 del sitio público corresponde a un frente separado.
@@ -114,6 +114,8 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
 ## Próximos Pasos
 
-1. Desplegar Fase 3.5.4.2 a DEV y ejecutar la primera prueba real end-to-end de upload, reemplazo, desasociación y persistencia.
-2. Validar Fase 3.2 en DEV con impresora térmica real y ajustar escala/márgenes del navegador si hace falta.
+1. Validar Fase 3.2 en DEV con impresora térmica real y ajustar escala/márgenes del navegador si hace falta.
+2. Cerrar la validación manual del usuario QA limitado y `/app/access-denied` si aún falta evidencia humana.
 3. Ejecutar de forma opcional la prueba forzada del fallback de `/catalogo` con la API bloqueada/offline.
+
+Backlog futuro de imágenes, sin tratarlo como bug de Fase 3.5.4: inventario de huérfanos, política de retención, limpieza segura, backup automatizado de `shared/catalog-images`, posible conversión/recompresión WebP, upload de imagen de sección y galería múltiple/CDN/cloud storage.

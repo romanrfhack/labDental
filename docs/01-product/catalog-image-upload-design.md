@@ -1,10 +1,10 @@
 # Diseño Operativo De Almacenamiento De Imágenes Del Catálogo
 
-Fase 3.5.4.0, 2026-08-08. Esta fase define el almacenamiento persistente y el contrato operativo previo a implementar carga/reemplazo de imágenes desde `/app/admin/catalogo`.
+Fase 3.5.4.0, 2026-08-08: **CERRADA**. Define el almacenamiento persistente y el contrato operativo de carga/reemplazo de imágenes desde `/app/admin/catalogo`.
 
-Actualización Fase 3.5.4.1, 2026-08-08: el backend quedó implementado, desplegado y validado operativamente en DEV en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`. Existen POST/DELETE por producto, GET público, almacenamiento tipado, validación hasta 2 MB, nombres GUID y pruebas API aisladas. No se creó migración.
+Actualización Fase 3.5.4.1, 2026-08-08: **CERRADA EN DEV**. El backend quedó implementado y desplegado en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`. Existen POST/DELETE por producto, GET público, almacenamiento tipado, validación hasta 2 MB, nombres GUID y pruebas API aisladas. No se creó migración.
 
-Actualización Fase 3.5.4.2, 2026-08-08: la UI quedó desplegada en DEV en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`. El QA funcional real aprobó upload, preview y render público. El archivo `29b1d5f129af436a80b0c951555299d2.jpg` quedó en el storage persistente con `86688` bytes, `www-data:www-data` y modo `0644`. Estado: desplegada en DEV y QA funcional de upload/render público aprobado; persistencia entre releases y desasociación final pendientes.
+Actualización Fase 3.5.4.2, 2026-08-08: **CERRADA EN DEV**. La UI quedó desplegada en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`. El QA real aprobó selección, preview, upload multipart/XSRF, reemplazo, render público, persistencia tras `dev-44-8c2f92b` y desasociación. Fase 3.5.4 completa: **QA end-to-end APROBADO EN DEV**.
 
 ## Resultado De La Fase
 
@@ -94,7 +94,7 @@ No se recomienda servir `${LDT_APP_ROOT}/shared/catalog-images` mediante alias d
 ### Ubicación Y Configuración
 
 - Carpeta efectiva: `${LDT_APP_ROOT}/shared/catalog-images`.
-- Ruta DEV esperada, pendiente de verificación: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`.
+- Ruta DEV verificada: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`.
 - La ruta se configura por ambiente; no se deriva de `backend/current` ni del content root del release.
 - El proceso debe fallar de forma explícita y segura al subir si la configuración falta, la carpeta no existe o no tiene permisos de escritura. No debe hacer fallback silencioso a un release ni a `/tmp`.
 - La lectura pública solo resuelve archivos dentro de esa raíz configurada.
@@ -194,7 +194,7 @@ Las imágenes estáticas actuales continúan con rutas `assets/catalog/products/
 
 ## Impacto Operativo En Deploy
 
-Fase 3.5.4.1 requerirá preparar el ambiente antes de activar la UI:
+El diseño de Fase 3.5.4.1 requirió preparar el ambiente antes de activar la UI:
 
 1. Confirmar el valor real de `LDT_APP_ROOT` sin imprimir secretos.
 2. Crear `${LDT_APP_ROOT}/shared/catalog-images` si no existe.
@@ -205,9 +205,9 @@ Fase 3.5.4.1 requerirá preparar el ambiente antes de activar la UI:
 7. Confirmar que el límite de request body del proxy admite 2 MB más overhead multipart.
 8. Desplegar backend y validar POST/GET/DELETE, health y persistencia después de un segundo deploy/rollback.
 
-El script actual ya preserva `shared` porque solo poda `backend/releases`, `frontend/releases` y migraciones antiguas. Sin embargo, la creación de `catalog-images`, ownership y configuración todavía no están implementadas. Cualquier cambio posterior al script o al VPS debe documentarse en `docs/05-delivery/DEPLOYMENT.md` y validarse primero en DEV.
+El script actual ya preserva `shared` porque solo poda `backend/releases`, `frontend/releases` y migraciones antiguas. La creación de `catalog-images`, ownership y configuración no están automatizadas en el script, pero quedaron preparadas y validadas operativamente en DEV. Cualquier automatización posterior del script o cambio al VPS debe documentarse en `docs/05-delivery/DEPLOYMENT.md` y validarse primero en DEV.
 
-No se requiere cambio Nginx si el proxy actual enruta todo `/api`. Esta condición debe verificarse; no se asume como evidencia directa porque la configuración no está en el repositorio.
+No se requirió cambio Nginx: el GET público real de la imagen respondió `200` a través del dominio DEV. La configuración exacta del proxy sigue sin estar versionada en el repositorio.
 
 ## Backup Y Restauración
 
@@ -269,10 +269,15 @@ No se define todavía una retención automatizada. Como baseline operativo se re
 - `catalog.manage` ve controles mutables; `catalog.view` queda readonly.
 - DELETE significa desasociar. Los archivos anteriores y huérfanos no se borran; cleanup queda para una fase futura.
 
-## Pendiente Operativo DEV
+## Cierre Operativo DEV
 
-El storage, backend y UI DEV están activos. Upload, preview y render público quedaron aprobados con el archivo `29b1d5f129af436a80b0c951555299d2.jpg`, que continúa asociado al producto. Falta ejecutar otro deploy y confirmar que el archivo, su asociación y su URL pública sobreviven al cambio de release. La desasociación/DELETE final también debe probarse después y no se considera validada todavía.
+El storage, backend y UI DEV están activos. Upload, preview, reemplazo, render público, persistencia entre releases y desasociación quedaron aprobados. Después de `dev-44-8c2f92b`, el archivo físico y su GET público sobrevivieron y la imagen siguió visible. Después de DELETE, API y catálogo público dejaron de referenciar/mostrar la imagen; el archivo físico y su GET directo siguieron disponibles, que es el comportamiento intencional del MVP.
 
-## Siguiente Fase Recomendada
+## Backlog Futuro, No Bugs
 
-Prueba final de persistencia entre releases para la imagen ya asociada y, después, prueba final independiente de desasociación/DELETE.
+- Inventario de archivos huérfanos y política de retención.
+- Limpieza segura de imágenes no referenciadas.
+- Backup automatizado de `shared/catalog-images`.
+- Posible conversión/recompresión WebP.
+- Upload de imagen de sección.
+- Galería múltiple, CDN o cloud storage.
