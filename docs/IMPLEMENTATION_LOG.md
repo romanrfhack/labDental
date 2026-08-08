@@ -63,11 +63,24 @@ Se corrigió `selectSectionFromLocation()` para:
 - `git diff --check`: correcto.
 - Validaciones focalizadas previas: TypeScript estricto, mapper de API, historial `pushState`/`popstate`, CSS parseable y composición estática en 390 px y 1440 px.
 
+
+### Cierre QA DEV PUB-UX-2.4
+
+- Implementación integrada en `dev` mediante PR #1, PR #2 y PR #3; commit funcional final `b34b2509087f6a846fc9a9f06f075ebdfdb4e817`.
+- Validación previa: Angular build correcto con initial total `321.10 kB`; .NET build correcto; Domain 1/1, Application 1/1 y API 158/158; `git diff --check` correcto.
+- Smoke técnico DEV final: GitHub Actions run `31276207073`, resultado `success` en el primer intento.
+- `/health`, `/catalogo` y `/api/catalog/public`: HTTP `200`.
+- Respuesta pública: 12 categorías y 41 productos con estructura válida.
+- Chrome headless confirmó el DOM lazy-loaded con el nuevo hero, selector de categorías, CTA y tarjetas `catalog-product-card`.
+- Se generaron capturas DEV de 1440 x 1200 y 390 x 1200 con `prefers-reduced-motion`; revisión visual sin scroll horizontal, recortes, problemas de contraste ni bloqueantes responsive.
+- Una captura anterior mostró el hero atenuado porque tomó el primer frame de la transición; no era una falla de cascada ni despliegue. La captura estable con movimiento reducido confirmó el estado final esperado.
+- El PR temporal de smoke no fue fusionado y su rama se realineó con `dev` después de conservar la evidencia.
+
 ### Estado Y Siguiente Paso
 
-- `PUB-UX-2.1`, `PUB-UX-2.2` y `PUB-UX-2.3`: implementadas.
-- `PUB-UX-2.4`: pendiente confirmar el workflow de despliegue del commit final, smoke tests de `/health`, `/catalogo` y `/api/catalog/public`, y pase visual humano en DEV.
-- Después del cierre DEV corresponde iniciar `PUB-UX-3` para home, servicios, contacto y encabezado público.
+- `PUB-UX-2.1`, `PUB-UX-2.2`, `PUB-UX-2.3` y `PUB-UX-2.4`: **cerradas técnicamente en DEV**.
+- Aceptación visual humana final del responsable: pendiente; no bloquea el cierre técnico ni el funcionamiento publicado.
+- Siguiente fase: `PUB-UX-3` para home, servicios, contacto y encabezado público.
 
 ## 2026-08-08 - Cierre Documental QA DEV End-To-End Fase 3.5.4
 
