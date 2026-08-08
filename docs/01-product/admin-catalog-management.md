@@ -28,7 +28,7 @@ Actualización Fase 3.5.4.0, 2026-08-08: el diseño operativo de almacenamiento 
 
 Actualización Fase 3.5.4.1, 2026-08-08: el backend de upload/reemplazo/desasociación está desplegado y validado en DEV en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`; el storage persistente está preparado para `www-data`.
 
-Actualización Fase 3.5.4.2, 2026-08-08: `/app/admin/catalogo` agrega localmente upload, reemplazo y desasociación solo para productos existentes. Mantiene selección de assets, preview, `catalog.view` readonly y autoridad backend. Deploy/QA DEV pendientes.
+Actualización Fase 3.5.4.2, 2026-08-08: `/app/admin/catalogo` está desplegado en DEV en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`. Admin puede crear/editar producto; upload, preview y render público quedaron aprobados. La imagen real continúa asociada al producto. Estado: desplegada en DEV y QA funcional de upload/render público aprobado; persistencia entre releases y desasociación final pendientes.
 
 ## Propósito Futuro
 
@@ -78,7 +78,7 @@ Antes de implementar se debe definir:
 - Migración del catálogo desde `catalog-data.ts` a backend/base de datos. Implementado en Fase 3.5.1 con seed inicial idempotente.
 - Modelo de datos para secciones, productos, precios, imágenes, estados y ordenamiento. Implementado en Fase 3.5.1 con `CatalogSection` y `CatalogProduct` con `ImagePath` simple para MVP.
 - Endpoints requeridos y reglas de autorización. Implementado en Fase 3.5.1: `GET /api/catalog/public` y endpoints privados bajo `/api/admin/catalog`.
-- Almacenamiento de imágenes: definido en Fase 3.5.4.0 como `${LDT_APP_ROOT}/shared/catalog-images`, configurado por ambiente y fuera de releases. La ruta DEV esperada `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` debe verificarse antes de activar upload.
+- Almacenamiento de imágenes: definido en Fase 3.5.4.0 como `${LDT_APP_ROOT}/shared/catalog-images`, configurado por ambiente y fuera de releases. La ruta DEV `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` quedó verificada con `www-data:www-data`, modo `0750`, y un upload real de `86688` bytes.
 - Entrega pública: definida como `GET /api/catalog/images/{fileName}` para reutilizar el proxy de `/api`, sin requerir cambio Nginx si el prefijo completo ya se enruta al backend.
 - Reglas de validación: máximo 2 MB, extensiones `.webp`, `.jpg`, `.jpeg`, `.png`, MIME/firma coherentes, nombre único generado por servidor, bloqueo de path traversal y rechazo de URLs externas.
 - Persistencia: `ImagePath` acepta assets actuales y `/api/catalog/images/{fileName}`; reemplazo no borra el archivo anterior en el MVP.
@@ -113,6 +113,6 @@ La secuencia sugerida después de Fase 3.5.0 es:
 3. Fase 3.5.3: `/catalogo` público consume API con manejo de error/fallback de transición. Implementada localmente.
 4. Fase 3.5.4.0: diseño operativo de almacenamiento persistente, endpoints, seguridad y backup. Documentada.
 5. Fase 3.5.4.1: backend upload/reemplazo/desasociación de imágenes de catálogo. Desplegada y validada en DEV.
-6. Fase 3.5.4.2: UI upload/reemplazo/desasociación desde `/app/admin/catalogo`. Implementada localmente; deploy/QA DEV pendientes.
+6. Fase 3.5.4.2: UI upload/reemplazo/desasociación desde `/app/admin/catalogo`. Desplegada en DEV; QA funcional de upload/render público aprobado, con persistencia entre releases y desasociación final pendientes.
 
 El catálogo requiere modelo de datos, endpoints, almacenamiento de imágenes, permisos y reglas de publicación; por eso no conviene mezclarlo con el MVP operativo de entrega.

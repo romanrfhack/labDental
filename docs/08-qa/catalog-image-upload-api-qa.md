@@ -12,6 +12,18 @@ Fase 3.5.4.1 — backend upload/reemplazo/desasociación, 2026-08-08.
 - Storage: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, owner/group `www-data:www-data`, permisos `0750`, escritura de `www-data` validada.
 - `CatalogImages__StoragePath` configurado una sola vez en `/etc/laboratorio-tlahuac-dev/api.env`.
 
+## QA Real Parcial Con UI Fase 3.5.4.2 — 2026-08-08
+
+- Commit UI desplegado: `f9acb0dfa973bd131ab2850c69105c4a90d84470`; GitHub Actions `success`.
+- `/health`, `/api/catalog/public` y `/catalogo`: `200`.
+- POST real desde `/app/admin/catalogo`: OK; el producto público renderiza la imagen cargada.
+- Archivo creado: `29b1d5f129af436a80b0c951555299d2.jpg`, `86688` bytes, `www-data:www-data`, modo `0644`.
+- Storage: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, `www-data:www-data`, modo `0750`.
+- La imagen continúa asociada al producto para la prueba posterior a otro deploy.
+- Estado: desplegada en DEV y QA funcional de upload/render público aprobado; persistencia entre releases y desasociación final pendientes.
+
+Esta evidencia valida un POST/GET real y el almacenamiento físico actual. No valida todavía reemplazo, DELETE/desasociación ni supervivencia del archivo y su asociación después de cambiar de release.
+
 ## Alcance Automatizado
 
 - `POST /api/admin/catalog/products/{id}/image` con `multipart/form-data` y una sola parte `file`.
@@ -61,14 +73,14 @@ La decisión de la fase es usar `413 Payload Too Large` para el máximo de archi
 - [x] Crear `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` fuera de releases.
 - [x] Confirmar usuario/grupo efectivo de la API y asignar permisos mínimos de lectura/escritura; no usar `777`.
 - [x] Configurar `CatalogImages__StoragePath` fuera del repositorio.
-- [ ] Confirmar que Nginx/proxy admite 2 MB más overhead multipart y enruta `/api/catalog/images/*`.
+- [x] Confirmar con el archivo probado que Nginx/proxy admite el multipart usado y enruta `/api/catalog/images/*`.
 - [ ] Probar POST, GET, reemplazo y DELETE con Admin; confirmar `403` con Repartidor.
 - [ ] Confirmar que el archivo sigue disponible tras otro deploy y rollback controlado.
 - [ ] Respaldar/restaurar base y `shared/catalog-images` como un mismo punto temporal.
 
 ## Exclusiones
 
-- La UI de Fase 3.5.4.2 está implementada localmente; su QA DEV se documenta aparte.
+- La UI de Fase 3.5.4.2 está desplegada; su QA DEV parcial se documenta aparte.
 - Sin migración, conversión WebP, recomprensión, limpieza de huérfanos ni borrado físico en DELETE.
 - Sin cambios de `AuthService`, guards, cookies, política XSRF, deploy o dependencias.
 
@@ -78,4 +90,4 @@ La decisión de la fase es usar `413 Payload Too Large` para el máximo de archi
 - Suite completa: Domain 1/1, Application 1/1 y API 156/156.
 - `dotnet build`: 0 errores; permanecen 2 warnings `NU1903` conocidos en tests.
 - `npm run build`: correcto, initial total `317.77 kB`.
-- Backend DEV desplegado y validado operativamente; prueba real de upload desde la UI queda pendiente del deploy de 3.5.4.2.
+- Backend y UI DEV desplegados; POST/GET real y render público aprobados. Persistencia entre releases, reemplazo y DELETE/desasociación final permanecen pendientes.

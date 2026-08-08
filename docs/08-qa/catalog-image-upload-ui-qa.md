@@ -4,7 +4,9 @@ Fase 3.5.4.2 — UI para subir, reemplazar y desasociar imágenes de productos d
 
 ## Estado
 
-Implementación local completada y compilada. La primera prueba real end-to-end en DEV queda pendiente de desplegar estos cambios.
+Fase 3.5.4.2 desplegada en DEV y QA funcional parcial aprobado para upload, preview y render público. La persistencia entre releases y la desasociación final permanecen pendientes.
+
+Commit UI desplegado: `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`.
 
 Backend DEV disponible y validado operativamente:
 
@@ -18,6 +20,26 @@ Backend DEV disponible y validado operativamente:
 - `CatalogImages__StoragePath` está configurado una sola vez en `/etc/laboratorio-tlahuac-dev/api.env`.
 
 No se registran valores secretos en este documento.
+
+## QA Funcional Parcial DEV — 2026-08-08
+
+| Caso | Resultado |
+| --- | --- |
+| `GET /health` | `200` |
+| `GET /api/catalog/public` | `200` |
+| `GET /catalogo` | `200` |
+| Admin crea producto | OK |
+| Admin edita producto | OK |
+| Upload desde `/app/admin/catalogo` | OK |
+| Preview de imagen | OK |
+| Producto público muestra la imagen cargada | OK |
+| Archivo físico creado | `29b1d5f129af436a80b0c951555299d2.jpg` |
+| Tamaño del archivo | `86688` bytes |
+| Owner/group y modo del archivo | `www-data:www-data`, `0644` |
+| Storage | `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` |
+| Owner/group y modo del directorio | `www-data:www-data`, `0750` |
+
+La imagen continúa asociada al producto para ejecutar la prueba posterior a otro deploy. Esto confirma la asociación y lectura actuales, pero todavía no confirma persistencia entre releases.
 
 ## Cobertura Implementada
 
@@ -35,16 +57,16 @@ No se registran valores secretos en este documento.
 
 ## Checklist Manual DEV — Admin
 
-- [ ] 1. Abrir `/app/admin/catalogo` con Admin.
-- [ ] 2. Editar un producto existente.
-- [ ] 3. Elegir PNG/JPG/WebP de hasta 2 MB.
-- [ ] 4. Confirmar preview local antes de enviar.
-- [ ] 5. Pulsar `Subir imagen` o `Reemplazar imagen`.
-- [ ] 6. Confirmar `Imagen actualizada.` y preview servido desde `/api/catalog/images/...`.
+- [x] 1. Abrir `/app/admin/catalogo` con Admin.
+- [x] 2. Editar un producto existente.
+- [x] 3. Elegir PNG/JPG/WebP de hasta 2 MB.
+- [x] 4. Confirmar preview local antes de enviar.
+- [x] 5. Pulsar `Subir imagen` o `Reemplazar imagen`.
+- [x] 6. Confirmar preview servido desde `/api/catalog/images/...` después del upload.
 - [ ] 7. Recargar `/app/admin/catalogo`.
 - [ ] 8. Confirmar que la imagen persiste.
-- [ ] 9. Abrir `/catalogo`.
-- [ ] 10. Confirmar que la imagen nueva aparece públicamente.
+- [x] 9. Abrir `/catalogo`.
+- [x] 10. Confirmar que la imagen nueva aparece públicamente.
 - [ ] 11. Reemplazarla con otra imagen válida.
 - [ ] 12. Confirmar que `imagePath` cambia a otro GUID.
 - [ ] 13. Confirmar que la imagen nueva aparece en admin y público.
@@ -67,7 +89,7 @@ No se registran valores secretos en este documento.
 
 ## Checklist Manual DEV — Persistencia
 
-- [ ] 24. Después de upload, verificar que el archivo existe en `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` sin imprimir contenido sensible ni rutas adicionales.
+- [x] 24. Después de upload, verificar que el archivo existe en `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` sin imprimir contenido sensible ni rutas adicionales.
 - [ ] 25. Ejecutar otro deploy DEV y confirmar que la URL sigue sirviendo la imagen; si no se ejecuta ahora, conservar esta prueba como paso obligatorio posterior.
 
 ## Estados HTTP Esperados En UI
@@ -94,4 +116,4 @@ No se registran valores secretos en este documento.
 
 ## Siguiente Paso
 
-Desplegar la UI a DEV y ejecutar la primera prueba real end-to-end de upload, reemplazo, desasociación y persistencia después de deploy.
+Ejecutar otro deploy DEV y confirmar que `29b1d5f129af436a80b0c951555299d2.jpg` continúa asociado y servido. Después, validar por separado la desasociación/DELETE final y su comportamiento público. Ninguno de esos dos puntos se considera aprobado todavía.

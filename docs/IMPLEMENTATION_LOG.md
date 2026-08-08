@@ -6,6 +6,37 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-08-08 - Registro QA DEV Parcial Fase 3.5.4.2
+
+### Evidencia Registrada
+
+- Commit UI desplegado: `f9acb0dfa973bd131ab2850c69105c4a90d84470`; GitHub Actions `success`.
+- `/health`, `/api/catalog/public` y `/catalogo`: `200`.
+- Admin puede crear/editar producto; upload desde `/app/admin/catalogo`, preview y render público de la imagen: OK.
+- Archivo persistente creado: `29b1d5f129af436a80b0c951555299d2.jpg`, `86688` bytes, `www-data:www-data`, modo `0644`.
+- Storage: `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, `www-data:www-data`, modo `0750`.
+- La imagen continúa asociada al producto para la prueba posterior a otro deploy.
+- Estado: desplegada en DEV y QA funcional de upload/render público aprobado; persistencia entre releases y desasociación final pendientes.
+
+### Alcance Del Registro
+
+- Solo se actualizaron los ocho documentos solicitados.
+- No se modificó código, backend, frontend funcional, migraciones, auth, guards, cookies, XSRF, deploy ni dependencias.
+- No se hicieron cambios funcionales para forzar la prueba.
+- No se imprimieron secretos, no se usó `codex-cobranza-sql` y no se hizo commit.
+
+### Pendientes Exactos
+
+1. Ejecutar otro deploy DEV y confirmar que el archivo, su asociación y su URL pública sobreviven al cambio de release.
+2. Ejecutar la prueba final de desasociación/DELETE y confirmar el resultado en admin y `/catalogo`, recordando que DELETE no borra físicamente el archivo.
+
+### Validaciones Solicitadas
+
+- `npm run build`: correcto; initial total `318.75 kB`, sin warning de budget.
+- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos.
+- `dotnet test`: correcto; Domain 1/1, Application 1/1 y API 156/156.
+- `git diff --check`: correcto.
+
 ## 2026-08-08 - Fase 3.5.4.2 UI Upload De Imágenes De Productos
 
 ### Frontend Implementado
@@ -52,7 +83,7 @@
 
 ### Siguiente Paso Recomendado
 
-Desplegar Fase 3.5.4.2 a DEV y ejecutar la primera prueba real end-to-end de upload, reemplazo, desasociación y persistencia después de otro deploy.
+Ejecutar otro deploy DEV para validar persistencia entre releases de la imagen asociada y, después, cerrar la desasociación/DELETE final.
 
 ## 2026-08-08 - Fase 3.5.4.1 Backend Upload De Imágenes De Catálogo
 

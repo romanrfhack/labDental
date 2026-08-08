@@ -2,7 +2,23 @@
 
 Fase 3.5.2 - UI admin catálogo/precios con selección de imagen existente.
 
-Actualización Fase 3.5.4.2, 2026-08-08: la UI agrega localmente un bloque `Imagen del producto` con origen/preview, selección de asset heredado, archivo nuevo, upload/reemplazo y desasociación. Solo aplica a productos existentes y `catalog.manage`; secciones conservan selección de asset y `catalog.view` permanece readonly. QA DEV detallado: `docs/08-qa/catalog-image-upload-ui-qa.md`.
+Actualización Fase 3.5.4.2, 2026-08-08: la UI está desplegada en DEV en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`. El QA funcional parcial aprobó creación/edición de producto, upload, preview y render público. Solo aplica a productos existentes y `catalog.manage`; secciones conservan selección de asset y `catalog.view` permanece readonly. Persistencia entre releases y desasociación final siguen pendientes. QA DEV detallado: `docs/08-qa/catalog-image-upload-ui-qa.md`.
+
+## QA DEV Parcial Fase 3.5.4.2 - 2026-08-08
+
+| Caso | Resultado |
+| --- | --- |
+| Commit UI desplegado | `f9acb0dfa973bd131ab2850c69105c4a90d84470` |
+| GitHub Actions | `success` |
+| `/health` | `200` |
+| `/api/catalog/public` | `200` |
+| `/catalogo` | `200` |
+| Admin crea/edita producto | OK |
+| Upload desde `/app/admin/catalogo` | OK |
+| Preview de imagen | OK |
+| Producto público muestra imagen cargada | OK |
+
+Resultado: desplegada en DEV y QA funcional de upload/render público aprobado; persistencia entre releases y desasociación final pendientes.
 
 ## Cierre QA DEV - 2026-07-05
 
@@ -66,7 +82,7 @@ Resultado: integración admin → API pública → catálogo público OK, sin bu
 - Usuario sin sesión debe seguir redirigido a `/login`.
 - Usuario autenticado sin permiso debe seguir redirigido a `/app/access-denied`.
 - `/catalogo` público consume `GET /api/catalog/public` desde Fase 3.5.3 y conserva `catalog-data.ts` como fallback.
-- Upload/reemplazo/desasociación de producto está implementado localmente desde Fase 3.5.4.2; backend sigue siendo autoridad.
+- Upload/reemplazo/desasociación de producto está desplegado desde Fase 3.5.4.2; upload y render público tienen QA DEV aprobado, mientras reemplazo y desasociación final siguen pendientes. El backend sigue siendo autoridad.
 - No se crearon migraciones.
 - No se modificó backend, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
 
@@ -116,4 +132,4 @@ Resultado: integración admin → API pública → catálogo público OK, sin bu
 - El asset `protesis-removible-unidad-acrilica.jpg` existe en carpeta fuente, pero la configuración Angular actual copia `src/assets/**/*.webp`; por eso la allowlist UI usa los assets `.webp` existentes.
 - Las rutas `provisionales-yacket-*` y `protesis-removible-unidad-metalica..webp` se conservan por compatibilidad con assets existentes y se marcan visualmente como heredadas.
 - Fase 3.5.3 se implementó localmente sin modificar esta UI admin: `/catalogo` público consume `GET /api/catalog/public` y conserva fallback a `catalog-data.ts`.
-- Siguiente paso: desplegar Fase 3.5.4.2 y ejecutar el checklist end-to-end de `catalog-image-upload-ui-qa.md`.
+- Siguiente paso: ejecutar otro deploy para validar persistencia entre releases y, después, cerrar la prueba final de desasociación en `catalog-image-upload-ui-qa.md`.

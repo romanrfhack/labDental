@@ -40,7 +40,7 @@ Fuente detallada: `docs/00-governance/roadmap.md` y `docs/05-delivery/phase-1-mv
 - Fase 3.5.3: catálogo público consume API con fallback. Implementada el 2026-07-10 y cerrada en DEV el 2026-08-08 con commit `8be9e14ec8cda5e8486770a77733a4413e456e96`, GitHub Actions `success`, `/health` `200`, `/catalogo` `200` y `/api/catalog/public` sin sesión `200`. Activar/desactivar productos y cambiar nombre/precio desde admin se reflejó correctamente en `/catalogo`. El fallback forzado offline no se probó en DEV y queda como cobertura manual opcional. No cambia UI admin, backend, migraciones, upload, `AuthService`, guards, cookies, XSRF ni dependencias.
 - Fase 3.5.4.0: diseño operativo de almacenamiento de imágenes del catálogo. Documentada el 2026-08-08; define `${LDT_APP_ROOT}/shared/catalog-images` fuera de releases, ruta pública `GET /api/catalog/images/{fileName}`, `ImagePath` `/api/catalog/images/{fileName}`, POST/DELETE de imagen por producto, máximo 2 MB, formatos `.webp`/`.jpg`/`.jpeg`/`.png`, validación de extensión/MIME/firma, nombre único, bloqueo de path traversal, `catalog.manage`, lectura pública, exclusión de Repartidor, permisos de filesystem y backup/restore. No implementa código, migraciones, frontend ni cambios de deploy.
 - Fase 3.5.4.1: backend upload/reemplazo/desasociación de imágenes. Implementada, desplegada y validada operativamente en DEV el 2026-08-08 en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`; storage persistente preparado para `www-data`, endpoints/health públicos correctos y sin migración ni dependencias nuevas.
-- Fase 3.5.4.2: UI upload/reemplazo/desasociación desde `/app/admin/catalogo`. Implementada localmente el 2026-08-08 solo para productos, con multipart/XSRF, validación de 2 MB y WebP/JPEG/PNG, preview local, allowlist de assets/rutas server-generated y modo readonly; deploy y QA end-to-end DEV pendientes.
+- Fase 3.5.4.2: UI upload/reemplazo/desasociación desde `/app/admin/catalogo`. Desplegada en DEV el 2026-08-08 en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`; QA funcional de upload, preview y render público aprobado. El archivo real permanece asociado para la prueba posterior. Persistencia entre releases y desasociación final pendientes.
 
 ## Sitio Público Institucional
 
@@ -74,11 +74,11 @@ Las fases comerciales describen propuesta, alcance y aceptación con cliente. No
 
 ## Siguiente Prioridad Técnica
 
-Desplegar Fase 3.5.4.2 a DEV y ejecutar la primera prueba real end-to-end de upload, reemplazo, desasociación y persistencia posterior a deploy.
+Ejecutar otro deploy DEV para confirmar la persistencia entre releases de la imagen actualmente asociada; después validar la desasociación/DELETE final. No marcar ninguno de esos dos puntos como cerrado antes de la evidencia real.
 
 Fase 3.5.3 queda cerrada en DEV: `/catalogo` consume `GET /api/catalog/public`, refleja cambios administrados y conserva fallback local con `catalog-data.ts`.
 
-Fase 3.5.4.1 ya está activa en DEV y el storage está preparado. Fase 3.5.4.2 agrega solamente UI; no cambia backend, migraciones, auth, guards, cookies, XSRF, deploy ni `/catalogo`. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
+Fase 3.5.4.1 y Fase 3.5.4.2 ya están activas en DEV. Upload/render público está aprobado; el archivo real permanece en storage y asociado al producto. La fase UI no cambió backend, migraciones, auth, guards, cookies, XSRF, deploy ni `/catalogo`. Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
 
 ## Regla De Actualización
 

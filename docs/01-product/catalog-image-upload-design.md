@@ -4,7 +4,7 @@ Fase 3.5.4.0, 2026-08-08. Esta fase define el almacenamiento persistente y el co
 
 Actualización Fase 3.5.4.1, 2026-08-08: el backend quedó implementado, desplegado y validado operativamente en DEV en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release `dev-42-1b0384c`. Existen POST/DELETE por producto, GET público, almacenamiento tipado, validación hasta 2 MB, nombres GUID y pruebas API aisladas. No se creó migración.
 
-Actualización Fase 3.5.4.2, 2026-08-08: la UI quedó implementada localmente solo para productos en `/app/admin/catalogo`. Agrega multipart/XSRF, validación de archivo, preview local, reemplazo y desasociación; conserva assets heredados, modo readonly y el backend como autoridad. Deploy y QA end-to-end DEV quedan pendientes.
+Actualización Fase 3.5.4.2, 2026-08-08: la UI quedó desplegada en DEV en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, con GitHub Actions `success`. El QA funcional real aprobó upload, preview y render público. El archivo `29b1d5f129af436a80b0c951555299d2.jpg` quedó en el storage persistente con `86688` bytes, `www-data:www-data` y modo `0644`. Estado: desplegada en DEV y QA funcional de upload/render público aprobado; persistencia entre releases y desasociación final pendientes.
 
 ## Resultado De La Fase
 
@@ -271,8 +271,8 @@ No se define todavía una retención automatizada. Como baseline operativo se re
 
 ## Pendiente Operativo DEV
 
-El storage y backend DEV ya están preparados y activos. Falta desplegar 3.5.4.2, ejecutar el checklist de `docs/08-qa/catalog-image-upload-ui-qa.md` y confirmar que una imagen cargada sobrevive a otro deploy.
+El storage, backend y UI DEV están activos. Upload, preview y render público quedaron aprobados con el archivo `29b1d5f129af436a80b0c951555299d2.jpg`, que continúa asociado al producto. Falta ejecutar otro deploy y confirmar que el archivo, su asociación y su URL pública sobreviven al cambio de release. La desasociación/DELETE final también debe probarse después y no se considera validada todavía.
 
 ## Siguiente Fase Recomendada
 
-Deploy DEV y primera prueba real end-to-end de upload/persistencia para Fase 3.5.4.2.
+Prueba final de persistencia entre releases para la imagen ya asociada y, después, prueba final independiente de desasociación/DELETE.
