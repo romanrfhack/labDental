@@ -276,6 +276,32 @@ Pendientes de cliente:
 - Imágenes faltantes de `Servicios prostodónticos`.
 - Lighthouse o revisión equivalente queda para una fase posterior.
 
+
+## Estado PUB-UX-2 — Workspace Del Catálogo Público
+
+Estado: **cerrado técnicamente en DEV; aceptación visual humana final pendiente**.
+
+Experiencia vigente de `/catalogo`:
+
+- Una sola categoría activa controlada por el usuario; no existe autoplay ni cambio automático de contenido.
+- Escritorio usa panel lateral; tablet usa navegación horizontal; móvil usa selector nativo y tarjetas compactas horizontales.
+- La selección se identifica por `key`, actualiza `/catalogo#<key>` y funciona con Atrás/Adelante.
+- Enlaces profundos de categorías creadas únicamente desde Admin se conservan mientras carga la API y se resuelven contra la respuesta pública.
+- Se muestran descripciones administrables de sección y producto cuando existen.
+- Una imagen de producto se usa solo para su producto; la imagen de categoría aparece únicamente en el encabezado de esa categoría.
+- Se mantienen `GET /api/catalog/public`, timeout, fallback `catalog-data.ts`, precios MXN, placeholders, imágenes heredadas y `/api/catalog/images/{fileName}`.
+- No se modificaron backend, migraciones, permisos, auth, guards, cookies, XSRF ni el panel administrativo.
+
+Validación de cierre:
+
+- Angular build correcto; initial total `321.10 kB`, sin warning de budget.
+- .NET build correcto; Domain 1/1, Application 1/1 y API 158/158.
+- GitHub Actions run `31276207073`: `/health`, `/catalogo` y `/api/catalog/public` en `200`; 12 categorías y 41 productos; DOM lazy-loaded validado.
+- Capturas de 1440 x 1200 y 390 x 1200 revisadas con movimiento reducido; sin scroll horizontal, recortes, contraste insuficiente ni bloqueantes responsive.
+- La captura inicial atenuada fue un frame transitorio de `data-animate` en Chrome headless; el estado estable y `prefers-reduced-motion` quedaron correctos.
+
+Siguiente fase de rediseño público: `PUB-UX-3`, enfocada en home, servicios, contacto y encabezado público.
+
 ## Audiencia
 
 - Doctores y doctoras que buscan un laboratorio dental.
