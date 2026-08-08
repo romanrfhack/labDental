@@ -58,7 +58,8 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/styles/public-catalog.scss"
             ]
           },
           "configurations": {
