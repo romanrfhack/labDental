@@ -8,6 +8,8 @@ set -Eeuo pipefail
 : "${LDT_ENV_FILE:?Missing LDT_ENV_FILE}"
 : "${LDT_SITE_URL:?Missing LDT_SITE_URL}"
 : "${LDT_SQLCMD:?Missing LDT_SQLCMD}"
+: "${LDT_LOCAL_HEALTH_URL:?Missing LDT_LOCAL_HEALTH_URL}"
+: "${LDT_PUBLIC_HEALTH_URL:?Missing LDT_PUBLIC_HEALTH_URL}"
 
 REMOTE_TARBALL="/tmp/labdental-${LDT_RELEASE_ID}.tar.gz"
 TMP_DIR="$(mktemp -d)"
@@ -22,26 +24,108 @@ PREV_FRONTEND="$(readlink -f "${LDT_APP_ROOT}/frontend/current" 2>/dev/null || t
 SWITCHED="false"
 
 cleanup() {
-  rm -rf "$TMP_DIR"
-  rm -f "$REMOTE_TARBALL"
+  rm -rf "$TMP_DIR" || true
+  rm -f "$REMOTE_TARBALL" || true
+}
+
+wait_for_health() {
+  local name="$1"
+  local url="$2"
+  local max_attempts="$3"
+  local sleep_seconds="$4"
+  local attempt
+  local http_status
+
+  for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+    http_status=""
+
+    if http_status="$(curl -fsS \
+      --connect-timeout 2 \
+      --max-time 5 \
+      --output /dev/null \
+      --write-out '%{http_code}' \
+      "$url")" && [ "$http_status" = "200" ]; then
+      echo "Health check '${name}' succeeded with HTTP 200 on attempt ${attempt}/${max_attempts}."
+      return 0
+    fi
+
+    echo "Health check '${name}' failed on attempt ${attempt}/${max_attempts} (HTTP ${http_status:-unavailable})."
+
+    if [ "$attempt" -lt "$max_attempts" ]; then
+      sleep "$sleep_seconds"
+    fi
+  done
+
+  echo "ERROR: health check '${name}' did not return HTTP 200 after ${max_attempts} attempts."
+  return 1
+}
+
+print_deploy_diagnostics() {
+  echo
+  echo "=== DEPLOY FAILURE DIAGNOSTICS ==="
+  systemctl status "$LDT_API_SERVICE" --no-pager -l || true
+  journalctl -u "$LDT_API_SERVICE" -n 120 --no-pager || true
+
+  printf 'backend/current -> '
+  readlink -f "${LDT_APP_ROOT}/backend/current" || echo "unavailable"
+
+  printf 'frontend/current -> '
+  readlink -f "${LDT_APP_ROOT}/frontend/current" || echo "unavailable"
 }
 
 rollback_on_error() {
   local exit_code=$?
+  local rollback_failed="false"
+
   if [ "$exit_code" -ne 0 ] && [ "$SWITCHED" = "true" ]; then
+    print_deploy_diagnostics
+
+    echo
     echo "ERROR: deploy failed after symlink switch. Attempting rollback..."
 
-    if [ -n "$PREV_BACKEND" ] && [ -d "$PREV_BACKEND" ]; then
-      ln -sfn "$PREV_BACKEND" "${LDT_APP_ROOT}/backend/current.rollback"
-      mv -Tf "${LDT_APP_ROOT}/backend/current.rollback" "${LDT_APP_ROOT}/backend/current"
+    if [ -z "$PREV_BACKEND" ] || [ ! -d "$PREV_BACKEND" ]; then
+      echo "ERROR: rollback backend release is unavailable."
+      rollback_failed="true"
     fi
 
-    if [ -n "$PREV_FRONTEND" ] && [ -d "$PREV_FRONTEND" ]; then
-      ln -sfn "$PREV_FRONTEND" "${LDT_APP_ROOT}/frontend/current.rollback"
-      mv -Tf "${LDT_APP_ROOT}/frontend/current.rollback" "${LDT_APP_ROOT}/frontend/current"
+    if [ -z "$PREV_FRONTEND" ] || [ ! -d "$PREV_FRONTEND" ]; then
+      echo "ERROR: rollback frontend release is unavailable."
+      rollback_failed="true"
     fi
 
-    systemctl restart "$LDT_API_SERVICE" || true
+    if [ "$rollback_failed" = "false" ]; then
+      if ! ln -sfn "$PREV_BACKEND" "${LDT_APP_ROOT}/backend/current.rollback" \
+        || ! mv -Tf "${LDT_APP_ROOT}/backend/current.rollback" "${LDT_APP_ROOT}/backend/current"; then
+        echo "ERROR: failed to restore backend/current during rollback."
+        rollback_failed="true"
+      fi
+
+      if ! ln -sfn "$PREV_FRONTEND" "${LDT_APP_ROOT}/frontend/current.rollback" \
+        || ! mv -Tf "${LDT_APP_ROOT}/frontend/current.rollback" "${LDT_APP_ROOT}/frontend/current"; then
+        echo "ERROR: failed to restore frontend/current during rollback."
+        rollback_failed="true"
+      fi
+    fi
+
+    if [ "$rollback_failed" = "false" ]; then
+      if ! systemctl restart "$LDT_API_SERVICE"; then
+        echo "ERROR: rollback restored symlinks but failed to restart ${LDT_API_SERVICE}."
+        rollback_failed="true"
+      elif ! wait_for_health "rollback local" "$LDT_LOCAL_HEALTH_URL" 30 3; then
+        echo "ERROR: rollback release failed its local health check."
+        rollback_failed="true"
+      elif ! wait_for_health "rollback public" "$LDT_PUBLIC_HEALTH_URL" 30 3; then
+        echo "ERROR: rollback release failed its public health check."
+        rollback_failed="true"
+      fi
+    fi
+
+    if [ "$rollback_failed" = "true" ]; then
+      echo "ERROR: rollback failed; manual intervention is required."
+      print_deploy_diagnostics
+    else
+      echo "Rollback completed and the previous release is healthy."
+    fi
   fi
 
   cleanup
@@ -120,12 +204,11 @@ SWITCHED="true"
 echo
 echo "=== RESTART SERVICE ==="
 systemctl restart "$LDT_API_SERVICE"
-sleep 5
 
 echo
 echo "=== HEALTH CHECK ==="
-curl -fsS "${LDT_SITE_URL}/health"
-echo
+wait_for_health "local" "$LDT_LOCAL_HEALTH_URL" 30 3
+wait_for_health "public" "$LDT_PUBLIC_HEALTH_URL" 30 3
 
 echo
 echo "=== SERVICE STATUS ==="

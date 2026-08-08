@@ -21,6 +21,17 @@ Fuente canónica de build, deploy, dominio, DNS, variables de entorno y publicac
 - En desarrollo, Angular consume la API en `http://localhost:5277`.
 - En DEV publicado, la validación funcional confirmada por navegador se documenta en `docs/05-delivery/dev-deployment-validation.md`.
 
+### Health Check Y Rollback De DEV
+
+- Después de reiniciar la API, el deploy valida primero `http://127.0.0.1:5012/health` y después `https://dev.laboratoriodentaltlahuac.com/health`.
+- Cada validación exige HTTP `200` y permite hasta 30 intentos con 3 segundos entre intentos; cada `curl -fsS` limita la conexión a 2 segundos y la petición completa a 5 segundos.
+- `systemctl is-active` se conserva como información de estado, pero no sustituye a `/health`: el servicio puede estar activo antes de que Kestrel acepte tráfico.
+- Si el release nuevo no queda sano, antes del rollback se muestran el estado del servicio, las últimas 120 entradas de su journal y los destinos de `backend/current` y `frontend/current`. No se imprimen variables de entorno ni cadenas de conexión.
+- El rollback restaura ambos symlinks, reinicia el servicio y vuelve a validar health local y público con los mismos reintentos. Si no puede restaurar, reiniciar o recuperar health, lo reporta explícitamente para intervención manual.
+- Para un futuro deploy de `main`, deben configurarse las variables de GitHub `LDT_LOCAL_HEALTH_URL` y `LDT_PUBLIC_HEALTH_URL` con los endpoints de producción antes de habilitarlo.
+
+El `502` observado al desplegar `dev-38-11ea0a2` se trata como un probable problema de timing: el workflow anterior esperaba solo 5 segundos y hacía una única petición pública, mientras que arranques observados de la API tardaron aproximadamente 15–20 segundos. El rollback mantuvo DEV estable en `dev-37-3dc0347`. Este ajuste modifica solo automatización y documentación; no cambia código funcional de backend o frontend, migraciones ni catálogo.
+
 ## Ambiente DEV Publicado
 
 - URL: `https://dev.laboratoriodentaltlahuac.com`.

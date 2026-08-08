@@ -6,6 +6,40 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-08-08 - Health Check Robusto En Deploy DEV
+
+### Cambio Realizado
+
+- El workflow pasa al script remoto los endpoints de health local y público; para `dev` son `http://127.0.0.1:5012/health` y `https://dev.laboratoriodentaltlahuac.com/health`.
+- `deploy-lab.sh` reemplaza la espera fija de 5 segundos y el único `curl` público por `wait_for_health`, con hasta 30 intentos, pausa de 3 segundos, `curl -fsS`, timeout de conexión de 2 segundos, timeout total de 5 segundos y requisito explícito de HTTP `200`.
+- El release nuevo valida primero health local y después health público.
+- Antes de hacer rollback se imprimen `systemctl status`, las últimas 120 entradas de `journalctl` y los destinos de los symlinks actuales, sin mostrar variables de entorno ni cadenas de conexión.
+- El rollback restaura backend y frontend, reinicia la API y valida también health local y público con reintentos. Cualquier falla de restauración, restart o health se reporta explícitamente.
+
+### Diagnóstico Documentado
+
+El deploy de `dev-38-11ea0a2` recibió `502` durante una ventana de health check de aproximadamente 8 segundos y el rollback dejó estable `dev-37-3dc0347`. Como no hubo evidencia clara de crash y arranques previos necesitaron aproximadamente 15–20 segundos para llegar a `Now listening`, el incidente se trata como probable timing demasiado agresivo del health check anterior.
+
+### Exclusiones Confirmadas
+
+- No se modificó código funcional de backend o frontend.
+- No se modificaron migraciones ni catálogo.
+- No se tocaron autenticación, guards, cookies, XSRF ni permisos.
+- No se instalaron dependencias.
+- No se hizo commit.
+
+### Validaciones Ejecutadas
+
+- `bash -n .github/scripts/deploy-lab.sh`: correcto.
+- Ruta de fallo de `wait_for_health`: correcta con dos intentos controlados contra un puerto local cerrado.
+- `git diff --check`: correcto.
+- Búsquedas solicitadas de health check, rollback, restart y endpoints local/público: correctas.
+- Búsquedas de patrones sensibles ejecutadas con `rg -l`, limitando la salida a nombres de archivo.
+
+### Siguiente Paso Recomendado
+
+Hacer commit/push y validar un nuevo deploy automático de DEV.
+
 ## 2026-07-10 - Fase 3.5.3 Catálogo Público Consume API
 
 ### Cambio Realizado

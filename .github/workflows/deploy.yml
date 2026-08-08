@@ -157,6 +157,8 @@ jobs:
           LDT_ENV_FILE: ${{ secrets.LDT_ENV_FILE }}
           LDT_SITE_URL: ${{ secrets.LDT_SITE_URL }}
           LDT_SQLCMD: ${{ secrets.LDT_SQLCMD }}
+          LDT_LOCAL_HEALTH_URL: ${{ github.ref_name == 'dev' && 'http://127.0.0.1:5012/health' || vars.LDT_LOCAL_HEALTH_URL }}
+          LDT_PUBLIC_HEALTH_URL: ${{ github.ref_name == 'dev' && 'https://dev.laboratoriodentaltlahuac.com/health' || vars.LDT_PUBLIC_HEALTH_URL }}
         run: |
           REMOTE_ENV="$(
             printf "LDT_RELEASE_ID=%q " "$RELEASE_ID"
@@ -166,6 +168,8 @@ jobs:
             printf "LDT_ENV_FILE=%q " "$LDT_ENV_FILE"
             printf "LDT_SITE_URL=%q " "$LDT_SITE_URL"
             printf "LDT_SQLCMD=%q " "$LDT_SQLCMD"
+            printf "LDT_LOCAL_HEALTH_URL=%q " "$LDT_LOCAL_HEALTH_URL"
+            printf "LDT_PUBLIC_HEALTH_URL=%q " "$LDT_PUBLIC_HEALTH_URL"
           )"
 
           ssh \
