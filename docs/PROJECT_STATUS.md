@@ -56,6 +56,20 @@ Validación del registro QA DEV intermedio Fase 3.5.4.2, 2026-08-08: `npm run bu
 
 Validación del cierre documental end-to-end Fase 3.5.4, 2026-08-08: `npm run build` correcto con initial total `318.75 kB`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 156/156; `git diff --check` correcto. Solo se modificó documentación.
 
+
+## PUB-UX-2 — Rediseño Visual Del Catálogo Público
+
+Estado: **implementado en `dev`; validación final del despliegue y pase visual DEV pendientes**.
+
+- `/catalogo` usa ahora un workspace controlado por el usuario: sidebar en escritorio, navegación horizontal en tablet y selector nativo con tarjetas compactas en móvil.
+- Se eliminaron autoplay, temporizadores, galería duplicada y cambios automáticos de categoría.
+- La categoría activa se identifica por `key` y se refleja en el hash compartible `/catalogo#<key>`; Atrás/Adelante recorren selecciones previas.
+- Los enlaces profundos de categorías creadas únicamente desde Admin conservan su hash durante la carga inicial y se resuelven cuando responde `GET /api/catalog/public`; solo se normalizan al fallback si la API no contiene la categoría o falla.
+- El catálogo muestra descripciones administrables de categorías y productos cuando existen, sin reservar espacio cuando están vacías.
+- Las imágenes específicas cargadas desde Admin y los assets heredados continúan funcionando; una imagen de categoría se usa solo en el encabezado de la categoría, no como sustituto engañoso para todos los productos.
+- Se mantienen API pública, fallback local, panel administrativo, carga/reemplazo/desasociación de imágenes, permisos, auth, cookies y XSRF sin cambios.
+- Implementación principal integrada mediante PR #1 y ajuste de fidelidad mediante PR #2; la corrección de revisión y documentación se incorpora en el cierre de esta fase.
+
 ## Estado Por Frente
 
 - Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto. Fase 2.5 confirmó que no hubo regresión visible del sitio público.
