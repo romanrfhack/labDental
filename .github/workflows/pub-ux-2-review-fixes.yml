@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - agent/pub-ux-2-review-fixes
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - reopened
+      - synchronize
 
 permissions:
   contents: write
@@ -22,12 +29,14 @@ jobs:
       NODE_VERSION: '22.x'
       CONFIGURATION: Release
       WEB_DIR: src/LaboratorioTlahuac.Web
+      BRANCH_NAME: ${{ github.event.pull_request.head.ref || github.ref_name }}
 
     steps:
       - name: Checkout review branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ env.BRANCH_NAME }}
 
       - name: Apply targeted review fixes and documentation
         shell: bash
@@ -227,5 +236,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "fix: preserve dynamic catalog deep links"
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          git push origin "HEAD:${BRANCH}"
+          git push origin "HEAD:${BRANCH_NAME}"
