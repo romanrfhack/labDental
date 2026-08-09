@@ -1,0 +1,107 @@
+name: Finalize PUB-UX-3
+
+on:
+  push:
+    branches:
+      - agent/pub-ux-3-public-site
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pub-ux-3-finalize
+  cancel-in-progress: false
+
+jobs:
+  validate-document-commit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      CONFIGURATION: Release
+      WEB_DIR: src/LaboratorioTlahuac.Web
+      BRANCH_NAME: agent/pub-ux-3-public-site
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+          cache-dependency-path: src/LaboratorioTlahuac.Web/package-lock.json
+      - name: Restore and build backend
+        run: |
+          dotnet restore
+          dotnet build --configuration "$CONFIGURATION" --no-restore
+      - name: Test backend
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal
+      - name: Build frontend
+        run: |
+          npm --prefix "$WEB_DIR" ci
+          npm --prefix "$WEB_DIR" run build
+      - name: Update canonical documentation
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          status_path = Path('docs/PROJECT_STATUS.md')
+          status = status_path.read_text(encoding='utf-8')
+          status_heading = '## PUB-UX-3 — Rediseño Del Sitio Público\n'
+          if status_heading not in status:
+              marker = '\n## Estado Por Frente\n'
+              if marker not in status:
+                  raise SystemExit('PROJECT_STATUS marker not found')
+              section = '''\n## PUB-UX-3 — Rediseño Del Sitio Público\n\nEstado: **IMPLEMENTADO EN RAMA Y VALIDADO TÉCNICAMENTE; despliegue DEV pendiente al fusionar**.\n\n- Header público compacto con navegación móvil colapsable y acceso al sistema separado.\n- Home reorganizada con hero editorial en dos columnas, imágenes reales del catálogo, CTAs compactos, accesos visuales a categorías, proceso y contacto.\n- `/servicios` funciona como directorio hacia categorías reales de `/catalogo#<key>`, evitando duplicar productos/precios.\n- `/contacto` prioriza teléfonos y correo confirmados y elimina tarjetas de datos pendientes.\n- `/catalogo` conserva PUB-UX-2, API administrable, imágenes persistentes y navegación por `key`.\n- No se modificaron backend, API, migraciones, base de datos, panel administrativo, auth, permisos, cookies, XSRF, guards ni deploy.\n\n'''
+              status = status.replace(marker, '\n' + section + '## Estado Por Frente\n', 1)
+              status_path.write_text(status, encoding='utf-8')
+
+          log_path = Path('docs/IMPLEMENTATION_LOG.md')
+          log = log_path.read_text(encoding='utf-8')
+          log_heading = '## 2026-08-08 - PUB-UX-3 Rediseño Real Del Sitio Público\n'
+          if log_heading not in log:
+              marker = '- Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.\n\n'
+              if marker not in log:
+                  raise SystemExit('IMPLEMENTATION_LOG marker not found')
+              entry = '''## 2026-08-08 - PUB-UX-3 Rediseño Real Del Sitio Público\n\n### Cambio Realizado\n\n- Se corrigió la discrepancia entre el diseño reportado y el código realmente desplegado: la rama `dev` todavía conservaba el home anterior.\n- Se reemplazaron CTAs centrales de ancho completo por acciones compactas dentro de un hero editorial con imágenes reales del catálogo.\n- Se incorporó navegación pública compacta y menú móvil colapsable.\n- Home ahora prioriza catálogo, familias de trabajo, proceso y contacto; se retiró copy técnico sobre `/app`, seguimiento interno y rutas.\n- Servicios se convirtió en directorio hacia categorías reales del catálogo.\n- Contacto muestra solo canales confirmados y una guía breve para preparar el caso.\n\n### Alcance Protegido\n\n- Sin cambios en backend, API, entidades, migraciones, base de datos, panel administrativo, imágenes administrables, permisos, auth, cookies, XSRF, guards o deploy.\n- Sin dependencias nuevas.\n\n### Validación\n\n- `dotnet restore`, build y tests: correctos antes del commit documental.\n- `npm ci` y `npm run build`: correctos antes del commit documental.\n- `git diff --check`: correcto.\n- Despliegue y revisión visual DEV quedan como cierre posterior a la fusión.\n\n'''
+              log = log.replace(marker, marker + entry, 1)
+              log_path.write_text(log, encoding='utf-8')
+
+          roadmap_path = Path('docs/ROADMAP.md')
+          roadmap = roadmap_path.read_text(encoding='utf-8')
+          roadmap_line = '- PUB-UX-3: rediseño de home, servicios, contacto y encabezado público. Implementado y validado técnicamente; despliegue/revisión visual DEV pendientes.\n'
+          if roadmap_line not in roadmap:
+              lines = roadmap.splitlines(keepends=True)
+              for index, line in enumerate(lines):
+                  if line.startswith('- PUB-UX-2:'):
+                      lines.insert(index + 1, roadmap_line)
+                      break
+              else:
+                  raise SystemExit('ROADMAP PUB-UX-2 marker not found')
+              roadmap_path.write_text(''.join(lines), encoding='utf-8')
+
+          public_path = Path('docs/01-product/public-website.md')
+          public = public_path.read_text(encoding='utf-8')
+          public_heading = '## Estado PUB-UX-3 — Rediseño Del Sitio Público\n'
+          if public_heading not in public:
+              marker = '\n## Audiencia\n'
+              if marker not in public:
+                  raise SystemExit('public-website marker not found')
+              section = '''\n## Estado PUB-UX-3 — Rediseño Del Sitio Público\n\n- Home: hero editorial con imágenes reales del catálogo, acciones compactas, accesos directos a familias, proceso de consulta y contacto.\n- Header: navegación desktop compacta y menú móvil colapsable; `/login` sigue siendo acceso público al sistema.\n- Servicios: directorio visual que enlaza a categorías administrables del catálogo mediante hash.\n- Contacto: teléfonos y correo confirmados; datos no confirmados se mantienen fuera de la interfaz principal.\n- Se mantiene separación funcional entre sitio público y aplicación privada bajo `/app`.\n- Sin cambios de backend, API, auth, permisos, cookies, XSRF o dependencias.\n\n'''
+              public = public.replace(marker, '\n' + section + '## Audiencia\n', 1)
+              public_path.write_text(public, encoding='utf-8')
+          PY
+      - name: Validate and commit
+        shell: bash
+        run: |
+          git diff --check
+          git rm .github/workflows/pub-ux-3-validate.yml .github/workflows/pub-ux-3-finalize.yml
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: record validated PUB-UX-3 implementation"
+          git push origin "HEAD:${BRANCH_NAME}"
