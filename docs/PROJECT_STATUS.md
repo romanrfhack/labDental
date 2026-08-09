@@ -73,6 +73,18 @@ Estado: **CERRADO TÉCNICAMENTE EN DEV**; build, pruebas, smoke HTTP/DOM y revis
 - Se generaron y revisaron capturas estables de 1440 x 1200 y 390 x 1200 con `prefers-reduced-motion`; no se detectaron recortes horizontales, problemas de contraste ni bloqueantes responsive.
 - La primera captura headless atenuada correspondía al frame inicial de la transición `data-animate`; la ruta de movimiento reducido confirmó el estado visual final y no requirió cambio funcional.
 
+
+## PUB-UX-3 — Rediseño Del Sitio Público
+
+Estado: **IMPLEMENTADO EN RAMA Y VALIDADO TÉCNICAMENTE; despliegue DEV pendiente al fusionar**.
+
+- Header público compacto con navegación móvil colapsable y acceso al sistema separado.
+- Home reorganizada con hero editorial en dos columnas, imágenes reales del catálogo, CTAs compactos, accesos visuales a categorías, proceso y contacto.
+- `/servicios` funciona como directorio hacia categorías reales de `/catalogo#<key>`, evitando duplicar productos/precios.
+- `/contacto` prioriza teléfonos y correo confirmados y elimina tarjetas de datos pendientes.
+- `/catalogo` conserva PUB-UX-2, API administrable, imágenes persistentes y navegación por `key`.
+- No se modificaron backend, API, migraciones, base de datos, panel administrativo, auth, permisos, cookies, XSRF, guards ni deploy.
+
 ## Estado Por Frente
 
 - Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto. Fase 2.5 confirmó que no hubo regresión visible del sitio público.
