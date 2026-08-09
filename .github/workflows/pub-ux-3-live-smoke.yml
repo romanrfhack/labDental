@@ -1,0 +1,120 @@
+name: Smoke live PUB-UX-3
+
+on:
+  push:
+    branches:
+      - agent/pub-ux-3-live-smoke
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pub-ux-3-live-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for deployed PUB-UX-3 and validate rendered pages
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE_URL="https://dev.laboratoriodentaltlahuac.com"
+          WORK="$RUNNER_TEMP/pub-ux-3-live"
+          REPORT="$WORK/report.txt"
+          CHROME="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          mkdir -p "$WORK"
+          : > "$REPORT"
+
+          if [ -z "$CHROME" ]; then
+            echo "Chrome/Chromium unavailable" | tee -a "$REPORT"
+            exit 1
+          fi
+
+          render() {
+            local path="$1"
+            local output="$2"
+            "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+              --force-prefers-reduced-motion --virtual-time-budget=7000 --dump-dom \
+              "$BASE_URL$path" > "$output" 2>/dev/null || true
+          }
+
+          for attempt in $(seq 1 40); do
+            echo "attempt=$attempt" | tee -a "$REPORT"
+            health="$(curl -sS -L --connect-timeout 3 --max-time 12 -o "$WORK/health.txt" -w '%{http_code}' "$BASE_URL/health" || true)"
+            home="$(curl -sS -L --connect-timeout 3 --max-time 12 -o "$WORK/home-index.html" -w '%{http_code}' "$BASE_URL/" || true)"
+            services="$(curl -sS -L --connect-timeout 3 --max-time 12 -o /dev/null -w '%{http_code}' "$BASE_URL/servicios" || true)"
+            catalog="$(curl -sS -L --connect-timeout 3 --max-time 12 -o /dev/null -w '%{http_code}' "$BASE_URL/catalogo" || true)"
+            contact="$(curl -sS -L --connect-timeout 3 --max-time 12 -o /dev/null -w '%{http_code}' "$BASE_URL/contacto" || true)"
+            api="$(curl -sS -L --connect-timeout 3 --max-time 12 -o "$WORK/catalog.json" -w '%{http_code}' "$BASE_URL/api/catalog/public" || true)"
+            echo "codes=$health,$home,$services,$catalog,$contact,$api" | tee -a "$REPORT"
+
+            if [ "$health" = 200 ] && [ "$home" = 200 ] && [ "$services" = 200 ] && [ "$catalog" = 200 ] && [ "$contact" = 200 ] && [ "$api" = 200 ]; then
+              render / "$WORK/home.html"
+              render /servicios "$WORK/services.html"
+              render /contacto "$WORK/contact.html"
+              render /catalogo#emax "$WORK/catalog.html"
+
+              if grep -Fq 'Prótesis y restauraciones dentales con una consulta más clara' "$WORK/home.html" \
+                && grep -Fq 'Explorar catálogo' "$WORK/home.html" \
+                && grep -Fq 'Encuentra rápido el tipo de trabajo que necesitas' "$WORK/home.html" \
+                && grep -Fq 'home-v2' "$WORK/home.html" \
+                && ! grep -Fq 'Catálogo público del laboratorio y entrada al sistema administrativo para seguimiento operativo interno.' "$WORK/home.html" \
+                && ! grep -Fq '>Ver catálogo<' "$WORK/home.html" \
+                && grep -Fq 'Soluciones para distintas necesidades clínicas' "$WORK/services.html" \
+                && grep -Fq 'Hablemos del trabajo que necesitas coordinar' "$WORK/contact.html" \
+                && grep -Fq 'catalog-page' "$WORK/catalog.html"; then
+                  echo "rendered_pub_ux_3=ok" | tee -a "$REPORT"
+                  break
+              fi
+            fi
+
+            if [ "$attempt" = 40 ]; then
+              echo "PUB-UX-3 was not observed in DEV within retry window" | tee -a "$REPORT"
+              exit 1
+            fi
+            sleep 10
+          done
+
+          python3 - "$WORK/catalog.json" <<'PY' | tee -a "$REPORT"
+          import json, pathlib, sys
+          data = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+          sections = data.get('sections')
+          assert isinstance(sections, list) and sections
+          products = sum(len(s.get('products') or []) for s in sections)
+          assert products > 0
+          print(f"catalog_sections={len(sections)} catalog_products={products}")
+          PY
+
+      - name: Capture stable desktop and mobile evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE_URL="https://dev.laboratoriodentaltlahuac.com"
+          WORK="$RUNNER_TEMP/pub-ux-3-live"
+          CHROME="$(command -v google-chrome || command -v chromium-browser || command -v chromium)"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --force-prefers-reduced-motion --hide-scrollbars --virtual-time-budget=7000 \
+            --window-size=1440,1200 --screenshot="$WORK/home-desktop.png" "$BASE_URL/"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --force-prefers-reduced-motion --hide-scrollbars --virtual-time-budget=7000 \
+            --window-size=390,1200 --screenshot="$WORK/home-mobile.png" "$BASE_URL/"
+          test -s "$WORK/home-desktop.png"
+          test -s "$WORK/home-mobile.png"
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pub-ux-3-live-smoke
+          path: ${{ runner.temp }}/pub-ux-3-live
+          if-no-files-found: warn
+          retention-days: 3
