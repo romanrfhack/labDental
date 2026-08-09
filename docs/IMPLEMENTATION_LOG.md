@@ -6,6 +6,29 @@
 - `docs/00-governance/changelog.md` se mantiene como changelog histórico de entregas relevantes.
 - Cuando una tarea documental cambie fuentes canónicas, debe registrarse aquí y, si afecta entregables del proyecto, también en el changelog.
 
+## 2026-08-08 - PUB-UX-3 Rediseño Real Del Sitio Público
+
+### Cambio Realizado
+
+- Se corrigió la discrepancia entre el diseño reportado y el código realmente desplegado: la rama `dev` todavía conservaba el home anterior.
+- Se reemplazaron CTAs centrales de ancho completo por acciones compactas dentro de un hero editorial con imágenes reales del catálogo.
+- Se incorporó navegación pública compacta y menú móvil colapsable.
+- Home ahora prioriza catálogo, familias de trabajo, proceso y contacto; se retiró copy técnico sobre `/app`, seguimiento interno y rutas.
+- Servicios se convirtió en directorio hacia categorías reales del catálogo.
+- Contacto muestra solo canales confirmados y una guía breve para preparar el caso.
+
+### Alcance Protegido
+
+- Sin cambios en backend, API, entidades, migraciones, base de datos, panel administrativo, imágenes administrables, permisos, auth, cookies, XSRF, guards o deploy.
+- Sin dependencias nuevas.
+
+### Validación
+
+- `dotnet restore`, build y tests: correctos antes del commit documental.
+- `npm ci` y `npm run build`: correctos antes del commit documental.
+- `git diff --check`: correcto.
+- Despliegue y revisión visual DEV quedan como cierre posterior a la fusión.
+
 
 ## 2026-08-08 - PUB-UX-2 Rediseño Visual Del Catálogo Público
 

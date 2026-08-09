@@ -302,6 +302,16 @@ Validación de cierre:
 
 Siguiente fase de rediseño público: `PUB-UX-3`, enfocada en home, servicios, contacto y encabezado público.
 
+
+## Estado PUB-UX-3 — Rediseño Del Sitio Público
+
+- Home: hero editorial con imágenes reales del catálogo, acciones compactas, accesos directos a familias, proceso de consulta y contacto.
+- Header: navegación desktop compacta y menú móvil colapsable; `/login` sigue siendo acceso público al sistema.
+- Servicios: directorio visual que enlaza a categorías administrables del catálogo mediante hash.
+- Contacto: teléfonos y correo confirmados; datos no confirmados se mantienen fuera de la interfaz principal.
+- Se mantiene separación funcional entre sitio público y aplicación privada bajo `/app`.
+- Sin cambios de backend, API, auth, permisos, cookies, XSRF o dependencias.
+
 ## Audiencia
 
 - Doctores y doctoras que buscan un laboratorio dental.
