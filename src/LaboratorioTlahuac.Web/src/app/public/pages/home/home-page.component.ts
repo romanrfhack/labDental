@@ -7,121 +7,165 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
   selector: 'app-home-page',
   imports: [RouterLink, PublicScrollAnimationsDirective],
   template: `
-    <div class="home-page public-animation-scope" appPublicScrollAnimations>
-    <section class="hero-section">
-      <div class="hero-copy" data-animate="fade-up">
-        <img
-          class="hero-logo"
-          src="/assets/brand/logo-ldt.webp"
-          alt="Laboratorio Dental Tláhuac"
-          width="809"
-          height="545"
-          data-parallax="0.08"
-        />
-        <p class="eyebrow">Precisión • Estética • Confianza</p>
-        <h1>Prótesis, restauraciones y soluciones dentales</h1>
-        <p class="hero-text">
-          Catálogo público del laboratorio y entrada al sistema administrativo para seguimiento operativo interno.
-        </p>
-        <div class="hero-actions" aria-label="Acciones principales">
-          <a class="primary-action" routerLink="/catalogo">Ver catálogo</a>
-          <a class="secondary-action" routerLink="/contacto">Contactar</a>
+    <div class="home-page home-v2 public-animation-scope" appPublicScrollAnimations>
+      <section class="home-v2-hero">
+        <div class="home-v2-hero-inner">
+          <div class="home-v2-copy" data-animate="fade-up">
+            <p class="home-v2-eyebrow">Laboratorio Dental Tláhuac</p>
+            <h1>Prótesis y restauraciones dentales con una consulta más clara</h1>
+            <p class="home-v2-lead">
+              Explora materiales, tipos de trabajo y precios de referencia antes de coordinar directamente con el laboratorio.
+            </p>
+
+            <div class="home-v2-actions" aria-label="Acciones principales">
+              <a class="home-v2-btn primary" routerLink="/catalogo">Explorar catálogo</a>
+              <a class="home-v2-btn secondary" routerLink="/contacto">Hablar con el laboratorio</a>
+            </div>
+
+            <div class="home-v2-trust" aria-label="Ventajas del sitio">
+              <span>Catálogo por categorías</span>
+              <span>Precios de referencia</span>
+              <span>Contacto directo</span>
+            </div>
+          </div>
+
+          <div class="home-v2-visual" data-animate="fade-in" aria-label="Muestra de trabajos dentales">
+            <figure class="home-v2-main-image">
+              <img
+                src="/assets/catalog/products/zirconia-corona-estratificada.webp"
+                alt="Corona de zirconia, imagen representativa del catálogo"
+                width="760"
+                height="570"
+              />
+              <figcaption>
+                <span>Zirconia</span>
+                <strong>Restauraciones estéticas</strong>
+              </figcaption>
+            </figure>
+
+            <a class="home-v2-mini-card" routerLink="/catalogo" fragment="emax">
+              <img
+                src="/assets/catalog/products/emax-corona-estratificada.webp"
+                alt="Corona E-MAX"
+                width="360"
+                height="270"
+              />
+              <span>E-MAX</span>
+            </a>
+
+            <a class="home-v2-mini-card" routerLink="/catalogo" fragment="prostodoncia-parcial-total">
+              <img
+                src="/assets/catalog/products/prostodoncia-dentadura-total-luciton.webp"
+                alt="Prótesis total"
+                width="360"
+                height="270"
+              />
+              <span>Prótesis removible</span>
+            </a>
+          </div>
         </div>
-      </div>
-      <div class="hero-panel" aria-label="Información resumida" data-animate="fade-in">
-        <span class="panel-label">Catálogo de precios 2026</span>
-        <strong>Doctores, consultorios y clínicas dentales</strong>
-        <p>Precios de referencia sujetos a confirmación del cliente antes de publicación formal.</p>
-        <a href="tel:+525533319445">55 3331 9445</a>
-      </div>
-    </section>
-    <section class="section-block" id="servicios">
-      <div class="section-heading" data-animate="fade-up">
-        <p class="eyebrow">Capacidades</p>
-        <h2>Catálogo público con precios</h2>
-        <p>
-          La nueva ruta /catalogo muestra productos organizados por categoría, precios e imágenes locales
-          cuando están disponibles.
-        </p>
-      </div>
-      <div class="card-grid">
-        <article data-animate="stagger-card">
-          <span aria-hidden="true">01</span>
-          <h3>Catálogo de servicios</h3>
-          <p>Productos y precios organizados por secciones para revisión pública del catálogo 2026.</p>
-        </article>
-        <article data-animate="stagger-card">
-          <span aria-hidden="true">02</span>
-          <h3>Seguimiento interno</h3>
-          <p>Entrada al sistema administrativo para revisar clientes, órdenes, pagos y estado operativo.</p>
-        </article>
-        <article data-animate="stagger-card">
-          <span aria-hidden="true">03</span>
-          <h3>Comunicación profesional</h3>
-          <p>Contacto visible por teléfono y correo, sin publicar dirección, horarios ni WhatsApp no confirmados.</p>
-        </article>
-      </div>
-    </section>
-    <section class="section-block process-section" id="proceso">
-      <div class="section-heading" data-animate="fade-up">
-        <p class="eyebrow">Proceso</p>
-        <h2>Una ruta simple para trabajar con el laboratorio</h2>
-      </div>
-      <ol class="process-list">
-        <li data-animate="stagger-card">
-          <strong>Contacto</strong>
-          <span>El doctor, consultorio o clínica puede llamar o escribir al correo publicado.</span>
-        </li>
-        <li data-animate="stagger-card">
-          <strong>Coordinación</strong>
-          <span>Se revisan indicaciones, tiempos y datos necesarios para cada trabajo.</span>
-        </li>
-        <li data-animate="stagger-card">
-          <strong>Seguimiento</strong>
-          <span>El sistema privado concentra órdenes, estados, pagos y saldos para operación interna.</span>
-        </li>
-      </ol>
-    </section>
-    <section class="section-block benefits-section">
-      <div class="section-heading" data-animate="fade-up">
-        <p class="eyebrow">Beneficios</p>
-        <h2>Diseñado para una operación dental más clara</h2>
-      </div>
-      <div class="benefit-list">
-        <div data-animate="stagger-card">
-          <strong>Presencia digital formal</strong>
-          <span>Información institucional disponible en el dominio del laboratorio.</span>
+      </section>
+
+      <section class="home-v2-section home-v2-categories" aria-labelledby="categorias-title">
+        <div class="home-v2-section-heading" data-animate="fade-up">
+          <p class="home-v2-eyebrow">Catálogo</p>
+          <h2 id="categorias-title">Encuentra rápido el tipo de trabajo que necesitas</h2>
+          <p>Accede directamente a algunas de las familias más consultadas. El catálogo conserva el detalle completo y administrable.</p>
         </div>
-        <div data-animate="stagger-card">
-          <strong>Acceso ordenado</strong>
-          <span>Entrada visible al sistema administrativo mediante /login.</span>
+
+        <div class="home-v2-category-grid">
+          <a routerLink="/catalogo" fragment="zirconia" class="home-v2-category-card" data-animate="stagger-card">
+            <img src="/assets/catalog/products/zirconia-corona-monolitica.webp" alt="Corona monolítica de zirconia" width="520" height="390" />
+            <div>
+              <span>01</span>
+              <strong>Zirconia</strong>
+              <small>Coronas, carillas e incrustaciones</small>
+            </div>
+          </a>
+
+          <a routerLink="/catalogo" fragment="emax" class="home-v2-category-card" data-animate="stagger-card">
+            <img src="/assets/catalog/products/emax-incrustacion.webp" alt="Incrustación E-MAX" width="520" height="390" />
+            <div>
+              <span>02</span>
+              <strong>E-MAX</strong>
+              <small>Restauraciones libres de metal</small>
+            </div>
+          </a>
+
+          <a routerLink="/catalogo" fragment="provisionales-guardas" class="home-v2-category-card" data-animate="stagger-card">
+            <img src="/assets/catalog/products/provisionales-guarda-oclusal-acrilico.webp" alt="Guarda oclusal de acrílico" width="520" height="390" />
+            <div>
+              <span>03</span>
+              <strong>Provisionales y guardas</strong>
+              <small>Auxiliares para distintas etapas clínicas</small>
+            </div>
+          </a>
+
+          <a routerLink="/catalogo" fragment="prostodoncia-parcial-total" class="home-v2-category-card" data-animate="stagger-card">
+            <img src="/assets/catalog/products/prostodoncia-dentadura-total-kulzer.webp" alt="Dentadura total en acrílico" width="520" height="390" />
+            <div>
+              <span>04</span>
+              <strong>Prótesis parcial y total</strong>
+              <small>Opciones removibles y acrílicas</small>
+            </div>
+          </a>
         </div>
-        <div data-animate="stagger-card">
-          <strong>Separación segura</strong>
-          <span>El sitio público no expone la aplicación privada bajo /app.</span>
+
+        <a class="home-v2-text-link" routerLink="/catalogo">Ver todas las categorías <span aria-hidden="true">→</span></a>
+      </section>
+
+      <section class="home-v2-section home-v2-process" aria-labelledby="proceso-title">
+        <div class="home-v2-section-heading" data-animate="fade-up">
+          <p class="home-v2-eyebrow">Proceso</p>
+          <h2 id="proceso-title">Del catálogo a la coordinación del trabajo</h2>
+          <p>Una ruta sencilla para reducir dudas antes del primer contacto.</p>
         </div>
-      </div>
-    </section>
-    <section class="contact-band" id="contacto">
-      <div data-animate="fade-up">
-        <p class="eyebrow">Contacto</p>
-        <h2>Contacto directo del laboratorio</h2>
-        <p>
-          Teléfonos y correo tomados del cartel/catálogo. Dirección, horarios y WhatsApp siguen pendientes de
-          confirmación.
-        </p>
-        <div class="contact-links" aria-label="Datos de contacto">
+
+        <ol class="home-v2-steps">
+          <li data-animate="stagger-card">
+            <span>01</span>
+            <strong>Explora</strong>
+            <p>Ubica el material o tipo de trabajo dentro del catálogo.</p>
+          </li>
+          <li data-animate="stagger-card">
+            <span>02</span>
+            <strong>Revisa</strong>
+            <p>Consulta opciones, imágenes y precios de referencia disponibles.</p>
+          </li>
+          <li data-animate="stagger-card">
+            <span>03</span>
+            <strong>Coordina</strong>
+            <p>Confirma indicaciones, disponibilidad, tiempos y precio final con el laboratorio.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="home-v2-section home-v2-prep" aria-labelledby="preparar-title">
+        <div class="home-v2-prep-copy" data-animate="fade-up">
+          <p class="home-v2-eyebrow">Antes de contactar</p>
+          <h2 id="preparar-title">Ten a la mano la información clave del caso</h2>
+          <p>Con estos datos la coordinación puede ser más directa desde el primer contacto.</p>
+        </div>
+        <div class="home-v2-prep-list" data-animate="fade-in">
+          <span>Tipo de trabajo</span>
+          <span>Material o alternativa deseada</span>
+          <span>Indicaciones relevantes</span>
+          <span>Fecha requerida</span>
+        </div>
+      </section>
+
+      <section class="home-v2-contact" aria-labelledby="contacto-title">
+        <div data-animate="fade-up">
+          <p class="home-v2-eyebrow">Contacto</p>
+          <h2 id="contacto-title">¿Ya sabes qué trabajo necesitas?</h2>
+          <p>Comunícate directamente por teléfono o correo para confirmar el caso.</p>
+        </div>
+        <div class="home-v2-contact-links" data-animate="fade-in">
           <a href="tel:+525533319445">55 3331 9445</a>
-          <a href="tel:+525521612311">55 2161 2311</a>
-          <a href="tel:+525598029816">55 9802 9816</a>
           <a href="mailto:contacto@laboratoriodentaltlahuac.com">contacto@laboratoriodentaltlahuac.com</a>
+          <a class="home-v2-contact-more" routerLink="/contacto">Ver todos los datos de contacto →</a>
         </div>
-      </div>
-      <div class="contact-actions" data-animate="fade-in">
-        <a class="primary-action" routerLink="/contacto">Ver contacto</a>
-        <a class="secondary-action" routerLink="/login">Iniciar sesión</a>
-      </div>
-    </section>
+      </section>
     </div>
   `,
   styleUrl: './home-page.component.scss'
