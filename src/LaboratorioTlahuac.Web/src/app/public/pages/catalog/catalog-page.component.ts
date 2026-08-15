@@ -48,7 +48,11 @@ type CatalogHistoryMode = 'push' | 'replace';
         </div>
       </section>
 
-      <section class="catalog-workspace" aria-label="Catálogo de productos y precios">
+      <section
+        class="catalog-workspace"
+        aria-label="Catálogo de productos y precios"
+        [attr.aria-busy]="catalogLoadState() === 'loading'"
+      >
         <div class="catalog-workspace-inner">
           <aside class="catalog-category-panel">
             <div class="catalog-category-heading">
@@ -61,6 +65,7 @@ type CatalogHistoryMode = 'push' | 'replace';
               <span>Selecciona una categoría</span>
               <select
                 [value]="selectedSectionKey()"
+                aria-controls="catalog-results"
                 (change)="selectSectionByKey($any($event.target).value)"
               >
                 @for (section of sections(); track section.id) {
@@ -77,7 +82,8 @@ type CatalogHistoryMode = 'push' | 'replace';
                   class="catalog-category-button"
                   type="button"
                   [class.is-active]="section.id === selectedSectionKey()"
-                  [attr.aria-current]="section.id === selectedSectionKey() ? 'true' : null"
+                  [attr.aria-pressed]="section.id === selectedSectionKey()"
+                  aria-controls="catalog-results"
                   (click)="selectSectionByKey(section.id)"
                 >
                   <span class="catalog-category-marker" aria-hidden="true">
@@ -93,9 +99,14 @@ type CatalogHistoryMode = 'push' | 'replace';
           </aside>
 
           <section
+            id="catalog-results"
             class="catalog-results"
             [attr.aria-labelledby]="'catalog-section-title-' + selectedSection().id"
           >
+            <p class="visually-hidden" aria-live="polite" aria-atomic="true">
+              Mostrando {{ selectedSection().name }}: {{ productCountLabel(currentProducts().length) }}.
+            </p>
+
             <header
               class="catalog-section-intro"
               [class.has-media]="getSectionImage(selectedSection())"
@@ -125,7 +136,9 @@ type CatalogHistoryMode = 'push' | 'replace';
                   <img
                     [src]="sectionImage"
                     [alt]="getSectionImageAlt(selectedSection())"
-                    loading="eager"
+                    width="640"
+                    height="480"
+                    loading="lazy"
                     decoding="async"
                     (error)="markImageMissing(sectionImage)"
                   />
@@ -142,6 +155,8 @@ type CatalogHistoryMode = 'push' | 'replace';
                         <img
                           [src]="productImage"
                           [alt]="getProductImageAlt(selectedSection(), product)"
+                          width="640"
+                          height="480"
                           loading="lazy"
                           decoding="async"
                           (error)="markImageMissing(productImage)"
