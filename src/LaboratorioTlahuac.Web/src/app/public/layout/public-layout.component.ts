@@ -1,10 +1,12 @@
-import { Component, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, ViewChild, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-public-layout',
   imports: [RouterLink, RouterLinkActive, RouterOutlet],
   template: `
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
+
     <header class="public-header">
       <div class="header-inner">
         <a routerLink="/" class="brand" aria-label="Ir al inicio" (click)="closeMobileMenu()">
@@ -15,6 +17,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             width="809"
             height="545"
             aria-hidden="true"
+            decoding="async"
           />
           <span class="brand-copy">
             <span class="brand-name">Laboratorio Dental Tláhuac</span>
@@ -31,11 +34,12 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         </nav>
 
         <button
+          #mobileMenuToggle
           type="button"
           class="mobile-menu-toggle"
           aria-controls="public-mobile-nav"
           [attr.aria-expanded]="mobileMenuOpen()"
-          aria-label="Abrir o cerrar navegación"
+          [attr.aria-label]="mobileMenuOpen() ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'"
           (click)="toggleMobileMenu()"
         >
           <span aria-hidden="true"></span>
@@ -60,7 +64,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       </nav>
     </header>
 
-    <main id="contenido-principal" class="public-main">
+    <main id="contenido-principal" class="public-main" tabindex="-1">
       <router-outlet />
     </main>
 
@@ -74,6 +78,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             width="809"
             height="545"
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
           />
           <div>
             <strong>Laboratorio Dental Tláhuac</strong>
@@ -106,6 +112,9 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   styleUrl: './public-layout.component.scss'
 })
 export class PublicLayoutComponent {
+  @ViewChild('mobileMenuToggle', { read: ElementRef })
+  private mobileMenuToggle?: ElementRef<HTMLButtonElement>;
+
   readonly mobileMenuOpen = signal(false);
 
   toggleMobileMenu() {
@@ -114,5 +123,15 @@ export class PublicLayoutComponent {
 
   closeMobileMenu() {
     this.mobileMenuOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeMobileMenuWithEscape() {
+    if (!this.mobileMenuOpen()) {
+      return;
+    }
+
+    this.closeMobileMenu();
+    queueMicrotask(() => this.mobileMenuToggle?.nativeElement.focus());
   }
 }
