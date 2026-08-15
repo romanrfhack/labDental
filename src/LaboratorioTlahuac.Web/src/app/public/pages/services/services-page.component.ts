@@ -18,7 +18,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
 
       <div class="services-v2-grid">
         <article class="services-v2-card" data-animate="stagger-card">
-          <img src="/assets/catalog/products/zirconia-corona-estratificada.webp" alt="Corona de zirconia" width="620" height="420" />
+          <img src="/assets/catalog/products/zirconia-corona-estratificada.webp" alt="Corona de zirconia" width="620" height="420" loading="lazy" decoding="async" />
           <div class="services-v2-card-body">
             <span class="services-v2-index">01</span>
             <h2>Restauraciones estéticas</h2>
@@ -33,7 +33,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
         </article>
 
         <article class="services-v2-card" data-animate="stagger-card">
-          <img src="/assets/catalog/products/iflex-protesis-bilateral.webp" alt="Prótesis removible" width="620" height="420" />
+          <img src="/assets/catalog/products/iflex-protesis-bilateral.webp" alt="Prótesis removible" width="620" height="420" loading="lazy" decoding="async" />
           <div class="services-v2-card-body">
             <span class="services-v2-index">02</span>
             <h2>Prótesis removible</h2>
@@ -48,7 +48,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
         </article>
 
         <article class="services-v2-card" data-animate="stagger-card">
-          <img src="/assets/catalog/products/provisionales-guarda-oclusal-acrilico.webp" alt="Guarda oclusal de acrílico" width="620" height="420" />
+          <img src="/assets/catalog/products/provisionales-guarda-oclusal-acrilico.webp" alt="Guarda oclusal de acrílico" width="620" height="420" loading="lazy" decoding="async" />
           <div class="services-v2-card-body">
             <span class="services-v2-index">03</span>
             <h2>Provisionales y auxiliares</h2>
@@ -62,7 +62,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
         </article>
 
         <article class="services-v2-card" data-animate="stagger-card">
-          <img src="/assets/catalog/products/prostodoncia-dentadura-total-luciton.webp" alt="Dentadura total" width="620" height="420" />
+          <img src="/assets/catalog/products/prostodoncia-dentadura-total-luciton.webp" alt="Dentadura total" width="620" height="420" loading="lazy" decoding="async" />
           <div class="services-v2-card-body">
             <span class="services-v2-index">04</span>
             <h2>Servicios complementarios</h2>
