@@ -6,6 +6,12 @@ import { ActivatedRouteSnapshot, RouterStateSnapshot, TitleStrategy } from '@ang
 const productionOrigin = 'https://laboratoriodentaltlahuac.com';
 const defaultDescription =
   'Laboratorio Dental Tláhuac: prótesis, restauraciones dentales, materiales y precios de referencia para profesionales de la salud dental.';
+const publicDescriptions: Readonly<Record<string, string>> = {
+  '/': 'Laboratorio Dental Tláhuac: prótesis, restauraciones dentales, materiales y precios de referencia para odontólogos, consultorios y clínicas.',
+  '/catalogo': 'Consulta el catálogo de Laboratorio Dental Tláhuac por categorías, con materiales, trabajos, imágenes y precios de referencia en MXN.',
+  '/servicios': 'Conoce las soluciones de Laboratorio Dental Tláhuac en restauraciones estéticas, prótesis removible, provisionales y servicios complementarios.',
+  '/contacto': 'Contacta a Laboratorio Dental Tláhuac para confirmar indicaciones, disponibilidad, tiempos y precio final de tu trabajo dental.'
+};
 
 @Injectable()
 export class AppTitleStrategy extends TitleStrategy {
@@ -21,9 +27,10 @@ export class AppTitleStrategy extends TitleStrategy {
     }
 
     const leafRoute = this.getLeafRoute(snapshot.root);
-    const description = this.getRouteDescription(leafRoute);
-    const canonicalUrl = this.getCanonicalUrl(snapshot.url);
-    const isPrivateRoute = this.isPrivateRoute(snapshot.url);
+    const path = this.getPath(snapshot.url);
+    const description = this.getRouteDescription(leafRoute, path);
+    const canonicalUrl = this.getCanonicalUrl(path);
+    const isPrivateRoute = this.isPrivateRoute(path);
     const isDevelopmentHost = this.document.location.hostname.startsWith('dev.');
     const robots = isPrivateRoute || isDevelopmentHost ? 'noindex, nofollow' : 'index, follow';
     const resolvedTitle = pageTitle ?? this.title.getTitle();
@@ -55,19 +62,26 @@ export class AppTitleStrategy extends TitleStrategy {
     return currentRoute;
   }
 
-  private getRouteDescription(route: ActivatedRouteSnapshot) {
-    const description = route.data['description'];
+  private getRouteDescription(route: ActivatedRouteSnapshot, path: string) {
+    const routeDescription = route.data['description'];
 
-    return typeof description === 'string' && description.trim() ? description.trim() : defaultDescription;
+    if (typeof routeDescription === 'string' && routeDescription.trim()) {
+      return routeDescription.trim();
+    }
+
+    return publicDescriptions[path] ?? defaultDescription;
   }
 
-  private getCanonicalUrl(url: string) {
-    const path = url.split(/[?#]/, 1)[0] || '/';
+  private getPath(url: string) {
+    return url.split(/[?#]/, 1)[0] || '/';
+  }
+
+  private getCanonicalUrl(path: string) {
     return `${productionOrigin}${path === '/' ? '/' : path}`;
   }
 
-  private isPrivateRoute(url: string) {
-    return url === '/login' || url.startsWith('/login?') || url === '/app' || url.startsWith('/app/');
+  private isPrivateRoute(path: string) {
+    return path === '/login' || path === '/app' || path.startsWith('/app/');
   }
 
   private updateCanonicalLink(url: string) {
