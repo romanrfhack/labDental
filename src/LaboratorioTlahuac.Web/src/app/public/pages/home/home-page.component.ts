@@ -17,10 +17,10 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
               Explora materiales, tipos de trabajo y precios de referencia antes de coordinar directamente con el laboratorio.
             </p>
 
-            <div class="home-v2-actions" aria-label="Acciones principales">
+            <nav class="home-v2-actions" aria-label="Acciones principales">
               <a class="home-v2-btn primary" routerLink="/catalogo">Explorar catálogo</a>
               <a class="home-v2-btn secondary" routerLink="/contacto">Hablar con el laboratorio</a>
-            </div>
+            </nav>
 
             <div class="home-v2-trust" aria-label="Ventajas del sitio">
               <span>Catálogo por categorías</span>
@@ -29,13 +29,16 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
             </div>
           </div>
 
-          <div class="home-v2-visual" data-animate="fade-in" aria-label="Muestra de trabajos dentales">
+          <div class="home-v2-visual" data-animate="fade-in" role="group" aria-label="Muestra de trabajos dentales">
             <figure class="home-v2-main-image">
               <img
                 src="/assets/catalog/products/zirconia-corona-estratificada.webp"
                 alt="Corona de zirconia, imagen representativa del catálogo"
                 width="760"
                 height="570"
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
               />
               <figcaption>
                 <span>Zirconia</span>
@@ -46,9 +49,11 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
             <a class="home-v2-mini-card" routerLink="/catalogo" fragment="emax">
               <img
                 src="/assets/catalog/products/emax-corona-estratificada.webp"
-                alt="Corona E-MAX"
+                alt=""
                 width="360"
                 height="270"
+                loading="lazy"
+                decoding="async"
               />
               <span>E-MAX</span>
             </a>
@@ -56,9 +61,11 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
             <a class="home-v2-mini-card" routerLink="/catalogo" fragment="prostodoncia-parcial-total">
               <img
                 src="/assets/catalog/products/prostodoncia-dentadura-total-luciton.webp"
-                alt="Prótesis total"
+                alt=""
                 width="360"
                 height="270"
+                loading="lazy"
+                decoding="async"
               />
               <span>Prótesis removible</span>
             </a>
@@ -75,7 +82,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
 
         <div class="home-v2-category-grid">
           <a routerLink="/catalogo" fragment="zirconia" class="home-v2-category-card" data-animate="stagger-card">
-            <img src="/assets/catalog/products/zirconia-corona-monolitica.webp" alt="Corona monolítica de zirconia" width="520" height="390" />
+            <img src="/assets/catalog/products/zirconia-corona-monolitica.webp" alt="" width="520" height="390" loading="lazy" decoding="async" />
             <div>
               <span>01</span>
               <strong>Zirconia</strong>
@@ -84,7 +91,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
           </a>
 
           <a routerLink="/catalogo" fragment="emax" class="home-v2-category-card" data-animate="stagger-card">
-            <img src="/assets/catalog/products/emax-incrustacion.webp" alt="Incrustación E-MAX" width="520" height="390" />
+            <img src="/assets/catalog/products/emax-incrustacion.webp" alt="" width="520" height="390" loading="lazy" decoding="async" />
             <div>
               <span>02</span>
               <strong>E-MAX</strong>
@@ -93,7 +100,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
           </a>
 
           <a routerLink="/catalogo" fragment="provisionales-guardas" class="home-v2-category-card" data-animate="stagger-card">
-            <img src="/assets/catalog/products/provisionales-guarda-oclusal-acrilico.webp" alt="Guarda oclusal de acrílico" width="520" height="390" />
+            <img src="/assets/catalog/products/provisionales-guarda-oclusal-acrilico.webp" alt="" width="520" height="390" loading="lazy" decoding="async" />
             <div>
               <span>03</span>
               <strong>Provisionales y guardas</strong>
@@ -102,7 +109,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
           </a>
 
           <a routerLink="/catalogo" fragment="prostodoncia-parcial-total" class="home-v2-category-card" data-animate="stagger-card">
-            <img src="/assets/catalog/products/prostodoncia-dentadura-total-kulzer.webp" alt="Dentadura total en acrílico" width="520" height="390" />
+            <img src="/assets/catalog/products/prostodoncia-dentadura-total-kulzer.webp" alt="" width="520" height="390" loading="lazy" decoding="async" />
             <div>
               <span>04</span>
               <strong>Prótesis parcial y total</strong>
@@ -163,7 +170,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
         <div class="home-v2-contact-links" data-animate="fade-in">
           <a href="tel:+525533319445">55 3331 9445</a>
           <a href="mailto:contacto@laboratoriodentaltlahuac.com">contacto@laboratoriodentaltlahuac.com</a>
-          <a class="home-v2-contact-more" routerLink="/contacto">Ver todos los datos de contacto →</a>
+          <a class="home-v2-contact-more" routerLink="/contacto">Ver todos los datos de contacto <span aria-hidden="true">→</span></a>
         </div>
       </section>
     </div>
