@@ -1,412 +1,166 @@
 # Estado Del Proyecto
 
-## Resumen
+Última sincronización documental: **2026-08-22 — DOC-SYNC-1**.
 
-Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y una primera versión del sitio público institucional mobile-first implementada. Ambos frentes viven en el mismo repositorio y en la misma app Angular, pero se documentan por separado para evitar confundir fases.
+Este documento describe el estado vigente. El detalle histórico permanece en `docs/IMPLEMENTATION_LOG.md` y `docs/00-governance/changelog.md`.
 
-Fase actual del frente público/sistema: Fase 1.6 del sitio público cerrada como validada visualmente por el responsable del proyecto, Fase 2.5 del sistema privado cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.0 cerrada como despliegue DEV validado/baseline UAT inicial, Fase 3.2 implementada como MVP de impresión de etiquetas, Fase 3.3 implementada como administración MVP de usuarios y roles, Fase 3.4 implementada para entregas/repartidor mobile-first y Fase 3.5 cerrada en DEV hasta 3.5.4. La Fase 3.5.4.0 está **CERRADA**, 3.5.4.1 está **CERRADA EN DEV**, 3.5.4.2 está **CERRADA EN DEV** y la Fase 3.5.4 completa tiene **QA end-to-end APROBADO**.
+## Resumen Ejecutivo
 
-QA DEV end-to-end Fase 3.5.4, 2026-08-08: commit UI `f9acb0dfa973bd131ab2850c69105c4a90d84470`, GitHub Actions `success`; `/health`, `/api/catalog/public` y `/catalogo` respondieron `200`. Admin creó/editó producto, seleccionó imagen, vio preview antes/después del upload multipart/XSRF, reemplazó la imagen y confirmó el render público. El archivo de evidencia de QA tuvo `86688` bytes, `www-data:www-data`, modo `0644`, dentro de `/var/www/laboratorio-tlahuac-dev/shared/catalog-images`, cuyo directorio conserva `www-data:www-data` y modo `0750`.
+Laboratorio Dental Tláhuac tiene un MVP administrativo privado avanzado y un sitio público institucional implementado en la misma solución Angular/.NET. El ambiente DEV está publicado en `https://dev.laboratoriodentaltlahuac.com` desde la rama `dev` y se utiliza como baseline UAT.
 
-Persistencia y desasociación aprobadas: después del release backend posterior `dev-44-8c2f92b`, el archivo físico siguió existiendo, su GET público siguió en `200` y la imagen permaneció visible. Al quitarla desde la UI, `/api/catalog/public` dejó de referenciarla y `/catalogo` dejó de mostrarla; el archivo físico permaneció y su GET directo siguió en `200`. Este resultado es intencional: DELETE desasocia, no elimina físicamente.
+El sitio público ya completó su ciclo reciente de rediseño y optimización:
 
-Estado operativo Fase 3.5.4.1 en DEV, 2026-08-08: commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, release backend `dev-42-1b0384c`, GitHub Actions `success`; `/health`, `/api/catalog/public` y `/catalogo` respondieron `200`, y GET de imagen inexistente respondió `404`. El storage `/var/www/laboratorio-tlahuac-dev/shared/catalog-images` usa `www-data:www-data`, permisos `0750`, escritura validada para el proceso `www-data`, y `CatalogImages__StoragePath` está configurado una sola vez fuera del repositorio en `/etc/laboratorio-tlahuac-dev/api.env`.
+- `PUB-UX-2`: catálogo público rediseñado como workspace responsive y **aprobado visualmente**.
+- `PUB-UX-3`: home, servicios, contacto y header rediseñados, desplegados en DEV y **aprobados visualmente**.
+- `PUB-UX-4`: accesibilidad, estabilidad visual, SEO y Lighthouse; integrado a `dev` mediante PR #8, merge `bfa07d0285ca66fab359c151b43ed9458a6b7727`.
+- Lighthouse de cierre del árbol integrado: Accesibilidad `100`, Best Practices `100`, SEO `100` en `/`, `/servicios`, `/catalogo` y `/contacto`; Performance entre `91` y `96`.
 
-Actualización Deploy DEV, 2026-08-08: el fallo de `dev-38-11ea0a2` con `502` durante health check se trata como probable timing demasiado agresivo, porque el workflow anterior solo esperaba 5 segundos, la ventana total observada fue de aproximadamente 8 segundos y la API ha tardado 15–20 segundos en llegar a `Now listening`. El rollback dejó estable `dev-37-3dc0347`. El deploy ahora espera con reintentos y exige HTTP `200` primero en `http://127.0.0.1:5012/health` y después en `https://dev.laboratoriodentaltlahuac.com/health`; si falla, imprime estado/journal/symlinks antes de restaurar, y el release anterior también debe superar ambos health checks con reintentos. No se modificó código funcional, backend, frontend, migraciones ni catálogo.
-
-Cierre QA DEV Fase 3.5.3 y deploy resiliente, 2026-08-08: commit `8be9e14ec8cda5e8486770a77733a4413e456e96` desplegado con GitHub Actions `success`; `/health`, `/catalogo` y `/api/catalog/public` sin sesión respondieron `200`. El responsable del proyecto confirmó que activar/desactivar productos y cambiar nombre/precio desde `/app/admin/catalogo` se refleja correctamente en `/catalogo`. El intento anterior `11ea0a296253d2e0a2660963430d49482dc4aaee` falló en el health check posterior al restart; el nuevo deploy valida el ajuste resiliente y cierra ese pendiente. La prueba forzada del fallback con API bloqueada/offline no se ejecutó en DEV y queda como cobertura manual opcional. No hubo cambios funcionales para este cierre documental.
-
-Actualización Fase 3.4.2.1, 2026-07-04: el listado `/app/ordenes` muestra ahora el estado operativo de la orden y el estado logístico de entrega por separado. `WorkOrder.Status` conserva su semántica; una entrega marcada como `FailedDelivery` se muestra como `No entregada` en la columna `Entrega`, sin convertir la orden a otro estado. Las órdenes sin entrega muestran `Sin entrega`.
-
-Actualización Fase 3.4.3, 2026-07-04: `/app/entregas` y `/app/entregas/:id` quedan implementadas como rutas privadas de repartidor con `deliveries.view`. El listado usa `GET /api/deliveries?assignedToMe=true`, muestra cards mobile-first con folio, cliente, paciente/referencia, trabajo, estado, fecha de entrega y dirección/contacto si existen; el detalle valida que la entrega esté asignada al usuario autenticado antes de mostrar datos y permite cerrar con `recipientName` o marcar no entregada con `failedReason` solo si el usuario tiene `deliveries.complete`. No se permite asignar repartidor desde esta UI.
-
-Actualización Fase 3.4.3.1, 2026-07-05: el login ahora usa ruta inicial por permisos cuando no hay `returnUrl` interno válido explícito. La prioridad mantiene `reports.view -> /app/dashboard` y agrega `deliveries.view -> /app/entregas`, por lo que un usuario `Repartidor` sin `reports.view` entra automáticamente a `/app/entregas`. Si existe `returnUrl` interno válido se conserva y `permissionGuard` sigue enviando a `/app/access-denied` cuando falta permiso. `/app/access-denied` usa el mismo inicio por permisos y su enlace principal dice `Ir a mi inicio`. Además, `FailedDelivery` puede reintentarse desde admin y desde repartidor asignado: `PATCH /api/deliveries/{id}/retry` vuelve la entrega a `OutForDelivery`, actualiza `OutForDeliveryAtUtc` con hora de servidor, mantiene `AssignedToUserId`, no cambia `WorkOrder.Status` y permite después marcar entregada o volver a marcar no entregada. El historial completo de intentos queda como fase futura.
-
-QA DEV Fase 3.4.3.1, 2026-07-05: commit `59542efd4f57df7ba04a2444c5496040810d1702` desplegado con GitHub Actions `success`; `/health` respondió `200` y `/api/deliveries` sin sesión respondió `401`. Repartidor quedó validado para login sin `returnUrl` hacia `/app/entregas`, carga de `/app/entregas`, rechazo de `/app/dashboard` hacia `/app/access-denied`, enlace `Ir a mi inicio`, retry de `FailedDelivery`, cierre posterior como `Entregada`, validación de `recipientName` vacío y logout. Admin quedó validado para login a `/app/dashboard`, carga de `/app/ordenes`, grid con `Estado` + `Entrega`, sección `Entrega`, retry sin cambiar `WorkOrder.Status` y refresco del grid. No se reportaron observaciones ni bug claro.
-
-Actualización Fase 3.4.4, 2026-07-05: `/app/entregas` agrega filtros por `Todas`, `En ruta`, `Asignadas`, `No entregadas` y `Entregadas`, más contadores de asignadas/en ruta/no entregadas/entregadas. Las cards mobile-first resaltan folio, cliente, fecha de entrega, estado, trabajo, dirección/contacto si existen y botón principal más claro. `/app/entregas/:id` mejora la jerarquía visual, muestra teléfono con `tel:` solo si existe, WhatsApp clicable solo si existe dato WhatsApp y `Abrir mapa` con Google Maps solo si existe dirección. No se cambian backend, migraciones, dependencias, permisos, rutas privadas, auth, guards, cookies ni XSRF.
-
-QA DEV Fase 3.4.4, 2026-07-05: GitHub Actions `success`, `/health` `200` y `/api/deliveries` sin sesión `401`. Repartidor quedó validado para login, carga de `/app/entregas`, filtros de estado, contadores, cards mobile-first, detalle de entrega, acciones contextuales, reintentar entrega, marcar entregada, marcar no entregada, `tel:` solo si hay teléfono, WhatsApp solo si existe dato, `Abrir mapa` solo si hay dirección y logout. Observaciones: sin hallazgos reportados ni bug claro.
-
-Actualización Catálogo Público, 2026-07-04: `/catalogo` fue rediseñado con carrusel custom de secciones y galería visual por sección usando Angular signals, CSS y assets locales, sin librerías externas. La selección de sección actualiza galería y productos/precios sin cambiar la data, precios, rutas públicas, login/admin, backend, base de datos, migraciones, contratos API ni dependencias npm. Corrección posterior de accesibilidad: el selector de secciones dejó de usar semántica ARIA de tabs y ahora usa navegación con botones y `aria-current` para la sección activa.
-
-Actualización Fase 3.5.0, 2026-07-05: quedó documentado el diseño técnico del catálogo administrable en `docs/01-product/catalog-admin-design.md`. Se inventarió el catálogo actual de 12 secciones y 40 productos, se confirmó que `/catalogo` usa `catalog-data.ts` y assets locales, se propuso modelo `CatalogSection`/`CatalogProduct`, permisos `catalog.view` y `catalog.manage` con `catalog.publish` opcional, endpoints público/admin, estrategia de imágenes y fases 3.5.1 a 3.5.4. Recomendación MVP: backend + migración + seed inicial y selección de imágenes existentes; upload queda para una fase posterior. No se modificó código funcional, no se crearon migraciones, no se tocaron backend/frontend funcional, auth, deploy ni dependencias.
-
-Actualización Fase 3.5.1, 2026-07-05: quedó implementado el backend del catálogo administrable sin cambiar `/catalogo`. Se agregaron entidades `CatalogSection` y `CatalogProduct`, configuración EF, migración `20260705054221_AddCatalogManagement`, seed idempotente inicial desde el catálogo actual, permisos `catalog.view` y `catalog.manage`, endpoint público `GET /api/catalog/public` sin autenticación y endpoints admin bajo `/api/admin/catalog/sections` y `/api/admin/catalog/products`. Admin recibe los permisos por `Permissions.All`; `Repartidor` conserva solo `deliveries.view` y `deliveries.complete`, sin permisos de catálogo. No se implementó UI admin, upload de imágenes ni consumo público de API desde `/catalogo`; las imágenes siguen siendo rutas relativas de assets existentes. QA DEV quedó cerrado en commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8` con GitHub Actions `success`, `/health` `200`, `/api/catalog/public` sin sesión `200`, `/catalogo` `200` y endpoints admin de catálogo sin sesión `401`.
-
-Actualización Fase 3.5.2, 2026-07-05: quedó implementada la UI admin de catálogo/precios bajo `/app/admin/catalogo`, sin cambiar `/catalogo` público. Se agregaron modelos frontend, `AdminCatalogService`, allowlist local `catalog-image-options.ts` con assets `.webp` existentes, navegación privada `Catálogo`, lectura de secciones/productos, filtros por sección/estado, formularios de crear/editar, activar/desactivar, actualización rápida de precio, selección/limpieza de `imagePath` y preview. `catalog.view` puede ver en modo solo lectura; `catalog.manage` ve acciones mutables. `Repartidor` no ve navegación de catálogo. No se implementó upload, no se crearon migraciones, no se tocó backend, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
-
-Validación local Fase 3.5.2, 2026-07-05: `npm run build` correcto sin warning de budget, `dotnet build` correcto con warnings `NU1903` conocidos, `dotnet test` correcto en ejecución serial, `git diff --check` correcto y búsquedas obligatorias ejecutadas con salida sensible limitada a nombres de archivo.
-
-QA DEV Fase 3.5.2, 2026-07-05: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db` desplegado con GitHub Actions `success`; `/health` respondió `200`; `/api/admin/catalog/sections` y `/api/admin/catalog/products` sin sesión respondieron `401`. Admin quedó validado para login, navegación `Catálogo`, carga de `/app/admin/catalogo`, listado y filtro, creación/edición/activación de secciones y productos, actualización de precio, bloqueo de precio negativo, selección/preview/limpieza de imagen existente. `/catalogo` público siguió funcionando y `Repartidor` quedó validado sin navegación ni acceso. Observaciones: sin hallazgos ni bug claro reportado.
-
-Actualización Fase 3.5.3, 2026-07-10: `/catalogo` público quedó conectado localmente a `GET /api/catalog/public` mediante `PublicCatalogService`. La página inicia con `catalog-data.ts` como fallback, muestra un loading breve, reemplaza por API si la respuesta contiene secciones y al menos un producto total válidos, y usa fallback ante error HTTP, timeout, respuesta nula, secciones vacías, catálogo sin productos o error de mapeo. Se conserva el layout público, carrusel, galería, precios MXN, `imagePath`, `altText`, placeholders y rutas públicas. El aviso de fallback es no técnico. No se modificó UI admin, backend, migraciones, upload, `AuthService`, guards, cookies, XSRF, deploy ni dependencias.
-
-Validación local Fase 3.5.3, 2026-07-10: `npm run build` correcto desde `src/LaboratorioTlahuac.Web` con initial total `317.77 kB` sin warning de budget; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 140/140; `git diff --check` correcto. Búsquedas obligatorias de catálogo, rutas públicas/privadas, permisos, upload, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas con salida sensible limitada a nombres de archivo. QA manual DEV queda documentada en `docs/08-qa/public-catalog-api-qa.md`.
-
-Actualización Fase 3.5.4.1, 2026-08-08: **CERRADA EN DEV**. Backend de imágenes persistentes implementado, desplegado y validado con POST/DELETE privados por producto, GET público, `CatalogImages__StoragePath`, máximo 2 MB, extensiones/MIME/firma permitidos, GUID seguro, temporal + rename, compensación ante fallo DB, path traversal bloqueado y compatibilidad con assets heredados. DELETE solo desasocia y no borra. No hay migración ni dependencias nuevas.
-
-Actualización Fase 3.5.4.2, 2026-08-08: **CERRADA EN DEV**. `/app/admin/catalogo` agrega UI solo para imágenes de productos existentes: selector heredado, origen/preview, file input, validación frontend hasta 2 MB para WebP/JPEG/PNG, multipart con XSRF, reemplazo y desasociación. `catalog.manage` controla las acciones; `catalog.view` permanece readonly. El QA end-to-end aprobó creación/edición, preview, upload, reemplazo, persistencia tras deploy, render público y desasociación. No se cambiaron backend, secciones, `/catalogo`, migraciones, dependencias, `AuthService`, guards, cookies, política XSRF ni deploy durante esta UI.
-
-Validación local Fase 3.5.4.1, 2026-08-08: `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test --no-build` correcto con Domain 1/1, Application 1/1 y API 156/156; `npm run build` correcto con initial total `317.77 kB`; suite focalizada catálogo 27/27; `git diff --check` correcto. Búsquedas sensibles se limitaron a nombres de archivo.
-
-Validación local Fase 3.5.4.2, 2026-08-08: `npm run build` correcto con initial total `318.75 kB`; `dotnet build` correcto con 0 errores y warnings `NU1903` conocidos; `dotnet test` correcto con 158/158 pruebas; `git diff --check` correcto. El frontend no tiene script de tests y no se agregó framework. Búsquedas obligatorias ejecutadas; patrones sensibles limitados a nombres de archivo.
-
-Validación del registro QA DEV intermedio Fase 3.5.4.2, 2026-08-08: `npm run build` correcto con initial total `318.75 kB`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 156/156; `git diff --check` correcto. Ese corte fue superado por el cierre end-to-end documentado arriba.
-
-Validación del cierre documental end-to-end Fase 3.5.4, 2026-08-08: `npm run build` correcto con initial total `318.75 kB`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 156/156; `git diff --check` correcto. Solo se modificó documentación.
-
-
-## PUB-UX-2 — Rediseño Visual Del Catálogo Público
-
-Estado: **CERRADO TÉCNICAMENTE EN DEV**; build, pruebas, smoke HTTP/DOM y revisión visual headless desktop/móvil aprobados. La aceptación visual humana final del responsable queda pendiente.
-
-- `/catalogo` usa ahora un workspace controlado por el usuario: sidebar en escritorio, navegación horizontal en tablet y selector nativo con tarjetas compactas en móvil.
-- Se eliminaron autoplay, temporizadores, galería duplicada y cambios automáticos de categoría.
-- La categoría activa se identifica por `key` y se refleja en el hash compartible `/catalogo#<key>`; Atrás/Adelante recorren selecciones previas.
-- Los enlaces profundos de categorías creadas únicamente desde Admin conservan su hash durante la carga inicial y se resuelven cuando responde `GET /api/catalog/public`; solo se normalizan al fallback si la API no contiene la categoría o falla.
-- El catálogo muestra descripciones administrables de categorías y productos cuando existen, sin reservar espacio cuando están vacías.
-- Las imágenes específicas cargadas desde Admin y los assets heredados continúan funcionando; una imagen de categoría se usa solo en el encabezado de la categoría, no como sustituto engañoso para todos los productos.
-- Se mantienen API pública, fallback local, panel administrativo, carga/reemplazo/desasociación de imágenes, permisos, auth, cookies y XSRF sin cambios.
-- Implementación principal integrada mediante PR #1 y ajuste de fidelidad mediante PR #2; la corrección de revisión y documentación se incorpora en el cierre de esta fase.
-- `PUB-UX-2.4` se validó en DEV mediante GitHub Actions run `31276207073`: `/health`, `/catalogo` y `/api/catalog/public` respondieron `200`; la API entregó 12 categorías y 41 productos; el DOM lazy-loaded mostró los marcadores del nuevo workspace.
-- Se generaron y revisaron capturas estables de 1440 x 1200 y 390 x 1200 con `prefers-reduced-motion`; no se detectaron recortes horizontales, problemas de contraste ni bloqueantes responsive.
-- La primera captura headless atenuada correspondía al frame inicial de la transición `data-animate`; la ruta de movimiento reducido confirmó el estado visual final y no requirió cambio funcional.
-
-
-## PUB-UX-3 — Rediseño Del Sitio Público
-
-Estado: **IMPLEMENTADO EN RAMA Y VALIDADO TÉCNICAMENTE; despliegue DEV pendiente al fusionar**.
-
-- Header público compacto con navegación móvil colapsable y acceso al sistema separado.
-- Home reorganizada con hero editorial en dos columnas, imágenes reales del catálogo, CTAs compactos, accesos visuales a categorías, proceso y contacto.
-- `/servicios` funciona como directorio hacia categorías reales de `/catalogo#<key>`, evitando duplicar productos/precios.
-- `/contacto` prioriza teléfonos y correo confirmados y elimina tarjetas de datos pendientes.
-- `/catalogo` conserva PUB-UX-2, API administrable, imágenes persistentes y navegación por `key`.
-- No se modificaron backend, API, migraciones, base de datos, panel administrativo, auth, permisos, cookies, XSRF, guards ni deploy.
+La administración privada de catálogo, precios e imágenes también está cerrada en DEV hasta Fase 3.5.4 con QA end-to-end aprobado.
 
 ## Estado Por Frente
 
-- Sitio público: Fase 1.6 cerrada; `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron aprobados visualmente por el responsable del proyecto. Fase 2.5 confirmó que no hubo regresión visible del sitio público.
-- Catálogo: PUB-UX-2 cerrado técnicamente en DEV como workspace controlado por el usuario, con sidebar en escritorio, navegación horizontal en tablet, selector nativo y tarjetas compactas en móvil; sin autoplay ni galería duplicada. Mantiene API administrable, fallback local, imágenes persistentes, precios MXN y enlaces compartibles por `key`. Smoke DEV: `/health`, `/catalogo` y `/api/catalog/public` en `200`, 12 categorías, 41 productos y DOM lazy-loaded validado.
-- Deploy DEV: `https://dev.laboratoriodentaltlahuac.com` está publicado desde rama `dev` y queda validado como baseline UAT inicial en Fase 3.0. El commit `8be9e14ec8cda5e8486770a77733a4413e456e96` desplegó con GitHub Actions `success`, validó el health check resiliente y dejó `/health`, `/catalogo` y `/api/catalog/public` en `200`. El fallo anterior de `11ea0a296253d2e0a2660963430d49482dc4aaee` quedó atribuido probablemente al timing del health check anterior, sin evidencia clara de crash.
-- Login/auth: `/login` sigue público; login con Admin local validado manualmente y login QA validado manualmente en DEV; el frontend registra un interceptor HTTP funcional que navega a `/login` con `replaceUrl: true` ante `401` de API por sesión expirada, sin tratar `403` como login expirado. Desde Fase 3.4.3.1, si no hay `returnUrl` interno válido explícito, el login usa la ruta inicial por permisos; `Repartidor` con `deliveries.view` y sin `reports.view` va a `/app/entregas`. `returnUrl` externo sigue bloqueado, el `permissionGuard` conserva `/app/access-denied` para falta de permiso, y no se tocaron cookies ni XSRF.
-- Sistema privado: Fase 2.6 implementada, Fase 3.0 validada en DEV, Fase 3.1 documentada, Fase 3.2 implementada, Fase 3.2.1 validada técnicamente, Fase 3.3 implementada para `/app/admin/usuarios` y `/app/admin/roles`, Fase 3.3.1 validada técnicamente sin bloqueantes para preparar despliegue DEV, Fase 3.4.0 documentada para diseñar entregas/repartidor mobile-first, Fase 3.4.1 implementada y desplegada para backend delivery MVP + permisos, Fase 3.4.2 implementada para operar entregas desde `/app/ordenes/:id`, Fase 3.4.2.1 implementada para mostrar estado de entrega en `/app/ordenes`, Fase 3.4.3 implementada para repartidor en `/app/entregas`, Fase 3.4.3.1 implementada y validada en DEV para redirect por permisos y retry de `FailedDelivery`, Fase 3.4.4 implementada y validada en DEV para pulido UX operativo de entregas, Fase 3.5.2 implementada y validada en DEV para administrar catálogo en `/app/admin/catalogo`, y bugs de repintado en Admin > Clientes, Admin > Órdenes > Nueva orden, Admin > Órdenes > Detalle, Admin > Órdenes > Listado, Admin > Órdenes > Edición, Admin > Etiquetas, Admin > Pagos, Admin > Doctores internos y Admin > Dashboard corregidos con signals; `/app`, `/app/dashboard`, `/app/entregas`, `/app/entregas/:id` y `/app/admin/catalogo` siguen privados, `/dashboard` no es ruta privada real, `/app/ordenes` conserva impresión de etiqueta interna y etiqueta de entrega.
-- Frontend performance: `app.routes.ts` usa `loadComponent` para layouts y páginas públicas/privadas, evitando imports eager de features pesadas en el bundle inicial. El budget no se modificó; `npm run build` bajó de `535.62 kB` iniciales con warning a `304.19 kB` sin warning. La optimización lazy loading ya quedó desplegada en DEV junto con el commit `e4c28205c6b866ab0d71edb13c49164100340b0d`.
-- Pendientes del cliente: dirección, horarios, WhatsApp real, aprobación final de precios 2026, aprobación de `Anticipo 50%`, aprobación de `Trabajos urgentes +40%` e imágenes faltantes de `Servicios prostodónticos`.
+### Sitio Público
 
-## Sistema Privado / MVP Administrativo
+Estado: **cerrado funcional y visualmente en DEV; pendiente promoción a producción**.
 
-Estado: avanzado, con QA funcional y demo documentadas; Fase 2.3 queda cerrada por corrección de hallazgos QA del sistema privado.
+Rutas públicas vigentes:
 
-- Ruta privada base: `/app`.
-- Dashboard real: `/app/dashboard`.
-- Login público de entrada: `/login`.
-- Backend .NET 10 y frontend Angular 21 implementados.
-- Auth por cookie HttpOnly, CSRF/XSRF y permisos por claims.
-- Módulos implementados: clientes, doctores, clínicas, doctores internos, órdenes de trabajo, estados, pagos, saldos calculados, dashboard básico y administración MVP de usuarios/roles.
-- Fase 3.3 Usuarios/Roles 2026-07-03: `/app/admin/usuarios` deja de ser placeholder y permite listar usuarios, crear usuarios con contraseña temporal capturada por Admin, editar email/nombre, activar/desactivar, asignar roles existentes y actualizar contraseña temporal sin mostrarla después ni enviarla por correo.
-- Fase 3.3 Roles 2026-07-03: `/app/admin/roles` deja de ser placeholder y muestra roles/permisos en modo solo lectura. La edición de permisos queda fuera del MVP para evitar cambios peligrosos de seguridad sin flujo cerrado.
-- Endpoints Fase 3.3: `GET /api/admin/users`, `GET /api/admin/users/{id}`, `POST /api/admin/users`, `PUT /api/admin/users/{id}`, `PATCH /api/admin/users/{id}/status`, `PATCH /api/admin/users/{id}/roles`, `POST /api/admin/users/{id}/temporary-password`, `GET /api/admin/roles` y `GET /api/admin/roles/{id}`.
-- Permisos Fase 3.3: usuarios requiere `users.manage`; roles requiere `roles.manage`; el frontend conserva `permissionGuard` existente y el backend autoriza cada endpoint con policies existentes.
-- Seed baseline: `SecuritySeed:EnsureBaselineOnStartup` queda `true` en Development para asegurar permisos existentes, sincronizar permisos faltantes del rol `Admin` existente y rol `Repartidor`; desde Fase 3.4.1 el rol `Repartidor` se sincroniza con `deliveries.view` y `deliveries.complete`, sin permisos amplios de órdenes, clientes, pagos, usuarios ni roles.
-- Seguridad Fase 3.3: no hay delete de usuarios/roles, no se exponen `passwordHash` ni contraseñas temporales en respuestas, no se envían correos, no se tocó `AuthService`, `auth.guard.ts`, `permission.guard.ts`, cookies ni XSRF. El backend evita desactivar al propio usuario y evita dejar el sistema sin un usuario activo con `users.manage`.
-- Fase 3.3.1 QA 2026-07-03: appsettings revisados sin secretos reales ni passwords guardados; endpoints admin confirmados con policies `users.manage`/`roles.manage`; sin sesión los nueve endpoints admin devuelven `401` usando XSRF válido en mutables; pruebas API cubren Admin, usuario sin permisos con `403`, no filtrado de `passwordHash` ni contraseña temporal, y `Repartidor` sin permisos. Pendientes DEV: pase visual con Admin, `/app/access-denied` con usuario limitado real y force-change password antes de producción.
-- Fase 3.4.0 Entregas/Repartidor 2026-07-03: análisis técnico previo documentado sin código ni migraciones. Se recomienda crear entidad separada `WorkOrderDelivery` con estado logístico propio (`PendingAssignment`, `Assigned`, `OutForDelivery`, `Delivered`, `FailedDelivery`, `Cancelled`), usar ruta `/app/entregas`, endpoints `/api/deliveries/*`, y permisos `deliveries.view`, `deliveries.assign`, `deliveries.update` y `deliveries.complete`.
-- Fase 3.4.1 Entregas API 2026-07-04: backend delivery MVP implementado sin UI. Se agrega entidad `WorkOrderDelivery`, enum `DeliveryStatus`, migración `20260704053734_AddWorkOrderDeliveries`, endpoints mínimos `GET /api/deliveries`, `GET /api/deliveries/{id}`, `GET/POST /api/work-orders/{workOrderId}/delivery`, `PATCH /api/deliveries/{id}/assign`, `PATCH /api/deliveries/{id}/out-for-delivery`, `PATCH /api/deliveries/{id}/complete` y `PATCH /api/deliveries/{id}/failed`. Repartidor recibe solo `deliveries.view` y `deliveries.complete`; Admin recibe todos los permisos `deliveries.*`.
-- Fase 3.4.1.1 QA Delivery 2026-07-04: migración `20260704053734_AddWorkOrderDeliveries` aplicada correctamente en SQL local `ldt-labdental-sql`/`LaboratorioTlahuac_Dev`; endpoints delivery validados por API real con Admin y Repartidor QA local. Se corrigió idempotencia del seed baseline para que un rol `Admin` existente reciba permisos nuevos de `Permissions.All` aunque `SecuritySeed:RunOnStartup=false`; no se leyeron ni imprimieron secretos, no se ejecutó `dotnet user-secrets list`, no se usó `codex-cobranza-sql`, no se tocó UI/auth/guards/cookies/XSRF/deploy y no se hizo commit.
-- Cierre DEV Fase 3.4.1 2026-07-04: GitHub Actions run `28712956106` desplegó correctamente a DEV el commit `e4c28205c6b866ab0d71edb13c49164100340b0d`; `GET /health` responde `200`; `GET /api/deliveries` sin sesión responde `401`, confirmando Delivery API publicada y protegida. La migración `WorkOrderDeliveries` ya está aplicada o la base está al día. La fase siguiente en ese cierre era Fase 3.4.2 UI admin de entregas desde órdenes, implementada posteriormente en este documento.
-- Fase 3.4.2 UI Admin Entregas 2026-07-04: `/app/ordenes/:id` agrega sección `Entrega` con carga local, estado vacío, creación de entrega, asignación de repartidor desde usuarios activos disponibles, marcar salida, marcar entregada con `recipientName`, marcar no entregada con `failedReason`, timestamps de asignación/salida/entrega/falla, recibido/motivo de falla, errores controlados y refresco de entrega/orden tras cada acción. Se agregan modelos/servicio frontend `DeliveryService` para consumir `/api/work-orders/{workOrderId}/delivery` y `/api/deliveries/*`; no se creó `/app/entregas`, no se implementó UI mobile del repartidor, no se tocó backend, migraciones, endpoints, `AuthService`, guards, cookies, XSRF ni deploy. La carga de repartidores reutiliza endpoints admin existentes; si no se puede filtrar por rol `Repartidor`, muestra advertencia y selector controlado de usuarios activos.
-- Cierre operativo DEV Fase 3.4.2 2026-07-04: GitHub Actions para commit `97d46e9` falló en health check con `502`; el rollback dejó activo `dev-23-eea8f39`. El release `dev-24-97d46e9` quedó copiado, fue validado manualmente en puerto alterno `5013` cargando `/etc/laboratorio-tlahuac-dev/api.env` con parser seguro, y luego se activó cambiando `backend/current` manualmente. El intento inicial de sourcear `api.env` en Bash fue inválido por espacios/semicolons en la connection string. Tras reiniciar `laboratorio-tlahuac-dev-api.service`, el servicio quedó `active`; `GET /health` responde `200` y `/api/deliveries` sin sesión responde `401` en loopback y dominio DEV. Pendiente técnico: hacer el health check del workflow más tolerante después del restart.
-- Fase 3.4.2.1 Listado de órdenes con entrega 2026-07-04: `GET /api/work-orders` agrega `delivery` opcional al item de listado con `deliveryId`, `deliveryStatus`, `deliveryStatusLabel`, `assignedToUserName`, `deliveredAtUtc` y `failedAtUtc`. El listado `/app/ordenes` conserva la columna `Estado` para `WorkOrder.Status`, renombra la fecha planeada a `Fecha entrega` y agrega badge `Entrega`. Si no hay entrega muestra `Sin entrega`; si la entrega está en `FailedDelivery` muestra `No entregada`. No cambia `WorkOrder.Status`, no crea migraciones, no agrega endpoints, no toca auth, guards, cookies, XSRF ni deploy.
-- Fase 3.4.3 UI Repartidor 2026-07-04: `/app/entregas` lista entregas asignadas al usuario autenticado con `assignedToMe=true` en cards mobile-first; `/app/entregas/:id` muestra detalle de entrega asignada con cliente, dirección, contacto, folio, paciente, referencia, trabajo, fecha, estado de orden y seguimiento. La ruta requiere `deliveries.view`; las acciones de marcar entregada con `recipientName` y no entregada con `failedReason` requieren `deliveries.complete`. Si falta `deliveries.complete`, queda lectura sin acciones. La UI no asigna repartidor, no muestra entregas ajenas en el detalle, no muestra información financiera y no toca backend, migraciones, endpoints, `AuthService`, guards, cookies, XSRF ni deploy.
-- Fase 3.4.3.1 Redirect y reintento 2026-07-05: el login calcula inicio por permisos cuando no hay `returnUrl` interno válido, `/app/access-denied` enlaza a ese mismo inicio y un `Repartidor` sin `reports.view` queda dirigido a `/app/entregas`. Se agrega `PATCH /api/deliveries/{id}/retry` para pasar `FailedDelivery` a `OutForDelivery`, con `deliveries.update` para operación/Admin o `deliveries.complete` si el repartidor asignado reintenta su entrega. El reintento mantiene `AssignedToUserId`, actualiza `OutForDeliveryAtUtc`, no cambia `WorkOrder.Status`, permite cierre posterior como `Delivered` y permite volver a `FailedDelivery` con último `failedReason`/`failedAtUtc`. No se agregan migraciones ni dependencias, no se tocan cookies/XSRF, y el historial completo de intentos queda como fase futura.
-- QA DEV Fase 3.4.3.1 2026-07-05: deploy `success` del commit `59542efd4f57df7ba04a2444c5496040810d1702`; `/health` `200`; `/api/deliveries` sin sesión `401`; Repartidor OK para redirect a `/app/entregas`, access denied con `Ir a mi inicio`, retry, cierre posterior, validación de `recipientName` vacío y logout; Admin OK para dashboard, `/app/ordenes`, grid `Estado` + `Entrega`, sección `Entrega`, retry sin cambiar `WorkOrder.Status` y refresco de grid.
-- Fase 3.4.4 UX Entregas 2026-07-05: `/app/entregas` queda con filtros/contadores operativos y cards mobile-first mejoradas; `/app/entregas/:id` queda con jerarquía visual más clara, teléfono/WhatsApp/mapa condicionales y acciones contextuales. El flujo mantiene `deliveries.view` para ver y `deliveries.complete` para cerrar/reintentar entregas.
-- Fase 3.5.0 Catálogo administrable 2026-07-05: fase solo documental. Se recomienda implementar primero backend/base de datos, migración, seed idempotente desde `catalog-data.ts`, permisos `catalog.view`/`catalog.manage`, endpoint público `GET /api/catalog/public` y endpoints privados bajo `/api/admin/catalog`, manteniendo `/catalogo` con data estática hasta la fase de transición pública. La estrategia MVP de imágenes es seleccionar assets existentes; upload queda diferido.
-- Fase 3.5.1 Catálogo API 2026-07-05: backend catálogo administrable implementado sin UI. Se agregan `CatalogSection`, `CatalogProduct`, migración `20260705054221_AddCatalogManagement`, seed idempotente desde `catalog-data.ts`, `CatalogSeed:RunOnStartup`, permisos `catalog.view`/`catalog.manage`, `GET /api/catalog/public`, `GET/POST/PUT/PATCH /api/admin/catalog/sections` y `GET/POST/PUT/PATCH /api/admin/catalog/products`. `GET` admin acepta `catalog.view` o `catalog.manage`; mutaciones requieren `catalog.manage`; Admin recibe ambos permisos; `Repartidor` no recibe permisos de catálogo. No cambia `/catalogo`, no crea UI admin, no implementa upload, no mueve assets, no toca `AuthService`, guards, cookies ni XSRF.
-- Fase 3.5.2 Catálogo UI Admin 2026-07-05: `/app/admin/catalogo` queda implementada como ruta privada con `catalog.view`; la navegación privada muestra `Catálogo` a usuarios con `catalog.view` o `catalog.manage`. La UI consume `/api/admin/catalog/sections` y `/api/admin/catalog/products`, lista secciones/productos, filtra productos por sección/estado, permite crear/editar/activar/desactivar con `catalog.manage`, actualiza precios con endpoint dedicado, selecciona `imagePath` desde assets `.webp` existentes y muestra preview. Usuarios con `catalog.view` sin `catalog.manage` quedan en solo lectura. No cambia `/catalogo`, no implementa upload, no crea migraciones, no toca backend, `AuthService`, guards, cookies ni XSRF.
-- Fase 3.5.3 Catálogo público API/fallback 2026-07-10: `/catalogo` consume `GET /api/catalog/public` con `PublicCatalogService`, valida contrato público y conserva `catalog-data.ts` como fallback ante error HTTP, timeout, respuesta nula, secciones vacías, catálogo sin productos o error de mapeo. Mantiene diseño público, rutas, precios MXN, `imagePath`, `altText`, placeholders y aviso no técnico. No cambia UI admin, backend, migraciones, upload, `AuthService`, guards, cookies ni XSRF.
-- Corrección Clientes 2026-07-02: `/app/clientes` y `/app/clientes/:id` migran su estado async renderizado a Angular signals para evitar que, en modo zoneless con `HttpClient` y `withFetch()`, la vista quede en `Cargando cliente...` o no repinte hasta un clic DOM después de crear un cliente.
-- Corrección Edición de cliente 2026-07-03: `/app/clientes/:id/editar` migra `customer`, `isLoading`, `isSubmitting` y `errorMessage` a Angular signals para que el `GET /api/customers/{id}` pinte el formulario de edición sin quedar en `Cargando cliente...`; el `PUT /api/customers/{id}` conserva el DTO actual y navega al detalle con `NavigationExtras.info` transitorio para `Cliente actualizado correctamente.`.
-- Corrección Nueva orden 2026-07-02: `/app/ordenes/nueva` migra la carga renderizada de clientes activos en `WorkOrderFormComponent` a Angular signals, junto con loading/error local, cliente seleccionado, doctores internos y estado de submit de creación, para que el select `Cliente` muestre las opciones al recibir la respuesta HTTP sin requerir un clic DOM.
-- Corrección Dashboard Admin 2026-07-02: `/app/dashboard` migra `summary`, `isLoading` y `errorMessage` a Angular signals para que `GET /api/dashboard/summary` pinte el resumen o el error controlado al terminar la petición sin depender de clics ni eventos DOM.
-- Corrección Detalle de orden 2026-07-03: `/app/ordenes/:id` migra `order`, `statuses`, `isLoading`, `errorMessage`, `successMessage`, `isChangingStatus` y `statusErrorMessage` a Angular signals para que `GET /api/work-orders/{id}` pinte el detalle o el error controlado sin quedar en `Cargando orden...` después de crear una orden.
-- Corrección Listado de órdenes 2026-07-03: `/app/ordenes` migra `items`, `customers`, `statuses`, filtros, paginación, `isLoading`, `errorMessage` y `totalCount` a Angular signals para que `GET /api/work-orders`, `GET /api/customers` y `GET /api/work-orders/statuses` pinten el listado/filtros sin depender de blur, focus ni clics. La pantalla agrega responsive mínimo: header con wrap, filtros auto-fit, scroll horizontal local para tabla en tablet y cards por orden en móvil.
-- Auditoría zoneless Admin 2026-07-03: se revisaron `loading`, `subscribe()`, `finalize()`, `HttpErrorResponse`, usos de `signal()`, textos de Etiquetas/Pagos/Ordenes/Clientes/Dashboard/Inventario/Proveedores/Usuarios/Roles y posibles hacks de repintado en `src/LaboratorioTlahuac.Web/src/app`. El patrón pendiente con evidencia clara quedó en Edición de orden, Etiqueta interna, Etiqueta entrega, Pagos y Doctores internos; Dashboard, Clientes, Nueva orden, Detalle de orden y Listado de órdenes ya estaban migrados; Inventario, Proveedores, Usuarios y Roles son placeholders sin HTTP.
-- Corrección Admin zoneless extendida 2026-07-03: `/app/ordenes/:id/editar`, `/app/ordenes/:id/etiqueta-trabajo`, `/app/ordenes/:id/etiqueta-entrega`, `/app/pagos`, la sección de pagos dentro de `/app/ordenes/:id` y Doctores internos dentro de cliente detalle migran estado renderizado async a Angular signals. Se cubren datos/listas, loading, submitting/creating/cancelling/saving, mensajes de error, filtros y paginación donde aplica; no se cambiaron endpoints, DTOs, backend, DB, migraciones, auth, `withFetch()` ni `zone.js`.
-- Flujo crear orden 2026-07-03: `POST /api/work-orders` se mantiene sin cambios; al crear correctamente se navega a `/app/ordenes/{id}` con `NavigationExtras.info` transitorio para `successMessage`, y el detalle lo lee desde `Router.currentNavigation()?.extras.info` para que la alerta no persista al recargar la URL.
-- Mejora Nueva orden 2026-07-03: el campo `Costo total` de `WorkOrderFormComponent` muestra formato moneda MXN al perder foco y mantiene el `FormControl` real como `number | null`; el payload `WorkOrderUpsertRequest.totalAmount` se sigue enviando como número o `null`, sin `$`, comas ni texto `MXN`.
-- Sesión expirada 2026-07-03: `authExpiredInterceptor` centraliza la UX de `401` HTTP y navega a `/login` usando ruta Angular y `replaceUrl: true` cuando la sesión expira dentro del layout privado; evita repetir navegación si ya está en `/login` o si otro `401` ya disparó el redirect. `403` queda como error de permisos para componentes/guards.
-- Flujo crear cliente 2026-07-02: `POST /api/customers` se mantiene sin cambios; al crear correctamente se navega a `/app/clientes/{id}` con `NavigationExtras.info` transitorio para `successMessage`, y el detalle lo lee desde `Router.currentNavigation()?.extras.info` para que la alerta no persista al recargar la URL.
-- Correcciones zoneless 2026-07-02 y 2026-07-03 en Clientes, Edición de cliente, Nueva orden, Dashboard Admin, Detalle de orden, Listado de órdenes, Edición de orden, Etiquetas, Pagos y Doctores internos no modificaron backend, contratos API, base de datos, migraciones, `AuthService`, guards, cookies, XSRF, deploy ni dependencias; no se agregó `zone.js` ni se quitó `withFetch()`.
-- QA funcional documentada en `docs/08-qa/`.
-- Demo administrativa documentada en `docs/08-qa/demo-script.md`.
-- Validación Fase 2.0 por código: `/login` sigue público; `/app` está protegido por `authGuard`; `/app/dashboard` está protegido por `permissionGuard` y requiere `reports.view`; `/dashboard` no existe como ruta privada real.
-- Validación Fase 2.0 de login visual/lógica: los cambios visuales de Fase 1.5 en `login-page.component.ts` no alteraron `AuthService.login()`, manejo de errores, sanitización de `returnUrl`, navegación posterior al login ni solicitud de CSRF desde `AuthService`.
-- Validación Fase 2.0 de `returnUrl`: se aceptan rutas internas seguras bajo `/app`, como `/app/dashboard`; en esa fase, valores externos o inválidos como `https://example.com`, `//example.com` y `javascript:alert(1)` usaban fallback seguro `/app/dashboard`. Desde Fase 3.4.3.1 el fallback vigente es la ruta inicial por permisos.
-- Validación Fase 2.1: la connection string de desarrollo apunta a `Server=localhost;Database=LaboratorioTlahuac_Dev`, por lo que es local, pero SQL Server no estuvo accesible en este entorno; `dotnet ef database update` falló por conexión y no aplicó migraciones.
-- Admin local Fase 2.1 quedó pendiente: no existen variables `LT_ADMIN_EMAIL`, `LT_ADMIN_PASSWORD`, `LT_ADMIN_FULL_NAME`, `SecuritySeed__RunOnStartup=true` en el proceso y no existe archivo de user-secrets para `laboratorio-tlahuac-api-dev`; no se inventaron credenciales ni se guardaron secretos.
-- Validación real de login Fase 2.1 quedó pendiente por falta de base local accesible y credenciales Admin locales. Se validó API local con `/health`, Angular local en `http://localhost:4200/login`, `GET /api/auth/csrf` con `204` y `GET /api/auth/me` sin sesión con `401`.
-- Permisos Fase 2.1 confirmados por código: el seed Admin asigna todos los permisos de `Permissions.All`, incluyendo `reports.view`, y `/app/dashboard` requiere `reports.view`.
-- Validación Fase 2.1c: Docker está disponible y se confirmó que no se usará `codex-cobranza-sql` ni otros contenedores de otros proyectos.
-- Contenedor dedicado esperado: `ldt-labdental-sql`; base local esperada: `LaboratorioTlahuac_Dev`; volumen esperado: `ldt-labdental-sql-data`.
-- `ldt-labdental-sql` no existe todavía en este entorno y no se creó porque `LDT_SQL_SA_PASSWORD` no está definida en el proceso. Por seguridad no se inventó password ni se imprimieron secretos.
-- Puertos locales preferidos revisados: `14336`, `14337` y `14338` están libres en el preflight local; el puerto objetivo sigue siendo `14336` cuando la variable esté definida.
-- Fase 2.1c no configuró `ConnectionStrings:DefaultConnection` en user-secrets, no aplicó migraciones, no ejecutó seed Admin y no validó login real porque el bloqueo ocurre antes de crear SQL Server.
-- Variables Admin Fase 2.1c: `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están definidas; `LT_ADMIN_FULL_NAME` existe en el proceso pero no se usó porque seed/login quedaron bloqueados.
-- Actualización Fase 2.1c 2026-05-23: `ldt-labdental-sql` ya existe, está activo y expone `1433/tcp` en el puerto local `14336`; no se usó `codex-cobranza-sql`.
-- `dotnet ef migrations list` confirmó las migraciones `20260508044157_InitialSecurityModel`, `20260509004819_AddCustomersAndInternalDoctors`, `20260509022531_AddWorkOrders` y `20260509053231_AddPayments`.
-- `dotnet ef database update` confirmó que `LaboratorioTlahuac_Dev` ya estaba al día; no hubo migraciones nuevas por aplicar.
-- La API local levantó en `http://localhost:5277`, ejecutó la ruta de seed al inicio con configuración Admin disponible en user-secrets y luego se apagó `SecuritySeed:RunOnStartup` en user-secrets.
-- Validación HTTP 2026-05-23: `/health` respondió `200`, `GET /api/auth/csrf` respondió `204` y `GET /api/auth/me` sin sesión respondió `401`.
-- Login real, `/api/auth/me` autenticado, logout y `/api/auth/me` después de logout siguen pendientes porque `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` no están disponibles en el proceso de Codex; no se extrajeron ni imprimieron secretos.
-- Validación manual 2026-05-23: `/login` carga correctamente, el login con Admin local creado por seed funciona, la navegación redirige a `/app/dashboard` y la ruta privada post-logout redirige a `/login?returnUrl=%2Fapp%2Fdashboard`.
-- Hallazgo manual 2026-05-23: el dashboard cargó una vez, pero al regresar a la página queda en `Cargando dashboard...`; este pendiente queda cerrado posteriormente con la validación manual de Fase 2.1d.
-- `/api/auth/me` autenticado no queda confirmado porque el resultado manual no fue marcado como `sí`; logout independiente tampoco fue marcado, aunque la redirección posterior a logout sí fue reportada como correcta.
-- Confirmación de rutas 2026-05-23: `/login` sigue siendo público; `/app` y `/app/dashboard` siguen siendo privados; `/dashboard` no es ruta privada real.
-- Diagnóstico Fase 2.1d: `/app/dashboard` solo consulta `GET /api/dashboard/summary`; los errores HTTP sí apagaban `isLoading` con `finalize`, pero una petición que queda pendiente no tenía timeout y podía dejar visible `Cargando dashboard...` indefinidamente.
-- Corrección Fase 2.1d: `dashboard-page.component.ts` agrega timeout de 15 segundos a la consulta de resumen y muestra error controlado si la API no responde a tiempo.
-- Fase 2.1d no modificó `AuthService`, guards, rutas, cookies, XSRF, backend, endpoints, permisos, migraciones, deploy ni dependencias.
-- Validación Fase 2.1d sin sesión: `/health` respondió `200`, `GET /api/auth/csrf` respondió `204`, `GET /api/auth/me` respondió `401` y `GET /api/dashboard/summary` respondió `401`.
-- Validación manual Fase 2.1d 2026-05-27: `/login` carga correctamente, login con Admin local validado, redirección posterior a `/app/dashboard` validada y `/app/dashboard` ya no queda indefinidamente en `Cargando dashboard...`.
-- Flujo autenticado validado manualmente; `GET /api/auth/me` autenticado no fue inspeccionado de forma independiente.
-- `GET /api/dashboard/summary` autenticado queda validado indirectamente por la carga correcta del dashboard; el endpoint no fue inspeccionado de forma independiente.
-- Redirección posterior a logout o sesión cerrada validada: `/app/dashboard` redirige a `/login?returnUrl=%2Fapp%2Fdashboard`; logout como acción independiente no queda documentado como inspeccionado por separado.
-- Cierre Fase 2.1d: validado manualmente por el responsable del proyecto sin modificar `AuthService`, guards, rutas, cookies, XSRF, backend, endpoints, base de datos, migraciones, deploy ni dependencias.
-- Validación Fase 2.2 2026-05-27: SQL dedicado `ldt-labdental-sql` activo en `14336`, base local `LaboratorioTlahuac_Dev`, API en `http://localhost:5277` y Angular en `http://localhost:4200`; no se usó `codex-cobranza-sql`.
-- Fase 2.2 validó por HTTP autenticado con Admin: `GET /api/auth/csrf` `204`, `POST /api/auth/login` `200`, `GET /api/auth/me` `200` con 19 permisos, `GET /api/dashboard/summary` `200`, listados de clientes/órdenes/pagos `200`, `POST /api/auth/logout` `200` y `/api/auth/me` posterior `401`.
-- Fase 2.2 creó datos locales de prueba claramente marcados: cliente `Cliente QA LDT 20260527-210940 Editado`, orden `OT-20260528-201A16` y pago `Pago QA LDT 20260527-210940`; no se limpiaron.
-- Fase 2.2 registró dos hallazgos principales: definir zona horaria de negocio para métricas de dashboard como "Para hoy" y agregar estado activo visual en navegación privada si se prioriza UX.
-- Limitación Fase 2.2: no hay navegador/headless local instalado sin agregar dependencias, por lo que redirecciones visuales, consola y Network se documentan por código/API y quedan pendientes para pase manual en navegador real si se requiere.
-- Corrección Fase 2.3: el dashboard define `Dashboard:BusinessTimeZone` con default `America/Mexico_City` y calcula el "hoy" operativo con `clock.UtcNow` convertido a esa zona horaria.
-- Métricas Fase 2.3 ajustadas: `dueToday`, `overdue` y `upcomingDue` usan la fecha operativa del laboratorio; `DeliveryDate` conserva su significado como fecha de entrega capturada.
-- Compatibilidad Fase 2.3: el ID canónico documentado es IANA `America/Mexico_City`; el resolver acepta el equivalente Windows `Central Standard Time (Mexico)` para entornos Windows si aplica.
-- Prueba Fase 2.3 agregada: `OperationalSummaryUsesBusinessTimeZoneDateWhenUtcDateDiffers` cubre el caso donde UTC y Mexico City caen en fechas distintas y valida `dueToday`, `overdue` y `upcomingDue`.
-- Navegación privada Fase 2.3: `PrivateLayoutComponent` usa `routerLinkActive`, `ariaCurrentWhenActive` y `routerLinkActiveOptions` exacto para `/app/dashboard`; se agregaron estilos de activo, hover y focus visible sin cambiar permisos, rutas ni logout.
-- Fase 2.3 no modificó sitio público, `AuthService`, guards, cookies, XSRF, endpoints públicos, rutas privadas, migraciones, deploy ni dependencias.
-- Validación Fase 2.4 2026-05-27: SQL dedicado `ldt-labdental-sql` activo en `14336`, base `LaboratorioTlahuac_Dev`, API en `http://localhost:5277` y Angular en `http://localhost:4200`; `codex-cobranza-sql` no apareció activo ni se usó.
-- Fase 2.4 validó por HTTP/API con Admin: CSRF `204`, login `200`, `/api/auth/me` `200` con 19 permisos, dashboard/listados `200`, logout `200` y endpoints privados posteriores `401`.
-- Fase 2.4 creó datos locales QA: cliente `a5c48811-e171-450b-963e-f929a0d71084` con prefijo `Cliente QA LDT F2.4` y orden `OT-20260528-82F6A6` (`53a35d65-a3ff-4f7d-ab7c-b0b2d658df44`) con `DeliveryDate=2026-05-27`; no se limpiaron.
-- Dashboard Fase 2.4: con la orden QA en fecha operativa local `2026-05-27`, `dueToday` subió de 1 a 2 y `upcomingDue` de 1 a 2; `overdue` se mantuvo en 0 y `generatedAtUtc` se confirmó UTC con offset `+00:00`.
-- Navegación privada Fase 2.4: no hay navegador/headless disponible sin instalar dependencias, por lo que el estado activo se validó por código/build, shell Angular `200` y búsquedas; queda pendiente pase visual humano.
-- Usuario limitado Fase 2.4: no se creó porque no existe mecanismo seguro local fuera de fixtures de pruebas y no se autorizó SQL directo; por código, `permissionGuard` conserva `/app/access-denied` para sesión sin permiso.
-- Fase 2.4 no modificó código, `AuthService`, guards, cookies, XSRF, endpoints, rutas privadas, backend, migraciones, deploy ni dependencias.
-- Fase 2.5 2026-05-28: pase visual/manual privado confirmado en navegador real por el responsable del proyecto.
-- Resultados visuales Fase 2.5: `/login`, login Admin, `/app/dashboard`, `/app/clientes`, `/app/ordenes`, `/app/pagos`, navegación activa en rutas principales, placeholders de inventario/proveedores/usuarios/roles, logout y redirección de `/app/dashboard` sin sesión a `/login?returnUrl=%2Fapp%2Fdashboard` quedaron OK.
-- Fase 2.5 confirma que el sitio público no tuvo regresión visible y no reportó bloqueantes visuales.
-- Fase 2.5 documenta que `/dashboard` raíz sigue sin ser ruta privada real por revisión técnica de `app.routes.ts`.
-- Fase 2.5 define como mecanismo recomendado para usuario QA limitado un seed solo Development, desactivado por default, controlado por user-secrets o variables de entorno, sin imprimir password, sin SQL manual, sin modificar Admin y sin activarse en producción.
-- Plan creado: `docs/08-qa/limited-user-qa-plan.md`.
-- Fase 2.5 no modificó código, backend, `AuthService`, guards, cookies, XSRF, endpoints, rutas privadas, base de datos, migraciones, deploy ni dependencias.
-- Fase 2.6 implementa el seed QA limitado solo `Development` bajo `SecuritySeed:LimitedQaUser`.
-- El seed QA limitado queda desactivado por default y requiere `SecuritySeed:LimitedQaUser:RunOnStartup=true` mas email, password y nombre desde user-secrets o variables de entorno.
-- Variables soportadas para datos sensibles QA: `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME`.
-- Permisos QA limitados: `SecuritySeed:LimitedQaUser:Permissions`, sincronizados contra claves existentes en `Permissions.All`; para validar access-denied se recomienda `customers.view` sin `reports.view`.
-- El rol local `Limited QA` se crea o sincroniza solo en Development; si el email configurado pertenece a un Admin, el seed QA se omite para no alterar Admin.
-- Fase 2.6 no crea migraciones, no agrega endpoints, no usa SQL manual, no guarda secretos en archivos versionados, no imprime contrasenas y no modifica rutas privadas, `AuthService`, guards, cookies, XSRF ni deploy.
-- Pruebas Fase 2.6 agregadas: casos directos del seeder para no crear fuera de Development, no crear si esta desactivado, no crear si falta configuracion requerida, crear con configuracion completa, no otorgar `reports.view` cuando no se configura, otorgar `customers.view` explicito y no alterar Admin.
-- Prueba API Fase 2.6 agregada: login con usuario QA limitado por seed, `/api/auth/me` con permisos limitados, `/api/customers` `200` con `customers.view`, `/api/dashboard/summary` `403` sin `reports.view` y sin sesion `401`.
-- Validacion local real Fase 2.6: pendiente porque `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME` no estan disponibles en el proceso de Codex; no se inventaron credenciales.
-- Validacion navegador Fase 2.6 de `/app/access-denied`: pendiente porque no hay navegador/headless local disponible sin instalar dependencias; quedan pasos manuales exactos en `docs/08-qa/limited-user-qa-plan.md`.
-- Validación DEV Fase 3.0 2026-07-02: `https://dev.laboratoriodentaltlahuac.com` queda registrado como baseline UAT inicial desde rama `dev`; rutas públicas, `/login`, login QA, `/app/dashboard` autenticado y redirección sin sesión a `/login` fueron confirmados manualmente por el responsable del proyecto.
-- Validación `curl` DEV Fase 3.0: `/`, `/servicios`, `/catalogo`, `/contacto`, `/login` y `/app/dashboard` respondieron `200` sin credenciales; para `/app/dashboard`, ese `200` solo confirma el shell SPA y no reemplaza la validación navegador de guards.
-- Usuario QA limitado/access-denied en DEV: sigue pendiente de cierre formal si aún no se prueba con cuenta limitada real sin `reports.view`; el login QA validado en DEV sí tiene acceso al dashboard y no prueba el caso `403`/`/app/access-denied`.
-- Fase 3.1 2026-07-02: análisis operativo documentado para órdenes, etiquetas, reparto, usuarios/roles y catálogo. Se confirma que `/app/ordenes` ya existe y debe extenderse; no se creó panel duplicado, no se modificó código, no se tocaron migraciones, base de datos, auth, guards, endpoints, cookies, XSRF, deploy ni dependencias.
-- Documentos Fase 3.1 creados: `docs/01-product/operations-orders-delivery.md`, `docs/01-product/label-printing.md` y `docs/01-product/driver-mobile-workflow.md`.
-- Fase 3.1 confirma que la orden actual tiene folio, cliente, paciente, trabajo, color, fechas, estado, total, observaciones, historial y pagos; faltan datos de reparto como repartidor asignado, salida, receptor, fecha/hora real de entrega y evidencia.
-- Fase 3.1 recomienda Fase 3.2 como siguiente incremento: impresión de etiqueta interna y etiqueta de entrega desde órdenes existentes, con rutas privadas bajo `/app` y CSS de impresión en milímetros.
-- Fase 3.2 2026-07-02: implementado MVP de impresión desde navegador para órdenes existentes. El detalle `/app/ordenes/:id` agrega acciones `Etiqueta interna` y `Etiqueta entrega`; las rutas privadas nuevas son `/app/ordenes/:id/etiqueta-trabajo` y `/app/ordenes/:id/etiqueta-entrega`, ambas bajo `/app` con `authGuard` heredado y `permissionGuard` usando `orders.view`.
-- Etiqueta interna Fase 3.2: tamaño objetivo 76 x 51 mm; muestra LDT, folio, cliente, doctor interno si existe, paciente, fecha de recepción, fecha de entrega, estado, color si existe, trabajo y observaciones breves si existen.
-- Etiqueta entrega Fase 3.2: tamaño objetivo 102 x 51 mm; muestra LDT, folio, cliente, paciente/referencia, trabajo, fecha de entrega, estado, `Dirección pendiente`, `Contacto pendiente`, `Recibe: __________________` y `Firma: __________________`.
-- Fase 3.2 usa `WorkOrderService.getById()` y no cambia contratos API, endpoints, backend, base de datos, migraciones, deploy ni dependencias; no se implementan todavía QR/barcode, PDF, impresión directa, repartidor asignado, evidencia, firma digital ni etiqueta chica 51 x 25 mm.
-- Limitación Fase 3.2: el detalle actual de orden no incluye dirección/contacto completo del cliente; por eso la etiqueta de entrega imprime textos pendientes seguros hasta diseñar DTO de impresión/entrega o ampliar contrato en fase futura.
-- Fase 3.2.1 2026-07-02: QA técnico de etiquetas cerrado sin hallazgos bloqueantes. Se confirmó que las rutas viven bajo `/app`, requieren sesión y `orders.view`, usan servicio/modelos existentes, no agregan endpoints, migraciones ni dependencias, imprimen con `window.print()`, ocultan navegación/botones en `@media print`, declaran `@page` para 76 x 51 mm y 102 x 51 mm, son legibles sin depender de color, compactan textos largos y muestran `Dirección pendiente`/`Contacto pendiente` cuando faltan datos.
-- Limitación Fase 3.2.1: no hay navegador/headless local disponible sin instalar dependencias; prueba visual real e impresión física quedan pendientes en DEV con impresora térmica.
+- `/`
+- `/servicios`
+- `/catalogo`
+- `/contacto`
+- `/login`
 
-La Fase 1 / Etapa 7 documentada en `docs/05-delivery/phase-1-mvp.md` corresponde a este sistema privado.
+Características vigentes:
 
-## Sitio Público Institucional
+- Diseño mobile-first aprobado.
+- Header público compacto y navegación móvil accesible.
+- Home editorial con acceso directo al catálogo y contacto.
+- Servicios como directorio hacia categorías reales del catálogo.
+- Catálogo administrable consumiendo `GET /api/catalog/public` con fallback local.
+- Imágenes de productos administrables y persistentes fuera de releases.
+- Selección de categoría compartible mediante hash.
+- SEO por ruta y `robots.txt` válido.
+- Skip link, foco visible, reduced motion y mejoras de navegación por teclado.
 
-Estado: Fase 1 implementada como primera versión pública revisable; Fase 1.6 incorporó pulido visual premium con animaciones sutiles, sin cambiar rutas públicas/privadas, y queda cerrada como validada visualmente por el responsable del proyecto.
+Datos públicos confirmados:
 
-- Rutas públicas existentes: `/`, `/catalogo`, `/servicios`, `/contacto`.
-- Entrada al sistema: `/login`.
-- Ubicación técnica: `src/LaboratorioTlahuac.Web/src/app/public`.
-- `/` muestra landing mobile-first con hero, capacidades, proceso, beneficios, contacto y entrada al sistema.
-- `/catalogo` muestra productos, secciones, precios e imágenes desde `GET /api/catalog/public` cuando la API responde correctamente, con fallback local a `catalog-data.ts`.
-- `/servicios` y `/contacto` funcionan como páginas públicas de apoyo.
-- Logo público: `src/LaboratorioTlahuac.Web/src/assets/brand/logo-ldt.webp`, servido como `/assets/brand/logo-ldt.webp`.
-- Identidad incorporada: Laboratorio Dental Tláhuac, `Precisión • Estética • Confianza` y `Prótesis, restauraciones y soluciones dentales`.
-- Contacto incorporado desde cartel/catálogo: 55 3331 9445, 55 2161 2311, 55 9802 9816 y `contacto@laboratoriodentaltlahuac.com`.
-- Los teléfonos se muestran como enlaces `tel:` y el correo como `mailto:`.
-- No se muestra enlace de WhatsApp porque sigue pendiente confirmar si esos teléfonos operan como WhatsApp.
-- Fase 1.2 pulió copy público y retiró CTAs que podían interpretarse como contacto confirmado.
-- Dirección, horarios, WhatsApp como canal real, redes sociales, mapa y materiales visuales adicionales siguen pendientes.
-- El catálogo inicial con precios ya fue incorporado desde datos estructurados.
-- Imágenes del catálogo: `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
-- Data fallback del catálogo: `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
-- Backlog futuro documentado: administración de catálogo, precios e imágenes desde la app privada bajo `/app`. Fase 3.5.1 ya implementa backend/API/seed, Fase 3.5.2 ya implementa UI admin bajo `/app/admin/catalogo` y Fase 3.5.3 conecta `/catalogo` a la API pública con fallback local.
-- Catálogo validado por código: 12 secciones, 40 productos, 19 productos con imagen específica, 16 productos con imagen representativa de sección y 5 productos con placeholder visual.
-- Los 5 placeholders restantes pertenecen a `Servicios prostodónticos`: Reparación de dentadura por fractura, Gancho volado, Descanso metálico c/u, Rebase y Aumentar dientes c/u.
-- Los precios se mantienen como números en API/fallback y se formatean en MXN con `Intl.NumberFormat('es-MX')`.
-- La UI muestra la nota comercial prudente `Precios de referencia 2026 sujetos a confirmación.` porque la información proviene del cartel proporcionado y requiere aprobación final del cliente antes de publicar.
-- Condiciones visibles en cartel/catálogo: `Anticipo 50%` y `Trabajos urgentes +40%`; se documentan y se muestran con texto prudente de confirmación pendiente, no como condiciones definitivas.
-- `angular.json` conserva el copiado de assets `.webp` desde `src/assets` hacia `assets`; no copia archivos `:Zone.Identifier` desde esa carpeta.
-- Los archivos `:Zone.Identifier` del catálogo fueron retirados del working tree. Las imágenes `.webp` y el `.jpg` existente no se borraron.
-- Fase 1.1 ajustó wrapping, espaciado, footer responsive y contenedores públicos para reducir riesgo de overflow.
-- Hallazgo manual corregido: al abrir `/app/dashboard` sin sesión, el frontend debe redirigir a `/login?returnUrl=/app/dashboard` en vez de quedar en blanco si falla la verificación de sesión.
-- Revisión de seguridad/routing completada: `returnUrl` se restringe a rutas internas seguras bajo `/app`; desde Fase 3.4.3.1, si recibe valores externos o inválidos usa la ruta inicial por permisos.
-- No se contó con navegador/headless local para capturas automatizadas; la revisión visual manual ya fue realizada por el responsable del proyecto.
-- Login/guards: sin cambios en Fase 1.3.
-- No se modificaron backend, `AuthService`, cookies, XSRF, endpoints, base de datos, deploy, dependencias ni rutas privadas en Fase 1.3.
-- Documento funcional canónico: `docs/01-product/public-website.md`.
-- Checklist responsive canónico: `docs/08-qa/RESPONSIVE_CHECKLIST.md`.
-- Fase 1.6 aplicada: header/footer más visuales, hero público con composición institucional, reveal escalonado, parallax ligero del logo, microinteracciones en CTAs/cards y catálogo público más premium.
-- Enfoque Fase 1.6: CSS + `IntersectionObserver`; no se instaló GSAP ni otra dependencia.
-- `prefers-reduced-motion` desactiva reveal, parallax y transformaciones relevantes; el contenido no depende del movimiento para entenderse.
-- `/catalogo` mantiene precios legibles, frames uniformes de imágenes, nota `Precios de referencia 2026 sujetos a confirmación.` y condiciones prudentes.
-- Rediseño `/catalogo` 2026-07-04: el selector horizontal tipo chips fue reemplazado por tarjetas compactas de sección con miniatura, nombre destacado y conteo de productos. El carrusel oculta scrollbar, permite flechas, teclado, mouse y touch, autoavanza cada 4 segundos y pausa con hover, focus, interacción manual o `prefers-reduced-motion`.
-- Galería `/catalogo` 2026-07-04: la sección activa muestra una imagen central estable con `aspect-ratio`, miniaturas anterior/siguiente cuando existen y fallback visual para secciones sin imágenes. Las imágenes salen de `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`; `Servicios prostodónticos` conserva fallback porque no tiene imagen propia ni productos con imagen.
-- Accesibilidad `/catalogo` 2026-07-04: el carrusel de secciones ya no usa `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected` ni `aria-controls`; la selección se expresa con botones nativos dentro de `nav aria-label="Secciones del catálogo"` y `aria-current="true"` en la sección activa.
-- Exclusiones rediseño `/catalogo` 2026-07-04: no se modificaron backend, base de datos, migraciones, contratos API, `package.json`, `package-lock.json`, rutas públicas, login/admin, auth, cookies ni XSRF.
-- `/contacto` diferencia datos confirmados contra pendientes sin inventar dirección, horarios ni WhatsApp.
-- `/login` solo recibió pulido visual en SCSS; no se modificó lógica de login, `AuthService`, guards, cookies, XSRF ni `returnUrl`.
-- Validación visual manual Fase 1.6 2026-05-27: `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron revisados y aprobados.
-- Breakpoints revisados y aprobados manualmente: 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
-- Resultado visual Fase 1.6: diseño más atractivo, animaciones sutiles y profesionales, sin scroll horizontal, header móvil estable, logo proporcionado, botones cómodos en celular, catálogo legible, imágenes uniformes, precios correctos, placeholders intencionales y `/contacto` separando datos confirmados contra pendientes.
-- Reduced motion queda validado por implementación/código; no se reportaron hallazgos manuales bloqueantes.
-- Cierre visual Fase 1.6: cerrada y aprobada visualmente por el responsable del proyecto; lista para revisión/retroalimentación del cliente, manteniendo pendientes de contenido real.
+- Teléfonos: `55 3331 9445`, `55 2161 2311`, `55 9802 9816`.
+- Correo: `contacto@laboratoriodentaltlahuac.com`.
 
-La Fase 0/Fase 1 del sitio público corresponde a este frente nuevo. No contradice el avance del MVP administrativo.
+Datos que siguen sin publicarse por falta de confirmación final:
 
-## Dominio Y Deploy
+- Dirección.
+- Horarios.
+- WhatsApp como canal institucional.
+- Redes sociales.
+- Mapa/ubicación pública.
+- Condiciones comerciales no aprobadas formalmente.
 
-Estado: DEV publicado y validado como baseline UAT inicial; Fase 3.4.1 backend delivery MVP, lazy loading frontend, Fase 3.4.2 UI admin de entregas, Fase 3.4.3.1 redirect/retry de entregas y Fase 3.5.2 UI admin catálogo/precios validados en DEV; producción pendiente de definición final.
+### Sistema Privado
 
-- Dominio principal: `laboratoriodentaltlahuac.com`.
-- URL DEV: `https://dev.laboratoriodentaltlahuac.com`.
-- Rama DEV desplegada: `dev`.
-- Plataforma DEV: VPS.
-- Último QA DEV documentado: Fase 3.5.4 completa, end-to-end aprobado; commit UI `f9acb0dfa973bd131ab2850c69105c4a90d84470`; GitHub Actions `success`; `/health`, `/api/catalog/public` y `/catalogo` `200`; upload, preview, reemplazo, persistencia después de `dev-44-8c2f92b`, render público y desasociación OK.
-- Plataforma/DNS/HTTPS productivos: pendientes.
-- Fuente canónica de deploy: `docs/05-delivery/DEPLOYMENT.md`.
-- Validación DEV canónica: `docs/05-delivery/dev-deployment-validation.md`.
+Estado: **MVP operativo avanzado y validado en DEV/UAT**.
 
-## QA
+Implementado:
 
-- QA funcional del MVP administrativo: ejecutada y documentada; Fase 2.2 agrega el reporte `docs/08-qa/private-admin-qa.md`, Fase 2.3 cierra los hallazgos de zona horaria del dashboard y navegación activa, Fase 2.4 agrega pase manual/técnico privado con Admin, Fase 2.5 cierra el pase visual humano privado, Fase 2.6 implementa/prueba por API el usuario QA limitado Development-only, Fase 3.0 registra DEV como baseline UAT inicial, Fase 3.2 agrega `docs/08-qa/label-printing-qa.md`, Fase 3.2.1 amplía ese QA con preparación de prueba física, Fase 3.4.1 registra Delivery API desplegada/protegida en DEV, Fase 3.4.3.1 cierra QA DEV de redirect/retry con Repartidor/Admin, Fase 3.5.2 cierra QA DEV de UI admin catálogo/precios, Fase 3.5.3 agrega QA para catálogo público API/fallback y Fase 3.5.4 cierra QA end-to-end de imágenes en DEV.
-- QA responsive del sitio público: revisión por código/build ejecutada; Fase 1.6 cerrada como validada visualmente por el responsable del proyecto.
-- No existe runner frontend no interactivo; frontend se valida hoy con `npm run build` y revisión manual cuando aplique.
-- Validación Fase 3.4.3.1 2026-07-05: `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 129/129; `npm run build` desde `src/LaboratorioTlahuac.Web` correcto, initial total `314.59 kB`, sin warning de budget. QA DEV real de redirect con usuario `Repartidor`, retry desde Admin/repartidor asignado, cierre posterior, validación de `recipientName` vacío y logout quedó cerrado el 2026-07-05 en commit `59542efd4f57df7ba04a2444c5496040810d1702`.
-- Validación Fase 3.4.4 2026-07-05: `npm run build` desde `src/LaboratorioTlahuac.Web` correcto, initial total `314.59 kB`, sin warning de budget; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 129/129; `git diff --check` correcto. Las búsquedas obligatorias de rutas, permisos, `Reintentar entrega`, `tel:`, `maps`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` se ejecutaron al cierre.
-- QA DEV Fase 3.4.4 2026-07-05: GitHub Actions `success`, `/health` `200`, `/api/deliveries` sin sesión `401`; login Repartidor, `/app/entregas`, filtros, contadores, cards, detalle, acciones contextuales, retry, marcar entregada, marcar no entregada, `tel:` condicional, WhatsApp condicional, mapa condicional y logout quedaron OK. Sin observaciones reportadas.
-- Validación Fase 3.5.0 2026-07-05: `npm run build` desde `src/LaboratorioTlahuac.Web` correcto, initial total `314.59 kB`, sin warning de budget; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 129/129; `git diff --check` correcto. Búsquedas obligatorias ejecutadas: `catalog-data`, `/catalogo`, `catalog.manage`, `Catalog`, `assets/catalog`, `/dashboard`, `/app/dashboard` y `/login`.
-- Validación rediseño catálogo público 2026-07-04: `npm run build` desde `src/LaboratorioTlahuac.Web` correcto sin warning de budget; initial total `313.95 kB`. `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests. `dotnet test` correcto con Domain 1/1, Application 1/1 y API 124/124. `/catalogo` respondió `200` en dev server local y se generaron capturas Playwright móvil/desktop. Pase manual interactivo completo pendiente.
-- Validación accesibilidad catálogo público 2026-07-04: búsqueda de `role="tab`, `tablist`, `tabpanel`, `aria-controls` y `aria-selected` en `catalog-page.component.ts` sin coincidencias; `git diff --check`, `npm run build`, `dotnet build` y `dotnet test` correctos; diffs de `package.json` y `package-lock.json` sin cambios.
-- Validación corrección Clientes 2026-07-02: `git diff --check` correcto; `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101.
-- Validación corrección Dashboard Admin 2026-07-02: `git diff --check`, `npm run build`, `dotnet build`, `dotnet test`, `git status --short` y `git diff --stat` ejecutados al cierre de la tarea. No existe script frontend `test`; solo `ng`, `start`, `build` y `watch`.
-- Validación corrección Órdenes detalle/costo 2026-07-03: `git diff --check`, `npm run build`, `dotnet build`, `dotnet test`, `git status --short` y `git diff --stat` ejecutados al cierre de la tarea. `npm run build` pasa con warning de presupuesto inicial excedido por 1.99 kB; `dotnet build` y `dotnet test` pasan con los 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests. No existe script frontend `test`; solo `ng`, `start`, `build` y `watch`.
-- Validación redirección 401 a login 2026-07-03: `git diff --check`, `npm run build`, `dotnet build`, `dotnet test`, `git status --short` y `git diff --stat` ejecutados al cierre de la tarea. `npm run build` pasa con warning de presupuesto inicial excedido por 2.39 kB; `dotnet build` y `dotnet test` pasan con los 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests. No existe script frontend `test`; solo `ng`, `start`, `build` y `watch`.
-- Validación corrección Edición de cliente 2026-07-03: `git diff --check`, `npm run build`, `dotnet build`, `dotnet test`, `git status --short` y `git diff --stat` ejecutados al cierre de la tarea. `npm run build` pasa con warning de presupuesto inicial excedido por 2.79 kB; `dotnet build` pasa con 0 errores y los 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` pasa con Domain 1/1, Application 1/1 y API 101/101. No existe script frontend `test`; solo `ng`, `start`, `build` y `watch`.
-- Validación corrección Listado de órdenes 2026-07-03: `git diff --check`, `npm run build`, `dotnet build` y `dotnet test` ejecutados correctamente durante la tarea. `npm run build` pasa con warning de presupuesto inicial excedido por 5.93 kB; `dotnet build` pasa con 0 errores y los 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` pasa con Domain 1/1, Application 1/1 y API 101/101. No existe script frontend `test`; solo `ng`, `start`, `build` y `watch`.
-- Validación corrección Admin zoneless extendida 2026-07-03: `git diff --check`, `npm run build`, `dotnet build`, `dotnet test`, `git status --short` y `git diff --stat` ejecutados al cierre de la tarea. `npm run build` pasa con warning de presupuesto inicial excedido por 7.01 kB; `dotnet build` pasa con 0 errores y los 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` pasa con Domain 1/1, Application 1/1 y API 101/101. No existe script frontend `test`; solo `ng`, `start`, `build` y `watch`.
-- Validación manual sugerida para Clientes queda pendiente de navegador real: `/app/clientes` debe pintar sin clic, crear cliente debe mostrar `Cliente creado correctamente.`, navegar a `/app/clientes/{id}`, pintar el detalle sin clic, recargar por URL directa y confirmar listado/búsqueda/filtros/paginación sin errores de consola ni requests anormales.
-- Validación manual sugerida para Dashboard Admin queda pendiente de navegador real: abrir `/app/dashboard`, confirmar que deja de mostrar `Cargando dashboard...`, pinta métricas/resumen sin clic, recargar la página, revisar consola/Network y confirmar que Clientes y Nueva orden no presentan regresión.
-- Validación manual sugerida para Órdenes queda pendiente de navegador real: abrir `/app/ordenes/nueva`, confirmar que el select `Cliente` sigue cargando sin clic manual, capturar `Costo total` como `2000` y confirmar formato MXN al perder foco, crear orden, confirmar navegación a `/app/ordenes/{id}`, confirmar que el detalle pinta sin clic manual, recargar el detalle y revisar consola/Network.
-- Validación manual sugerida para Listado de órdenes queda pendiente de navegador real: abrir y recargar `/app/ordenes`, confirmar que deja de mostrar `Cargando ordenes...` sin blur/focus/clic, revisar `GET /api/work-orders`, `GET /api/customers` y `GET /api/work-orders/statuses` en Network, probar búsqueda, cliente, estado, fechas, incluir canceladas, paginación, acciones Ver/Editar y responsive desktop/tablet/móvil/DevTools sin overflow global ni botón `Nueva orden` cortado.
-- Validación manual sugerida para sesión expirada queda pendiente de navegador real: iniciar sesión, abrir `/app/dashboard`, expirar o eliminar cookie de sesión desde DevTools, provocar `GET /api/dashboard/summary` u otra API protegida con `401`, confirmar navegación final a `/login`, sin loop, y confirmar que un `403` sigue mostrando no autorizado sin redirigir.
-- Validación Fase 1: `npm run build` ejecutado correctamente en `src/LaboratorioTlahuac.Web`.
-- Validación Fase 1.1: `npm run build`, `git diff --check`, rutas por `curl` y búsquedas de `/login`, `/app/dashboard` y `/dashboard` ejecutadas.
-- Validación 2026-05-13: `npm run build` correcto después del ajuste de guards.
-- Revisión de seguridad/routing 2026-05-13: `returnUrl` externo o inválido se bloquea; desde Fase 3.4.3.1 el fallback es la ruta inicial por permisos y usuario autenticado sin permiso conserva flujo a `/app/access-denied`.
-- Validación Fase 1.2: `npm run build`, `git diff --check` y búsquedas de rutas ejecutadas.
-- Validación Fase 1.3: `npm run build`, `git diff --check`, búsqueda de rutas y verificación de assets del catálogo ejecutadas.
-- Validación Fase 1.3.1: `npm run build`, `git diff --check`, búsquedas solicitadas y verificación por nombre de archivos `*:Zone.Identifier` ejecutadas correctamente.
-- Validación Fase 1.5: `npm run build`, `git diff --check` y búsquedas solicitadas de logo, contacto, WhatsApp y rutas ejecutadas correctamente.
-- Validación Fase 2.0: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` ejecutados correctamente.
-- Validación Fase 2.1: `npm run build`, `dotnet build` y `dotnet test` ejecutados correctamente; el primer `dotnet test` se repitió porque chocó con un `dotnet build` paralelo y produjo bloqueo temporal de archivo en `obj`.
-- Validación Fase 2.1 parcial: API levantada en `http://localhost:5277` y `/health` respondió `Healthy`; Angular levantó en `http://localhost:4200/` y `/login` respondió con shell Angular.
-- Validación Fase 2.1 bloqueada: no se pudo validar login real, `/api/auth/me` autenticado, logout ni redirección visual de `/app/dashboard` tras logout porque no hay SQL Server local accesible ni Admin local configurado.
-- Validación Fase 2.1c preflight Docker: `docker version`, `docker ps`, revisión del contenedor `ldt-labdental-sql`, revisión de puertos `14336`/`14337`/`14338` y verificación de variables locales ejecutadas sin imprimir secretos.
-- Validación Fase 2.1c bloqueada: no se creó SQL Server dedicado porque `LDT_SQL_SA_PASSWORD` no está definida; no se configuró user-secrets de conexión, no se ejecutó `dotnet ef database update`, no se levantó API para seed y no se validó login real.
-- Validación Fase 2.1c documental: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas solicitadas ejecutadas correctamente; no se detectaron valores reales de contraseña en archivos versionados, solo nombres de variables o placeholders.
-- Validación Fase 2.1c 2026-05-23: `docker ps --filter "name=ldt-labdental-sql"`, `docker port ldt-labdental-sql`, `dotnet ef migrations list`, `dotnet ef database update`, API local, `/health`, `/api/auth/csrf`, `/api/auth/me` sin sesión, apagado de seed, `npm run build`, `dotnet build` y `dotnet test` ejecutados correctamente.
-- Validación Fase 2.1c 2026-05-23 pendiente en ejecución por Codex: login real autenticado, `/api/auth/me` autenticado, logout y `/api/auth/me` posterior a logout por ausencia de `LT_ADMIN_EMAIL` y `LT_ADMIN_PASSWORD` en el proceso; login real y dashboard autenticado se cerraron posteriormente por validación manual de Fase 2.1d.
-- Validación manual Fase 2.1c 2026-05-23: login real con Admin local confirmado por navegador, redirección a `/app/dashboard` confirmada y redirección post-logout a `/login?returnUrl=%2Fapp%2Fdashboard` confirmada.
-- Validación manual Fase 2.1c 2026-05-23 con hallazgo: `/app/dashboard` no queda validado funcionalmente porque al regresar a la página permanece en `Cargando dashboard...`; este hallazgo se cerró posteriormente en Fase 2.1d.
-- Validación manual Fase 2.1c 2026-05-23 pendiente como evidencia independiente: confirmar explícitamente `GET /api/auth/me` autenticado y logout como acción independiente.
-- Validación técnica post-documentación 2026-05-23: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` ejecutados correctamente.
-- Validación Fase 2.1d 2026-05-23: diagnóstico por código de rutas, guards, `AuthService`, login, dashboard, servicio dashboard y endpoint backend; permiso confirmado como `reports.view` y Admin seed confirmado con `Permissions.All`.
-- Validación Fase 2.1d 2026-05-23: `npm run build`, `dotnet test` y `dotnet build` pasaron; un primer `dotnet build` falló por ejecutarse en paralelo con `dotnet test` y bloquear temporalmente `MvcTestingAppManifest.json`, luego pasó en serial.
-- Validación HTTP Fase 2.0 con Angular dev server en `http://127.0.0.1:4201/`: `/`, `/servicios`, `/catalogo`, `/contacto`, `/login`, `/app`, `/app/dashboard`, `/dashboard` y casos de `/login?returnUrl=...` respondieron con shell Angular `200`; la protección privada se confirmó por router/guards porque `curl` no ejecuta Angular.
-- No existe script `lint` en `src/LaboratorioTlahuac.Web/package.json`.
-- Validación Fase 1.6 2026-05-27: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`, sin warnings de presupuesto tras mover estilos públicos pesados a CSS global acotado.
-- Validación Fase 1.6 2026-05-27: `dotnet build` correcto con 0 warnings y 0 errores.
-- Validación Fase 1.6 2026-05-27: `dotnet test` correcto; Domain 1/1, Application 1/1 y API 90/90.
-- Validación Fase 1.6 2026-05-27: `git diff --check` correcto y búsquedas solicitadas de rutas, `prefers-reduced-motion` y `gsap` ejecutadas.
-- Validación visual Fase 1.6 2026-05-27: cierre manual confirmado por el responsable del proyecto para rutas públicas, `/login`, breakpoints obligatorios, ausencia de scroll horizontal y comportamiento mobile-first.
-- Cierre documental Fase 1.6 2026-05-27: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` se ejecutaron nuevamente correctamente.
-- Cierre documental Fase 1.6 y Fase 2.1d 2026-05-27: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias ejecutadas correctamente.
-- Confirmación Fase 2.1d 2026-05-27: dashboard autenticado cerrado manualmente; `GET /api/auth/me` autenticado queda sin inspección independiente y `GET /api/dashboard/summary` autenticado queda validado indirectamente por carga del dashboard.
-- Confirmación de rutas 2026-05-27: `/login` sigue público; `/app` y `/app/dashboard` siguen privados por routing/guards; `/dashboard` no es ruta privada real.
-- Confirmación de secretos 2026-05-27: la búsqueda en documentos tocados solo encontró nombres de variables, placeholders, textos redactados o menciones de `user-secrets`; no se detectaron valores reales de contraseña, tokens, API keys ni llaves privadas.
-- Validación Fase 2.2 2026-05-27: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias ejecutadas correctamente; búsquedas de patrones sensibles se ejecutaron con salida limitada a archivos para no imprimir valores.
-- Validación Fase 2.3 2026-05-27: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` correctos; `dotnet build` cerró con 0 warnings y 0 errores, y `dotnet test` cerró con Domain 1/1, Application 1/1 y API 91/91 tras agregar prueba de zona horaria.
-- Validación Fase 2.3 2026-05-27: `docker ps --filter "name=ldt-labdental-sql"` y `docker port ldt-labdental-sql` confirmaron SQL dedicado en `14336`; `docker port` requirió permiso fuera del sandbox.
-- Validación Fase 2.3 2026-05-27: búsquedas obligatorias de rutas, `routerLinkActive`, `America/Mexico_City`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas; las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
-- Nota de validación Fase 2.3: la primera ejecución de `dotnet test` falló por tener dos constructores públicos en el fixture de pruebas; se corrigió dejando un solo constructor público y se repitió correctamente.
-- Zona horaria formal de negocio definida en Fase 2.3: `America/Mexico_City`; el hallazgo de `dueToday=0` por cálculo UTC queda corregido por código y prueba automatizada.
-- Validación Fase 2.4 2026-05-27: preflight Docker, API/Angular locales, rutas públicas, rutas privadas por shell Angular, login/logout Admin por API, dashboard con fecha operativa, revisión de navegación activa por código y revisión de mecanismo de usuario limitado ejecutados sin imprimir secretos.
-- Validación de cierre Fase 2.4 2026-05-27: `npm run build`, `dotnet build`, `dotnet test` y `git diff --check` ejecutados correctamente; `dotnet test` cerró con Domain 1/1, Application 1/1 y API 91/91.
-- Búsquedas obligatorias Fase 2.4: rutas, `routerLinkActive`, `America/Mexico_City`, compatibilidad Windows de zona horaria, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas; las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
-- Limitación Fase 2.4: no existe navegador/headless local sin instalar dependencias; la navegación activa queda pendiente de pase visual humano aunque el código y build validan `routerLinkActive`.
-- Limitación Fase 2.4: no existe mecanismo seguro de producto para crear usuario limitado local; `/app/access-denied` queda pendiente de validación manual con usuario real.
-- Validación manual Fase 2.5 2026-05-28: resultados visuales humanos concretos recibidos y documentados; la fase queda completada para pase visual humano privado.
-- Usuario QA limitado Fase 2.5: se recomienda backlog técnico inmediato de seed solo Development documentado en `docs/08-qa/limited-user-qa-plan.md`; no se implementó.
-- Validación de cierre Fase 2.5 2026-05-28: `npm run build`, `dotnet build`, `dotnet test`, `git diff --check` y búsquedas obligatorias ejecutadas correctamente; las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
-- Validacion Fase 2.6 2026-05-28: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`.
-- Validacion Fase 2.6 2026-05-28: `dotnet build` correcto con 0 warnings y 0 errores.
-- Validacion Fase 2.6 2026-05-28: `dotnet test` correcto; Domain 1/1, Application 1/1 y API 101/101.
-- Validacion automatizada Fase 2.6: el usuario QA limitado creado por configuracion de tests puede iniciar sesion, `/api/auth/me` devuelve `customers.view` sin `reports.view`, `/api/customers` responde `200`, `/api/dashboard/summary` responde `403` con sesion limitada y `401` sin sesion.
-- Validacion local real Fase 2.6: no ejecutada porque no hay variables QA limitadas seguras en el proceso y no se ejecuta `dotnet user-secrets list`.
-- Validacion navegador Fase 2.6: no ejecutada porque no hay navegador/headless local disponible sin instalar dependencias.
-- Validacion de cierre Fase 2.6 2026-05-28: `git diff --check` correcto y busquedas obligatorias ejecutadas; busquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
-- Validación Fase 3.0 2026-07-02: `curl` sin credenciales contra `https://dev.laboratoriodentaltlahuac.com`, `/servicios`, `/catalogo`, `/contacto`, `/login` y `/app/dashboard` respondió `200`; se documenta que en SPA Angular la ruta privada puede devolver shell `200` por `curl`, mientras la validación real de guards fue manual por navegador.
-- Validación técnica Fase 3.0 2026-07-02: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` por vulnerabilidad conocida de `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101.
-- Validación Fase 3.1 2026-07-02: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101; `git diff --check` correcto; búsquedas obligatorias de órdenes, `WorkOrder`, `Delivery`, repartidor, catálogo, `/dashboard`, `/app/dashboard` y `/login` ejecutadas.
-- Validación Fase 3.2 2026-07-02: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101; `git diff --check` correcto; búsquedas obligatorias de `/app/ordenes`, `etiqueta`, `@page`, `window.print`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas. Las búsquedas de patrones sensibles se limitaron a archivos para no imprimir valores.
-- Validación Fase 3.2.1 2026-07-02: `npm run build` correcto desde `src/LaboratorioTlahuac.Web`; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 101/101. Búsquedas obligatorias de etiquetas, rutas, `@page`, `window.print`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas; patrones sensibles revisados con salida limitada a archivos para no imprimir valores. Validación visual local no ejecutada por falta de navegador/headless disponible sin instalar dependencias.
-- Validación Fase 3.3 2026-07-03: `npm run build` correcto desde `src/LaboratorioTlahuac.Web` con warning de presupuesto inicial excedido por 31.04 kB; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 110/110 tras agregar pruebas de administración de usuarios/roles. La validación final de `git diff --check` y búsquedas obligatorias queda registrada en la bitácora de implementación.
-- Validación Fase 3.3.1 2026-07-03: `npm run build` correcto con warning de budget inicial excedido por 31.04 kB; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 110/110; `git diff --check` correcto. Local: `ldt-labdental-sql` activo en `14336`, API `http://localhost:5277`, Angular `http://localhost:4200`, `/health` `200`, `/login`, `/app/admin/usuarios` y `/app/admin/roles` como shell Angular `200`. Sin sesión, todos los endpoints admin respondieron `401`; el caso `403` con usuario limitado real queda pendiente en DEV aunque está cubierto por pruebas API para rutas admin.
-- Validación Fase 3.4.0 2026-07-03: `npm run build` correcto desde `src/LaboratorioTlahuac.Web` con warning de budget inicial excedido por 31.04 kB; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 110/110; `git diff --check` correcto. La fase fue solo documental: no se modificó código, no se crearon migraciones, no se agregaron endpoints, no se tocaron auth/guards/cookies/XSRF/deploy y no se instalaron dependencias.
-- Validación Fase 3.4.1 2026-07-04: `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 120/120 tras agregar pruebas de entregas/permisos/seed; `npm run build` correcto desde `src/LaboratorioTlahuac.Web` con warning de budget inicial excedido por 26.71 kB; `git diff --check` correcto; búsquedas finales de delivery, permisos, rutas, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas con salida limitada a archivos para patrones sensibles.
-- Validación optimización frontend lazy loading 2026-07-04: `npm run build` base reprodujo initial total `535.62 kB` con warning por exceder `500.00 kB` en `35.62 kB`; `npm run build -- --stats-json` fue soportado y generó `stats.json` durante esa corrida; tras convertir rutas a `loadComponent`, `npm run build` pasó sin warning con initial total `304.19 kB`, reducción aproximada `231.43 kB`; `dotnet build`, `dotnet test` y `git diff --check` pasaron. No se modificaron budget, backend, `AuthService`, guards, cookies, XSRF, endpoints, migraciones, deploy ni dependencias.
-- Validación cierre documental DEV Fase 3.4.1 2026-07-04: `npm run build` correcto con initial total `304.19 kB` sin warning de budget; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 121/121; `git diff --check` correcto. Solo documentación modificada.
-- Validación Fase 3.4.2 UI admin entregas 2026-07-04: `npm run build` correcto desde `src/LaboratorioTlahuac.Web` con initial total `304.19 kB` sin warning de budget; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 121/121; `git diff --check` correcto; búsquedas obligatorias de delivery, permisos, rutas, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas con salida limitada a archivos para patrones sensibles. La validación manual posterior de Fase 3.4.3.1 cubrió en DEV login Admin, `/app/ordenes`, grid `Estado` + `Entrega`, sección `Entrega`, retry Admin, `WorkOrder.Status` sin cambio y refresco de grid; el caso visual con usuario sin permisos queda como validación independiente si se requiere.
-- Validación cierre operativo DEV Fase 3.4.2 2026-07-04: release `dev-24-97d46e9` validado manualmente en puerto alterno `5013`; `backend/current` ajustado manualmente a ese release; `laboratorio-tlahuac-dev-api.service` reiniciado y `active`; `http://127.0.0.1:5012/health` `200`; `http://127.0.0.1:5012/api/deliveries` sin sesión `401`; `https://dev.laboratoriodentaltlahuac.com/health` `200`; `https://dev.laboratoriodentaltlahuac.com/api/deliveries` sin sesión `401`. No se imprimieron secretos, no se usó `codex-cobranza-sql` y esta tarea modificó solo documentación.
-- Validación Fase 3.4.2.1 listado de órdenes con entrega 2026-07-04: `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 124/124; `npm run build` correcto desde `src/LaboratorioTlahuac.Web` con initial total `305.34 kB` sin warning de budget; `git diff --check` correcto; búsquedas obligatorias de `deliveryStatus`, `deliveryStatusLabel`, `No entregada`, `WorkOrderStatus`, `FailedDelivery`, `/app/ordenes`, `/dashboard`, `/app/dashboard`, `/login`, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas. Las búsquedas sensibles se limitaron a archivos para no imprimir valores.
-- Validación Fase 3.4.3 UI repartidor 2026-07-04: `npm run build` correcto desde `src/LaboratorioTlahuac.Web` con initial total `305.66 kB` sin warning de budget; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 124/124; `git diff --check` correcto; búsquedas obligatorias de `/app/entregas`, `assignedToMe`, `deliveries.view`, `deliveries.complete`, `/dashboard`, `/app/dashboard` y `/login` ejecutadas.
-- Validación Fase 3.5.1 catálogo administrable 2026-07-05: `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests; `dotnet test` correcto con Domain 1/1, Application 1/1 y API 140/140; `npm run build` correcto desde `src/LaboratorioTlahuac.Web` con initial total `314.59 kB` sin warning de budget; `git diff --check` correcto; búsquedas obligatorias de catálogo, rutas públicas/privadas, variables sensibles, `ConnectionStrings` y `codex-cobranza-sql` ejecutadas. Las búsquedas sensibles se limitaron a archivos para no imprimir valores.
-- QA DEV Fase 3.5.1 2026-07-05: commit `ebcf6e54b77ec6c5afaafdf8c21afc77213bf9d8` desplegado con GitHub Actions `success`; `/health` `200`; `/api/catalog/public` sin sesión `200` con secciones, productos, precios MXN e `imagePath`; `/catalogo` `200`; `/api/admin/catalog/sections` sin sesión `401`; `/api/admin/catalog/products` sin sesión `401`. Observación no bloqueante para Fase 3.5.2: validar visualmente rutas de imagen heredadas con nombres `yacket` y doble punto.
-- Cierre documental QA DEV Fase 3.5.1 2026-07-05: `dotnet build`, `dotnet test`, `npm run build` y `git diff --check` ejecutados correctamente; se mantienen solo los 2 warnings `NU1903` conocidos en tests.
-- Validación Fase 3.5.2 UI admin catálogo 2026-07-05: `npm run build` correcto desde `src/LaboratorioTlahuac.Web` con initial total `317.27 kB` sin warning de budget; `dotnet build` correcto con 0 errores y 2 warnings `NU1903` conocidos; primer `dotnet test` paralelo con `dotnet build` falló por bloqueo temporal de archivo en `obj`, luego `dotnet test` en serial pasó con Domain 1/1, Application 1/1 y API 140/140. Validación manual DEV queda documentada en `docs/08-qa/catalog-admin-ui-qa.md`.
-- QA DEV Fase 3.5.2 2026-07-05: commit `e89d1f0b872d253838dc77f5df5fafb61522f9db` desplegado con GitHub Actions `success`; `/health` `200`; endpoints admin de catálogo sin sesión `401`; Admin OK para navegación, carga, listados, filtros, mutaciones, precio negativo bloqueado, selección/preview/limpieza de imagen; `/catalogo` público OK; `Repartidor` sin navegación/acceso OK; sin observaciones ni bug claro reportado.
+- Autenticación por cookie HttpOnly y protección CSRF/XSRF.
+- Usuarios, roles y permisos.
+- Clientes, doctores y clínicas.
+- Órdenes de trabajo.
+- Pagos, abonos, cancelación y saldos calculados.
+- Dashboard operativo/financiero básico.
+- Etiquetas internas y de entrega desde navegador.
+- Entregas/repartidor mobile-first con estados, asignación, reintento y cierre.
+- Administración privada de catálogo, precios e imágenes.
 
-## Comercial
+QA pendiente no bloqueante en DEV:
 
-- Paquete comercial de primera ronda documentado en `docs/09-commercial/`.
-- Las fases comerciales no son el roadmap técnico interno.
-- Próxima conversación comercial: demo con cliente, alcance, precio, prioridades y materiales del sitio.
+- Prueba física de etiquetas con impresora térmica real: `76 x 51 mm` y `102 x 51 mm`.
+- Validación manual en navegador de un usuario limitado real sin `reports.view` y `/app/access-denied`.
+- Prueba forzada del fallback público de catálogo con API bloqueada/offline: opcional.
 
-## Próxima Tarea Recomendada
+### Catálogo Administrable
 
-Validar Fase 3.2 en DEV con impresora térmica real: etiqueta interna 76 x 51 mm y etiqueta de entrega 102 x 51 mm, incluyendo escala y márgenes del navegador. Según `docs/ROADMAP.md`, es el siguiente pendiente técnico canónico ya implementado que requiere evidencia física.
+Estado: **Fase 3.5.4 cerrada en DEV con QA end-to-end aprobado**.
 
-Como coberturas paralelas, puede ejecutarse la prueba forzada de error HTTP, timeout y respuesta inválida del fallback de `/catalogo`; también puede completarse la evidencia humana de `/app/admin/usuarios`, asignación de `Repartidor` y `/app/admin/roles` readonly.
+- Secciones/productos/precios administrables.
+- Activar/desactivar y ordenar.
+- Upload/reemplazo/desasociación de imagen de producto.
+- Compatibilidad con assets heredados.
+- Storage persistente `${LDT_APP_ROOT}/shared/catalog-images`.
+- GET público `/api/catalog/images/{fileName}`.
+- DELETE desasocia; no elimina físicamente el archivo.
 
-Mantener pendientes de cliente para el sitio público: confirmar vigencia de precios 2026, condiciones comerciales del cartel, WhatsApp como canal real, dirección, horarios y reemplazo de imágenes faltantes por archivos `.webp` específicos.
+Backlog de imágenes, no defectos del MVP:
 
-Pendiente paralelo: cerrar validación de usuario QA limitado y `/app/access-denied` en DEV si aún no queda formalmente validada con cuenta limitada real sin `reports.view`.
+- Inventario de huérfanos.
+- Política de retención y limpieza segura.
+- Backup automatizado.
+- Conversión/recompresión WebP.
+- Upload de imagen de sección.
+- Galería múltiple/CDN/cloud storage.
 
-Backlog futuro separado, no bugs de Fase 3.5.4: inventario de archivos huérfanos, política de retención, limpieza segura de imágenes no referenciadas, backup automatizado de `shared/catalog-images`, posible conversión/recompresión WebP, upload de imagen de sección y galería múltiple/CDN/cloud storage. También permanece una fase posterior de firma/foto/ubicación/QR para entregas.
+## Ambientes Y Ramas
+
+### DEV
+
+- Rama: `dev`.
+- URL: `https://dev.laboratoriodentaltlahuac.com`.
+- Estado: publicado y validado como baseline UAT.
+- Deploy: GitHub Actions + VPS con releases inmutables, health checks y rollback.
+
+### Producción
+
+- Rama prevista: `main`.
+- Dominio: `https://laboratoriodentaltlahuac.com`.
+- Estado: **no desplegado**.
+- `dev` contiene una cantidad significativa de trabajo posterior a `main`; no debe promoverse sin fase explícita de readiness.
+- El workflow productivo está protegido por `LDT_ENABLE_PROD_DEPLOY == true` y requiere configuración del environment `production`.
+
+## Riesgos / Pendientes Antes De Producción
+
+Prioridad alta:
+
+1. Hardening de cuentas: definir e implementar cambio obligatorio de contraseña temporal en primer acceso antes de usuarios productivos.
+2. Base SQL Server productiva y revisión controlada de migraciones.
+3. Backup y restore probado de base de datos.
+4. Backup y restore conjunto de `shared/catalog-images` con la BD.
+5. Variables/secrets del environment `production`.
+6. DNS, HTTPS y redirecciones canónicas.
+7. Health checks local/público y rollback de producción.
+8. Smoke de Admin, Repartidor, catálogo administrable y sitio público.
+9. Promoción controlada `dev -> main` únicamente después del checklist productivo.
+
+## Próximo Plan De Trabajo
+
+Fuente: `docs/05-delivery/current-work-plan.md`.
+
+Orden acordado:
+
+1. `DOC-SYNC-1` — reconciliación documental. **Esta actualización lo cierra al integrarse a `dev`.**
+2. `OPS-QA-1` — impresora térmica + usuario limitado; fallback catálogo opcional.
+3. `PROD-READY-1` — seguridad, infraestructura, backups, DNS/HTTPS y release candidate.
+4. `PROD-RELEASE-1` — PR `dev -> main`, despliegue y smoke productivo.
+5. `POST-PROD-1` — monitoreo, backups operativos y observación inicial.
+6. Después: seleccionar nueva fase funcional entre migración Excel, inventario/proveedores, reportes, automatizaciones/WhatsApp o ampliación de entregas.
+
+## Backlog Funcional Mayor
+
+Pendiente de priorización posterior al release productivo:
+
+- Migración/importación del Excel histórico.
+- Inventario y proveedores.
+- Reportes administrativos ampliados.
+- Automatizaciones y WhatsApp.
+- Entregas avanzadas: QR/código, escaneo, evidencia fotográfica/firma e historial de intentos.
+
+## Regla De Fuente De Verdad
+
+Para estado vigente usar, en este orden:
+
+1. `docs/PROJECT_STATUS.md`.
+2. `docs/ROADMAP.md`.
+3. Fuente funcional/técnica específica del frente.
+4. `docs/IMPLEMENTATION_LOG.md` y changelog para historia y evidencia.
+
+Los documentos históricos no deben interpretarse como estado vigente cuando contradigan esta sincronización.
