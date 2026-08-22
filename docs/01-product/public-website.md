@@ -1,402 +1,235 @@
 # Sitio Público Institucional
 
-Fuente canónica funcional del sitio público de Laboratorio Dental Tláhuac.
+Última sincronización: **2026-08-22 — DOC-SYNC-1**.
+
+Fuente funcional vigente del sitio público de Laboratorio Dental Tláhuac.
 
 ## Propósito
 
-Publicar una presencia digital clara, confiable y mobile-first para Laboratorio Dental Tláhuac en `laboratoriodentaltlahuac.com`, sin exponer el sistema administrativo privado.
+Publicar una presencia digital clara, profesional, accesible y mobile-first para Laboratorio Dental Tláhuac, manteniendo separado el sistema administrativo privado bajo `/app`.
 
-## Estado Fase 1
+## Estado Actual
 
-Primera versión pública implementada dentro de `src/LaboratorioTlahuac.Web/src/app/public`.
+Estado en DEV: **implementado, desplegado, optimizado y aprobado visualmente**.
 
-Secciones listas en `/`:
+Cierres recientes:
 
-- Hero principal con mensaje institucional.
-- Capacidades del laboratorio con contenido provisional.
-- Proceso de trabajo de alto nivel.
-- Beneficios para doctores, consultorios y clínicas.
-- Contacto con CTA neutral hacia `/contacto`.
-- Entrada visible al sistema mediante `/login`.
+- `PUB-UX-2`: rediseño de `/catalogo` como workspace responsive — aprobado.
+- `PUB-UX-3`: rediseño de home, servicios, contacto y header — aprobado en DEV.
+- `PUB-UX-4`: accesibilidad, estabilidad visual, SEO y Lighthouse — integrado a `dev` mediante PR #8, merge `bfa07d0285ca66fab359c151b43ed9458a6b7727`.
 
-Páginas públicas listas:
+Producción en `laboratoriodentaltlahuac.com`: **pendiente**.
 
-- `/`: landing institucional mobile-first.
-- `/catalogo`: catálogo público con productos, precios de referencia e imágenes locales.
-- `/servicios`: página de capacidades provisionales.
-- `/contacto`: página de contacto con teléfonos y correo del cartel/catálogo; dirección, horarios y WhatsApp siguen pendientes.
+## Rutas Públicas
 
-Decisión de navegación: se mantienen páginas públicas existentes y la home también usa secciones internas para que la primera experiencia móvil sea recorrible sin cambiar de ruta.
+- `/` — home institucional.
+- `/servicios` — directorio visual hacia familias del catálogo.
+- `/catalogo` — catálogo público administrable.
+- `/contacto` — canales confirmados y guía para preparar consulta.
+- `/login` — entrada al sistema privado.
 
-## Estado Fase 1.1
+Rutas privadas:
 
-QA responsive técnico parcialmente completado.
+- `/app/**` requiere sesión y permisos.
+- `/dashboard` no es una ruta privada real.
 
-- Se revisó la estructura de header, CTAs, cards, footer y páginas públicas por código/SCSS.
-- Se ajustó el footer para evitar columnas rígidas en tablet/desktop.
-- Se reforzó el wrapping de marca, links, botones y textos largos.
-- Se mantuvo `/login` como entrada pública al sistema y `/app` como zona privada.
-- Hallazgo manual corregido: `/app/dashboard` sin sesión debe redirigir a `/login?returnUrl=/app/dashboard` aunque falle la verificación inicial de sesión.
-- No se modificaron `AuthService`, backend, endpoints, cookies, XSRF, base de datos ni deploy.
-- Revisión visual por breakpoint queda pendiente porque el entorno local no tiene navegador/headless disponible sin instalar dependencias.
+## Home
 
-## Estado Fase 1.2
+La home aprobada usa:
 
-Fase ejecutada parcialmente por falta de contenido real confirmado.
+- Hero editorial en dos columnas.
+- Mensaje comercial centrado en prótesis/restauraciones y consulta clara.
+- Acciones compactas hacia catálogo y contacto.
+- Imágenes reales del catálogo.
+- Accesos a familias destacadas.
+- Proceso resumido de consulta.
+- CTA final de contacto.
 
-Contenido real incorporado:
+No debe volver a mostrar copy interno sobre `/app`, rutas técnicas, seguimiento administrativo o implementación.
 
-- Ninguno. La solicitud dejó WhatsApp, dirección, horarios, logo, servicios exactos, texto principal aprobado y materiales visuales como pendientes.
+## Header Y Footer
 
-Cambios aplicados para revisión:
+Header público:
 
-- Se retiró el CTA principal `WhatsApp pendiente por confirmar`.
-- Se reemplazó por CTA neutral hacia `/contacto`.
-- Se ajustaron textos de home, servicios, contacto y footer para no presentar datos pendientes como definitivos.
-- `/servicios` queda como página preparada para el catálogo final, sin publicar servicios exactos.
-- `/contacto` queda como página preparada para datos finales, sin teléfono, dirección ni horarios inventados.
+- Sticky y compacto.
+- Marca/logotipo proporcionados.
+- Navegación a Inicio, Servicios, Catálogo y Contacto.
+- Acceso al sistema diferenciado.
+- Menú móvil colapsable.
+- Soporte de teclado/Escape y foco visible.
+- Skip link hacia contenido principal.
 
-Secciones listas para revisión del cliente:
+Footer:
 
-- Hero principal.
-- Capacidades/catálogo en preparación.
-- Proceso de trabajo de alto nivel.
-- Beneficios para doctores, consultorios y clínicas.
-- Contacto sin datos no confirmados.
-- Entrada a `/login`.
+- Navegación pública.
+- Teléfonos y correo confirmados.
+- Acceso al sistema sin convertirlo en CTA comercial principal.
 
-## Estado Fase 1.3
+## Servicios
 
-Catálogo público implementado en ruta dedicada `/catalogo`.
+`/servicios` funciona como directorio hacia familias reales del catálogo, evitando duplicar productos/precios fuera de la fuente administrable.
 
-Decisión de ruta:
+Familias destacadas pueden enlazar con hash, por ejemplo:
 
-- Se agregó `/catalogo` porque el catálogo contiene muchas secciones, productos, precios e imágenes.
-- `/servicios` se mantiene como página introductoria y enlaza al catálogo.
-- `/login` sigue como entrada pública al sistema.
-- `/app` y `/app/dashboard` siguen como zona privada.
+- `/catalogo#zirconia`
+- `/catalogo#emax`
+- `/catalogo#prostodoncia-parcial-total`
+- `/catalogo#servicios-prostodonticos`
 
-Data del catálogo:
+Los nombres y categorías visibles deben seguir la data real disponible y no inventar servicios no administrados.
 
-- Archivo: `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
-- Interfaces: `CatalogSection` y `CatalogProduct`.
-- Desde Fase 3.5.3, la UI consulta `GET /api/catalog/public` y mapea la respuesta al mismo modelo de vista.
-- `catalog-data.ts` permanece como fallback local para no dejar `/catalogo` vacío si la API falla, tarda demasiado o responde con datos inválidos.
-- Los precios se formatean en MXN desde valores numéricos.
+## Catálogo Público
 
-Imágenes:
+Fuente primaria:
 
-- Carpeta fuente: `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
-- Ruta pública esperada en Angular: `/assets/catalog/products/`.
-- Formato usado en catálogo: `.webp`.
-- Angular copia `src/assets/**/*.webp` como assets públicos.
-- Las imágenes se muestran en un frame uniforme con `aspect-ratio: 4 / 3`, `object-fit: contain`, fondo claro y centrado.
+- `GET /api/catalog/public`.
 
-Manejo de placeholders:
+Fallback:
 
-- Si existe imagen específica del producto, se usa esa imagen.
-- Si falta imagen específica, se usa imagen representativa de la sección.
-- Si no existe imagen de producto ni de sección, se muestra placeholder visual con iniciales.
+- `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
 
-Imágenes pendientes:
+Comportamiento vigente:
 
-- Faltan imágenes específicas para varios productos que hoy usan imagen de sección.
-- Faltan imágenes para `Servicios prostodónticos`; esos productos usan placeholder.
-- Existe `protesis-removible-unidad-acrilica.jpg`, pero no se usa en esta fase porque el criterio definido fue `.webp`.
+- Una categoría activa a la vez.
+- Desktop con navegación lateral.
+- Tablet con navegación horizontal manual.
+- Móvil con selector compacto y tarjetas adaptadas.
+- Sin autoplay.
+- Sin galería duplicada.
+- Selección estable mediante `key`.
+- Hash compartible y compatible con atrás/adelante del navegador.
+- Descripciones opcionales de sección/producto.
+- Imagen de producto propia; sin reutilizar una imagen de sección como si fuera producto distinto.
+- Placeholder visual cuando no existe imagen de producto.
+- Precios formateados en MXN.
+- Carga administrable desde `/app/admin/catalogo`.
 
-Contenido incorporado:
+### Imágenes
 
-- Catálogo inicial completo con secciones, productos y precios provistos para Fase 1.3.
-- No se agregaron WhatsApp, dirección, horarios ni logo porque siguen sin confirmarse.
+Se soportan dos orígenes válidos:
 
-## Estado Fase 1.3.1
+1. Assets heredados `assets/catalog/products/...`.
+2. Imágenes persistentes `/api/catalog/images/{fileName}` cargadas desde administración.
 
-Cierre técnico del catálogo y preparación para revisión visual del cliente.
+Storage DEV validado:
 
-Ruta y estructura:
+- `${LDT_APP_ROOT}/shared/catalog-images`.
 
-- Ruta pública: `/catalogo`.
-- `/servicios` permanece como página introductoria y enlaza a `/catalogo`.
-- Archivo de datos: `src/LaboratorioTlahuac.Web/src/app/public/data/catalog-data.ts`.
-- Carpeta de imágenes: `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
-- Ruta pública esperada de imágenes: `/assets/catalog/products/`.
-- `angular.json` conserva el copiado de `src/assets/**/*.webp` hacia `assets`; no se requirió cambiar configuración.
+El upload/reemplazo/desasociación de imagen de producto está cerrado en DEV con QA end-to-end aprobado.
 
-Conteo validado por código:
+DELETE desasocia la imagen del producto y no elimina físicamente el archivo.
 
-- Secciones: 12.
-- Productos: 40.
-- Productos con imagen específica: 19.
-- Productos con imagen representativa de sección: 16.
-- Productos con placeholder visual: 5.
+## Contacto
 
-Placeholders restantes:
+Datos confirmados y publicables:
 
-- Reparación de dentadura por fractura.
-- Gancho volado.
-- Descanso metálico c/u.
-- Rebase.
-- Aumentar dientes c/u.
+- `55 3331 9445`
+- `55 2161 2311`
+- `55 9802 9816`
+- `contacto@laboratoriodentaltlahuac.com`
 
-Datos y precios:
+Los teléfonos deben usar `tel:` y el correo `mailto:`.
 
-- Los precios permanecen como números en `catalog-data.ts`, no como strings formateados.
-- La UI formatea precios con `Intl.NumberFormat('es-MX')` y moneda `MXN`.
-- El copy visible usa la nota `Precios de referencia 2026 sujetos a confirmación.`.
-- El catálogo se cargó desde el cartel proporcionado; precios, vigencia 2026 y cualquier condición comercial requieren aprobación final del cliente antes de publicar formalmente.
-- No se agregaron condiciones comerciales nuevas en esta fase.
-
-Backlog futuro relacionado:
-
-- La administración de catálogo, precios e imágenes queda documentada como fase futura separada en `docs/01-product/admin-catalog-management.md`.
-- No pertenece a la fase actual del sitio público.
-- Fase 3.5.1 ya implementó backend/API/seed de catálogo, Fase 3.5.2 ya implementó UI admin bajo `/app/admin/catalogo` y Fase 3.5.3 conectó `/catalogo` a `GET /api/catalog/public`.
-- El catálogo público actual consume API cuando la respuesta contiene secciones y productos válidos; si hay error HTTP, timeout, respuesta nula, secciones vacías, catálogo sin productos o error de mapeo, vuelve a `catalog-data.ts`.
-- La edición futura deberá vivir bajo `/app`, requerir permisos administrativos y no exponerse en el sitio público.
-- Fase 3.5.0 documenta el diseño técnico en `docs/01-product/catalog-admin-design.md`; Fase 3.5.3 mantiene `catalog-data.ts` como plan de reversa durante transición DEV.
-- Fase 3.5.1 implementa `GET /api/catalog/public` y endpoints admin de catálogo.
-- Fase 3.5.2 permite administrar secciones/productos/precios e imágenes existentes desde `/app/admin/catalogo`; esos cambios ya pueden alimentar el catálogo público cuando la API responde correctamente.
-- QA DEV Fase 3.5.1 confirmó que `/catalogo` sigue respondiendo `200` y que la API pública de catálogo también responde `200` sin sesión. No se cambió la fuente de datos visible del catálogo público.
-- QA DEV Fase 3.5.2 confirmó que la administración privada de catálogo no rompió `/catalogo` público; en ese cierre la ruta pública seguía funcionando con `catalog-data.ts`.
-- QA DEV Fase 3.5.3 quedó cerrada el 2026-08-08 con commit `8be9e14ec8cda5e8486770a77733a4413e456e96`, GitHub Actions `success`, `/health` `200`, `/catalogo` `200` y `/api/catalog/public` sin sesión `200`.
-- El responsable del proyecto confirmó que activar/desactivar productos y cambiar nombre/precio desde `/app/admin/catalogo` se refleja correctamente en `/catalogo`, validando el consumo real de datos administrados.
-- La degradación forzada con API bloqueada/offline no se probó en DEV; `catalog-data.ts` permanece implementado como fallback y esa prueba queda como cobertura manual opcional, sin bloquear el cierre del camino principal.
-- Fase 3.5.4.1 está cerrada en DEV con backend para imágenes persistentes: el API público puede devolver `imagePath` `/api/catalog/images/{fileName}` y el navegador lo lee mediante GET público.
-- Fase 3.5.4.2 está cerrada en DEV bajo `/app/admin/catalogo`. El QA end-to-end aprobó upload, reemplazo, persistencia tras otro release, render público y desasociación. `/catalogo` no requirió cambios para esta fase: renderiza el `imagePath` recibido y conserva el mismo fallback.
-
-Assets:
-
-- Se retiraron del working tree los archivos `:Zone.Identifier` detectados dentro de `src/LaboratorioTlahuac.Web/src/assets/catalog/products/`.
-- No se borraron imágenes `.webp`.
-- No se borró `protesis-removible-unidad-acrilica.jpg`; sigue documentado como asset local no usado porque el catálogo de esta fase referencia `.webp`.
-
-Rutas confirmadas por revisión de código:
-
-- `/catalogo`, `/servicios` y `/contacto` están bajo layout público.
-- `/login` sigue como entrada pública al sistema.
-- `/app` y `/app/dashboard` siguen bajo zona privada con guards.
-- `/dashboard` no existe como ruta privada real.
-
-## Estado Fase 1.5
-
-Identidad visual y contacto real del cartel/catálogo incorporados.
-
-Marca:
-
-- Logo fuente: `src/LaboratorioTlahuac.Web/src/assets/brand/logo-ldt.webp`.
-- Ruta pública: `/assets/brand/logo-ldt.webp`.
-- El logo se usa proporcionalmente en header público, home y login visual.
-- Nombre comercial: Laboratorio Dental Tláhuac.
-- Eslogan: `Precisión • Estética • Confianza`.
-- Línea descriptiva: `Prótesis, restauraciones y soluciones dentales`.
-- Tokens documentados en `docs/02-domain/brand-guidelines.md`.
-
-Datos de contacto incorporados:
-
-- Teléfonos: 55 3331 9445, 55 2161 2311 y 55 9802 9816.
-- Correo: `contacto@laboratoriodentaltlahuac.com`.
-- Los teléfonos se muestran como teléfonos con enlaces `tel:`.
-- El correo se muestra con enlace `mailto:`.
-
-Datos pendientes:
+Datos que siguen fuera de la interfaz principal por falta de confirmación final:
 
 - Dirección.
 - Horarios.
-- WhatsApp como canal real.
+- WhatsApp institucional.
 - Redes sociales.
-- Mapa o ubicación pública.
+- Mapa/ubicación pública.
 
-Condiciones comerciales:
+## Condiciones Comerciales
 
-- Se mantiene `Precios de referencia 2026 sujetos a confirmación.`.
-- `Anticipo 50%` y `Trabajos urgentes +40%` aparecen en el cartel/catálogo, pero requieren aprobación final del cliente.
-- Si se muestran en UI, deben aparecer con texto prudente de confirmación pendiente, no como condiciones definitivas.
+Se conserva una nota prudente de precios de referencia sujetos a confirmación.
 
-Alcance técnico:
+No publicar como definitivos sin aprobación explícita:
 
-- No se modificaron backend, `AuthService`, guards, cookies, XSRF, endpoints, base de datos, migraciones, deploy, dependencias ni rutas privadas.
-- `/login` sigue como entrada pública.
-- `/app` y `/app/dashboard` siguen como zona privada.
-- `/dashboard` no se creó como ruta privada real.
+- Anticipo `50%`.
+- Trabajos urgentes `+40%`.
+- Tiempos de entrega específicos.
+- Otras condiciones derivadas de carteles/documentos previos.
 
-## Estado Fase 1.6
+## Accesibilidad
 
-Pulido visual premium del sitio público implementado y validado visualmente por el responsable del proyecto.
+Baseline vigente:
 
-Enfoque técnico:
+- Skip link.
+- Navegación por teclado.
+- Foco visible.
+- Menú móvil compatible con Escape.
+- Contraste corregido en páginas públicas.
+- `prefers-reduced-motion` respetado.
+- Imágenes con `alt` administrable o texto alternativo seguro.
+- Dimensiones/aspect-ratio reservados para reducir layout shift.
 
-- Se resolvió sin GSAP y sin dependencias nuevas.
-- Se agregó una directiva pública reusable basada en `IntersectionObserver`, `matchMedia('(prefers-reduced-motion: reduce)')` y CSS transitions.
-- El parallax es ligero y limitado al logo del hero en home mediante `transform`, sin pinning, sin scrub agresivo y sin smooth scroll global.
-- Los estilos pesados de home y catálogo viven en `src/LaboratorioTlahuac.Web/src/styles.scss` con selectores acotados por `.home-page` y `.catalog-page` para no afectar la app privada.
-- Si JS de animación falla, el contenido queda visible porque el estado oculto solo se activa cuando la directiva agrega `public-animation-ready`.
+Lighthouse de cierre PUB-UX-4:
 
-Páginas afectadas:
+| Ruta | Performance | Accesibilidad | Best Practices | SEO |
+| --- | ---: | ---: | ---: | ---: |
+| `/` | 91 | 100 | 100 | 100 |
+| `/servicios` | 95 | 100 | 100 | 100 |
+| `/catalogo` | 93 | 100 | 100 | 100 |
+| `/contacto` | 96 | 100 | 100 | 100 |
 
-- `/`: hero institucional con fondo más cinematográfico, logo con profundidad, entrada de copy/CTAs, reveal escalonado de beneficios, proceso y contacto.
-- `/servicios`: composición más editorial, tarjetas con índice visual, banda de ruta recomendada y CTA claro a `/catalogo`.
-- `/catalogo`: encabezado premium, resumen visual, contacto/condiciones más claras, cards de producto con frame uniforme, microinteracción de imagen y reveal por lote por sección.
-- `/contacto`: cards separan datos confirmados y pendientes; teléfonos/correo quedan destacados sin inventar dirección, horarios ni WhatsApp.
-- `/login`: solo pulido visual de SCSS para reforzar marca; no se modificó lógica, `AuthService`, guards ni `returnUrl`.
+La medición corresponde al árbol final de PUB-UX-4 antes del merge; `dev` contiene ese mismo árbol más el commit de merge.
 
-Accesibilidad y movimiento:
+## SEO
 
-- `prefers-reduced-motion: reduce` desactiva reveal, parallax y transformaciones de hover relevantes.
-- Las animaciones no son necesarias para entender el contenido.
-- Focus visible y contraste se mantienen con tokens LDT.
-- No se oculta contenido esencial sin JS.
+Implementado:
 
-Validación visual manual 2026-05-27:
+- Título/descripción por ruta pública.
+- Descripción institucional actualizada.
+- `robots.txt` válido.
+- `/login` y `/app` desautorizados para rastreo mediante robots.
 
-- `/`, `/servicios`, `/catalogo`, `/contacto` y `/login` fueron revisados visualmente y aprobados.
-- Breakpoints revisados y aprobados: 360px, 375px, 390px, 414px, 768px, 1024px y desktop.
-- No se detectó scroll horizontal.
-- El header no se rompe en móvil, el logo se ve proporcionado y los botones son cómodos en celular.
-- El catálogo sigue legible, las imágenes se ven uniformes, los precios se leen correctamente y los placeholders se ven intencionales.
-- `/contacto` separa datos confirmados y pendientes correctamente.
-- El diseño se considera más atractivo visualmente y las animaciones se sienten sutiles y profesionales.
-- El sitio sigue siendo mobile-first y no se detectaron problemas visuales bloqueantes.
-- Reduced motion queda validado por implementación/código; no se reportaron hallazgos manuales bloqueantes.
+Pendiente para producción:
 
-Cierre:
+- Validar dominio canónico final.
+- Decidir `www` o dominio raíz.
+- Revisar indexación después de publicación productiva.
+- Sitemap solo si se considera necesario; no es requisito del MVP actual.
 
-- Fase 1.6 queda cerrada como validada visualmente.
-- El enfoque CSS + `IntersectionObserver` queda aceptado para esta etapa.
-- No se usó GSAP ni se instalaron dependencias nuevas.
-- El sitio queda listo para revisión y retroalimentación del cliente.
+## Rendimiento
 
-Pendientes de cliente:
+Medidas vigentes:
 
-- Dirección.
-- Horarios.
-- WhatsApp como canal real.
-- Aprobación final de precios 2026.
-- Aprobación de `Anticipo 50%`.
-- Aprobación de `Trabajos urgentes +40%`.
-- Imágenes faltantes de `Servicios prostodónticos`.
-- Lighthouse o revisión equivalente queda para una fase posterior.
+- Lazy loading de rutas Angular.
+- Lazy loading de imágenes below-the-fold cuando corresponde.
+- Sin librería externa de carrusel.
+- Sin nuevas dependencias para PUB-UX-2/3/4.
+- Composición con CSS y Angular nativos.
 
+## Estado De Aprobación
 
-## Estado PUB-UX-2 — Workspace Del Catálogo Público
+Aprobado por revisión humana en DEV:
 
-Estado: **cerrado técnicamente en DEV; aceptación visual humana final pendiente**.
+- Catálogo desktop/móvil.
+- Home, servicios, contacto y header.
+- Dirección visual general posterior a PUB-UX-3.
 
-Experiencia vigente de `/catalogo`:
+`PUB-UX-4` cerró mejoras técnicas sin replantear el diseño visual aprobado.
 
-- Una sola categoría activa controlada por el usuario; no existe autoplay ni cambio automático de contenido.
-- Escritorio usa panel lateral; tablet usa navegación horizontal; móvil usa selector nativo y tarjetas compactas horizontales.
-- La selección se identifica por `key`, actualiza `/catalogo#<key>` y funciona con Atrás/Adelante.
-- Enlaces profundos de categorías creadas únicamente desde Admin se conservan mientras carga la API y se resuelven contra la respuesta pública.
-- Se muestran descripciones administrables de sección y producto cuando existen.
-- Una imagen de producto se usa solo para su producto; la imagen de categoría aparece únicamente en el encabezado de esa categoría.
-- Se mantienen `GET /api/catalog/public`, timeout, fallback `catalog-data.ts`, precios MXN, placeholders, imágenes heredadas y `/api/catalog/images/{fileName}`.
-- No se modificaron backend, migraciones, permisos, auth, guards, cookies, XSRF ni el panel administrativo.
+## Próximo Hito
 
-Validación de cierre:
+El sitio público no requiere otra fase de rediseño antes de producción.
 
-- Angular build correcto; initial total `321.10 kB`, sin warning de budget.
-- .NET build correcto; Domain 1/1, Application 1/1 y API 158/158.
-- GitHub Actions run `31276207073`: `/health`, `/catalogo` y `/api/catalog/public` en `200`; 12 categorías y 41 productos; DOM lazy-loaded validado.
-- Capturas de 1440 x 1200 y 390 x 1200 revisadas con movimiento reducido; sin scroll horizontal, recortes, contraste insuficiente ni bloqueantes responsive.
-- La captura inicial atenuada fue un frame transitorio de `data-animate` en Chrome headless; el estado estable y `prefers-reduced-motion` quedaron correctos.
+Próximos pasos globales:
 
-Siguiente fase de rediseño público: `PUB-UX-3`, enfocada en home, servicios, contacto y encabezado público.
+1. `OPS-QA-1` para QA operativo pendiente del sistema privado.
+2. `PROD-READY-1` para preparar infraestructura, seguridad, backup/restore, DNS y HTTPS.
+3. `PROD-RELEASE-1` para promover `dev -> main` y publicar producción.
 
+Fuente de priorización: `docs/05-delivery/current-work-plan.md`.
 
-## Estado PUB-UX-3 — Rediseño Del Sitio Público
+## Alcance Protegido
 
-- Home: hero editorial con imágenes reales del catálogo, acciones compactas, accesos directos a familias, proceso de consulta y contacto.
-- Header: navegación desktop compacta y menú móvil colapsable; `/login` sigue siendo acceso público al sistema.
-- Servicios: directorio visual que enlaza a categorías administrables del catálogo mediante hash.
-- Contacto: teléfonos y correo confirmados; datos no confirmados se mantienen fuera de la interfaz principal.
-- Se mantiene separación funcional entre sitio público y aplicación privada bajo `/app`.
-- Sin cambios de backend, API, auth, permisos, cookies, XSRF o dependencias.
+Cualquier cambio futuro del sitio público debe preservar salvo decisión explícita:
 
-## Audiencia
+- Rutas privadas y guards.
+- Auth/cookies/XSRF.
+- Contratos API de catálogo.
+- Administración de catálogo e imágenes.
+- Fallback de catálogo.
+- Diseño visual aprobado como baseline.
 
-- Doctores y doctoras que buscan un laboratorio dental.
-- Clínicas dentales que requieren trabajos de laboratorio.
-- Clientes potenciales que necesitan ubicación, servicios y contacto.
-- Personal interno que usará `/login` como entrada al sistema.
-
-## Páginas Públicas Planeadas
-
-Rutas existentes para Fase 1:
-
-- `/`: página principal.
-- `/catalogo`: catálogo público de productos y precios.
-- `/servicios`: servicios del laboratorio.
-- `/contacto`: datos de contacto, ubicación y forma de comunicación.
-- `/login`: entrada pública al sistema privado.
-
-Rutas futuras opcionales:
-
-- `/trabajos`
-- `/ubicacion`
-- `/privacidad`
-
-## Enfoque Mobile-First
-
-- El cliente revisará primero desde celular.
-- La navegación debe funcionar cómodamente con dedo.
-- Los botones y enlaces deben tener área táctil suficiente.
-- El texto debe ser legible sin zoom.
-- No debe existir scroll horizontal.
-- Las imágenes deben estar optimizadas.
-- Validación obligatoria: `docs/08-qa/RESPONSIVE_CHECKLIST.md`.
-
-## Entrada A Login
-
-- `/login` debe mantenerse visible como acceso al sistema.
-- `/login` no debe mezclarse visualmente con rutas privadas.
-- El rediseño visual del sitio público no debe cambiar auth, cookies, guards, permisos ni CSRF/XSRF.
-- Validación Fase 2.0: `/login` sigue público y los cambios visuales de Fase 1.5 no alteraron `AuthService.login()`, manejo de errores, sanitización de `returnUrl` ni navegación posterior al login.
-- El flujo validado manualmente para Fase 2.1d es `/` o ruta pública -> `/login` -> login correcto con Admin local -> `/app/dashboard`; QA manual más amplio del sistema privado queda para Fase 2.2.
-
-## Contenido Pendiente Del Cliente
-
-- Servicios finales a publicar.
-- Textos institucionales.
-- WhatsApp como canal real.
-- Ubicación.
-- Horarios.
-- Fotografías o materiales visuales adicionales aprobados.
-- Aprobación final de precios y condiciones comerciales visibles en el cartel.
-
-Estos datos siguen pendientes después de Fase 1.2; no se deben presentar placeholders como información definitiva.
-
-## Contenido Provisional
-
-No se inventaron dirección, horarios, WhatsApp, redes sociales ni mapa. Mientras el cliente confirma información, el sitio evita enlazar canales no confirmados y muestra avisos seguros:
-
-- WhatsApp no confirmado.
-- Dirección no confirmada.
-- Horarios no confirmados.
-
-Las capacidades publicadas en Fase 1 son descripciones generales provisionales, no catálogo final de servicios. Deben validarse con el cliente antes de presentarse como oferta cerrada.
-
-## Relación Con Dominio
-
-- Dominio principal: `laboratoriodentaltlahuac.com`.
-- El sitio público debe cargar por HTTPS cuando haya producción.
-- La app privada seguirá bajo `/app` en el mismo dominio salvo decisión futura.
-
-## Fuera De Alcance De Fase 1 Del Sitio
-
-- Cambiar auth.
-- Cambiar rutas privadas.
-- Cambiar endpoints.
-- Cambiar deploy productivo.
-- Crear una app o repo nuevo.
-- Implementar módulos privados nuevos.
-- Implementar administración de catálogo, precios o imágenes.
-- Eliminar `catalog-data.ts` como fallback antes de cerrar la transición pública.
-
-## Secciones Faltantes O Pendientes
-
-- Contenido final aprobado por el cliente.
-- Logo o identidad visual final.
-- Fotografías o materiales visuales propios del laboratorio.
-- Aviso de privacidad si se solicitarán datos personales desde el sitio público.
-- Formulario real de contacto, solo cuando exista backend o herramienta confirmada para recibir mensajes.
-- QA visual completa en los viewports del checklist responsive, cuando el reporte manual incluya resultados explícitos y observaciones concretas.
+Las modificaciones visuales posteriores deben ser incrementales y justificadas por feedback o métricas.

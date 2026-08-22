@@ -1,14 +1,16 @@
 # Fases Comerciales
 
-Este documento describe fases comerciales y de aceptación con cliente. No sustituye el roadmap técnico de `docs/ROADMAP.md` ni el roadmap técnico histórico de `docs/00-governance/roadmap.md`.
+Última sincronización: **2026-08-22 — DOC-SYNC-1**.
+
+Este documento describe fases comerciales y de aceptación con cliente. No sustituye `docs/ROADMAP.md` ni la evidencia técnica.
 
 ## Fase 0 — Planeación Y Documentación
 
-Estado actual: completada.
+Estado actual: **completada**.
 
 ### Objetivo
 
-Definir el contexto de negocio, alcance inicial, reglas principales, arquitectura base y documentación de trabajo.
+Definir contexto de negocio, alcance inicial, reglas principales, arquitectura base y documentación de trabajo.
 
 ### Entregables
 
@@ -20,127 +22,132 @@ Definir el contexto de negocio, alcance inicial, reglas principales, arquitectur
 
 ### Criterio De Aceptación
 
-La fase se considera aceptada cuando existe documentación suficiente para iniciar implementación y priorizar el MVP administrativo.
-
-### Dependencias
-
-- Confirmación de objetivos del laboratorio.
-- Validación inicial de operación actual basada en Excel.
+Cumplido.
 
 ## Fase 1 — Sistema Administrativo MVP
 
-Estado actual: implementada y validada en QA local.
+Estado actual: **implementada y validada en DEV/UAT**.
 
-### Objetivo
-
-Contar con un sistema administrativo privado para operar clientes, doctores, clínicas, órdenes, pagos, saldos y dashboard básico.
-
-### Entregables
+### Entregables Vigentes
 
 - Login privado.
 - Usuarios, roles y permisos.
-- Cookie auth HttpOnly y protección CSRF/XSRF.
+- Cookie auth HttpOnly y CSRF/XSRF.
 - Clientes, doctores y clínicas.
-- Doctores internos para clínicas.
 - Órdenes de trabajo dental.
-- Estados e historial de estados.
-- Pagos, abonos, cancelación de pagos y saldos calculados.
-- Dashboard operativo y financiero básico.
+- Estados e historial.
+- Pagos, abonos, cancelación y saldos calculados.
+- Dashboard operativo/financiero básico.
 - QA funcional documentado.
-- Guion de demo y guía de datos de prueba.
+- Administración de catálogo, precios e imágenes.
+
+### Pendientes Antes De Producción
+
+- Hardening de contraseña temporal / cambio obligatorio en primer acceso o política equivalente aprobada.
+- QA final de release candidate dentro de `PROD-READY-1`.
 
 ### Criterio De Aceptación
 
-La fase se acepta cuando el flujo administrativo principal puede demostrarse con datos de prueba y los criterios de QA local quedan documentados.
-
-### Dependencias
-
-- Base de datos configurada.
-- Usuario Admin configurado.
-- Validación funcional en ambiente local.
+El flujo administrativo principal ya puede demostrarse y operar en DEV. La aceptación productiva se completa durante Fase 4.
 
 ## Fase 2 — Sitio Web Corporativo
 
-Estado actual: pendiente.
+Estado actual: **implementada, desplegada y aprobada en DEV; publicación productiva pendiente**.
 
-### Objetivo
+### Entregables Implementados
 
-Publicar una presencia digital corporativa para Laboratorio Dental Tláhuac en `laboratoriodentaltlahuac.com`.
+- Home corporativa.
+- Servicios.
+- Catálogo público administrable.
+- Datos de contacto confirmados.
+- Diseño mobile-first.
+- SEO por ruta.
+- Accesibilidad y reduced motion.
+- Lighthouse de cierre PUB-UX-4.
 
-### Entregables
+### Pendientes De Contenido
 
-- Página principal corporativa.
-- Sección de servicios.
-- Datos de contacto.
-- Ubicación.
-- Información institucional.
-- Integración con dominio y DNS, sujeto a accesos del cliente.
+No bloquean DEV, pero solo deben publicarse cuando sean confirmados:
+
+- Dirección.
+- Horarios.
+- WhatsApp institucional.
+- Redes sociales.
+- Mapa.
+- Condiciones comerciales todavía no aprobadas formalmente.
+
+### Pendiente Comercial Principal
+
+Publicar `laboratoriodentaltlahuac.com` mediante `PROD-READY-1` y `PROD-RELEASE-1`.
 
 ### Criterio De Aceptación
 
-La fase se acepta cuando el sitio carga correctamente en el dominio acordado, comunica la información aprobada por el cliente y no expone el sistema privado.
-
-### Dependencias
-
-- Logo, textos, datos de contacto, ubicación y servicios proporcionados por el cliente.
-- Acceso o coordinación para dominio/DNS.
-- Aprobación de contenido.
+- DEV: cumplido visual/funcionalmente.
+- Producción: pendiente hasta que el dominio productivo cargue correctamente y el release sea aceptado.
 
 ## Fase 3 — Repartidores, Entregas Y Etiquetas
 
-Estado actual: pendiente.
+Estado actual: **MVP operativo implementado en DEV; ampliaciones avanzadas pendientes**.
 
-### Objetivo
+### Implementado
 
-Habilitar un flujo trazable de entregas mediante repartidores, etiquetas por orden, escaneo desde celular y evidencia de recibido.
+- Etiquetas de trabajo y entrega desde navegador.
+- Tamaños objetivo 76 x 51 mm y 102 x 51 mm.
+- Asignación de entrega/repartidor.
+- Estados logísticos.
+- Reintento de entrega no realizada.
+- Listado/detail mobile-first para repartidor.
+- Cierre entregado/no entregado.
+- Nombre de quien recibe cuando aplica.
+- Teléfono/WhatsApp/mapa solo cuando existe dato.
 
-### Entregables
+### Pendiente De QA Operativo
 
-- Etiquetas por orden con QR o código.
-- Impresión básica desde navegador.
-- Módulo web responsive/PWA para repartidores.
-- Asignación de entregas.
-- Estados de entrega.
+- Prueba física con impresora térmica real dentro de `OPS-QA-1`.
+
+### Ampliaciones Fuera Del MVP Cerrado
+
+- QR o código.
 - Escaneo desde celular.
-- Captura de firma o fotografía de recibido.
-- Nombre de quien recibe.
-- Historial por orden y por repartidor.
-- Panel administrativo de entregas.
+- Firma digital o fotografía de recibido.
+- Historial completo de intentos/evidencias.
+- PWA dedicada, si posteriormente se justifica.
 
 ### Criterio De Aceptación
 
-La fase se acepta cuando una entrega puede asignarse, consultarse desde celular, escanearse, cerrarse con evidencia y quedar registrada en historial.
-
-### Dependencias
-
-- Definición de formato de etiqueta.
-- Validación de flujo real con repartidores.
-- Validación de hardware si se solicita servicio local de impresión.
+El MVP actual permite asignar, consultar y cerrar entregas. La visión comercial ampliada queda pendiente de una fase futura si el laboratorio la prioriza.
 
 ## Fase 4 — QA, Capacitación Y Despliegue
 
-Estado actual: pendiente/cierre.
+Estado actual: **en preparación; DEV validado, producción pendiente**.
 
-### Objetivo
+### Trabajo Ya Cubierto
 
-Validar el alcance contratado, capacitar usuarios clave y poner la primera ronda en producción.
+- QA funcional amplio en DEV.
+- QA visual público.
+- QA catálogo administrable e imágenes.
+- QA repartidor.
+- Lighthouse público.
+- Deploy DEV con health checks y rollback.
 
-### Entregables
+### Trabajo Pendiente
 
-- QA funcional de la primera ronda.
-- Ajustes menores derivados de QA dentro del alcance.
-- Despliegue en ambiente productivo.
-- Capacitación básica.
-- Documentación de operación.
-- Cierre de aceptación.
+1. `OPS-QA-1` — impresora térmica y usuario limitado real.
+2. `PROD-READY-1` — seguridad, infraestructura, backups, DNS/HTTPS y release candidate.
+3. `PROD-RELEASE-1` — primera publicación productiva.
+4. Capacitación básica de usuarios clave, cuando se defina la fecha de salida.
+5. `POST-PROD-1` — observación inicial y cierre de aceptación.
 
 ### Criterio De Aceptación
 
-La fase se acepta cuando el cliente valida los flujos principales, el sistema queda desplegado, los usuarios clave reciben capacitación y se documenta el cierre de la primera ronda.
+La fase comercial 4 se cierra cuando:
 
-### Dependencias
+- producción está operativa;
+- usuarios clave pueden ejecutar los flujos principales;
+- backups/restore están definidos y probados;
+- smoke productivo es satisfactorio;
+- se registra aceptación de la primera ronda.
 
-- Accesos de producción.
-- Dominio/DNS disponibles.
-- Datos finales del cliente.
-- Aprobación de pruebas con usuarios reales.
+## Fuente De Prioridad
+
+El orden vigente de trabajo está en `docs/05-delivery/current-work-plan.md`.

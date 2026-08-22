@@ -2,6 +2,21 @@
 
 Todos los cambios relevantes del proyecto deben registrarse aquí. No se deben inventar funcionalidades implementadas.
 
+## 2026-08-22 - DOC-SYNC-1 Reconciliación Documental
+
+- Se sincroniza el estado documental con el código y QA reales de `dev`.
+- Se registran PUB-UX-2 y PUB-UX-3 como cerradas y aprobadas visualmente en DEV.
+- Se registra PUB-UX-4 como cerrada e integrada mediante PR #8, merge `bfa07d0285ca66fab359c151b43ed9458a6b7727`.
+- Se documenta Lighthouse final: Accesibilidad 100, Best Practices 100 y SEO 100 en las cuatro rutas públicas; Performance 91–96.
+- `docs/PROJECT_STATUS.md`, `docs/ROADMAP.md` y `docs/01-product/public-website.md` se convierten en resúmenes actuales, dejando el detalle histórico en bitácoras.
+- Se crea `docs/05-delivery/current-work-plan.md` con la secuencia `OPS-QA-1 -> PROD-READY-1 -> PROD-RELEASE-1 -> POST-PROD-1` después del cierre documental.
+- Se crea `docs/08-qa/pub-ux-4-lighthouse.md` como evidencia QA canónica de la fase pública de optimización.
+- Se actualizan fases comerciales: sitio web aprobado en DEV pero producción pendiente; entregas/etiquetas como MVP implementado con QA físico y ampliaciones avanzadas pendientes.
+- Se actualizan ambientes: DEV publicado en VPS desde `dev`; producción pendiente desde `main`.
+- Se actualiza backup/restore para SQL Server + `shared/catalog-images` como unidad lógica de recuperación.
+- Se marca el deploy inicial del MVP como completado en DEV.
+- No se modifica código funcional, frontend/backend, base de datos, migraciones, auth, permisos, deploy ni dependencias.
+
 ## 2026-05-12 - Fase 0.2 Consolidación Documental
 
 - Se consolida la documentación para separar sistema privado, sitio público, control global, deploy, QA y documentación comercial.
