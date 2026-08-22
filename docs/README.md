@@ -1,64 +1,131 @@
 # Índice De Documentación
 
-Este directorio contiene la documentación viva del proyecto Laboratorio Dental Tláhuac. La documentación se separa en sistema privado, sitio público, control global, operación, QA y paquete comercial.
+Última sincronización: **2026-08-22 — DOC-SYNC-1**.
 
-## Fuentes Canónicas
+Este directorio contiene la documentación viva de Laboratorio Dental Tláhuac. El estado vigente se concentra en pocas fuentes canónicas; los documentos históricos conservan contexto y evidencia pero no deben prevalecer sobre el estado actual.
+
+## Fuentes Canónicas Vigentes
 
 | Tema | Fuente |
 | --- | --- |
-| Estado global | `docs/PROJECT_STATUS.md` |
-| Roadmap global | `docs/ROADMAP.md` |
-| Bitácora de tareas | `docs/IMPLEMENTATION_LOG.md` |
-| Changelog histórico de entregas | `docs/00-governance/changelog.md` |
+| Estado global actual | `docs/PROJECT_STATUS.md` |
+| Roadmap global actual | `docs/ROADMAP.md` |
+| Plan de trabajo vigente | `docs/05-delivery/current-work-plan.md` |
+| Bitácora histórica de tareas | `docs/IMPLEMENTATION_LOG.md` |
+| Changelog de entregas | `docs/00-governance/changelog.md` |
 | Sitio público | `docs/01-product/public-website.md` |
 | Sistema privado | `docs/01-product/internal-system.md` |
-| Operación de órdenes y entrega | `docs/01-product/operations-orders-delivery.md` |
-| Impresión de etiquetas | `docs/01-product/label-printing.md` |
-| Flujo mobile-first repartidor | `docs/01-product/driver-mobile-workflow.md` |
-| Diseño MVP entregas/repartidor | `docs/01-product/delivery-mvp-design.md` |
-| Backlog administración de catálogo | `docs/01-product/admin-catalog-management.md` |
-| Diseño técnico catálogo administrable | `docs/01-product/catalog-admin-design.md` |
-| Diseño almacenamiento/upload catálogo | `docs/01-product/catalog-image-upload-design.md` |
-| Lineamientos de marca | `docs/02-domain/brand-guidelines.md` |
-| Arquitectura global | `docs/03-architecture/ARCHITECTURE.md` |
-| Auth y permisos | `docs/03-architecture/AUTH_FLOW.md` |
 | Deploy y dominio | `docs/05-delivery/DEPLOYMENT.md` |
-| Validación DEV baseline UAT | `docs/05-delivery/dev-deployment-validation.md` |
-| QA responsive | `docs/08-qa/RESPONSIVE_CHECKLIST.md` |
+| Ambientes | `docs/06-operations/environments.md` |
+| Backup y restore | `docs/06-operations/backup-and-restore.md` |
+| Auth y permisos | `docs/03-architecture/AUTH_FLOW.md` |
+| Arquitectura global | `docs/03-architecture/ARCHITECTURE.md` |
+
+## Producto / Operación
+
+| Tema | Fuente |
+| --- | --- |
+| Órdenes y entrega | `docs/01-product/operations-orders-delivery.md` |
+| Impresión de etiquetas | `docs/01-product/label-printing.md` |
+| Flujo repartidor mobile-first | `docs/01-product/driver-mobile-workflow.md` |
+| Diseño MVP entregas | `docs/01-product/delivery-mvp-design.md` |
+| Administración de catálogo | `docs/01-product/admin-catalog-management.md` |
+| Diseño catálogo administrable | `docs/01-product/catalog-admin-design.md` |
+| Diseño upload/storage imágenes | `docs/01-product/catalog-image-upload-design.md` |
+| Marca | `docs/02-domain/brand-guidelines.md` |
+
+## QA
+
+| Tema | Fuente |
+| --- | --- |
+| QA responsive general | `docs/08-qa/RESPONSIVE_CHECKLIST.md` |
 | QA MVP administrativo | `docs/08-qa/mvp-qa-checklist.md` |
-| QA sistema privado con Admin | `docs/08-qa/private-admin-qa.md` |
-| QA impresión de etiquetas | `docs/08-qa/label-printing-qa.md` |
-| QA usuarios y roles | `docs/08-qa/users-roles-qa.md` |
+| QA privado Admin | `docs/08-qa/private-admin-qa.md` |
+| QA etiquetas | `docs/08-qa/label-printing-qa.md` |
+| QA usuarios/roles | `docs/08-qa/users-roles-qa.md` |
 | QA API entregas | `docs/08-qa/delivery-api-qa.md` |
+| QA Admin entregas | `docs/08-qa/delivery-admin-ui-qa.md` |
+| QA Repartidor | `docs/08-qa/driver-mobile-qa.md` |
 | QA API catálogo | `docs/08-qa/catalog-api-qa.md` |
-| QA API upload imágenes catálogo | `docs/08-qa/catalog-image-upload-api-qa.md` |
-| QA UI upload imágenes catálogo | `docs/08-qa/catalog-image-upload-ui-qa.md` |
-| QA UI admin catálogo | `docs/08-qa/catalog-admin-ui-qa.md` |
-| QA catálogo público API/fallback | `docs/08-qa/public-catalog-api-qa.md` |
-| QA UI admin entregas | `docs/08-qa/delivery-admin-ui-qa.md` |
-| QA UI repartidor | `docs/08-qa/driver-mobile-qa.md` |
-| Plan QA usuario limitado | `docs/08-qa/limited-user-qa-plan.md` |
-| Alcance comercial | `docs/09-commercial/` |
+| QA Admin catálogo | `docs/08-qa/catalog-admin-ui-qa.md` |
+| QA catálogo público/fallback | `docs/08-qa/public-catalog-api-qa.md` |
+| QA API upload imágenes | `docs/08-qa/catalog-image-upload-api-qa.md` |
+| QA UI upload imágenes | `docs/08-qa/catalog-image-upload-ui-qa.md` |
+| QA usuario limitado | `docs/08-qa/limited-user-qa-plan.md` |
+| QA Lighthouse PUB-UX-4 | `docs/08-qa/pub-ux-4-lighthouse.md` |
+
+## Comercial
+
+- `docs/09-commercial/commercial-phases.md` contiene el estado comercial sincronizado.
+- El resto de `docs/09-commercial/` conserva propuesta, SOW, alcance y materiales de aceptación.
+- La documentación comercial no sustituye el estado técnico.
+
+## Estado Resumido
+
+### Sistema privado
+
+- MVP administrativo: operativo en DEV/UAT.
+- Usuarios/roles: implementados.
+- Entregas/repartidor: MVP implementado.
+- Catálogo administrable e imágenes: Fase 3.5.4 cerrada con QA end-to-end.
+- Pendientes manuales inmediatos: impresora térmica real y usuario limitado real.
+
+### Sitio público
+
+- PUB-UX-2: cerrado y aprobado.
+- PUB-UX-3: cerrado, desplegado y aprobado.
+- PUB-UX-4: cerrado e integrado a `dev`.
+- Lighthouse: 100 en accesibilidad, Best Practices y SEO; Performance 91–96.
+- Producción: pendiente.
+
+## Plan Vigente
+
+```text
+DOC-SYNC-1
+    ↓
+OPS-QA-1
+    ↓
+PROD-READY-1
+    ↓
+PROD-RELEASE-1
+    ↓
+POST-PROD-1
+    ↓
+Nueva fase funcional
+```
+
+Detalle: `docs/05-delivery/current-work-plan.md`.
 
 ## Carpetas
 
-- `00-governance/`: decisiones de control del proyecto, definition of done, roadmap técnico histórico y changelog de entregas.
-- `01-product/`: definición funcional del sitio público, sistema privado, pantallas, flujos, contexto y permisos.
-- `02-domain/`: reglas de negocio, entidades, pagos, ciclo de vida de órdenes e inventario futuro.
-- `03-architecture/`: arquitectura técnica, auth, backend, frontend y base de datos.
-- `04-decisions/`: ADRs aceptadas. No reescribir decisiones históricas; agregar nuevas ADRs cuando aplique.
-- `05-delivery/`: fases de entrega, deploy y próximos pasos.
-- `06-operations/`: ambientes, backup y operación. `deployment.md` queda como puente hacia `05-delivery/DEPLOYMENT.md`.
-- `07-imports/`: análisis y estrategia para migración del Excel.
-- `08-qa/`: QA funcional del MVP administrativo, checklist responsive, demo, datos y hallazgos.
-- `09-commercial/`: propuesta, SOW, fases comerciales, matriz de alcance, responsabilidades y control de cambios.
+- `00-governance/`: control, decisiones de proyecto, roadmap histórico y changelog.
+- `01-product/`: definición funcional y flujos.
+- `02-domain/`: reglas de negocio y dominio.
+- `03-architecture/`: arquitectura, auth, backend/frontend y datos.
+- `04-decisions/`: ADRs.
+- `05-delivery/`: fases, deploy y plan de trabajo vigente.
+- `06-operations/`: ambientes, backup y operación.
+- `07-imports/`: migración futura del Excel.
+- `08-qa/`: evidencia y checklists.
+- `09-commercial/`: propuesta, fases comerciales y aceptación.
 
-## Separación De Frentes
+## Regla De Prioridad Documental
 
-- Sistema privado / MVP administrativo: vive bajo `/app`; su estado actual está avanzado y documentado en QA, con Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, DEV validado como baseline UAT inicial en Fase 3.0, Fase 3.2 implementada para impresión MVP de etiquetas, Fase 3.3 implementada para usuarios/roles, Fase 3.4 implementada para entregas/repartidor y Fase 3.5 cerrada en DEV hasta 3.5.4. La Fase 3.5.4.0 está cerrada, 3.5.4.1 y 3.5.4.2 están cerradas en DEV, y el QA end-to-end de upload, reemplazo, persistencia entre releases y desasociación quedó aprobado.
-- Sitio público institucional: vive en la app Angular existente bajo `src/LaboratorioTlahuac.Web/src/app/public`; la primera versión mobile-first está implementada, Fase 1.6 quedó validada visualmente por el responsable del proyecto y Fase 3.5.3 quedó cerrada en DEV con `/catalogo` consumiendo `GET /api/catalog/public`, reflejando cambios administrados y conservando fallback local en `catalog-data.ts`.
-- Documentación comercial: describe alcance propuesto y fases comerciales, no necesariamente implementación técnica actual.
+Cuando dos documentos contradigan el estado actual, usar este orden:
+
+1. `PROJECT_STATUS.md`.
+2. `ROADMAP.md`.
+3. `current-work-plan.md`.
+4. Fuente específica del frente.
+5. Bitácoras/changelog como historia.
 
 ## Regla De Actualización
 
-Cada cambio de código debe actualizar `docs/PROJECT_STATUS.md` y `docs/IMPLEMENTATION_LOG.md`. Los cambios de arquitectura, auth, deploy, producto o QA deben actualizar también su fuente canónica correspondiente.
+Cada cierre relevante debe actualizar como mínimo:
+
+- `docs/PROJECT_STATUS.md`.
+- `docs/ROADMAP.md` si cambia prioridad/fase.
+- La fuente específica afectada.
+- Changelog o bitácora cuando corresponda.
+
+No reescribir ADRs históricos para reflejar decisiones posteriores; agregar nueva decisión si aplica.
