@@ -1,0 +1,137 @@
+name: PUB-UX-4 Validation
+
+on:
+  push:
+    branches:
+      - agent/pub-ux-4-quality
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '22.x'
+  CONFIGURATION: Release
+  WEB_DIR: src/LaboratorioTlahuac.Web
+  FRONTEND_DIST: src/LaboratorioTlahuac.Web/dist/laboratorio-tlahuac-web/browser
+
+jobs:
+  quality:
+    name: Build, tests and Lighthouse
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WEB_DIR }}/package-lock.json
+
+      - name: Restore backend
+        run: dotnet restore
+
+      - name: Build backend
+        run: dotnet build --configuration "$CONFIGURATION" --no-restore
+
+      - name: Test backend
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal
+
+      - name: Install frontend dependencies
+        run: npm --prefix "$WEB_DIR" ci
+
+      - name: Build frontend
+        run: npm --prefix "$WEB_DIR" run build
+
+      - name: Validate diff whitespace
+        run: |
+          git fetch origin dev
+          git diff --check origin/dev...HEAD
+
+      - name: Start static frontend
+        run: |
+          npx --yes serve@14 "$FRONTEND_DIST" --single --listen 4173 > "$RUNNER_TEMP/pub-ux-4-serve.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/pub-ux-4-serve.pid"
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat "$RUNNER_TEMP/pub-ux-4-serve.log"
+          exit 1
+
+      - name: Run Lighthouse on public routes
+        run: |
+          mkdir -p "$RUNNER_TEMP/lighthouse"
+
+          declare -A ROUTES=(
+            [home]="/"
+            [services]="/servicios"
+            [catalog]="/catalogo"
+            [contact]="/contacto"
+          )
+
+          for name in home services catalog contact; do
+            npx --yes lighthouse "http://127.0.0.1:4173${ROUTES[$name]}" \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --only-categories=performance,accessibility,best-practices,seo \
+              --output=json \
+              --output-path="$RUNNER_TEMP/lighthouse/$name.json" \
+              --quiet
+          done
+
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const root = path.join(process.env.RUNNER_TEMP, 'lighthouse');
+          const pages = ['home', 'services', 'catalog', 'contact'];
+          const minimum = {
+            performance: 0.80,
+            accessibility: 0.95,
+            'best-practices': 0.95,
+            seo: 0.95
+          };
+          let failed = false;
+
+          for (const page of pages) {
+            const report = JSON.parse(fs.readFileSync(path.join(root, `${page}.json`), 'utf8'));
+            const scores = Object.fromEntries(
+              Object.entries(minimum).map(([category]) => [category, report.categories[category].score])
+            );
+
+            console.log(`${page}: ${Object.entries(scores).map(([key, value]) => `${key}=${Math.round(value * 100)}`).join(' ')}`);
+
+            for (const [category, threshold] of Object.entries(minimum)) {
+              if (scores[category] < threshold) {
+                console.error(`${page}: ${category} ${scores[category]} < ${threshold}`);
+                failed = true;
+              }
+            }
+          }
+
+          if (failed) {
+            process.exit(1);
+          }
+          NODE
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pub-ux-4-lighthouse
+          path: ${{ runner.temp }}/lighthouse/*.json
+          if-no-files-found: warn

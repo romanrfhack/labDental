@@ -56,7 +56,7 @@ import { PublicScrollAnimationsDirective } from '../../animations/public-scroll-
         Dirección, horarios y WhatsApp se incorporarán cuando estén confirmados. Mientras tanto, solo se muestran los canales validados.
       </p>
 
-      <a class="contact-v2-back" routerLink="/catalogo" data-animate="fade-up">← Volver al catálogo</a>
+      <a class="contact-v2-back" routerLink="/catalogo" data-animate="fade-up"><span aria-hidden="true">←</span> Volver al catálogo</a>
     </section>
   `,
   styleUrl: './contact-page.component.scss'
