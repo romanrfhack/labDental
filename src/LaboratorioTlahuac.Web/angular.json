@@ -59,6 +59,7 @@
             ],
             "styles": [
               "src/styles.scss",
+              "src/styles/security-permissions.scss",
               "src/styles/public-catalog.scss"
             ]
           },
