@@ -1,0 +1,164 @@
+.permission-admin-layout {
+  grid-template-columns: minmax(0, 0.9fr) minmax(380px, 1.1fr);
+}
+
+.permission-editor-panel {
+  min-width: 0;
+}
+
+.permission-editor-header {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
+.permission-editor-header > div {
+  min-width: 0;
+}
+
+.permission-editor-header h2,
+.permission-editor-header p {
+  margin: 0;
+}
+
+.permission-editor-header p {
+  color: var(--color-neutral-500);
+  margin-top: 4px;
+}
+
+.permission-lock-badge,
+.permission-edit-badge {
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.permission-lock-badge {
+  background: var(--color-warning-100);
+  color: var(--color-warning-700);
+}
+
+.permission-edit-badge {
+  background: rgba(233, 247, 255, 0.86);
+  border: 1px solid rgba(166, 223, 247, 0.9);
+  color: var(--color-primary-600);
+}
+
+.permission-guidance {
+  background: rgba(243, 248, 252, 0.82);
+  border: 1px solid var(--color-neutral-100);
+  border-radius: var(--radius-sm);
+  color: var(--color-neutral-500);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.permission-groups {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.permission-group {
+  min-width: 0;
+}
+
+.permission-checkbox-list,
+.user-permission-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.permission-check-row {
+  align-items: flex-start;
+  border: 1px solid var(--color-neutral-100);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: var(--space-3);
+}
+
+.permission-check-row input {
+  accent-color: var(--color-primary-600);
+  margin-top: 3px;
+  min-height: auto;
+  padding: 0;
+}
+
+.permission-check-row > span,
+.user-permission-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.permission-check-row small,
+.user-permission-copy > span,
+.user-permission-copy > small {
+  color: var(--color-neutral-500);
+}
+
+.permission-check-row code,
+.user-permission-copy > small {
+  overflow-wrap: anywhere;
+}
+
+.permission-check-row code {
+  color: var(--color-neutral-400);
+  font-size: 0.76rem;
+}
+
+.user-permission-panel {
+  min-width: 0;
+}
+
+.user-permission-row {
+  align-items: center;
+  border: 1px solid var(--color-neutral-100);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 190px);
+  padding: var(--space-3);
+}
+
+.permission-title-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.permission-override-field {
+  display: grid;
+  gap: 5px;
+}
+
+.permission-override-field > span {
+  color: var(--color-neutral-500);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+@media (max-width: 920px) {
+  .permission-admin-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .customers-table-scroll {
+    display: none;
+  }
+
+  .user-permission-row {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+}
