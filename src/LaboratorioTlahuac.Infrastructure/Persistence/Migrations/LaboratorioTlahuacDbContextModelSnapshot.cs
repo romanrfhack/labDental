@@ -524,6 +524,26 @@ namespace LaboratorioTlahuac.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", "Security");
                 });
 
+            modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.UserPermissionOverride", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Effect")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("UserId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("UserPermissionOverrides", "Security");
+                });
+
             modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -754,6 +774,25 @@ namespace LaboratorioTlahuac.Infrastructure.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.UserPermissionOverride", b =>
+                {
+                    b.HasOne("LaboratorioTlahuac.Domain.Security.Entities.Permission", "Permission")
+                        .WithMany("UserPermissionOverrides")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LaboratorioTlahuac.Domain.Security.Entities.User", "User")
+                        .WithMany("PermissionOverrides")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.UserRole", b =>
                 {
                     b.HasOne("LaboratorioTlahuac.Domain.Security.Entities.Role", "Role")
@@ -837,6 +876,8 @@ namespace LaboratorioTlahuac.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.Permission", b =>
                 {
                     b.Navigation("RolePermissions");
+
+                    b.Navigation("UserPermissionOverrides");
                 });
 
             modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.Role", b =>
@@ -848,6 +889,8 @@ namespace LaboratorioTlahuac.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.User", b =>
                 {
+                    b.Navigation("PermissionOverrides");
+
                     b.Navigation("UserRoles");
                 });
 
