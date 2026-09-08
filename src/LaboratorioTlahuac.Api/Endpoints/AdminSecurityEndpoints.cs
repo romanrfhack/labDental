@@ -80,6 +80,30 @@ public static class AdminSecurityEndpoints
             .RequireAuthorization(Permissions.UsersManage)
             .WithName("AdminUsersAssignRoles");
 
+        group.MapGet(
+                "/users/{id:guid}/permissions",
+                async (
+                    Guid id,
+                    IAdminPermissionManagementService permissionManagementService,
+                    CancellationToken cancellationToken) =>
+                    ToResult(await permissionManagementService.GetUserPermissionsAsync(id, cancellationToken)))
+            .RequireAuthorization(Permissions.UsersManage)
+            .WithName("AdminUsersGetPermissions");
+
+        group.MapPatch(
+                "/users/{id:guid}/permissions",
+                async (
+                    Guid id,
+                    AdminUserPermissionOverridesRequest request,
+                    IAdminPermissionManagementService permissionManagementService,
+                    CancellationToken cancellationToken) =>
+                    ToResult(await permissionManagementService.UpdateUserPermissionOverridesAsync(
+                        id,
+                        request,
+                        cancellationToken)))
+            .RequireAuthorization(Permissions.UsersManage)
+            .WithName("AdminUsersUpdatePermissionOverrides");
+
         group.MapPost(
                 "/users/{id:guid}/temporary-password",
                 async (
