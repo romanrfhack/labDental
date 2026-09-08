@@ -1,9 +1,15 @@
-import { Component, OnInit, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { finalize } from 'rxjs';
+import { Component, OnInit, computed, signal } from '@angular/core';
+import { finalize, forkJoin } from 'rxjs';
 
 import { AdminSecurityService } from '../../admin-security.service';
-import { AdminRoleDetail, AdminRoleListItem } from '../../admin-security.models';
+import { AdminPermission, AdminRoleDetail, AdminRoleListItem } from '../../admin-security.models';
+
+interface PermissionGroup {
+  key: string;
+  label: string;
+  permissions: AdminPermission[];
+}
 
 @Component({
   selector: 'app-roles-page',
@@ -12,10 +18,13 @@ import { AdminRoleDetail, AdminRoleListItem } from '../../admin-security.models'
       <header class="page-header">
         <div>
           <h1>Roles</h1>
-          <p>Permisos actuales por rol. Edicion de permisos queda cerrada en esta fase.</p>
+          <p>Configura los permisos base que heredan automaticamente los usuarios de cada rol.</p>
         </div>
-        <span class="readonly-note">Solo lectura</span>
       </header>
+
+      @if (successMessage(); as message) {
+        <p class="alert-success" role="status">{{ message }}</p>
+      }
 
       @if (errorMessage(); as message) {
         <p class="alert-error" role="alert">{{ message }}</p>
@@ -50,7 +59,7 @@ import { AdminRoleDetail, AdminRoleListItem } from '../../admin-security.models'
                     <td>{{ role.permissionCount }}</td>
                     <td>
                       <button class="secondary-button" type="button" (click)="selectRole(role)">
-                        Ver permisos
+                        {{ isProtectedRole(role.name) ? 'Ver permisos' : 'Configurar' }}
                       </button>
                     </td>
                   </tr>
@@ -79,16 +88,23 @@ import { AdminRoleDetail, AdminRoleListItem } from '../../admin-security.models'
                     <dd>{{ role.permissionCount }}</dd>
                   </div>
                 </dl>
-                <button class="secondary-button" type="button" (click)="selectRole(role)">Ver permisos</button>
+                <button class="secondary-button" type="button" (click)="selectRole(role)">
+                  {{ isProtectedRole(role.name) ? 'Ver permisos' : 'Configurar' }}
+                </button>
               </article>
             }
           </div>
 
-          <aside class="admin-panel">
+          <aside class="admin-panel permission-editor">
             @if (selectedRole(); as role) {
               <header>
-                <h2>{{ role.name }}</h2>
-                <p>{{ role.description }}</p>
+                <div>
+                  <h2>{{ role.name }}</h2>
+                  <p>{{ role.description }}</p>
+                </div>
+                @if (isProtectedRole(role.name)) {
+                  <span class="readonly-note">Protegido</span>
+                }
               </header>
 
               <dl class="detail-grid">
@@ -102,17 +118,60 @@ import { AdminRoleDetail, AdminRoleListItem } from '../../admin-security.models'
                 </div>
               </dl>
 
-              @if (role.permissions.length === 0) {
-                <p class="empty-state">Este rol no tiene permisos asignados.</p>
+              @if (isProtectedRole(role.name)) {
+                <p class="permission-help">
+                  Este rol es tecnico/protegido. Sus permisos pueden consultarse, pero no modificarse desde la UI.
+                </p>
               } @else {
-                <ul class="permission-list">
-                  @for (permission of role.permissions; track permission.id) {
-                    <li>
-                      <strong>{{ permission.key }}</strong>
-                      <span>{{ permission.description }}</span>
-                    </li>
-                  }
-                </ul>
+                <p class="permission-help">
+                  Los cambios afectan a {{ role.userCount }} usuario{{ role.userCount === 1 ? '' : 's' }} con este rol.
+                  El backend aplica el nuevo permiso desde el siguiente request.
+                </p>
+              }
+
+              <div class="permission-groups">
+                @for (group of permissionGroups(); track group.key) {
+                  <section class="permission-group">
+                    <h3>{{ group.label }}</h3>
+                    <div class="permission-options">
+                      @for (permission of group.permissions; track permission.id) {
+                        <label class="permission-option">
+                          <input
+                            type="checkbox"
+                            [checked]="selectedPermissionIds().has(permission.id)"
+                            [disabled]="isProtectedRole(role.name) || isSaving()"
+                            (change)="togglePermission(permission.id, $any($event.target).checked)"
+                          />
+                          <span>
+                            <strong>{{ permission.description }}</strong>
+                            <small>{{ permission.key }}</small>
+                          </span>
+                        </label>
+                      }
+                    </div>
+                  </section>
+                }
+              </div>
+
+              @if (!isProtectedRole(role.name)) {
+                <div class="editor-actions">
+                  <button
+                    class="primary-button"
+                    type="button"
+                    [disabled]="isSaving() || !hasPermissionChanges()"
+                    (click)="savePermissions()"
+                  >
+                    {{ isSaving() ? 'Guardando...' : 'Guardar permisos' }}
+                  </button>
+                  <button
+                    class="secondary-button"
+                    type="button"
+                    [disabled]="isSaving() || !hasPermissionChanges()"
+                    (click)="resetPermissions()"
+                  >
+                    Descartar cambios
+                  </button>
+                </div>
               }
             } @else {
               <p class="empty-state">Selecciona un rol para ver sus permisos.</p>
@@ -121,13 +180,107 @@ import { AdminRoleDetail, AdminRoleListItem } from '../../admin-security.models'
         </div>
       }
     </section>
+  `,
+  styles: `
+    .permission-editor header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .permission-help {
+      margin: 1rem 0;
+      color: var(--text-muted, #52657a);
+      line-height: 1.5;
+    }
+
+    .permission-groups {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .permission-group {
+      border-top: 1px solid var(--border-color, #d7e2ec);
+      padding-top: 1rem;
+    }
+
+    .permission-group h3 {
+      margin: 0 0 0.65rem;
+      font-size: 1rem;
+    }
+
+    .permission-options {
+      display: grid;
+      gap: 0.6rem;
+    }
+
+    .permission-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      min-height: 44px;
+      cursor: pointer;
+    }
+
+    .permission-option input {
+      width: 1.15rem;
+      height: 1.15rem;
+      margin-top: 0.15rem;
+    }
+
+    .permission-option span {
+      display: grid;
+      gap: 0.15rem;
+      min-width: 0;
+    }
+
+    .permission-option small {
+      color: var(--text-muted, #52657a);
+      overflow-wrap: anywhere;
+    }
+
+    .editor-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
   `
 })
 export class RolesPageComponent implements OnInit {
   readonly roles = signal<AdminRoleListItem[]>([]);
+  readonly allPermissions = signal<AdminPermission[]>([]);
   readonly selectedRole = signal<AdminRoleDetail | null>(null);
+  readonly selectedPermissionIds = signal<Set<string>>(new Set());
+  readonly originalPermissionIds = signal<Set<string>>(new Set());
   readonly isLoading = signal(false);
+  readonly isSaving = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal<string | null>(null);
+
+  readonly permissionGroups = computed<PermissionGroup[]>(() => {
+    const groups = new Map<string, AdminPermission[]>();
+
+    for (const permission of this.allPermissions()) {
+      const prefix = permission.key.split('.')[0] || 'other';
+      const current = groups.get(prefix) ?? [];
+      current.push(permission);
+      groups.set(prefix, current);
+    }
+
+    return Array.from(groups.entries())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, permissions]) => ({
+        key,
+        label: this.groupLabel(key),
+        permissions: permissions.sort((left, right) => left.key.localeCompare(right.key))
+      }));
+  });
+
+  readonly hasPermissionChanges = computed(() =>
+    !this.setsEqual(this.selectedPermissionIds(), this.originalPermissionIds())
+  );
 
   constructor(private readonly adminSecurityService: AdminSecurityService) {}
 
@@ -136,41 +289,139 @@ export class RolesPageComponent implements OnInit {
   }
 
   selectRole(role: AdminRoleListItem): void {
-    this.errorMessage.set(null);
+    this.loadRoleDetail(role.id);
+  }
 
-    this.adminSecurityService.getRoleById(role.id).subscribe({
-      next: (detail) => this.selectedRole.set(detail),
-      error: (error: HttpErrorResponse) => this.errorMessage.set(this.toErrorMessage(error))
-    });
+  togglePermission(permissionId: string, isSelected: boolean): void {
+    const next = new Set(this.selectedPermissionIds());
+
+    if (isSelected) {
+      next.add(permissionId);
+    } else {
+      next.delete(permissionId);
+    }
+
+    this.selectedPermissionIds.set(next);
+    this.successMessage.set(null);
+  }
+
+  resetPermissions(): void {
+    this.selectedPermissionIds.set(new Set(this.originalPermissionIds()));
+    this.successMessage.set(null);
+  }
+
+  savePermissions(): void {
+    const role = this.selectedRole();
+
+    if (!role || this.isProtectedRole(role.name) || !this.hasPermissionChanges()) {
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    this.adminSecurityService
+      .updateRolePermissions(role.id, Array.from(this.selectedPermissionIds()))
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: (updatedRole) => {
+          this.applyRoleDetail(updatedRole);
+          this.successMessage.set(`Permisos de ${updatedRole.name} actualizados correctamente.`);
+          this.loadRoleListOnly();
+        },
+        error: (error: HttpErrorResponse) => this.errorMessage.set(this.toErrorMessage(error))
+      });
+  }
+
+  isProtectedRole(roleName: string): boolean {
+    const normalizedName = roleName.trim().toLocaleLowerCase();
+    return normalizedName === 'admin' || normalizedName === 'limited qa';
   }
 
   private loadRoles(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    this.adminSecurityService
-      .listRoles()
+    forkJoin({
+      roles: this.adminSecurityService.listRoles(),
+      permissions: this.adminSecurityService.listPermissions()
+    })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (roles) => {
+        next: ({ roles, permissions }) => {
           this.roles.set(roles);
+          this.allPermissions.set(permissions);
 
           const driverRole = roles.find((role) => role.name === 'Repartidor');
           const firstRole = driverRole ?? roles[0];
 
           if (firstRole) {
-            this.selectRole(firstRole);
+            this.loadRoleDetail(firstRole.id);
           }
         },
         error: (error: HttpErrorResponse) => this.errorMessage.set(this.toErrorMessage(error))
       });
   }
 
+  private loadRoleListOnly(): void {
+    this.adminSecurityService.listRoles().subscribe({
+      next: (roles) => this.roles.set(roles),
+      error: (error: HttpErrorResponse) => this.errorMessage.set(this.toErrorMessage(error))
+    });
+  }
+
+  private loadRoleDetail(roleId: string): void {
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    this.adminSecurityService.getRoleById(roleId).subscribe({
+      next: (detail) => this.applyRoleDetail(detail),
+      error: (error: HttpErrorResponse) => this.errorMessage.set(this.toErrorMessage(error))
+    });
+  }
+
+  private applyRoleDetail(detail: AdminRoleDetail): void {
+    const permissionIds = new Set(detail.permissions.map((permission) => permission.id));
+    this.selectedRole.set(detail);
+    this.selectedPermissionIds.set(new Set(permissionIds));
+    this.originalPermissionIds.set(new Set(permissionIds));
+  }
+
+  private groupLabel(key: string): string {
+    const labels: Record<string, string> = {
+      catalog: 'Catalogo',
+      customers: 'Clientes',
+      deliveries: 'Entregas',
+      inventory: 'Inventario',
+      orders: 'Ordenes',
+      payments: 'Pagos',
+      reports: 'Reportes y dashboard',
+      roles: 'Roles y seguridad',
+      suppliers: 'Proveedores',
+      users: 'Usuarios y seguridad'
+    };
+
+    return labels[key] ?? key.charAt(0).toUpperCase() + key.slice(1);
+  }
+
+  private setsEqual(left: Set<string>, right: Set<string>): boolean {
+    return left.size === right.size && Array.from(left).every((value) => right.has(value));
+  }
+
   private toErrorMessage(error: HttpErrorResponse): string {
     if (error.status === 403) {
-      return 'No tienes permiso para consultar roles.';
+      return 'No tienes permiso para administrar roles.';
     }
 
-    return 'No fue posible cargar roles y permisos.';
+    if (error.status === 409) {
+      return error.error?.title ?? 'Este rol esta protegido y no puede modificarse.';
+    }
+
+    if (error.status === 400) {
+      return 'La seleccion contiene uno o mas permisos invalidos.';
+    }
+
+    return 'No fue posible cargar o guardar los permisos del rol.';
   }
 }
