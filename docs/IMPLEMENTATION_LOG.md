@@ -4897,3 +4897,48 @@ Dejar reglas permanentes para Codex, documentar el estado real del proyecto y de
 - Confirmar contenido real del cliente: servicios, ubicación, horarios, teléfono, WhatsApp y mensajes comerciales.
 - Definir plataforma de despliegue, DNS, HTTPS y configuración productiva.
 - Validar visualmente el sitio en anchos móviles antes de presentarlo al cliente.
+
+
+## 2026-09-07 — SEC-PERM-1 — Administración De Roles Y Permisos
+
+Estado al registrar: **implementación de rama completada; pendiente integración y QA manual en DEV**.
+
+### Decisión
+
+- Mantener roles como fuente base; no copiar permisos al usuario.
+- Permisos efectivos: roles + `Allow` individuales - `Deny` individuales.
+- Admin protegido con todos los permisos.
+- Cambios efectivos en sesiones existentes mediante revalidación de cookie contra BD.
+
+### Backend / Persistencia
+
+- Nueva entidad `UserPermissionOverride` y enum `UserPermissionOverrideEffect`.
+- Nueva tabla `Security.UserPermissionOverrides` con PK compuesta y `Effect`.
+- Migración EF `AddUserPermissionOverrides` generada con tooling, incluyendo Designer y snapshot.
+- Nuevos endpoints `PUT /api/admin/roles/{id}/permissions` y `PUT /api/admin/users/{id}/permissions`.
+- `AuthSessionService` calcula permisos efectivos con roles + overrides.
+- `OnValidatePrincipal` refresca principal/cookie antes de autorización si la seguridad persistida cambió.
+- Baseline seed deja de sobrescribir un `Repartidor` ya administrado; Admin conserva sincronización total.
+
+### Frontend
+
+- Roles deja de ser sólo lectura para roles no protegidos.
+- Permisos agrupados por módulo y confirmación de usuarios afectados.
+- Usuarios muestra permiso efectivo, origen y triestado `Heredado / Permitir / Denegar`.
+- `permissionGuard` refresca `/api/auth/me` antes de navegación protegida.
+- Corregido markup duplicado que renderizaba una segunda tabla de Clientes en desktop.
+
+### QA Automático
+
+- Build backend Release: correcto.
+- Tests backend: correctos.
+- Build Angular: correcto.
+- `dotnet ef migrations has-pending-model-changes`: correcto.
+- Cobertura nueva: grant/revoke por rol sin relogin, Allow/Deny por usuario sin relogin, Admin protegido y preservación de permisos de Repartidor frente al baseline seed.
+
+### Estado Operativo
+
+- `OPS-QA-1` Limited User real quedó validado previamente el 2026-09-07.
+- Siguen pendientes las pruebas físicas de etiquetas 76x51 y 102x51.
+- `SEC-PERM-1` requiere smoke manual en DEV después de merge/deploy.
+- No se promovió `dev -> main` ni se tocó producción.

@@ -62,56 +62,51 @@ Fase 3.2 quedó implementada sin migraciones, sin dependencias, sin endpoints nu
 
 Fase 3.3 quedó implementada sin migraciones y sin modificar `AuthService`, guards, cookies ni XSRF. Fase 3.4.1 agrega permisos reales de entregas, entidad separada `WorkOrderDelivery`, estados logísticos `PendingAssignment`, `Assigned`, `OutForDelivery`, `Delivered` y `FailedDelivery`, endpoints `/api/deliveries` y `/api/work-orders/{workOrderId}/delivery`. Fase 3.4.2 agrega UI admin en `/app/ordenes/:id` para crear entrega, asignar repartidor, marcar salida, marcar entregada y marcar no entregada. Fase 3.4.3 agrega UI mobile-first de repartidor en `/app/entregas`. `Repartidor` queda con `deliveries.view` y `deliveries.complete`, sin acceso amplio a órdenes/clientes/pagos.
 
-## Usuarios Y Roles
+## Usuarios, Roles Y Permisos
 
-Estado: Fase 3.3 implementada como MVP operativo para DEV/UAT y Fase 3.3.1 validada tecnicamente para preparar despliegue DEV.
+Estado: administración MVP de usuarios/roles operativa en DEV; `SEC-PERM-1` implementado en rama de trabajo y pendiente de integración/QA DEV.
 
 - Rutas privadas:
-  - `/app/admin/usuarios`: administración de usuarios.
-  - `/app/admin/roles`: consulta readonly de roles y permisos.
-- Endpoints de usuarios:
-  - `GET /api/admin/users`
-  - `GET /api/admin/users/{id}`
-  - `POST /api/admin/users`
-  - `PUT /api/admin/users/{id}`
-  - `PATCH /api/admin/users/{id}/status`
-  - `PATCH /api/admin/users/{id}/roles`
-  - `POST /api/admin/users/{id}/temporary-password`
-- Endpoints de roles:
-  - `GET /api/admin/roles`
-  - `GET /api/admin/roles/{id}`
-- Permisos:
-  - Usuarios: `users.manage`.
-  - Roles: `roles.manage`.
-- Capacidades MVP:
-  - listar usuarios;
-  - crear usuarios con contraseña temporal capturada por Admin;
-  - editar email y nombre;
-  - activar/desactivar usuarios;
-  - asignar roles existentes;
-  - actualizar contraseña temporal sin mostrarla después;
-  - ver roles y permisos por rol en modo solo lectura.
-- Seguridad:
-  - no hay delete de usuarios ni roles;
+  - `/app/admin/usuarios`: usuarios, roles asignados y overrides individuales.
+  - `/app/admin/roles`: consulta y edición de permisos por rol.
+- Endpoints adicionales SEC-PERM-1:
+  - `PUT /api/admin/users/{id}/permissions`
+  - `PUT /api/admin/roles/{id}/permissions`
+- Herencia:
+  - al crear o reasignar un usuario, los permisos no se copian; se resuelven desde sus roles;
+  - permisos efectivos = unión de permisos de roles + `Allow` individuales - `Deny` individuales;
+  - ausencia de override significa `Heredado`.
+- UI de usuario:
+  - muestra permiso efectivo, rol(es) de origen y clave técnica;
+  - permite `Heredado / Permitir / Denegar` para usuarios no Admin.
+- UI de rol:
+  - permite editar permisos agrupados por módulo;
+  - advierte cuántos usuarios heredan el cambio.
+- Admin:
+  - conserva todos los permisos;
+  - el rol no puede reducirse desde UI/API;
+  - usuarios con rol Admin no pueden degradarse mediante overrides individuales.
+- Sesión:
+  - los claims de rol/permisos se revalidan contra BD en cada solicitud autenticada;
+  - si cambian, el principal y la cookie se renuevan antes de autorización;
+  - el `permissionGuard` refresca `/api/auth/me` antes de navegación protegida.
+- Seed:
+  - Admin continúa recibiendo permisos nuevos;
+  - `Repartidor` recibe `deliveries.view` y `deliveries.complete` sólo como baseline inicial y una ejecución posterior ya no pisa cambios administrativos;
+  - Limited QA mantiene seed explícito Development-only.
+- Persistencia:
+  - `Security.UserPermissionOverrides` con PK `(UserId, PermissionId)` y `Effect` `Allow/Deny`.
+- Seguridad heredada:
+  - no existe delete de usuarios/roles;
   - no se expone `passwordHash`;
-  - no se envían correos;
-  - no se implementa recuperación de contraseña por correo;
-  - el backend evita desactivar al propio usuario y evita dejar el sistema sin un usuario activo con `users.manage`.
-- QA Fase 3.3.1:
-  - appsettings revisados sin passwords reales ni secretos guardados;
-  - endpoints admin protegidos por `users.manage` o `roles.manage`;
-  - sin sesión, los nueve endpoints admin devuelven `401` usando XSRF válido en mutables;
-  - usuario sin permisos admin recibe `403` por pruebas API;
-  - Admin puede operar por pruebas API;
-  - la contraseña temporal no aparece en listados ni respuestas y no se registra en logs;
-  - el rol `Repartidor` existía como rol base sin permisos activos en ese cierre.
-- Actualización Fase 3.4.1:
-  - el rol `Repartidor` queda con `deliveries.view` y `deliveries.complete`;
-  - no recibe permisos amplios de administración, órdenes, clientes ni pagos.
-- Limitaciones:
-  - no hay force-change password en el siguiente login;
-  - la edición de permisos/roles queda fuera del MVP;
-  - la edición de permisos/roles sigue fuera del MVP.
+  - se conserva la regla de al menos un usuario activo con `users.manage`;
+  - mutaciones continúan protegidas por XSRF.
+- Pendiente `PROD-READY-1`:
+  - force-change password en primer login o política equivalente aprobada.
+
+Fuente funcional específica: `docs/01-product/user-roles-and-permissions.md`.
+ADR: `docs/04-decisions/ADR-0012-role-user-permission-administration.md`.
+QA: `docs/08-qa/users-roles-qa.md`.
 
 ### Administración De Catálogo, Precios E Imágenes
 

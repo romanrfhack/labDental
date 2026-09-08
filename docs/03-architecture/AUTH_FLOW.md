@@ -78,7 +78,7 @@ Seed tecnico solo en Development:
 - `SecuritySeed:LimitedQaUser:Permissions`
 - Variables sensibles equivalentes: `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` y `LT_QA_LIMITED_FULL_NAME`
 
-`SecuritySeed:EnsureBaselineOnStartup` queda activo en `Development` para asegurar el catálogo de permisos existentes, sincronizar permisos faltantes del rol `Admin` existente y asegurar el rol `Repartidor`. Ese baseline no lee ni escribe contraseñas y sincroniza `Repartidor` con `deliveries.view` y `deliveries.complete`.
+`SecuritySeed:EnsureBaselineOnStartup` queda activo en `Development` para asegurar el catálogo de permisos existentes, sincronizar permisos faltantes del rol `Admin` existente y asegurar que exista el rol `Repartidor`. El conjunto inicial de `Repartidor` es `deliveries.view` + `deliveries.complete`, pero desde `SEC-PERM-1` sólo se aplica al crear el rol; ejecuciones posteriores del baseline no sobrescriben permisos administrados desde la UI.
 
 El seed QA limitado no expone endpoint HTTP, no corre fuera de `Development`, esta desactivado por default y debe apagarse despues de sincronizar el usuario local.
 
@@ -640,3 +640,32 @@ Mecanismo recomendado para una fase posterior:
 - Para validar `/app/access-denied` contra `/app/dashboard`, el usuario limitado no debe tener `reports.view`.
 
 Fuente detallada: `docs/08-qa/limited-user-qa-plan.md`.
+
+
+## SEC-PERM-1 — Permisos Dinámicos Por Rol Y Usuario
+
+Endpoints administrativos nuevos:
+
+- `PUT /api/admin/roles/{id}/permissions`: requiere `roles.manage` y XSRF.
+- `PUT /api/admin/users/{id}/permissions`: requiere `users.manage` y XSRF.
+
+Modelo efectivo:
+
+- permisos base = unión de `RolePermission` de todos los roles del usuario;
+- `Security.UserPermissionOverrides` agrega `Allow` o `Deny` por `(UserId, PermissionId)`;
+- `Deny` prevalece sobre herencia para usuarios no Admin;
+- ausencia de override significa `Heredado`;
+- Admin conserva todos los permisos y no admite degradación por edición de rol/override.
+
+Actualización de sesión:
+
+1. La cookie continúa transportando claims de rol y permiso.
+2. Antes de autorización, `CookieAuthenticationEvents.OnValidatePrincipal` carga usuario, roles, permisos y overrides desde BD.
+3. Usuario inexistente, inactivo o bloqueado invalida el principal.
+4. Si los claims no coinciden con la seguridad persistida, la API reemplaza el principal y marca la cookie para renovación.
+5. La policy de la misma solicitud usa ya el principal actualizado.
+6. Angular ejecuta `/api/auth/me` desde `permissionGuard` antes de resolver una ruta protegida para mantener UI y backend alineados.
+
+Implicación operativa: un grant/revoke por rol o un `Allow/Deny` individual surte efecto sin exigir logout/login. El costo aceptado en esta fase es una consulta del grafo de seguridad por request autenticado; puede evolucionarse a security-stamp/cache si el volumen futuro lo requiere sin cambiar el contrato funcional.
+
+Evidencia automática: `tests/LaboratorioTlahuac.Api.Tests/PermissionAdministrationIntegrationTests.cs` y `SecuritySeederPermissionPreservationTests.cs`.

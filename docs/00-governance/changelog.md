@@ -125,3 +125,13 @@ Todos los cambios relevantes del proyecto deben registrarse aquí. No se deben i
 ## 2026-05-05 - Fase 0
 
 - Se crea documentación inicial del proyecto.
+
+
+### 2026-09-07 — SEC-PERM-1
+
+- Implementada administración de permisos por rol y overrides `Allow/Deny` por usuario en rama de trabajo.
+- Agregada revalidación de permisos para sesiones ya abiertas.
+- Admin queda protegido; Repartidor deja de ser sobrescrito por baseline una vez existente.
+- Agregada migración `Security.UserPermissionOverrides` generada por EF.
+- Corregida tabla duplicada de Clientes detectada durante OPS-QA-1.
+- Pendiente integración y smoke DEV; sin promoción a `main`.
