@@ -1,136 +1,165 @@
-# QA Usuarios Y Roles - Fase 3.3.1
+# QA Usuarios, Roles Y Permisos — SEC-PERM-1
+
+Última actualización: **2026-09-07**.
 
 ## Estado
 
-Fase 3.3.1 ejecutada como QA de seguridad, validacion tecnica y preparacion de despliegue DEV para la administracion MVP de usuarios y roles.
+La administración MVP de usuarios/roles ya estaba operativa en DEV. `SEC-PERM-1` amplía ese modelo con permisos editables por rol, overrides individuales por usuario y refresco de permisos de sesiones existentes.
 
-Resultado: sin hallazgos bloqueantes por codigo, pruebas, build ni HTTP local sin sesion. Queda pendiente la validacion visual/operativa completa en DEV con credenciales reales de Admin y usuario limitado.
+Estado actual:
 
-Actualización Fase 3.4.1: el rol `Repartidor` ya no debe aparecer sin permisos activos. Ahora debe mostrar solo `deliveries.view` y `deliveries.complete`.
+- validación automática de `codex/sec-perm-1`: **correcta**;
+- migración EF: **generada y sincronizada**;
+- validación manual del usuario limitado previo en DEV: **completada**;
+- QA visual/operativa de la nueva UI de permisos: **pendiente después del merge/deploy a DEV**.
 
-## Alcance Revisado
+## Contrato De Permisos
 
-Rutas privadas:
+Regla efectiva:
 
-- `/app/admin/usuarios`
-- `/app/admin/roles`
+`permisos efectivos = unión de permisos de roles + Allow individuales - Deny individuales`
 
-Ambas rutas viven bajo `/app`, heredan `authGuard` y usan `permissionGuard`.
+- `Heredado`: sin override individual.
+- `Allow`: agrega permiso aunque el rol no lo otorgue.
+- `Deny`: quita permiso aunque uno o más roles lo otorguen.
+- Admin conserva todos los permisos y no puede degradarse desde la UI.
 
-Endpoints revisados:
+## Endpoints
 
-| Endpoint | Permiso esperado | Estado QA |
+| Endpoint | Permiso administrador | Comportamiento |
 | --- | --- | --- |
-| `GET /api/admin/users` | `users.manage` | Protegido por backend; sin sesion devuelve `401`. |
-| `GET /api/admin/users/{id}` | `users.manage` | Protegido por backend; sin sesion devuelve `401`. |
-| `POST /api/admin/users` | `users.manage` | Protegido por backend y XSRF; sin sesion con XSRF valido devuelve `401`. |
-| `PUT /api/admin/users/{id}` | `users.manage` | Protegido por backend y XSRF; sin sesion con XSRF valido devuelve `401`. |
-| `PATCH /api/admin/users/{id}/status` | `users.manage` | Protegido por backend y XSRF; sin sesion con XSRF valido devuelve `401`. |
-| `PATCH /api/admin/users/{id}/roles` | `users.manage` | Protegido por backend y XSRF; sin sesion con XSRF valido devuelve `401`. |
-| `POST /api/admin/users/{id}/temporary-password` | `users.manage` | Protegido por backend y XSRF; sin sesion con XSRF valido devuelve `401`. |
-| `GET /api/admin/roles` | `roles.manage` | Protegido por backend; sin sesion devuelve `401`. |
-| `GET /api/admin/roles/{id}` | `roles.manage` | Protegido por backend; sin sesion devuelve `401`. |
+| `GET /api/admin/users` | `users.manage` | lista usuarios |
+| `GET /api/admin/users/{id}` | `users.manage` | detalle, roles y permisos efectivos |
+| `POST /api/admin/users` | `users.manage` | crea usuario con roles; permisos se heredan |
+| `PUT /api/admin/users/{id}` | `users.manage` | actualiza perfil |
+| `PATCH /api/admin/users/{id}/status` | `users.manage` | activa/desactiva |
+| `PATCH /api/admin/users/{id}/roles` | `users.manage` | sincroniza roles |
+| `PUT /api/admin/users/{id}/permissions` | `users.manage` | sincroniza overrides `Allow/Deny` |
+| `POST /api/admin/users/{id}/temporary-password` | `users.manage` | cambia contraseña temporal |
+| `GET /api/admin/roles` | `roles.manage` | lista roles y conteos |
+| `GET /api/admin/roles/{id}` | `roles.manage` | detalle y catálogo de permisos |
+| `PUT /api/admin/roles/{id}/permissions` | `roles.manage` | sincroniza permisos de rol no protegido |
+
+Los endpoints mutables conservan validación XSRF.
 
 ## Seguridad
 
-### Appsettings
+### Admin
 
-- `appsettings.json` conserva `SecuritySeed:EnsureBaselineOnStartup=false` y `SecuritySeed:RunOnStartup=false`.
-- `appsettings.Development.json` activa `SecuritySeed:EnsureBaselineOnStartup=true` solo para Development.
-- La revision redaccionada de `ConnectionStrings` confirma cadenas locales sin `Password=` ni `User Id=`.
-- `SecuritySeed:Admin:Password` en `appsettings.json` esta vacio.
-- No se detectaron contrasenas reales guardadas en `appsettings.json` ni `appsettings.Development.json`.
+- rol Admin protegido;
+- el seed garantiza todos los permisos conocidos;
+- la UI no permite reducir permisos de Admin;
+- la API rechaza intentos de reducción;
+- usuarios con Admin no admiten overrides individuales degradantes;
+- se conserva la regla de no dejar el sistema sin al menos un usuario activo con `users.manage`.
 
-### Permisos
+### Sesiones Existentes
 
-- Usuarios requiere `users.manage` en frontend y backend.
-- Roles requiere `roles.manage` en frontend y backend.
-- Usuario sin sesion: validado por HTTP local contra los nueve endpoints admin con resultado `401`.
-- Usuario autenticado sin permisos admin: cubierto por pruebas API existentes para `/api/admin/users` y `/api/admin/roles` con resultado `403`; validacion visual con usuario limitado real queda pendiente en DEV.
-- Admin: pruebas API confirman que puede listar/crear usuarios, asignar roles, activar/desactivar usuarios y consultar roles.
+La cookie contiene claims de roles/permisos, pero `OnValidatePrincipal` vuelve a resolver desde BD:
 
-### Password Temporal
+- usuario activo/bloqueado;
+- roles;
+- permisos de rol;
+- overrides.
 
-- No se devuelve en respuestas de creacion ni detalle.
-- No aparece en listados.
-- No se registra en logs de aplicacion; la busqueda encontro uso en DTOs, hashing y pruebas, no en `Console.*` ni mensajes de `LoggerMessage`.
-- La UI no genera ni muestra la contrasena temporal como resultado; el Admin la captura explicitamente en campos `type=password`.
-- Riesgo DEV/UAT: el Admin debe comunicar la contrasena inicial por un canal seguro fuera del sistema.
-- Pendiente obligatorio antes de operacion productiva amplia: implementar force-change password en el siguiente login o flujo equivalente.
+Si el principal ya no coincide, se reemplaza y la cookie se renueva. El nuevo permiso se usa antes de autorizar la solicitud actual.
 
-### Admin Intacto
+El `permissionGuard` de Angular refresca `/api/auth/me` antes de resolver una navegación protegida.
 
-- El backend evita desactivar la propia cuenta.
-- El backend evita dejar el sistema sin al menos un usuario activo con `users.manage`.
-- La proteccion es por permiso, no por nombre de rol: si hay otro usuario activo con `users.manage`, el sistema permite reasignar roles.
-- No existe delete de usuarios ni roles en esta fase.
+### Repartidor Y Seed
 
-### Rol Repartidor
+- al crear `Repartidor` por primera vez, baseline: `deliveries.view` + `deliveries.complete`;
+- después, el baseline seed no sobrescribe la configuración administrativa del rol;
+- el seed explícito de Limited QA continúa siendo técnico y sólo Development.
 
-- `Repartidor` queda preparado por baseline de seguridad en `Development`.
-- En Fase 3.3.1 fue validado como rol base sin permisos activos en pruebas API.
-- No recibe `orders.view`, `orders.edit` ni acceso amplio a ordenes completas.
-- Desde Fase 3.4.1 recibe `deliveries.view` y `deliveries.complete`, sin `deliveries.assign` ni `deliveries.update`.
+### Contraseña Temporal
 
-## QA Funcional DEV
+Sin cambio funcional en SEC-PERM-1:
 
-Checklist para ejecutar en DEV despues de desplegar rama `dev`:
+- nunca se devuelve hash ni contraseña en API;
+- Admin captura la contraseña temporal explícitamente;
+- sigue pendiente para `PROD-READY-1` forzar cambio en primer login o aprobar política equivalente.
 
-1. Iniciar sesion como Admin en `/login`.
-2. Abrir `/app/admin/usuarios`.
-3. Confirmar que carga sin errores de consola y lista usuarios.
-4. Crear usuario QA con email, nombre, contrasena temporal y rol `Repartidor`.
-5. Confirmar que la contrasena temporal no aparece en listado ni en detalle despues de guardar.
-6. Editar nombre/email del usuario creado.
-7. Cambiar roles del usuario creado.
-8. Desactivar y reactivar el usuario creado.
-9. Actualizar contrasena temporal desde accion explicita.
-10. Abrir `/app/admin/roles`.
-11. Confirmar que roles carga en modo solo lectura y comunica `Solo lectura`.
-12. Confirmar que cada rol muestra permisos.
-13. Confirmar que `Repartidor` aparece solo con `deliveries.view` y `deliveries.complete`.
-14. Iniciar sesion con usuario sin `users.manage`/`roles.manage`.
-15. Confirmar que `/app/admin/usuarios` y `/app/admin/roles` terminan en `/app/access-denied`.
-16. Cerrar sesion y confirmar que entrar a `/app/admin/usuarios` sin sesion redirige a `/login?returnUrl=...`.
+## Validación Automática Ejecutada
 
-## Validacion Local Ejecutada
+Workflow temporal `SEC-PERM-1 validation`:
 
-- `docker ps --filter name=ldt-labdental-sql`: `ldt-labdental-sql` activo en `14336`.
-- `docker ps --filter name=codex-cobranza-sql`: sin contenedor activo; no se uso.
-- API local levantada con `dotnet run --project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj`.
-- Angular local levantado con `npm start` en `http://localhost:4200/`.
-- `GET /health`: `200`.
-- `GET /api/auth/csrf`: `204` con token XSRF presente.
-- Sin sesion, todos los endpoints admin revisados devolvieron `401`; para mutables se envio XSRF valido.
-- `GET http://127.0.0.1:4200/login`: `200` shell Angular.
-- `GET http://127.0.0.1:4200/app/admin/usuarios`: `200` shell Angular.
-- `GET http://127.0.0.1:4200/app/admin/roles`: `200` shell Angular.
+- `dotnet restore`: correcto;
+- `dotnet build --configuration Release`: correcto;
+- `dotnet test --configuration Release`: correcto;
+- `npm ci`: correcto;
+- `npm run build`: correcto;
+- `dotnet ef migrations add AddUserPermissionOverrides`: correcto;
+- migración `.cs`, `.Designer.cs` y `LaboratorioTlahuacDbContextModelSnapshot.cs` generados por EF;
+- `dotnet ef migrations has-pending-model-changes`: correcto.
 
-Nota: el `200` de rutas privadas por `curl` solo confirma entrega del shell SPA. La validacion real de guards y pantallas requiere navegador con Angular ejecutando y credenciales reales.
+Pruebas específicas agregadas:
 
-## Build/Test
+1. grant de permiso por rol aplicado a sesión ya abierta;
+2. revoke por rol aplicado a la misma sesión;
+3. `Allow` individual aplicado a sesión existente;
+4. `Deny` individual prevalece sobre permiso heredado;
+5. `/api/auth/me` refleja permisos efectivos;
+6. rol Admin no puede reducirse;
+7. usuario Admin no puede degradarse por override;
+8. baseline seed no revierte permisos editados de Repartidor.
 
-- `npm run build` desde `src/LaboratorioTlahuac.Web`: correcto. Warning no bloqueante: bundle inicial `531.04 kB`, excede budget `500.00 kB` por `31.04 kB`.
-- `dotnet build`: correcto con 0 errores y 2 warnings `NU1903` conocidos por `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 en tests.
-- `dotnet test`: correcto; Domain 1/1, Application 1/1, API 110/110.
-- `git diff --check`: correcto.
-- Busquedas obligatorias ejecutadas. Patrones sensibles revisados con salida limitada a archivos.
+## Evidencia Manual De Usuario Limitado Ya Ejecutada
 
-## Riesgos Y Pendientes
+En DEV, 2026-09-07:
 
-- Validacion visual real en DEV con Admin queda pendiente.
-- Validacion de `/app/access-denied` con usuario limitado real sin `users.manage`/`roles.manage` queda pendiente en DEV; por pruebas API, una sesion sin permisos admin recibe `403`.
-- Implementar force-change password antes de produccion.
-- Definir si roles/permisos editables seran necesarios y bajo que reglas de seguridad.
-- Resolver o ajustar el warning de budget inicial en una fase de optimizacion frontend; no bloquea DEV porque esta por debajo del `maximumError` de `1MB`.
-- Fase 3.4.1 ya implemento modelo, endpoints y permisos de entregas; queda pendiente UI mobile-first y validacion DEV tras migracion.
+- login real correcto;
+- `customers.view=true`;
+- `reports.view=false`;
+- `/app/clientes` carga;
+- `/app/dashboard -> /app/access-denied`;
+- `/api/customers` autenticado: `200`;
+- `/api/dashboard/summary` autenticado: `403`;
+- `/api/dashboard/summary` sin credenciales: `401`;
+- logout: `/api/auth/me` devuelve `401`;
+- seed temporal retirado del ambiente.
 
-## Preparacion DEV
+## Checklist Manual Después Del Deploy DEV De SEC-PERM-1
 
-Si no aparecen bloqueantes en la validacion humana:
+### Rol
 
-1. Hacer commit de Fase 3.3 + Fase 3.3.1.
-2. Push a `dev`.
-3. Para Fase 3.4.1, aplicar migracion `AddWorkOrderDeliveries` en DEV antes de validar entregas.
-4. Validar los pasos del checklist QA funcional DEV.
-5. Registrar evidencia de Admin, usuario limitado, rol `Repartidor` y password temporal antes de validar UI de entregas.
+1. Iniciar sesión como Admin.
+2. Abrir `/app/admin/roles`.
+3. Confirmar que Admin aparece protegido y no editable.
+4. Seleccionar Repartidor.
+5. Agregar temporalmente un permiso no sensible de prueba, por ejemplo `customers.view`.
+6. Guardar y confirmar aviso de usuarios afectados.
+7. Con usuario Repartidor ya autenticado, confirmar que el nuevo permiso surte efecto sin relogin.
+8. Retirar el permiso y confirmar que se pierde sin relogin.
+9. Restaurar el conjunto operativo acordado del rol.
+
+### Usuario
+
+10. Abrir `/app/admin/usuarios` y crear/usar un usuario QA no Admin.
+11. Confirmar que sus permisos iniciales coinciden con los roles y no son copias individuales.
+12. Verificar que cada permiso muestra estado efectivo y rol de origen.
+13. Aplicar `Allow` a un permiso no heredado y validar acceso.
+14. Volver a `Heredado` y validar que desaparece la excepción.
+15. Aplicar `Deny` a un permiso heredado y validar rechazo.
+16. Volver a `Heredado` y validar recuperación por rol.
+17. Confirmar que usuario Admin muestra overrides bloqueados.
+
+### Regresión
+
+18. Confirmar `/api/...` sin sesión devuelve `401`.
+19. Confirmar sesión sin permiso devuelve `403`.
+20. Confirmar menú/rutas Angular coinciden con `/api/auth/me`.
+21. Confirmar Clientes ya no muestra una segunda tabla sin formato en desktop.
+22. Revisar consola del navegador sin errores nuevos.
+
+## Criterio De Salida
+
+SEC-PERM-1 puede cerrarse cuando:
+
+- PR a `dev` integrado;
+- migración aplicada por flujo DEV;
+- health público/local correcto;
+- checklist manual esencial de rol y override de usuario pasa;
+- Clientes duplicado corregido visualmente;
+- sin regresiones `401/403`;
+- evidencia de DEV registrada.
