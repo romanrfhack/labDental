@@ -6,8 +6,10 @@ import { AuthService } from '../core/auth/auth.service';
 import { ApiClient } from '../core/http/api-client';
 import {
   AdminPagedResponse,
+  AdminPermission,
   AdminRoleDetail,
   AdminRoleListItem,
+  AdminRolePermissionsRequest,
   AdminUserCreateRequest,
   AdminUserDetail,
   AdminUserListItem,
@@ -112,6 +114,29 @@ export class AdminSecurityService {
     return this.http.get<AdminRoleDetail>(this.apiClient.getUrl(`/api/admin/roles/${id}`), {
       withCredentials: true
     });
+  }
+
+  listPermissions(): Observable<AdminPermission[]> {
+    return this.http.get<AdminPermission[]>(this.apiClient.getUrl('/api/admin/permissions'), {
+      withCredentials: true
+    });
+  }
+
+  updateRolePermissions(id: string, permissionIds: string[]): Observable<AdminRoleDetail> {
+    const request: AdminRolePermissionsRequest = { permissionIds };
+
+    return this.authService.getCsrfHeaders().pipe(
+      switchMap((headers) =>
+        this.http.patch<AdminRoleDetail>(
+          this.apiClient.getUrl(`/api/admin/roles/${id}/permissions`),
+          request,
+          {
+            headers,
+            withCredentials: true
+          }
+        )
+      )
+    );
   }
 
   private toUserListParams(params: AdminUserListParams) {
