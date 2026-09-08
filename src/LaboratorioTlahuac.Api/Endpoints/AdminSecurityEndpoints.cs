@@ -110,6 +110,29 @@ public static class AdminSecurityEndpoints
             .RequireAuthorization(Permissions.RolesManage)
             .WithName("AdminRolesGetById");
 
+        group.MapGet(
+                "/permissions",
+                async (
+                    IAdminPermissionManagementService permissionManagementService,
+                    CancellationToken cancellationToken) =>
+                    ToResult(await permissionManagementService.ListPermissionsAsync(cancellationToken)))
+            .RequireAuthorization(Permissions.RolesManage)
+            .WithName("AdminPermissionsList");
+
+        group.MapPatch(
+                "/roles/{id:guid}/permissions",
+                async (
+                    Guid id,
+                    AdminRolePermissionsRequest request,
+                    IAdminPermissionManagementService permissionManagementService,
+                    CancellationToken cancellationToken) =>
+                    ToResult(await permissionManagementService.UpdateRolePermissionsAsync(
+                        id,
+                        request,
+                        cancellationToken)))
+            .RequireAuthorization(Permissions.RolesManage)
+            .WithName("AdminRolesUpdatePermissions");
+
         return endpoints;
     }
 
