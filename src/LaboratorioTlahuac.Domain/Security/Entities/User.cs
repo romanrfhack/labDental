@@ -48,6 +48,8 @@ public sealed class User
 
     public ICollection<UserRole> UserRoles { get; private set; } = new List<UserRole>();
 
+    public ICollection<UserPermissionOverride> PermissionOverrides { get; private set; } = new List<UserPermissionOverride>();
+
     public static User Create(
         string email,
         string fullName,

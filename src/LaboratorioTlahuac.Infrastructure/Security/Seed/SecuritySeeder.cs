@@ -70,10 +70,14 @@ public sealed class SecuritySeeder(
 
         var permissionsByKey = await EnsurePermissionsAsync(now, cancellationToken);
         var driverRole = await EnsureDriverRoleAsync(now, cancellationToken);
-        await SynchronizeRolePermissionsAsync(
-            driverRole,
-            GetKnownPermissions(DriverPermissionKeys, permissionsByKey),
-            cancellationToken);
+
+        if (dbContext.Entry(driverRole).State == EntityState.Added)
+        {
+            await SynchronizeRolePermissionsAsync(
+                driverRole,
+                GetKnownPermissions(DriverPermissionKeys, permissionsByKey),
+                cancellationToken);
+        }
 
         if (adminSeedEnabled)
         {

@@ -29,6 +29,11 @@ public interface IAdminSecurityService
         AdminUserRolesRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<AdminSecurityServiceResult<AdminUserDetailResponse>> UpdateUserPermissionsAsync(
+        Guid id,
+        AdminUserPermissionsRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<AdminSecurityServiceResult<AdminUserDetailResponse>> SetTemporaryPasswordAsync(
         Guid id,
         AdminUserTemporaryPasswordRequest request,
@@ -39,5 +44,10 @@ public interface IAdminSecurityService
 
     Task<AdminSecurityServiceResult<AdminRoleDetailResponse>> GetRoleByIdAsync(
         Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<AdminSecurityServiceResult<AdminRoleDetailResponse>> UpdateRolePermissionsAsync(
+        Guid id,
+        AdminRolePermissionsRequest request,
         CancellationToken cancellationToken = default);
 }

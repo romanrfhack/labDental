@@ -7,6 +7,7 @@ using LaboratorioTlahuac.Application.Admin;
 using LaboratorioTlahuac.Domain.Security;
 using LaboratorioTlahuac.Domain.Security.Entities;
 using LaboratorioTlahuac.Infrastructure.Persistence;
+using LaboratorioTlahuac.Infrastructure.Security.Authentication;
 
 namespace LaboratorioTlahuac.Infrastructure.Admin;
 
@@ -21,6 +22,7 @@ public sealed class AdminSecurityService(
     private const int DefaultPageSize = 20;
     private const int MaxPageSize = 100;
     private const int MinimumTemporaryPasswordLength = 10;
+    private static readonly string NormalizedAdminRoleName = SecurityTextNormalizer.NormalizeName("Admin");
 
     public async Task<AdminSecurityServiceResult<AdminPagedResponse<AdminUserListItemResponse>>> ListUsersAsync(
         AdminUserListQuery query,
@@ -93,11 +95,16 @@ public sealed class AdminSecurityService(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var user = await FindUserWithRolesAsync(id, asNoTracking: true, cancellationToken);
+        var user = await FindUserWithSecurityAsync(id, asNoTracking: true, cancellationToken);
 
-        return user is null
-            ? AdminSecurityServiceResult.NotFound<AdminUserDetailResponse>("User was not found.")
-            : AdminSecurityServiceResult.Success(MapUserDetail(user));
+        if (user is null)
+        {
+            return AdminSecurityServiceResult.NotFound<AdminUserDetailResponse>("User was not found.");
+        }
+
+        var permissions = await ListPermissionsAsync(cancellationToken);
+
+        return AdminSecurityServiceResult.Success(MapUserDetail(user, permissions));
     }
 
     public async Task<AdminSecurityServiceResult<AdminUserDetailResponse>> CreateUserAsync(
@@ -111,7 +118,7 @@ public sealed class AdminSecurityService(
             return AdminSecurityServiceResult.Validation<AdminUserDetailResponse>(input.Errors);
         }
 
-        var roleIds = NormalizeRoleIds(request.RoleIds);
+        var roleIds = NormalizeIds(request.RoleIds);
         var roleCheck = await EnsureRolesExistAsync(roleIds, requireAtLeastOne: true, cancellationToken);
 
         if (roleCheck.Errors.Count > 0)
@@ -157,7 +164,7 @@ public sealed class AdminSecurityService(
             return AdminSecurityServiceResult.Validation<AdminUserDetailResponse>(input.Errors);
         }
 
-        var user = await FindUserWithRolesAsync(id, asNoTracking: false, cancellationToken);
+        var user = await FindUserWithSecurityAsync(id, asNoTracking: false, cancellationToken);
 
         if (user is null)
         {
@@ -179,7 +186,7 @@ public sealed class AdminSecurityService(
         user.UpdateProfile(input.Value.Email, input.Value.FullName, clock.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return AdminSecurityServiceResult.Success(MapUserDetail(user));
+        return await GetUserByIdAsync(id, cancellationToken);
     }
 
     public async Task<AdminSecurityServiceResult<AdminUserDetailResponse>> UpdateUserStatusAsync(
@@ -187,7 +194,7 @@ public sealed class AdminSecurityService(
         AdminUserStatusRequest request,
         CancellationToken cancellationToken = default)
     {
-        var user = await FindUserWithRolesAsync(id, asNoTracking: false, cancellationToken);
+        var user = await FindUserWithSecurityAsync(id, asNoTracking: false, cancellationToken);
 
         if (user is null)
         {
@@ -221,7 +228,7 @@ public sealed class AdminSecurityService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return AdminSecurityServiceResult.Success(MapUserDetail(user));
+        return await GetUserByIdAsync(id, cancellationToken);
     }
 
     public async Task<AdminSecurityServiceResult<AdminUserDetailResponse>> AssignUserRolesAsync(
@@ -229,7 +236,7 @@ public sealed class AdminSecurityService(
         AdminUserRolesRequest request,
         CancellationToken cancellationToken = default)
     {
-        var roleIds = NormalizeRoleIds(request.RoleIds);
+        var roleIds = NormalizeIds(request.RoleIds);
         var roleCheck = await EnsureRolesExistAsync(roleIds, requireAtLeastOne: true, cancellationToken);
 
         if (roleCheck.Errors.Count > 0)
@@ -237,20 +244,23 @@ public sealed class AdminSecurityService(
             return AdminSecurityServiceResult.Validation<AdminUserDetailResponse>(roleCheck.Errors);
         }
 
-        var user = await FindUserWithRolesAsync(id, asNoTracking: false, cancellationToken);
+        var user = await FindUserWithSecurityAsync(id, asNoTracking: false, cancellationToken);
 
         if (user is null)
         {
             return AdminSecurityServiceResult.NotFound<AdminUserDetailResponse>("User was not found.");
         }
 
-        var desiredRolesGrantUsersManage = await RolesGrantPermissionAsync(
-            roleIds,
-            Permissions.UsersManage,
-            cancellationToken);
+        var desiredRolesContainAdmin = await RolesContainAdminAsync(roleIds, cancellationToken);
+        var desiredRolesGrantUsersManage = desiredRolesContainAdmin
+            || await RolesGrantPermissionAsync(roleIds, Permissions.UsersManage, cancellationToken);
+        var usersManageOverride = GetOverrideEffect(user, Permissions.UsersManage);
+        var desiredGrantsUsersManage = desiredRolesContainAdmin
+            || usersManageOverride == UserPermissionOverrideEffect.Allow
+            || (usersManageOverride != UserPermissionOverrideEffect.Deny && desiredRolesGrantUsersManage);
 
         if (user.IsActive
-            && !desiredRolesGrantUsersManage
+            && !desiredGrantsUsersManage
             && !await AnyOtherActiveUserWithPermissionAsync(id, Permissions.UsersManage, cancellationToken))
         {
             return AdminSecurityServiceResult.Conflict<AdminUserDetailResponse>(
@@ -261,11 +271,62 @@ public sealed class AdminSecurityService(
         user.Rename(user.FullName, clock.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var updatedUser = await FindUserWithRolesAsync(id, asNoTracking: true, cancellationToken);
+        return await GetUserByIdAsync(id, cancellationToken);
+    }
 
-        return updatedUser is null
-            ? AdminSecurityServiceResult.NotFound<AdminUserDetailResponse>("User was not found.")
-            : AdminSecurityServiceResult.Success(MapUserDetail(updatedUser));
+    public async Task<AdminSecurityServiceResult<AdminUserDetailResponse>> UpdateUserPermissionsAsync(
+        Guid id,
+        AdminUserPermissionsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var validation = ValidatePermissionOverrides(request.Overrides);
+
+        if (validation.Errors.Count > 0 || validation.Value is null)
+        {
+            return AdminSecurityServiceResult.Validation<AdminUserDetailResponse>(validation.Errors);
+        }
+
+        var permissionIds = validation.Value.Keys.ToHashSet();
+        var permissionCheck = await EnsurePermissionsExistAsync(permissionIds, cancellationToken);
+
+        if (permissionCheck.Errors.Count > 0)
+        {
+            return AdminSecurityServiceResult.Validation<AdminUserDetailResponse>(permissionCheck.Errors);
+        }
+
+        var user = await FindUserWithSecurityAsync(id, asNoTracking: false, cancellationToken);
+
+        if (user is null)
+        {
+            return AdminSecurityServiceResult.NotFound<AdminUserDetailResponse>("User was not found.");
+        }
+
+        if (SecurityIdentityMapper.IsAdmin(user) && validation.Value.Count > 0)
+        {
+            return AdminSecurityServiceResult.Conflict<AdminUserDetailResponse>(
+                "Users with the Admin role inherit the protected Admin permission set and cannot have individual overrides.");
+        }
+
+        var usersManagePermissionId = await dbContext.Permissions
+            .Where(permission => permission.Key == Permissions.UsersManage)
+            .Select(permission => (Guid?)permission.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+        var desiredGrantsUsersManage = SecurityIdentityMapper.IsAdmin(user)
+            || GrantsPermissionWithOverrides(user, Permissions.UsersManage, usersManagePermissionId, validation.Value);
+
+        if (user.IsActive
+            && !desiredGrantsUsersManage
+            && !await AnyOtherActiveUserWithPermissionAsync(id, Permissions.UsersManage, cancellationToken))
+        {
+            return AdminSecurityServiceResult.Conflict<AdminUserDetailResponse>(
+                "At least one active user with users.manage must remain.");
+        }
+
+        await SynchronizeUserPermissionOverridesAsync(user.Id, validation.Value, cancellationToken);
+        user.Rename(user.FullName, clock.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return await GetUserByIdAsync(id, cancellationToken);
     }
 
     public async Task<AdminSecurityServiceResult<AdminUserDetailResponse>> SetTemporaryPasswordAsync(
@@ -283,7 +344,7 @@ public sealed class AdminSecurityService(
             return AdminSecurityServiceResult.Validation<AdminUserDetailResponse>(errors);
         }
 
-        var user = await FindUserWithRolesAsync(id, asNoTracking: false, cancellationToken);
+        var user = await FindUserWithSecurityAsync(id, asNoTracking: false, cancellationToken);
 
         if (user is null)
         {
@@ -295,7 +356,7 @@ public sealed class AdminSecurityService(
         user.ClearLockout(now);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return AdminSecurityServiceResult.Success(MapUserDetail(user));
+        return await GetUserByIdAsync(id, cancellationToken);
     }
 
     public async Task<AdminSecurityServiceResult<IReadOnlyCollection<AdminRoleListItemResponse>>> ListRolesAsync(
@@ -317,20 +378,71 @@ public sealed class AdminSecurityService(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var role = await dbContext.Roles
-            .Include(currentRole => currentRole.RolePermissions)
-                .ThenInclude(rolePermission => rolePermission.Permission)
-            .Include(currentRole => currentRole.UserRoles)
-                .ThenInclude(userRole => userRole.User)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(currentRole => currentRole.Id == id, cancellationToken);
+        var role = await FindRoleWithSecurityAsync(id, asNoTracking: true, cancellationToken);
 
-        return role is null
-            ? AdminSecurityServiceResult.NotFound<AdminRoleDetailResponse>("Role was not found.")
-            : AdminSecurityServiceResult.Success(MapRoleDetail(role));
+        if (role is null)
+        {
+            return AdminSecurityServiceResult.NotFound<AdminRoleDetailResponse>("Role was not found.");
+        }
+
+        var permissions = await ListPermissionsAsync(cancellationToken);
+
+        return AdminSecurityServiceResult.Success(MapRoleDetail(role, permissions));
     }
 
-    private async Task<User?> FindUserWithRolesAsync(
+    public async Task<AdminSecurityServiceResult<AdminRoleDetailResponse>> UpdateRolePermissionsAsync(
+        Guid id,
+        AdminRolePermissionsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var permissionIds = NormalizeIds(request.PermissionIds);
+        var permissionCheck = await EnsurePermissionsExistAsync(permissionIds, cancellationToken);
+
+        if (permissionCheck.Errors.Count > 0)
+        {
+            return AdminSecurityServiceResult.Validation<AdminRoleDetailResponse>(permissionCheck.Errors);
+        }
+
+        var role = await FindRoleWithSecurityAsync(id, asNoTracking: false, cancellationToken);
+
+        if (role is null)
+        {
+            return AdminSecurityServiceResult.NotFound<AdminRoleDetailResponse>("Role was not found.");
+        }
+
+        if (IsRolePermissionEditingLocked(role))
+        {
+            return AdminSecurityServiceResult.Conflict<AdminRoleDetailResponse>(
+                "Admin permissions are protected and cannot be reduced from the UI.");
+        }
+
+        var usersManagePermission = await dbContext.Permissions
+            .AsNoTracking()
+            .SingleAsync(permission => permission.Key == Permissions.UsersManage, cancellationToken);
+        var currentlyGrantsUsersManage = role.RolePermissions.Any(
+            rolePermission => rolePermission.PermissionId == usersManagePermission.Id);
+        var willGrantUsersManage = permissionIds.Contains(usersManagePermission.Id);
+
+        if (currentlyGrantsUsersManage
+            && !willGrantUsersManage
+            && !await AnyActiveUserWithPermissionAfterRoleChangeAsync(
+                role.Id,
+                permissionIds,
+                usersManagePermission,
+                cancellationToken))
+        {
+            return AdminSecurityServiceResult.Conflict<AdminRoleDetailResponse>(
+                "At least one active user with users.manage must remain.");
+        }
+
+        await SynchronizeRolePermissionsAsync(role.Id, permissionIds, cancellationToken);
+        role.Touch(clock.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return await GetRoleByIdAsync(id, cancellationToken);
+    }
+
+    private async Task<User?> FindUserWithSecurityAsync(
         Guid id,
         bool asNoTracking,
         CancellationToken cancellationToken)
@@ -340,6 +452,8 @@ public sealed class AdminSecurityService(
                 .ThenInclude(userRole => userRole.Role)
                     .ThenInclude(role => role!.RolePermissions)
                         .ThenInclude(rolePermission => rolePermission.Permission)
+            .Include(user => user.PermissionOverrides)
+                .ThenInclude(permissionOverride => permissionOverride.Permission)
             .AsQueryable();
 
         if (asNoTracking)
@@ -350,7 +464,35 @@ public sealed class AdminSecurityService(
         return await query.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
     }
 
-    private async Task<RoleValidationResult> EnsureRolesExistAsync(
+    private async Task<Role?> FindRoleWithSecurityAsync(
+        Guid id,
+        bool asNoTracking,
+        CancellationToken cancellationToken)
+    {
+        var query = dbContext.Roles
+            .Include(role => role.RolePermissions)
+                .ThenInclude(rolePermission => rolePermission.Permission)
+            .Include(role => role.UserRoles)
+                .ThenInclude(userRole => userRole.User)
+            .AsQueryable();
+
+        if (asNoTracking)
+        {
+            query = query.AsNoTracking();
+        }
+
+        return await query.FirstOrDefaultAsync(role => role.Id == id, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<Permission>> ListPermissionsAsync(CancellationToken cancellationToken)
+    {
+        return await dbContext.Permissions
+            .AsNoTracking()
+            .OrderBy(permission => permission.Key)
+            .ToListAsync(cancellationToken);
+    }
+
+    private async Task<IdValidationResult> EnsureRolesExistAsync(
         HashSet<Guid> roleIds,
         bool requireAtLeastOne,
         CancellationToken cancellationToken)
@@ -360,12 +502,12 @@ public sealed class AdminSecurityService(
         if (requireAtLeastOne && roleIds.Count == 0)
         {
             AddError(errors, "RoleIds", "At least one role is required.");
-            return new RoleValidationResult(errors);
+            return new IdValidationResult(errors);
         }
 
         if (roleIds.Count == 0)
         {
-            return new RoleValidationResult(errors);
+            return new IdValidationResult(errors);
         }
 
         var existingRoleIds = await dbContext.Roles
@@ -378,7 +520,31 @@ public sealed class AdminSecurityService(
             AddError(errors, "RoleIds", "One or more roles do not exist.");
         }
 
-        return new RoleValidationResult(errors);
+        return new IdValidationResult(errors);
+    }
+
+    private async Task<IdValidationResult> EnsurePermissionsExistAsync(
+        HashSet<Guid> permissionIds,
+        CancellationToken cancellationToken)
+    {
+        var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+
+        if (permissionIds.Count == 0)
+        {
+            return new IdValidationResult(errors);
+        }
+
+        var existingPermissionIds = await dbContext.Permissions
+            .Where(permission => permissionIds.Contains(permission.Id))
+            .Select(permission => permission.Id)
+            .ToListAsync(cancellationToken);
+
+        if (existingPermissionIds.Count != permissionIds.Count)
+        {
+            AddError(errors, "PermissionIds", "One or more permissions do not exist.");
+        }
+
+        return new IdValidationResult(errors);
     }
 
     private async Task SynchronizeUserRolesAsync(
@@ -398,12 +564,59 @@ public sealed class AdminSecurityService(
 
         foreach (var desiredRoleId in desiredRoleIds)
         {
-            if (existingRoleIds.Contains(desiredRoleId))
+            if (!existingRoleIds.Contains(desiredRoleId))
             {
-                continue;
+                dbContext.UserRoles.Add(new UserRole(userId, desiredRoleId));
             }
+        }
+    }
 
-            dbContext.UserRoles.Add(new UserRole(userId, desiredRoleId));
+    private async Task SynchronizeRolePermissionsAsync(
+        Guid roleId,
+        HashSet<Guid> desiredPermissionIds,
+        CancellationToken cancellationToken)
+    {
+        var existing = await dbContext.RolePermissions
+            .Where(rolePermission => rolePermission.RoleId == roleId)
+            .ToListAsync(cancellationToken);
+        var existingIds = existing.Select(rolePermission => rolePermission.PermissionId).ToHashSet();
+
+        dbContext.RolePermissions.RemoveRange(
+            existing.Where(rolePermission => !desiredPermissionIds.Contains(rolePermission.PermissionId)));
+
+        foreach (var permissionId in desiredPermissionIds)
+        {
+            if (!existingIds.Contains(permissionId))
+            {
+                dbContext.RolePermissions.Add(new RolePermission(roleId, permissionId));
+            }
+        }
+    }
+
+    private async Task SynchronizeUserPermissionOverridesAsync(
+        Guid userId,
+        IReadOnlyDictionary<Guid, UserPermissionOverrideEffect> desiredOverrides,
+        CancellationToken cancellationToken)
+    {
+        var existing = await dbContext.UserPermissionOverrides
+            .Where(permissionOverride => permissionOverride.UserId == userId)
+            .ToListAsync(cancellationToken);
+        var existingByPermissionId = existing.ToDictionary(
+            permissionOverride => permissionOverride.PermissionId);
+
+        dbContext.UserPermissionOverrides.RemoveRange(
+            existing.Where(permissionOverride => !desiredOverrides.ContainsKey(permissionOverride.PermissionId)));
+
+        foreach (var desired in desiredOverrides)
+        {
+            if (existingByPermissionId.TryGetValue(desired.Key, out var permissionOverride))
+            {
+                permissionOverride.SetEffect(desired.Value);
+            }
+            else
+            {
+                dbContext.UserPermissionOverrides.Add(new UserPermissionOverride(userId, desired.Key, desired.Value));
+            }
         }
     }
 
@@ -412,19 +625,74 @@ public sealed class AdminSecurityService(
         string permission,
         CancellationToken cancellationToken)
     {
-        return await dbContext.UserRoles
-            .Where(userRole => userRole.UserId != excludedUserId && userRole.User!.IsActive)
-            .Join(
-                dbContext.RolePermissions,
-                userRole => userRole.RoleId,
-                rolePermission => rolePermission.RoleId,
-                (_, rolePermission) => rolePermission.PermissionId)
-            .Join(
-                dbContext.Permissions,
-                permissionId => permissionId,
-                currentPermission => currentPermission.Id,
-                (_, currentPermission) => currentPermission.Key)
-            .AnyAsync(permissionKey => permissionKey == permission, cancellationToken);
+        var users = await dbContext.Users
+            .Where(user => user.Id != excludedUserId && user.IsActive)
+            .Include(user => user.UserRoles)
+                .ThenInclude(userRole => userRole.Role)
+                    .ThenInclude(role => role!.RolePermissions)
+                        .ThenInclude(rolePermission => rolePermission.Permission)
+            .Include(user => user.PermissionOverrides)
+                .ThenInclude(permissionOverride => permissionOverride.Permission)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return users.Any(user => UserGrantsPermission(user, permission));
+    }
+
+    private async Task<bool> AnyActiveUserWithPermissionAfterRoleChangeAsync(
+        Guid changedRoleId,
+        HashSet<Guid> desiredPermissionIds,
+        Permission permission,
+        CancellationToken cancellationToken)
+    {
+        var users = await dbContext.Users
+            .Where(user => user.IsActive)
+            .Include(user => user.UserRoles)
+                .ThenInclude(userRole => userRole.Role)
+                    .ThenInclude(role => role!.RolePermissions)
+                        .ThenInclude(rolePermission => rolePermission.Permission)
+            .Include(user => user.PermissionOverrides)
+                .ThenInclude(permissionOverride => permissionOverride.Permission)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return users.Any(user => GrantsPermissionAfterRoleChange(
+            user,
+            changedRoleId,
+            desiredPermissionIds,
+            permission));
+    }
+
+    private static bool GrantsPermissionAfterRoleChange(
+        User user,
+        Guid changedRoleId,
+        HashSet<Guid> desiredPermissionIds,
+        Permission permission)
+    {
+        if (SecurityIdentityMapper.IsAdmin(user))
+        {
+            return true;
+        }
+
+        var overrideEffect = user.PermissionOverrides
+            .FirstOrDefault(permissionOverride => permissionOverride.PermissionId == permission.Id)
+            ?.Effect;
+
+        if (overrideEffect == UserPermissionOverrideEffect.Deny)
+        {
+            return false;
+        }
+
+        if (overrideEffect == UserPermissionOverrideEffect.Allow)
+        {
+            return true;
+        }
+
+        return user.UserRoles.Any(userRole =>
+            userRole.RoleId == changedRoleId
+                ? desiredPermissionIds.Contains(permission.Id)
+                : userRole.Role?.RolePermissions.Any(
+                    rolePermission => rolePermission.PermissionId == permission.Id) == true);
     }
 
     private async Task<bool> RolesGrantPermissionAsync(
@@ -445,6 +713,52 @@ public sealed class AdminSecurityService(
                 currentPermission => currentPermission.Id,
                 (_, currentPermission) => currentPermission.Key)
             .AnyAsync(permissionKey => permissionKey == permission, cancellationToken);
+    }
+
+    private async Task<bool> RolesContainAdminAsync(
+        HashSet<Guid> roleIds,
+        CancellationToken cancellationToken)
+    {
+        return roleIds.Count > 0
+            && await dbContext.Roles.AnyAsync(
+                role => roleIds.Contains(role.Id) && role.NormalizedName == NormalizedAdminRoleName,
+                cancellationToken);
+    }
+
+    private static UserPermissionOverrideEffect? GetOverrideEffect(User user, string permission)
+    {
+        return user.PermissionOverrides
+            .FirstOrDefault(permissionOverride => permissionOverride.Permission?.Key == permission)
+            ?.Effect;
+    }
+
+    private static bool GrantsPermissionWithOverrides(
+        User user,
+        string permissionKey,
+        Guid? permissionId,
+        IReadOnlyDictionary<Guid, UserPermissionOverrideEffect> desiredOverrides)
+    {
+        if (permissionId.HasValue && desiredOverrides.TryGetValue(permissionId.Value, out var effect))
+        {
+            return effect == UserPermissionOverrideEffect.Allow;
+        }
+
+        return user.UserRoles
+            .Select(userRole => userRole.Role)
+            .Where(role => role is not null)
+            .SelectMany(role => role!.RolePermissions)
+            .Select(rolePermission => rolePermission.Permission)
+            .Any(permission => permission?.Key == permissionKey);
+    }
+
+    private static bool UserGrantsPermission(User user, string permission)
+    {
+        return SecurityIdentityMapper.GetPermissionKeys(user).Contains(permission, StringComparer.Ordinal);
+    }
+
+    private static bool IsRolePermissionEditingLocked(Role role)
+    {
+        return role.NormalizedName == NormalizedAdminRoleName;
     }
 
     private static ValidatedInput<ValidatedCreateUser> ValidateUserCreate(AdminUserCreateRequest request)
@@ -479,6 +793,41 @@ public sealed class AdminSecurityService(
             : new ValidatedInput<ValidatedUpdateUser>(
                 new ValidatedUpdateUser(email, fullName),
                 errors);
+    }
+
+    private static ValidatedInput<Dictionary<Guid, UserPermissionOverrideEffect>> ValidatePermissionOverrides(
+        IReadOnlyCollection<AdminUserPermissionOverrideRequest>? overrides)
+    {
+        var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        var result = new Dictionary<Guid, UserPermissionOverrideEffect>();
+
+        foreach (var permissionOverride in overrides ?? [])
+        {
+            if (permissionOverride.PermissionId == Guid.Empty)
+            {
+                AddError(errors, "Overrides", "Permission id is required for every override.");
+                continue;
+            }
+
+            if (result.ContainsKey(permissionOverride.PermissionId))
+            {
+                AddError(errors, "Overrides", "Each permission can have at most one override.");
+                continue;
+            }
+
+            if (!Enum.TryParse<UserPermissionOverrideEffect>(permissionOverride.Effect, ignoreCase: true, out var effect)
+                || !Enum.IsDefined(effect))
+            {
+                AddError(errors, "Overrides", "Override effect must be Allow or Deny.");
+                continue;
+            }
+
+            result.Add(permissionOverride.PermissionId, effect);
+        }
+
+        return errors.Count > 0
+            ? new ValidatedInput<Dictionary<Guid, UserPermissionOverrideEffect>>(null, errors)
+            : new ValidatedInput<Dictionary<Guid, UserPermissionOverrideEffect>>(result, errors);
     }
 
     private static void ValidateEmail(string? email, Dictionary<string, string[]> errors)
@@ -542,14 +891,51 @@ public sealed class AdminSecurityService(
             user.UpdatedAtUtc);
     }
 
-    private static AdminUserDetailResponse MapUserDetail(User user)
+    private static AdminUserDetailResponse MapUserDetail(User user, IReadOnlyCollection<Permission> permissions)
     {
+        var isLocked = SecurityIdentityMapper.IsAdmin(user);
+        var permissionStates = permissions
+            .Select(permission =>
+            {
+                var sourceRoles = user.UserRoles
+                    .Where(userRole => userRole.Role?.RolePermissions.Any(
+                        rolePermission => rolePermission.PermissionId == permission.Id) == true)
+                    .Select(userRole => userRole.Role!.Name)
+                    .Distinct(StringComparer.Ordinal)
+                    .OrderBy(role => role, StringComparer.Ordinal)
+                    .ToArray();
+                var inherited = sourceRoles.Length > 0;
+                var permissionOverride = isLocked
+                    ? null
+                    : user.PermissionOverrides.FirstOrDefault(
+                        currentOverride => currentOverride.PermissionId == permission.Id);
+                var effective = permissionOverride?.Effect switch
+                {
+                    UserPermissionOverrideEffect.Allow => true,
+                    UserPermissionOverrideEffect.Deny => false,
+                    _ => inherited
+                };
+
+                return new AdminUserPermissionResponse(
+                    permission.Id,
+                    permission.Key,
+                    permission.Description,
+                    inherited,
+                    effective,
+                    permissionOverride?.Effect.ToString(),
+                    sourceRoles);
+            })
+            .OrderBy(permission => permission.Key, StringComparer.Ordinal)
+            .ToArray();
+
         return new AdminUserDetailResponse(
             user.Id,
             user.Email,
             user.FullName,
             user.IsActive,
             MapUserRoles(user),
+            isLocked,
+            permissionStates,
             user.LastLoginAtUtc,
             user.CreatedAtUtc,
             user.UpdatedAtUtc);
@@ -564,21 +950,32 @@ public sealed class AdminSecurityService(
             role.Name,
             role.Description,
             role.IsSystem,
+            IsRolePermissionEditingLocked(role),
             role.UserRoles.Count,
             permissions.Length,
             permissions);
     }
 
-    private static AdminRoleDetailResponse MapRoleDetail(Role role)
+    private static AdminRoleDetailResponse MapRoleDetail(
+        Role role,
+        IReadOnlyCollection<Permission> availablePermissions)
     {
         return new AdminRoleDetailResponse(
             role.Id,
             role.Name,
             role.Description,
             role.IsSystem,
+            IsRolePermissionEditingLocked(role),
             role.UserRoles.Count,
             role.UserRoles.Count(userRole => userRole.User?.IsActive == true),
-            MapRolePermissions(role));
+            MapRolePermissions(role),
+            availablePermissions
+                .Select(permission => new AdminPermissionResponse(
+                    permission.Id,
+                    permission.Key,
+                    permission.Description))
+                .OrderBy(permission => permission.Key, StringComparer.Ordinal)
+                .ToArray());
     }
 
     private static AdminRoleSummaryResponse[] MapUserRoles(User user)
@@ -608,20 +1005,10 @@ public sealed class AdminSecurityService(
             .ToArray();
     }
 
-    private static bool UserGrantsPermission(User user, string permission)
+    private static HashSet<Guid> NormalizeIds(IReadOnlyCollection<Guid>? ids)
     {
-        return user.UserRoles
-            .Select(userRole => userRole.Role)
-            .Where(role => role is not null)
-            .SelectMany(role => role!.RolePermissions)
-            .Select(rolePermission => rolePermission.Permission)
-            .Any(currentPermission => currentPermission?.Key == permission);
-    }
-
-    private static HashSet<Guid> NormalizeRoleIds(IReadOnlyCollection<Guid>? roleIds)
-    {
-        return (roleIds ?? [])
-            .Where(roleId => roleId != Guid.Empty)
+        return (ids ?? [])
+            .Where(id => id != Guid.Empty)
             .ToHashSet();
     }
 
@@ -638,7 +1025,7 @@ public sealed class AdminSecurityService(
         errors[key] = [message];
     }
 
-    private sealed record RoleValidationResult(IReadOnlyDictionary<string, string[]> Errors);
+    private sealed record IdValidationResult(IReadOnlyDictionary<string, string[]> Errors);
 
     private sealed record ValidatedInput<T>(T? Value, IReadOnlyDictionary<string, string[]> Errors);
 

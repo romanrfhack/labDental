@@ -21,6 +21,8 @@ public sealed class LaboratorioTlahuacDbContext(DbContextOptions<LaboratorioTlah
 
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
+    public DbSet<UserPermissionOverride> UserPermissionOverrides => Set<UserPermissionOverride>();
+
     public DbSet<Customer> Customers => Set<Customer>();
 
     public DbSet<InternalDoctor> InternalDoctors => Set<InternalDoctor>();

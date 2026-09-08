@@ -50,6 +50,11 @@ public sealed class Role
         return new Role(Guid.NewGuid(), name, description, isSystem, createdAtUtc);
     }
 
+    public void Touch(DateTimeOffset utcNow)
+    {
+        UpdatedAtUtc = utcNow;
+    }
+
     private void SetName(string name)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);

@@ -25,6 +25,8 @@ public sealed class Permission
 
     public ICollection<RolePermission> RolePermissions { get; private set; } = new List<RolePermission>();
 
+    public ICollection<UserPermissionOverride> UserPermissionOverrides { get; private set; } = new List<UserPermissionOverride>();
+
     public static Permission Create(string key, string description, DateTimeOffset createdAtUtc)
     {
         return new Permission(Guid.NewGuid(), key, description, createdAtUtc);
