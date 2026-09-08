@@ -69,11 +69,15 @@ public sealed class SecuritySeeder(
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var permissionsByKey = await EnsurePermissionsAsync(now, cancellationToken);
-        var driverRole = await EnsureDriverRoleAsync(now, cancellationToken);
-        await SynchronizeRolePermissionsAsync(
-            driverRole,
-            GetKnownPermissions(DriverPermissionKeys, permissionsByKey),
-            cancellationToken);
+        var (driverRole, driverRoleCreated) = await EnsureDriverRoleAsync(now, cancellationToken);
+
+        if (driverRoleCreated)
+        {
+            await SynchronizeRolePermissionsAsync(
+                driverRole,
+                GetKnownPermissions(DriverPermissionKeys, permissionsByKey),
+                cancellationToken);
+        }
 
         if (adminSeedEnabled)
         {
@@ -167,7 +171,9 @@ public sealed class SecuritySeeder(
         return adminRole;
     }
 
-    private async Task<Role> EnsureDriverRoleAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    private async Task<(Role Role, bool Created)> EnsureDriverRoleAsync(
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
     {
         var normalizedRoleName = SecurityTextNormalizer.NormalizeName(DriverRoleName);
         var role = await dbContext.Roles
@@ -177,13 +183,13 @@ public sealed class SecuritySeeder(
 
         if (role is not null)
         {
-            return role;
+            return (role, false);
         }
 
         role = Role.Create(DriverRoleName, DriverRoleDescription, isSystem: true, now);
         dbContext.Roles.Add(role);
 
-        return role;
+        return (role, true);
     }
 
     private async Task EnsureAdminPermissionsAsync(
