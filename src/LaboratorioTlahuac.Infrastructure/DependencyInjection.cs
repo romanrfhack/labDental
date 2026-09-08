@@ -63,13 +63,14 @@ public static class DependencyInjection
             options.UseSqlServer(connectionString);
         });
 
-        services.AddSingleton<IPermissionChecker, ClaimsPermissionChecker>();
+        services.AddScoped<IPermissionChecker, ClaimsPermissionChecker>();
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton(dashboardOptions);
         services.AddSingleton(catalogImagesOptions);
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IAuthSessionService, AuthSessionService>();
         services.AddScoped<IAdminSecurityService, AdminSecurityService>();
+        services.AddScoped<IAdminPermissionManagementService, AdminPermissionManagementService>();
         services.AddScoped<ICatalogService, CatalogService>();
         services.AddSingleton<ICatalogImageStorage, CatalogImageStorage>();
         services.AddScoped<ICustomerService, CustomerService>();
