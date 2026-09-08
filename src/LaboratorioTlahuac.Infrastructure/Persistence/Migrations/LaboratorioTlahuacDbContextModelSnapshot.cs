@@ -524,6 +524,24 @@ namespace LaboratorioTlahuac.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", "Security");
                 });
 
+            modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.UserPermissionOverride", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Effect")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("UserPermissionOverrides", "Security");
+                });
+
             modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -752,6 +770,25 @@ namespace LaboratorioTlahuac.Infrastructure.Persistence.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.UserPermissionOverride", b =>
+                {
+                    b.HasOne("LaboratorioTlahuac.Domain.Security.Entities.Permission", "Permission")
+                        .WithMany()
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LaboratorioTlahuac.Domain.Security.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LaboratorioTlahuac.Domain.Security.Entities.UserRole", b =>
