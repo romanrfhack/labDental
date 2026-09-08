@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { AdminSecurityService } from '../../admin-security.service';
+import { UserPermissionsPanelComponent } from '../../components/user-permissions-panel.component';
 import {
   AdminRoleListItem,
   AdminRoleSummary,
@@ -29,13 +30,13 @@ interface EditUserForm {
 
 @Component({
   selector: 'app-users-page',
-  imports: [FormsModule],
+  imports: [FormsModule, UserPermissionsPanelComponent],
   template: `
     <section class="feature-page">
       <header class="page-header">
         <div>
           <h1>Usuarios</h1>
-          <p>Alta, estado y roles de acceso para la app privada.</p>
+          <p>Alta, estado, roles y permisos individuales para la app privada.</p>
         </div>
         <button class="primary-button" type="button" (click)="toggleCreateForm()">
           {{ showCreateForm() ? 'Cerrar alta' : 'Nuevo usuario' }}
@@ -79,7 +80,7 @@ interface EditUserForm {
         <form class="admin-panel" (ngSubmit)="createUser()">
           <header>
             <h2>Nuevo usuario</h2>
-            <p>La contrasena se guarda cifrada y no se muestra despues de crear el usuario.</p>
+            <p>El usuario hereda automaticamente los permisos de los roles seleccionados.</p>
           </header>
 
           <div class="field-grid">
@@ -261,7 +262,7 @@ interface EditUserForm {
         <section class="admin-panel">
           <header>
             <h2>Roles asignados</h2>
-            <p>Selecciona al menos un rol existente.</p>
+            <p>Los permisos base se heredan automaticamente de estos roles.</p>
           </header>
 
           <div class="admin-checkbox-grid">
@@ -283,6 +284,8 @@ interface EditUserForm {
             </button>
           </div>
         </section>
+
+        <app-user-permissions-panel [userId]="user.id" />
 
         <form class="admin-panel" (ngSubmit)="setTemporaryPassword(user)">
           <header>
