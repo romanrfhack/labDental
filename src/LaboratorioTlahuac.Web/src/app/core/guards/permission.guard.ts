@@ -16,13 +16,13 @@ export const permissionGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  return authService.ensureSession().pipe(
-    map((isAuthenticated) => {
-      if (!isAuthenticated) {
+  return authService.me().pipe(
+    map((user) => {
+      if (!user) {
         return loginRedirect;
       }
 
-      return authService.hasPermission(requiredPermission)
+      return user.permissions.includes(requiredPermission)
         ? true
         : router.createUrlTree(['/app/access-denied']);
     }),
