@@ -1,0 +1,80 @@
+name: SEC-PERM-1 Validation
+
+on:
+  push:
+    branches:
+      - sec-perm-1-admin-permissions
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '22.x'
+  EF_VERSION: '10.0.7'
+  CONFIGURATION: Release
+  WEB_DIR: src/LaboratorioTlahuac.Web
+  INFRA_PROJECT: src/LaboratorioTlahuac.Infrastructure/LaboratorioTlahuac.Infrastructure.csproj
+  DB_CONTEXT: LaboratorioTlahuacDbContext
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WEB_DIR }}/package-lock.json
+
+      - name: Restore backend
+        run: dotnet restore
+
+      - name: Build backend
+        run: dotnet build --configuration "$CONFIGURATION" --no-restore
+
+      - name: Test backend
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal
+
+      - name: Install frontend dependencies
+        run: npm --prefix "$WEB_DIR" ci
+
+      - name: Build frontend
+        run: npm --prefix "$WEB_DIR" run build
+
+      - name: Install dotnet-ef
+        run: |
+          dotnet tool install --global dotnet-ef --version "$EF_VERSION"
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - name: Validate EF migration script
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          DOTNET_ENVIRONMENT: Development
+          ConnectionStrings__DefaultConnection: Server=localhost;Database=MigrationValidation;User Id=sa;Password=NotUsed123!;TrustServerCertificate=True
+        run: |
+          dotnet ef migrations script --idempotent \
+            --project "$INFRA_PROJECT" \
+            --startup-project src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj \
+            --context "$DB_CONTEXT" \
+            --configuration "$CONFIGURATION" \
+            --output "$RUNNER_TEMP/sec-perm-1.sql"
+          grep -q "UserPermissionOverrides" "$RUNNER_TEMP/sec-perm-1.sql"
+
+      - name: Validate diff whitespace
+        run: |
+          git fetch origin dev
+          git diff --check origin/dev...HEAD
