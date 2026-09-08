@@ -14,6 +14,9 @@ import {
   AdminUserDetail,
   AdminUserListItem,
   AdminUserListParams,
+  AdminUserPermissionOverrideRequest,
+  AdminUserPermissionOverridesRequest,
+  AdminUserPermissions,
   AdminUserRolesRequest,
   AdminUserStatusRequest,
   AdminUserTemporaryPasswordRequest,
@@ -83,6 +86,32 @@ export class AdminSecurityService {
           headers,
           withCredentials: true
         })
+      )
+    );
+  }
+
+  getUserPermissions(id: string): Observable<AdminUserPermissions> {
+    return this.http.get<AdminUserPermissions>(this.apiClient.getUrl(`/api/admin/users/${id}/permissions`), {
+      withCredentials: true
+    });
+  }
+
+  updateUserPermissionOverrides(
+    id: string,
+    overrides: AdminUserPermissionOverrideRequest[]
+  ): Observable<AdminUserPermissions> {
+    const request: AdminUserPermissionOverridesRequest = { overrides };
+
+    return this.authService.getCsrfHeaders().pipe(
+      switchMap((headers) =>
+        this.http.patch<AdminUserPermissions>(
+          this.apiClient.getUrl(`/api/admin/users/${id}/permissions`),
+          request,
+          {
+            headers,
+            withCredentials: true
+          }
+        )
       )
     );
   }
