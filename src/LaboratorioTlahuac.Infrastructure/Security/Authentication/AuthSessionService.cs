@@ -16,6 +16,7 @@ public sealed class AuthSessionService(
 {
     private const int MaxFailedAccessAttempts = 5;
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+    private static readonly string AdminRoleName = SecurityTextNormalizer.NormalizeName("Admin");
 
     public async Task<LoginResult> LoginAsync(
         string email,
@@ -66,7 +67,7 @@ public sealed class AuthSessionService(
         user.RecordSuccessfulLogin(now);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return LoginResult.Success(MapToAuthenticatedUser(user));
+        return LoginResult.Success(await MapToAuthenticatedUserAsync(user, cancellationToken));
     }
 
     public async Task<AuthenticatedUser?> GetCurrentUserAsync(
@@ -99,7 +100,7 @@ public sealed class AuthSessionService(
             return null;
         }
 
-        return MapToAuthenticatedUser(user);
+        return await MapToAuthenticatedUserAsync(user, cancellationToken);
     }
 
     private Task<User?> FindUserWithSecurityGraphAsync(
@@ -114,27 +115,65 @@ public sealed class AuthSessionService(
             .FirstOrDefaultAsync(user => user.NormalizedEmail == normalizedEmail, cancellationToken);
     }
 
-    private static AuthenticatedUser MapToAuthenticatedUser(User user)
+    private async Task<AuthenticatedUser> MapToAuthenticatedUserAsync(
+        User user,
+        CancellationToken cancellationToken)
     {
-        var roles = user.UserRoles
+        var roleEntities = user.UserRoles
             .Select(userRole => userRole.Role)
             .Where(role => role is not null)
-            .Select(role => role!.Name)
+            .Select(role => role!)
+            .ToArray();
+
+        var roles = roleEntities
+            .Select(role => role.Name)
             .Distinct(StringComparer.Ordinal)
             .OrderBy(role => role, StringComparer.Ordinal)
             .ToArray();
 
-        var permissions = user.UserRoles
-            .Select(userRole => userRole.Role)
-            .Where(role => role is not null)
-            .SelectMany(role => role!.RolePermissions)
+        var permissionSet = roleEntities
+            .SelectMany(role => role.RolePermissions)
             .Select(rolePermission => rolePermission.Permission)
             .Where(permission => permission is not null)
             .Select(permission => permission!.Key)
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(permission => permission, StringComparer.Ordinal)
-            .ToArray();
+            .ToHashSet(StringComparer.Ordinal);
 
-        return new AuthenticatedUser(user.Id, user.Email, user.FullName, roles, permissions);
+        var isAdmin = roleEntities.Any(role => role.NormalizedName == AdminRoleName);
+
+        if (!isAdmin)
+        {
+            var overrides = await dbContext.UserPermissionOverrides
+                .Where(userPermission => userPermission.UserId == user.Id)
+                .Join(
+                    dbContext.Permissions,
+                    userPermission => userPermission.PermissionId,
+                    permission => permission.Id,
+                    (userPermission, permission) => new
+                    {
+                        permission.Key,
+                        userPermission.Effect
+                    })
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            foreach (var directOverride in overrides)
+            {
+                if (directOverride.Effect == UserPermissionEffect.Allow)
+                {
+                    permissionSet.Add(directOverride.Key);
+                }
+                else if (directOverride.Effect == UserPermissionEffect.Deny)
+                {
+                    permissionSet.Remove(directOverride.Key);
+                }
+            }
+        }
+
+        return new AuthenticatedUser(
+            user.Id,
+            user.Email,
+            user.FullName,
+            roles,
+            permissionSet.OrderBy(permission => permission, StringComparer.Ordinal).ToArray());
     }
 }
