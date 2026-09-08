@@ -21,7 +21,7 @@ env:
   INFRA_PROJECT: src/LaboratorioTlahuac.Infrastructure/LaboratorioTlahuac.Infrastructure.csproj
   WEB_DIR: src/LaboratorioTlahuac.Web
   DB_CONTEXT: LaboratorioTlahuacDbContext
-  SNAPSHOT: src/LaboratorioTlahuac.Infrastructure/Persistence/Migrations/LaboratorioTlahuacDbContextModelSnapshot.cs
+  MIGRATIONS_DIR: src/LaboratorioTlahuac.Infrastructure/Persistence/Migrations
 
 jobs:
   validate:
@@ -64,23 +64,38 @@ jobs:
           dotnet tool install --global dotnet-ef --version "$EF_VERSION"
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
-      - name: Regenerate EF model snapshot
+      - name: Generate and verify EF migration
         env:
           ASPNETCORE_ENVIRONMENT: Development
           DOTNET_ENVIRONMENT: Development
+          SecuritySeed__EnsureBaselineOnStartup: 'false'
+          SecuritySeed__RunOnStartup: 'false'
+          SecuritySeed__LimitedQaUser__RunOnStartup: 'false'
+          CatalogSeed__RunOnStartup: 'false'
         run: |
-          dotnet ef migrations add SnapshotSyncProbe \
+          set -euo pipefail
+
+          if compgen -G "$MIGRATIONS_DIR/*_AddUserPermissionOverrides.cs" > /dev/null; then
+            echo "AddUserPermissionOverrides migration already exists."
+          else
+            dotnet ef migrations add AddUserPermissionOverrides \
+              --context "$DB_CONTEXT" \
+              --project "$INFRA_PROJECT" \
+              --startup-project "$API_PROJECT"
+          fi
+
+          dotnet ef migrations has-pending-model-changes \
             --context "$DB_CONTEXT" \
             --project "$INFRA_PROJECT" \
             --startup-project "$API_PROJECT"
 
-          if git diff --quiet -- "$SNAPSHOT"; then
-            echo "EF model snapshot already synchronized."
+          if git diff --quiet -- "$MIGRATIONS_DIR"; then
+            echo "EF migration and model snapshot are already synchronized."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$SNAPSHOT"
-          git commit -m "chore(ef): sync model snapshot for SEC-PERM-1"
+          git add "$MIGRATIONS_DIR"
+          git commit -m "chore(ef): generate AddUserPermissionOverrides migration"
           git push origin HEAD:codex/sec-perm-1
