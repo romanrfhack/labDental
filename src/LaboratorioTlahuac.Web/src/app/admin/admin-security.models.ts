@@ -67,6 +67,33 @@ export interface AdminRolePermissionsRequest {
   permissionIds: string[];
 }
 
+export type AdminUserPermissionOverrideEffect = 'Allow' | 'Deny';
+
+export interface AdminUserPermissionOverrideRequest {
+  permissionId: string;
+  effect: AdminUserPermissionOverrideEffect;
+}
+
+export interface AdminUserPermissionOverridesRequest {
+  overrides: AdminUserPermissionOverrideRequest[];
+}
+
+export interface AdminUserPermissionState {
+  permission: AdminPermission;
+  inherited: boolean;
+  effectiveAllowed: boolean;
+  overrideEffect: AdminUserPermissionOverrideEffect | null;
+  sourceRoles: string[];
+}
+
+export interface AdminUserPermissions {
+  userId: string;
+  email: string;
+  fullName: string;
+  roles: AdminRoleSummary[];
+  permissions: AdminUserPermissionState[];
+}
+
 export interface AdminRoleListItem {
   id: string;
   name: string;
