@@ -63,6 +63,10 @@ export interface AdminUserTemporaryPasswordRequest {
   temporaryPassword: string;
 }
 
+export interface AdminRolePermissionsRequest {
+  permissionIds: string[];
+}
+
 export interface AdminRoleListItem {
   id: string;
   name: string;
