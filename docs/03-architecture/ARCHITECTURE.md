@@ -91,7 +91,7 @@ Rutas existentes bajo `/app`:
 
 `/dashboard` no es una ruta privada real del sistema actual.
 
-Fase 3.3 reemplaza los placeholders de `/app/admin/usuarios` y `/app/admin/roles`: Usuarios es funcional para CRUD administrativo mínimo y asignación de roles existentes; Roles es funcional en modo readonly para ver permisos.
+Fase 3.3 reemplaza los placeholders de `/app/admin/usuarios` y `/app/admin/roles`: Usuarios es funcional para CRUD administrativo mínimo y asignación de roles existentes; Roles es funcional en modo readonly en DEV. La candidata SEC-PERM-1 agrega edición por rol y overrides individuales; refresca el principal desde BD antes de autorizar y agrega una única migración `20260908031302_AddUserPermissionOverrides`. Los nuevos contratos sólo se consideran desplegados después de integrar y validar la candidata en DEV.
 
 Rutas privadas de Fase 3.4.3:
 

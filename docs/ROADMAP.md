@@ -1,6 +1,6 @@
 # Roadmap Global
 
-Última sincronización: **2026-09-07 — SEC-PERM-1**.
+Última sincronización: **2026-10-06 — consolidación SEC-PERM-1**.
 
 Este roadmap prioriza el trabajo vigente. El roadmap histórico permanece en `docs/00-governance/roadmap.md` y la evidencia de implementación en `docs/IMPLEMENTATION_LOG.md`.
 
@@ -27,7 +27,7 @@ QA operativo:
 
 Seguridad de permisos:
 
-- `SEC-PERM-1` está implementado en `codex/sec-perm-1` y pendiente de integración/QA en DEV.
+- `SEC-PERM-1` está implementado en `codex/sec-perm-1-consolidated-20261006` y pendiente de integración/QA en DEV.
 
 ### Sitio Público
 

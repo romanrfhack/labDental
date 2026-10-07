@@ -105,6 +105,68 @@ public sealed class PermissionAdministrationIntegrationTests(TestApplicationFact
 
         Assert.Contains(Permissions.CustomersView, effectivePermissions);
         Assert.DoesNotContain(Permissions.ReportsView, effectivePermissions);
+
+        var resetResponse = await adminClient.PutAsJsonWithXsrfAsync(
+            $"/api/admin/users/{userId}/permissions",
+            adminXsrf,
+            new { overrides = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.OK, resetResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await userClient.GetAsync("/api/customers")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await userClient.GetAsync("/api/dashboard/summary")).StatusCode);
+    }
+
+    [Fact]
+    public async Task PermissionWritesRequireSessionPermissionAndXsrf()
+    {
+        var anonymous = factory.CreateClientWithoutRedirects();
+        var limited = factory.CreateClientWithoutRedirects();
+        var limitedXsrf = await limited.LoginAsLimitedUserAsync();
+        var admin = factory.CreateClientWithoutRedirects();
+        await admin.LoginAsAdminAsync();
+
+        foreach (var path in new[]
+        {
+            $"/api/admin/users/{Guid.NewGuid()}/permissions",
+            $"/api/admin/roles/{Guid.NewGuid()}/permissions"
+        })
+        {
+            Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.PutAsJsonAsync(path, new { })).StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden,
+                (await limited.PutAsJsonWithXsrfAsync(path, limitedXsrf, new { })).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await admin.PutAsJsonAsync(path, new { })).StatusCode);
+        }
+    }
+
+    [Fact]
+    public async Task InvalidOverridesDoNotChangeInheritedPermissions()
+    {
+        var admin = factory.CreateClientWithoutRedirects();
+        var xsrf = await admin.LoginAsAdminAsync();
+        var role = await GetRoleByNameAsync(admin, "Limited");
+        var created = await CreateUserAsync(admin, xsrf, UniqueEmail("invalid-override"),
+            "InvalidOverridePass123!", role.GetProperty("id").GetGuid());
+        var userId = created.GetProperty("id").GetGuid();
+        var permissionId = GetUserPermissionId(created, Permissions.ReportsView);
+
+        foreach (var overrides in new object[][]
+        {
+            [new { permissionId, effect = "Invalid" }],
+            [new { permissionId = Guid.NewGuid(), effect = "Allow" }],
+            [new { permissionId, effect = "Allow" }, new { permissionId, effect = "Deny" }]
+        })
+        {
+            var response = await admin.PutAsJsonWithXsrfAsync(
+                $"/api/admin/users/{userId}/permissions", xsrf, new { overrides });
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        var detail = await admin.GetFromJsonAsync<JsonElement>($"/api/admin/users/{userId}");
+        var reports = detail.GetProperty("permissions").EnumerateArray()
+            .Single(permission => permission.GetProperty("key").GetString() == Permissions.ReportsView);
+        Assert.True(reports.GetProperty("inherited").GetBoolean());
+        Assert.True(reports.GetProperty("effective").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, reports.GetProperty("overrideEffect").ValueKind);
     }
 
     [Fact]

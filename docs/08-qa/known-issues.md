@@ -1,6 +1,6 @@
 # Hallazgos Conocidos
 
-Última actualización: **2026-09-07**.
+Última actualización: **2026-10-06**.
 
 ## Críticos
 
@@ -13,7 +13,7 @@
 ## Medios
 
 - No existe suite E2E de navegador completa para todos los flujos Angular; se conserva build automático y QA manual dirigido en DEV.
-- La zona horaria formal de negocio para métricas de "hoy", vencidas y próximos 7 días sigue pendiente. Actualmente se usa fecha UTC del servidor.
+- Dashboard: zona horaria resuelta mediante `Dashboard:BusinessTimeZone` (default `America/Mexico_City`); `generatedAtUtc` permanece UTC. El pendiente anterior queda cerrado por implementación.
 - La cadena local por defecto con `Trusted_Connection=True` requiere adaptación explícita en Linux; QA local histórica usó SQL Server Docker con credenciales de desarrollo.
 
 ## Bajos
@@ -40,3 +40,7 @@
 - reportes ampliados;
 - automatizaciones/WhatsApp;
 - entregas avanzadas y ciclo de vida avanzado de imágenes.
+
+## Seguimiento Consolidado
+
+Fuente vigente por ID, evidencia y criterio de salida: `sec-perm-1-consolidation.md`. Las ramas originales no están integradas en DEV.

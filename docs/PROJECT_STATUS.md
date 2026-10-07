@@ -1,8 +1,19 @@
 # Estado Del Proyecto
 
-Última sincronización documental: **2026-09-07 — SEC-PERM-1**.
+Última sincronización documental: **2026-10-06 — consolidación SEC-PERM-1**.
 
 Este documento describe el estado vigente. El detalle histórico permanece en `docs/IMPLEMENTATION_LOG.md` y `docs/00-governance/changelog.md`.
+
+## Candidata Consolidada — 2026-10-06
+
+- Única candidata para revisión DEV: `codex/sec-perm-1-consolidated-20261006`.
+- Base funcional elegida: `codex/sec-perm-1` SHA `31d4541129828028a244083a46c702899a72889e`; DEV sigue en `25e1ec41109fc5cbca470a64afcfa3ed782bc44d` hasta integrar el PR.
+- La rama alternativa `sec-perm-1-admin-permissions` queda como antecedente, no candidata a merge; no mezclar sus endpoints ni su migración.
+- Validación del HEAD consolidado: consultar el check `SEC-PERM-1 candidate validation` del PR. La evidencia anterior no certifica este HEAD.
+- Se amplían pruebas de retorno a herencia, rechazo de overrides inválidos y protección `401/403/XSRF`.
+- QA usuario limitado del 2026-09-07: cierre documental histórico conservado; no se presenta como repetido en esta revisión.
+- Revisión HTTP 2026-10-06: DEV `/health` y `/api/catalog/public` 200, `/api/auth/me` sin sesión 401. Dominio principal: mismos endpoints 502; causa pendiente de diagnóstico.
+- Revisión y pendientes: `docs/08-qa/sec-perm-1-consolidation.md`.
 
 ## Resumen Ejecutivo
 
@@ -13,7 +24,7 @@ El sitio público está aprobado visual y técnicamente en DEV. La administraci�
 El frente activo es seguridad/readiness:
 
 - `OPS-QA-1`: la validación manual de usuario limitado real quedó completada el 2026-09-07; sólo faltan las pruebas físicas de etiquetas `76 x 51 mm` y `102 x 51 mm`.
-- `SEC-PERM-1`: implementación autorizada y construida en `codex/sec-perm-1`; incluye edición de permisos por rol, overrides individuales `Allow/Deny`, actualización de permisos de sesiones existentes, protección de Admin y corrección del render duplicado de Clientes. Está pendiente de revisión/merge a `dev` y QA visual en DEV.
+- `SEC-PERM-1`: implementación autorizada y construida en `codex/sec-perm-1-consolidated-20261006`; incluye edición de permisos por rol, overrides individuales `Allow/Deny`, actualización de permisos de sesiones existentes, protección de Admin y corrección del render duplicado de Clientes. Está pendiente de revisión/merge a `dev` y QA visual en DEV.
 - Producción continúa **sin desplegar**.
 
 ## Estado Por Frente
@@ -88,7 +99,7 @@ Pendiente obligatorio de `OPS-QA-1`:
 
 ### SEC-PERM-1
 
-Estado: **implementado en rama `codex/sec-perm-1`; pendiente DEV/UAT**.
+Estado: **implementado en rama `codex/sec-perm-1-consolidated-20261006`; pendiente DEV/UAT**.
 
 Validación automática de rama:
 
@@ -112,7 +123,7 @@ No se ha promovido a `main` ni se ha desplegado a producción.
 
 ### Rama De Trabajo SEC-PERM-1
 
-- rama: `codex/sec-perm-1`;
+- rama: `codex/sec-perm-1-consolidated-20261006`;
 - base original: `dev` SHA `25e1ec41109fc5cbca470a64afcfa3ed782bc44d`;
 - estado: implementación y validación automática completas; pendiente revisión final/PR a `dev`.
 

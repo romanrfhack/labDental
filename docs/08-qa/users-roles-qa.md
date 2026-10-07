@@ -1,6 +1,6 @@
 # QA Usuarios, Roles Y Permisos — SEC-PERM-1
 
-Última actualización: **2026-09-07**.
+Última actualización: **2026-10-06**.
 
 ## Estado
 
@@ -8,7 +8,7 @@ La administración MVP de usuarios/roles ya estaba operativa en DEV. `SEC-PERM-1
 
 Estado actual:
 
-- validación automática de `codex/sec-perm-1`: **correcta**;
+- validación histórica de `codex/sec-perm-1`: **correcta**; HEAD consolidado certificado sólo por su nuevo check CI;
 - migración EF: **generada y sincronizada**;
 - validación manual del usuario limitado previo en DEV: **completada**;
 - QA visual/operativa de la nueva UI de permisos: **pendiente después del merge/deploy a DEV**.
@@ -163,3 +163,13 @@ SEC-PERM-1 puede cerrarse cuando:
 - Clientes duplicado corregido visualmente;
 - sin regresiones `401/403`;
 - evidencia de DEV registrada.
+
+## Cobertura De Consolidación
+
+Candidata única: `codex/sec-perm-1-consolidated-20261006`.
+
+- Al eliminar overrides se restaura herencia en la misma sesión.
+- Overrides con efecto inválido, permiso inexistente o duplicado se rechazan sin modificar herencia.
+- Los nuevos endpoints PUT exigen sesión, permiso administrador y XSRF.
+- CI valida build/tests .NET, build Angular, coherencia del modelo EF y script SQL idempotente; guarda TRX y SQL como evidencia y no modifica la rama.
+- Resultado actual: consultar el check del HEAD del PR; QA visual y migración aplicada en DEV siguen pendientes.

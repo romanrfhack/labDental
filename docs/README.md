@@ -129,3 +129,5 @@ Cada cierre relevante debe actualizar como mínimo:
 - Changelog o bitácora cuando corresponda.
 
 No reescribir ADRs históricos para reflejar decisiones posteriores; agregar nueva decisión si aplica.
+
+- [Consolidación SEC-PERM-1 y pendientes vigentes](08-qa/sec-perm-1-consolidation.md).

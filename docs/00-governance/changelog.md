@@ -135,3 +135,9 @@ Todos los cambios relevantes del proyecto deben registrarse aquí. No se deben i
 - Agregada migración `Security.UserPermissionOverrides` generada por EF.
 - Corregida tabla duplicada de Clientes detectada durante OPS-QA-1.
 - Pendiente integración y smoke DEV; sin promoción a `main`.
+
+## 2026-10-06 — Consolidación SEC-PERM-1
+
+Se comparan ambas implementaciones desde DEV `25e1ec4`. Se selecciona `codex/sec-perm-1` (`31d4541`) por coherencia de contratos, refresco de principal/cookie, guardas administrativas y migración EF con Designer/snapshot. La variante `b26f042` conserva antecedente; su última CI falla en tests y no se mezclan sus contratos/migración.
+
+Candidata única: `codex/sec-perm-1-consolidated-20261006`. Se agregan regresiones de herencia, overrides inválidos y autorización/XSRF; CI sin auto-commits, con TRX/script SQL idempotente. Se reconcilian README, arquitectura, QA limitado y zona horaria. Evidencia y pendientes detallados en `docs/08-qa/sec-perm-1-consolidation.md`. Build/tests del nuevo HEAD: consultar check CI; no declarar QA visual ni aplicación de migración como completados. DEV/main no cambian por esta preparación.

@@ -4,12 +4,13 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 
 ## Estado Actual
 
-- Sistema privado / MVP administrativo: avanzado, con QA funcional, demo documentada, pase manual/técnico privado Fase 2.4 ejecutado, Fase 2.5 cerrada como pase visual humano privado completado, Fase 2.6 implementada para usuario QA limitado Development-only, Fase 3.2 implementada para impresión MVP de etiquetas desde órdenes existentes, Fase 3.3 implementada para administración MVP de usuarios/roles, Fase 3.4 implementada para entregas/repartidor mobile-first y Fase 3.5 cerrada en DEV hasta 3.5.4: diseño 3.5.4.0 cerrado, backend 3.5.4.1 cerrado en DEV, UI 3.5.4.2 cerrada en DEV y QA end-to-end completo aprobado para upload, reemplazo, persistencia entre releases y desasociación.
-- Sitio público institucional: primera versión mobile-first implementada en `/`, `/servicios`, `/catalogo` y `/contacto`; Fase 1.6 validada visualmente por el responsable del proyecto; Fase 3.5.3 cerrada en DEV con `/catalogo` consumiendo `GET /api/catalog/public`, reflejando cambios administrados y conservando fallback a `catalog-data.ts`; contenido final del cliente pendiente.
-- Ambiente DEV: publicado en `https://dev.laboratoriodentaltlahuac.com` desde rama `dev`; backend de imágenes en commit `1b0384c414b54f541394dbe0e2f1e4a4d9329e93`, UI en commit `f9acb0dfa973bd131ab2850c69105c4a90d84470`, GitHub Actions `success`, y `/health`, `/catalogo`, `/api/catalog/public` y GET público de la imagen probada en `200`. La persistencia se confirmó después del release backend `dev-44-8c2f92b`; la desasociación dejó de publicar la imagen sin eliminar el archivo físico, conforme al diseño.
-- Deploy productivo: pendiente de plataforma, DNS, HTTPS, variables y base productiva.
-
-La Fase 1 / Etapa 7 corresponde al MVP administrativo. La Fase 0/Fase 1 del sitio público corresponde a un frente separado.
+- MVP administrativo en DEV: clientes/doctores/clínicas, órdenes, pagos/saldos, dashboard, usuarios/roles, etiquetas, entregas y catálogo con imágenes persistentes.
+- Sitio público aprobado en DEV: `/`, `/servicios`, `/catalogo`, `/contacto`.
+- SEC-PERM-1: candidata única `codex/sec-perm-1-consolidated-20261006`, pendiente de revisión/integración y QA de su nueva UI en DEV. Incluye edición de permisos por rol, overrides `Allow/Deny` y refresco de sesiones existentes.
+- QA usuario limitado: completado según evidencia del 2026-09-07. Pendiente impresión física de etiquetas y QA de permisos tras deploy.
+- Inventario y proveedores: placeholders; funcionalidades futuras.
+- Producción: pendiente de readiness. En comprobación HTTP del 2026-10-06 el dominio principal respondió 502 en los endpoints consultados.
+- Fuente de estado y pendientes: [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) y [consolidación SEC-PERM-1](docs/08-qa/sec-perm-1-consolidation.md).
 
 ## Stack
 
@@ -114,8 +115,7 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
 ## Próximos Pasos
 
-1. Validar Fase 3.2 en DEV con impresora térmica real y ajustar escala/márgenes del navegador si hace falta.
-2. Cerrar la validación manual del usuario QA limitado y `/app/access-denied` si aún falta evidencia humana.
-3. Ejecutar de forma opcional la prueba forzada del fallback de `/catalogo` con la API bloqueada/offline.
-
-Backlog futuro de imágenes, sin tratarlo como bug de Fase 3.5.4: inventario de huérfanos, política de retención, limpieza segura, backup automatizado de `shared/catalog-images`, posible conversión/recompresión WebP, upload de imagen de sección y galería múltiple/CDN/cloud storage.
+1. Validar el HEAD de la candidata con el check `SEC-PERM-1 candidate validation` y revisar el PR a `dev`.
+2. Integrar/desplegar en DEV sólo después de revisar CI, migración y diff; ejecutar QA de roles/overrides/sesiones y Clientes.
+3. Cerrar impresión física `76 x 51 mm` y `102 x 51 mm`.
+4. Completar `PROD-READY-1` antes de promover a `main`.

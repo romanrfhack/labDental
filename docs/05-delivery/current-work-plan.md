@@ -1,6 +1,6 @@
 # Plan De Trabajo Vigente
 
-Última actualización: **2026-09-07 — SEC-PERM-1 en implementación**.
+Última actualización: **2026-10-06 — consolidación SEC-PERM-1**.
 
 Este documento responde una sola pregunta: **¿qué sigue y en qué orden?**
 
@@ -71,7 +71,7 @@ Criterio de salida:
 
 ### 3. SEC-PERM-1 — Administración De Roles Y Permisos
 
-Estado: **autorizada y en implementación en rama de trabajo sobre `dev`**.
+Estado: **implementada y consolidada en candidata; pendiente CI del HEAD, revisión, integración y UAT DEV**.
 
 Objetivo:
 

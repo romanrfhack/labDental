@@ -1,15 +1,18 @@
-name: SEC-PERM-1 validation
+name: SEC-PERM-1 candidate validation
 
 on:
   push:
     branches:
-      - codex/sec-perm-1
+      - codex/sec-perm-1-consolidated-20261006
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: sec-perm-1-validation
+  group: sec-perm-1-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -52,7 +55,7 @@ jobs:
         run: dotnet build --configuration "$CONFIGURATION" --no-restore
 
       - name: Test backend
-        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal --logger trx --results-directory "$RUNNER_TEMP/test-results"
 
       - name: Build frontend
         run: |
@@ -81,18 +84,22 @@ jobs:
             --project "$INFRA_PROJECT" \
             --startup-project "$API_PROJECT"
 
-      - name: Synchronize canonical documentation
-        run: python3 .github/scripts/sec-perm-1-finalize-docs.py
+          dotnet ef migrations script --idempotent \
+            --context "$DB_CONTEXT" \
+            --project "$INFRA_PROJECT" \
+            --startup-project "$API_PROJECT" \
+            --output "$RUNNER_TEMP/sec-perm-1-migrations.sql"
+          test -s "$RUNNER_TEMP/sec-perm-1-migrations.sql"
 
-      - name: Commit canonical documentation if needed
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- docs; then
-            echo "Canonical documentation already synchronized."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs
-          git commit -m "docs(security): finalize SEC-PERM-1 canonical traceability"
-          git push origin HEAD:codex/sec-perm-1
+      - name: Validate diff whitespace
+        run: git diff --check origin/dev...HEAD
+
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sec-perm-1-validation-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/test-results/*.trx
+            ${{ runner.temp }}/sec-perm-1-migrations.sql
+          retention-days: 14
