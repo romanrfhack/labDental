@@ -57,7 +57,8 @@ if mode == 'preflight':
     backup = f'/var/opt/mssql/data/{db}_secperm_{stamp}.bak'
     query = f"BACKUP DATABASE [{db}] TO DISK=N'{backup}' WITH COPY_ONLY, CHECKSUM; RESTORE VERIFYONLY FROM DISK=N'{backup}' WITH CHECKSUM;"
     # The application account need not receive backup privileges.
-    ids = subprocess.check_output(['docker', 'ps', '--filter', 'publish=14330', '--format', '{{.ID}}'], text=True).splitlines()
+    containers = [json.loads(line) for line in subprocess.check_output(['docker', 'ps', '--format', '{{json .}}'], text=True).splitlines()]
+    ids = [c['ID'] for c in containers if re.search(r':14330->1433/', c.get('Ports', ''))]
     if len(ids) != 1:
         raise SystemExit('Cannot identify the existing DEV SQL container for backup')
     container = ids[0]
