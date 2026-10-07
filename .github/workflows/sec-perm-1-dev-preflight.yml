@@ -1,0 +1,41 @@
+name: SEC-PERM-1 DEV preflight
+on:
+  push:
+    branches: [codex/sec-perm-1-consolidated-20261006]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sec-perm-1-dev-operations
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SSH
+        env:
+          LDT_SSH_PRIVATE_KEY: ${{ secrets.LDT_SSH_PRIVATE_KEY }}
+          LDT_SSH_HOST: ${{ secrets.LDT_SSH_HOST }}
+          LDT_SSH_PORT: ${{ secrets.LDT_SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$LDT_SSH_PRIVATE_KEY" > ~/.ssh/labdental_deploy_key
+          chmod 600 ~/.ssh/labdental_deploy_key
+          ssh-keyscan -p "$LDT_SSH_PORT" "$LDT_SSH_HOST" >> ~/.ssh/known_hosts
+      - name: Check DEV database and permissions
+        env:
+          LDT_SSH_HOST: ${{ secrets.LDT_SSH_HOST }}
+          LDT_SSH_PORT: ${{ secrets.LDT_SSH_PORT }}
+          LDT_SSH_USER: ${{ secrets.LDT_SSH_USER }}
+          LDT_DB_NAME: ${{ secrets.LDT_DB_NAME }}
+          LDT_ENV_FILE: ${{ secrets.LDT_ENV_FILE }}
+          LDT_SITE_URL: ${{ secrets.LDT_SITE_URL }}
+          LDT_SQLCMD: ${{ secrets.LDT_SQLCMD }}
+        run: |
+          set -euo pipefail
+          REMOTE_ENV="$(printf 'LDT_CHECK_preflight=%q LDT_DB_NAME=%q LDT_ENV_FILE=%q LDT_SITE_URL=%q LDT_SQLCMD=%q ' preflight "$LDT_DB_NAME" "$LDT_ENV_FILE" "$LDT_SITE_URL" "$LDT_SQLCMD")"
+          ssh -i ~/.ssh/labdental_deploy_key -p "$LDT_SSH_PORT" "$LDT_SSH_USER@$LDT_SSH_HOST" \
+            "$REMOTE_ENV python3 -" < .github/scripts/sec-perm-1-dev-check.py

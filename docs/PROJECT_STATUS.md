@@ -180,3 +180,9 @@ Para estado vigente usar, en este orden:
 2. `docs/ROADMAP.md`;
 3. fuente funcional/técnica específica del frente;
 4. `docs/IMPLEMENTATION_LOG.md` y changelog para historia y evidencia.
+
+## 2026-10-06 — Preflight e integración DEV SEC-PERM-1
+
+Se agrega preflight DEV por SSH con secrets del environment existente: consulta `__EFMigrationsHistory`, verifica consistencia de tabla/registro y rechaza migración alternativa o estado inesperado. Antes de integrar, crea backup COPY_ONLY con CHECKSUM y ejecuta RESTORE VERIFYONLY; no restaura ni altera datos de negocio.
+
+Tras deploy DEV se consulta migración aplicada y se ejecuta QA HTTP sin sesión; si las credenciales Admin configuradas están disponibles y son válidas, se valida Clientes, protección Admin, guardado idempotente de Repartidor y overrides de usuario QA aislado por API. Se prueba Allow/Deny/herencia en sesión abierta, logout y limpieza (overrides vacíos + usuario desactivado). No cambia permisos efectivos de usuarios operativos. Falta QA visual de navegador; ausencia/rechazo de credenciales se registra como BLOCKED y no se presenta como PASS. Evidencia de cada ejecución en Actions.

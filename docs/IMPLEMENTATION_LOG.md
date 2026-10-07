@@ -4948,3 +4948,9 @@ Estado al registrar: **implementación de rama completada; pendiente integració
 Se comparan ambas implementaciones desde DEV `25e1ec4`. Se selecciona `codex/sec-perm-1` (`31d4541`) por coherencia de contratos, refresco de principal/cookie, guardas administrativas y migración EF con Designer/snapshot. La variante `b26f042` conserva antecedente; su última CI falla en tests y no se mezclan sus contratos/migración.
 
 Candidata única: `codex/sec-perm-1-consolidated-20261006`. Se agregan regresiones de herencia, overrides inválidos y autorización/XSRF; CI sin auto-commits, con TRX/script SQL idempotente. Se reconcilian README, arquitectura, QA limitado y zona horaria. Evidencia y pendientes detallados en `docs/08-qa/sec-perm-1-consolidation.md`. Build/tests del nuevo HEAD: consultar check CI; no declarar QA visual ni aplicación de migración como completados. DEV/main no cambian por esta preparación.
+
+## 2026-10-06 — Preflight e integración DEV SEC-PERM-1
+
+Se agrega preflight DEV por SSH con secrets del environment existente: consulta `__EFMigrationsHistory`, verifica consistencia de tabla/registro y rechaza migración alternativa o estado inesperado. Antes de integrar, crea backup COPY_ONLY con CHECKSUM y ejecuta RESTORE VERIFYONLY; no restaura ni altera datos de negocio.
+
+Tras deploy DEV se consulta migración aplicada y se ejecuta QA HTTP sin sesión; si las credenciales Admin configuradas están disponibles y son válidas, se valida Clientes, protección Admin, guardado idempotente de Repartidor y overrides de usuario QA aislado por API. Se prueba Allow/Deny/herencia en sesión abierta, logout y limpieza (overrides vacíos + usuario desactivado). No cambia permisos efectivos de usuarios operativos. Falta QA visual de navegador; ausencia/rechazo de credenciales se registra como BLOCKED y no se presenta como PASS. Evidencia de cada ejecución en Actions.

@@ -60,3 +60,9 @@ Dashboard BusinessTimeZone está implementado: el pendiente histórico de usar U
 HTTP comprobado el 2026-10-06: DEV health/catalog público 200 y auth/me sin sesión 401; mismos endpoints del dominio principal 502. No se comprobó qué SHA ejecuta el VPS, credenciales, permisos actuales de la BD, backups, impresión física ni UI autenticada. La prueba de usuario limitado se toma del registro de septiembre.
 
 Secuencia: CI/revisión candidata -> integración y UAT DEV -> cierre impresión -> PROD-READY-1 -> promoción explícita dev/main. Esta preparación no despliega ni promueve producción.
+
+## Flujo de comprobación DEV
+
+`sec-perm-1-dev-preflight.yml` usa el environment DEV y el acceso SSH del deploy; su resultado es requisito operativo antes del merge. El script `.github/scripts/sec-perm-1-dev-check.py` restringe la BD a DEV, no muestra credenciales ni datos de Clientes. El backup queda en el volumen SQL bajo `/var/opt/mssql/data` y requiere retención posterior. RESTORE VERIFYONLY comprueba el backup; no sustituye una restauración completa de prueba de readiness.
+
+`deploy.yml` ejecuta el mismo script en modo post después del deploy DEV. QA autenticado depende de credenciales Admin válidas ya configuradas; no inventa ni resetea contraseñas. El usuario temporal se conserva desactivado como rastro de QA; no existe endpoint de borrado. QA de edición de rol hace escritura idempotente para no alterar permisos operativos; grant/revoke por rol sigue cubierto automáticamente y pendiente de UAT dirigido en navegador.
