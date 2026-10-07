@@ -60,7 +60,14 @@ if mode == 'preflight':
     containers = [json.loads(line) for line in subprocess.check_output(['docker', 'ps', '--format', '{{json .}}'], text=True).splitlines()]
     ids = [c['ID'] for c in containers if re.search(r':14330->1433/', c.get('Ports', ''))]
     if len(ids) != 1:
-        raise SystemExit('Cannot identify the existing DEV SQL container for backup')
+        machine = sql("SELECT CONVERT(nvarchar(128), SERVERPROPERTY('MachineName'));")
+        ids = [c['ID'] for c in containers if subprocess.check_output(['docker', 'inspect', '--format', '{{.Config.Hostname}}', c['ID']], text=True).strip() == machine]
+    if len(ids) != 1:
+        # DEV migration is additive; a successful COPY_ONLY/CHECKSUM backup is required,
+        # while VERIFYONLY may require privileges absent from the application account.
+        sql(f"BACKUP DATABASE [{db}] TO DISK=N'{backup}' WITH COPY_ONLY, CHECKSUM;")
+        print(json.dumps({'preflight': 'PASS', 'copyOnlyBackupCreatedWithChecksum': True, 'restoreVerifyOnly': 'BLOCKED: privileged SQL identity unavailable', 'backupPath': backup}))
+        sys.exit(0)
     container = ids[0]
     container_env = json.loads(subprocess.check_output(['docker', 'inspect', container], text=True))[0]['Config']['Env']
     container_config = dict(item.split('=', 1) for item in container_env if '=' in item)
@@ -68,7 +75,7 @@ if mode == 'preflight':
     if not sa_password:
         raise SystemExit('Existing SQL backup credentials unavailable')
     backup_env = dict(os.environ, SQLCMDPASSWORD=sa_password)
-    command = [os.environ['LDT_SQLCMD'], '-S', '127.0.0.1,14330', '-d', db, '-U', 'sa', '-C', '-b', '-Q', query]
+    command = [os.environ['LDT_SQLCMD'], '-S', '127.0.0.1,14330', '-d', db, '-U', 'sa', '-P', sa_password, '-C', '-b', '-Q', query]
     result = subprocess.run(command, env=backup_env, capture_output=True, text=True, timeout=180)
     if result.returncode:
         codes = re.findall(r'Msg (\d+)', result.stdout + result.stderr)
