@@ -1,15 +1,15 @@
 # Estado Del Proyecto
 
-Última sincronización documental: **2026-10-06 — consolidación SEC-PERM-1**.
+Última sincronización documental: **2026-10-06 — integración DEV SEC-PERM-1**.
 
 Este documento describe el estado vigente. El detalle histórico permanece en `docs/IMPLEMENTATION_LOG.md` y `docs/00-governance/changelog.md`.
 
 ## Candidata Consolidada — 2026-10-06
 
-- Única candidata para revisión DEV: `codex/sec-perm-1-consolidated-20261006`.
-- Base funcional elegida: `codex/sec-perm-1` SHA `31d4541129828028a244083a46c702899a72889e`; DEV sigue en `25e1ec41109fc5cbca470a64afcfa3ed782bc44d` hasta integrar el PR.
+- Candidata integrada a DEV mediante PR #10: `codex/sec-perm-1-consolidated-20261006`.
+- Base funcional elegida: `codex/sec-perm-1` SHA `31d4541129828028a244083a46c702899a72889e`; merge DEV `16b22fa4ad84749bed5b0c252e91671637b8b352`.
 - La rama alternativa `sec-perm-1-admin-permissions` queda como antecedente, no candidata a merge; no mezclar sus endpoints ni su migración.
-- Validación del HEAD consolidado: consultar el check `SEC-PERM-1 candidate validation` del PR. La evidencia anterior no certifica este HEAD.
+- HEAD `949808f`: checks 37554298114 y 37554293279 exitosos; 164 tests. Deploy VPS 37555301511 correcto; migración aplicada y health local/público 200. El workflow falló únicamente en el helper Python post-QA; corrección y nueva ejecución en curso.
 - Se amplían pruebas de retorno a herencia, rechazo de overrides inválidos y protección `401/403/XSRF`.
 - QA usuario limitado del 2026-09-07: cierre documental histórico conservado; no se presenta como repetido en esta revisión.
 - Revisión HTTP 2026-10-06: DEV `/health` y `/api/catalog/public` 200, `/api/auth/me` sin sesión 401. Dominio principal: mismos endpoints 502; causa pendiente de diagnóstico.
@@ -24,7 +24,7 @@ El sitio público está aprobado visual y técnicamente en DEV. La administraci�
 El frente activo es seguridad/readiness:
 
 - `OPS-QA-1`: la validación manual de usuario limitado real quedó completada el 2026-09-07; sólo faltan las pruebas físicas de etiquetas `76 x 51 mm` y `102 x 51 mm`.
-- `SEC-PERM-1`: implementación autorizada y construida en `codex/sec-perm-1-consolidated-20261006`; incluye edición de permisos por rol, overrides individuales `Allow/Deny`, actualización de permisos de sesiones existentes, protección de Admin y corrección del render duplicado de Clientes. Está pendiente de revisión/merge a `dev` y QA visual en DEV.
+- `SEC-PERM-1`: implementación autorizada y construida en `codex/sec-perm-1-consolidated-20261006`; incluye edición de permisos por rol, overrides individuales `Allow/Deny`, actualización de permisos de sesiones existentes, protección de Admin y corrección del render duplicado de Clientes. Integrado y desplegado a `dev`; QA autenticado/visual pendiente de acceso.
 - Producción continúa **sin desplegar**.
 
 ## Estado Por Frente
@@ -50,7 +50,7 @@ Características vigentes:
 
 ### Sistema Privado
 
-Estado: **MVP operativo avanzado y validado en DEV/UAT; hardening de permisos en preparación**.
+Estado: **MVP operativo avanzado y validado en DEV/UAT; hardening de permisos desplegado; aceptación autenticada pendiente**.
 
 Implementado en `dev`:
 
@@ -64,7 +64,7 @@ Implementado en `dev`:
 - entregas/repartidor mobile-first;
 - administración privada de catálogo, precios e imágenes.
 
-Candidato `SEC-PERM-1` en rama de trabajo:
+`SEC-PERM-1` integrado en DEV:
 
 - permisos por rol editables desde UI;
 - herencia dinámica de permisos al crear/asignar roles;
@@ -99,7 +99,7 @@ Pendiente obligatorio de `OPS-QA-1`:
 
 ### SEC-PERM-1
 
-Estado: **implementado en rama `codex/sec-perm-1-consolidated-20261006`; pendiente DEV/UAT**.
+Estado: **integrado y desplegado en DEV por PR #10; pendiente QA autenticado/UAT**.
 
 Validación automática de rama:
 
@@ -125,7 +125,7 @@ No se ha promovido a `main` ni se ha desplegado a producción.
 
 - rama: `codex/sec-perm-1-consolidated-20261006`;
 - base original: `dev` SHA `25e1ec41109fc5cbca470a64afcfa3ed782bc44d`;
-- estado: implementación y validación automática completas; pendiente revisión final/PR a `dev`.
+- estado: integrada por PR #10; conservada como antecedente verificable.
 
 ### Producción
 
@@ -138,7 +138,7 @@ No se ha promovido a `main` ni se ha desplegado a producción.
 
 Prioridad alta:
 
-1. Integrar y validar `SEC-PERM-1` en DEV con Admin y usuario no Admin.
+1. Completar QA autenticado de `SEC-PERM-1` en DEV con Admin y usuario no Admin.
 2. Completar pruebas físicas de etiquetas de `OPS-QA-1`.
 3. Hardening de cuentas: cambio obligatorio de contraseña temporal en primer acceso o política equivalente aprobada.
 4. Revisar cookies `Secure`, sesión, permisos y respuestas `401/403` en release candidate.
@@ -157,7 +157,7 @@ Orden vigente:
 
 1. `DOC-SYNC-1` — **cerrado**.
 2. `OPS-QA-1` — usuario limitado **cerrado**; hardware de impresión **pendiente**.
-3. `SEC-PERM-1` — **implementado en rama; pendiente integración/QA DEV**.
+3. `SEC-PERM-1` — **integrado en DEV; pendiente QA autenticado/visual**.
 4. `PROD-READY-1` — seguridad de cuentas, infraestructura, backups, DNS/HTTPS y release candidate.
 5. `PROD-RELEASE-1` — PR `dev -> main`, despliegue y smoke productivo.
 6. `POST-PROD-1` — monitoreo y estabilización.

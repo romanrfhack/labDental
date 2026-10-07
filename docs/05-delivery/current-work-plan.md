@@ -71,7 +71,7 @@ Criterio de salida:
 
 ### 3. SEC-PERM-1 — Administración De Roles Y Permisos
 
-Estado: **implementada y consolidada en candidata; pendiente CI del HEAD, revisión, integración y UAT DEV**.
+Estado: **integrada por PR #10; migración DEV aplicada; CI 164 tests correcta; QA autenticado/UAT pendiente de acceso**.
 
 Objetivo:
 

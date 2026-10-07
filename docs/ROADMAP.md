@@ -27,7 +27,7 @@ QA operativo:
 
 Seguridad de permisos:
 
-- `SEC-PERM-1` está implementado en `codex/sec-perm-1-consolidated-20261006` y pendiente de integración/QA en DEV.
+- `SEC-PERM-1` está implementado en `codex/sec-perm-1-consolidated-20261006` y integrado por PR #10; pendiente QA autenticado/visual en DEV.
 
 ### Sitio Público
 
@@ -68,7 +68,7 @@ Cobertura opcional:
 
 ### SEC-PERM-1 — Administración De Roles Y Permisos
 
-Estado: **implementado en rama; pendiente PR/deploy DEV y QA manual**.
+Estado: **integrado y desplegado en DEV (PR #10); pendiente QA autenticado/manual**.
 
 Objetivo:
 

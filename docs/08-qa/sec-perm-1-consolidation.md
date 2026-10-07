@@ -41,9 +41,9 @@ El refresco de principal consulta roles/overrides en cada solicitud autenticada:
 
 | ID | Estado | Acción / criterio de salida |
 | --- | --- | --- |
-| SEC-PERM-1-CI | Por verificar en HEAD del PR | Todos los checks verdes y evidencia TRX/SQL por SHA |
-| SEC-PERM-1-DEV | Pendiente | Revisar PR, migración/estado BD, integrar a dev y health correcto |
-| SEC-PERM-1-UAT | Pendiente | QA manual roles, usuario Allow/Deny/Heredado, sesión abierta, Admin y Clientes desktop/móvil |
+| SEC-PERM-1-CI | PASS en 949808f; 164 tests | Todos los checks verdes y evidencia TRX/SQL por SHA |
+| SEC-PERM-1-DEV | PR #10 integrado; migración/health PASS; helper post-QA en corrección | Revisar PR, migración/estado BD, integrar a dev y health correcto |
+| SEC-PERM-1-UAT | BLOCKED: acceso autenticado no disponible | QA manual roles, usuario Allow/Deny/Heredado, sesión abierta, Admin y Clientes desktop/móvil |
 | OPS-QA-1-USER | Cerrado documentalmente | Evidencia del 2026-09-07; no repetir como tarea pendiente previa |
 | OPS-QA-1-PRINT | Pendiente hardware | Etiquetas 76 x 51 mm y 102 x 51 mm en impresora real |
 | PROD-READY-1-AUTH | Pendiente | Cambio obligatorio de contraseña temporal o política equivalente aprobada |
@@ -66,3 +66,10 @@ Secuencia: CI/revisión candidata -> integración y UAT DEV -> cierre impresión
 `sec-perm-1-dev-preflight.yml` usa el environment DEV y el acceso SSH del deploy; su resultado es requisito operativo antes del merge. El script `.github/scripts/sec-perm-1-dev-check.py` restringe la BD a DEV, no muestra credenciales ni datos de Clientes. El backup queda en el volumen SQL bajo `/var/opt/mssql/data` y requiere retención posterior. El preflight 37554079112 creó backup COPY_ONLY con CHECKSUM; RESTORE VERIFYONLY quedó bloqueado por falta de identidad SQL privilegiada identificable. La verificación y restauración completa siguen pendientes de readiness.
 
 `deploy.yml` ejecuta el mismo script en modo post después del deploy DEV. QA autenticado depende de credenciales Admin válidas ya configuradas; no inventa ni resetea contraseñas. El usuario temporal se conserva desactivado como rastro de QA; no existe endpoint de borrado. QA de edición de rol hace escritura idempotente para no alterar permisos operativos; grant/revoke por rol sigue cubierto automáticamente y pendiente de UAT dirigido en navegador.
+
+
+## 2026-10-06 — PR #10 integrado y verificación DEV
+
+Merge `16b22fa4ad84749bed5b0c252e91671637b8b352`; candidata `949808f`, checks 37554298114/37554293279 verdes (164 tests). Deploy 37555301511 aplicó `20260908031302_AddUserPermissionOverrides`; historia contiene las siete migraciones esperadas, tabla presente con UserId/PermissionId/Effect. Health local y público 200. Workflow terminó en failure por UnboundLocalError del import local urllib en helper post-QA; se mueve import al módulo y se valida GET + escritura XSRF con dobles HTTP, sin BD/credenciales. Corrección en DEV y nueva ejecución pendiente. Contraseña SQL se transmite sólo por SQLCMDPASSWORD.
+
+QA autenticado BLOCKED: sin credenciales Admin configuradas; formulario seguro cancelado. No se crearon usuarios QA ni cambiaron permisos operativos. QA visual Clientes desktop/móvil y grant/revoke en sesión real siguen abiertos; cobertura automática no los sustituye. Backup COPY_ONLY/CHECKSUM creado antes del merge; VERIFYONLY/restore pendientes. Producción no cambia.

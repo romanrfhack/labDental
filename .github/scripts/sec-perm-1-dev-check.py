@@ -9,6 +9,7 @@ import secrets
 import subprocess
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 mode = os.environ.get('LDT_CHECK_MODE', 'preflight')
@@ -75,7 +76,7 @@ if mode == 'preflight':
     if not sa_password:
         raise SystemExit('Existing SQL backup credentials unavailable')
     backup_env = dict(os.environ, SQLCMDPASSWORD=sa_password)
-    command = [os.environ['LDT_SQLCMD'], '-S', '127.0.0.1,14330', '-d', db, '-U', 'sa', '-P', sa_password, '-C', '-b', '-Q', query]
+    command = [os.environ['LDT_SQLCMD'], '-S', '127.0.0.1,14330', '-d', db, '-U', 'sa', '-C', '-b', '-Q', query]
     result = subprocess.run(command, env=backup_env, capture_output=True, text=True, timeout=180)
     if result.returncode:
         codes = re.findall(r'Msg (\d+)', result.stdout + result.stderr)
@@ -96,7 +97,6 @@ def request(opener, jar, method, path, body=None):
     if method not in ('GET', 'HEAD'):
         opener.open(base + '/api/auth/csrf', timeout=20).read()
         token = next(c.value for c in jar if c.name == 'XSRF-TOKEN')
-        import urllib.parse
         headers['X-XSRF-TOKEN'] = urllib.parse.unquote(token)
     data = None if body is None else json.dumps(body).encode()
     if data is not None:
