@@ -9,7 +9,7 @@ Este documento describe el estado vigente. El detalle histórico permanece en `d
 - Candidata integrada a DEV mediante PR #10: `codex/sec-perm-1-consolidated-20261006`.
 - Base funcional elegida: `codex/sec-perm-1` SHA `31d4541129828028a244083a46c702899a72889e`; merge DEV `16b22fa4ad84749bed5b0c252e91671637b8b352`.
 - La rama alternativa `sec-perm-1-admin-permissions` queda como antecedente, no candidata a merge; no mezclar sus endpoints ni su migración.
-- HEAD `949808f`: checks 37554298114 y 37554293279 exitosos; 164 tests. Deploy VPS 37555301511 correcto; migración aplicada y health local/público 200. El workflow falló únicamente en el helper Python post-QA; corrección y nueva ejecución en curso.
+- HEAD `949808f`: checks 37554298114 y 37554293279 exitosos; 164 tests. Deploy VPS 37555301511 correcto; migración aplicada y health local/público 200. El primer workflow falló únicamente en el helper Python post-QA; corrección `13662f5` desplegada y workflow 37555582224 exitoso, con comprobación BD y smoke anónimo PASS. QA autenticado BLOCKED.
 - Se amplían pruebas de retorno a herencia, rechazo de overrides inválidos y protección `401/403/XSRF`.
 - QA usuario limitado del 2026-09-07: cierre documental histórico conservado; no se presenta como repetido en esta revisión.
 - Revisión HTTP 2026-10-06: DEV `/health` y `/api/catalog/public` 200, `/api/auth/me` sin sesión 401. Dominio principal: mismos endpoints 502; causa pendiente de diagnóstico.
@@ -186,3 +186,10 @@ Para estado vigente usar, en este orden:
 Se agrega preflight DEV por SSH con secrets del environment existente: consulta `__EFMigrationsHistory`, verifica consistencia de tabla/registro y rechaza migración alternativa o estado inesperado. Antes de integrar, crea backup COPY_ONLY con CHECKSUM e intenta RESTORE VERIFYONLY con identidad privilegiada identificable; no restaura ni altera datos de negocio. El preflight 37554079112 pasó con las seis migraciones esperadas y sin tabla de overrides. Backup creado; RESTORE VERIFYONLY bloqueado por identidad SQL privilegiada no disponible. Credenciales Admin ausentes: QA autenticado pendiente de acceso seguro.
 
 Tras deploy DEV se consulta migración aplicada y se ejecuta QA HTTP sin sesión; si las credenciales Admin configuradas están disponibles y son válidas, se valida Clientes, protección Admin, guardado idempotente de Repartidor y overrides de usuario QA aislado por API. Se prueba Allow/Deny/herencia en sesión abierta, logout y limpieza (overrides vacíos + usuario desactivado). No cambia permisos efectivos de usuarios operativos. Falta QA visual de navegador; ausencia/rechazo de credenciales se registra como BLOCKED y no se presenta como PASS. Evidencia de cada ejecución en Actions.
+
+
+## 2026-10-06 — Resultado final DEV SEC-PERM-1
+
+Workflow [37555582224](https://github.com/romanrfhack/labDental/actions/runs/37555582224) exitoso sobre `13662f557c013cf9e3e1c461219907e45bb54731`. 164 tests correctos, builds backend/frontend correctos, SQL idempotente y deploy VPS correctos. Health local/público 200. Consulta real post-deploy: siete migraciones esperadas, incluida `20260908031302_AddUserPermissionOverrides`; tabla presente y columnas UserId/PermissionId/Effect. Smoke anónimo health/catalog 200, auth/me y customers 401. Comprobación adicional roles/dashboard sin sesión 401; navegador Clientes redirige a login.
+
+QA autenticado y visual: **BLOCKED**, no PASS; faltan Admin/usuario no Admin, grant/revoke por rol, Allow/Deny/Heredado con sesión abierta, logout y Clientes desktop/móvil en DEV. Sin credenciales Admin configuradas; solicitud segura de login cancelada. No se alteraron permisos operativos ni se crearon usuarios de prueba. Backup previo COPY_ONLY/CHECKSUM creado; VERIFYONLY y restauración completa pendientes. No se promueve producción. Evidencia documental final no cambia código ni requiere nuevo despliegue.

@@ -6,7 +6,7 @@ Plataforma web para Laboratorio Dental Tláhuac. El repositorio contiene un sist
 
 - MVP administrativo en DEV: clientes/doctores/clínicas, órdenes, pagos/saldos, dashboard, usuarios/roles, etiquetas, entregas y catálogo con imágenes persistentes.
 - Sitio público aprobado en DEV: `/`, `/servicios`, `/catalogo`, `/contacto`.
-- SEC-PERM-1: candidata única `codex/sec-perm-1-consolidated-20261006`, pendiente de revisión/integración y QA de su nueva UI en DEV. Incluye edición de permisos por rol, overrides `Allow/Deny` y refresco de sesiones existentes.
+- SEC-PERM-1: integrado en DEV mediante PR #10, migración aplicada y deploy 37555582224 verde; pendiente QA autenticado y visual de su nueva UI. Incluye edición de permisos por rol, overrides `Allow/Deny` y refresco de sesiones existentes.
 - QA usuario limitado: completado según evidencia del 2026-09-07. Pendiente impresión física de etiquetas y QA de permisos tras deploy.
 - Inventario y proveedores: placeholders; funcionalidades futuras.
 - Producción: pendiente de readiness. En comprobación HTTP del 2026-10-06 el dominio principal respondió 502 en los endpoints consultados.
@@ -115,7 +115,7 @@ No ejecutar migraciones contra producción sin plan de despliegue y respaldo.
 
 ## Próximos Pasos
 
-1. Validar el HEAD de la candidata con el check `SEC-PERM-1 candidate validation` y revisar el PR a `dev`.
+1. Completar QA autenticado y visual de SEC-PERM-1 en DEV; PR #10 ya integrado, migración aplicada y despliegue verificado.
 2. Integrar/desplegar en DEV sólo después de revisar CI, migración y diff; ejecutar QA de roles/overrides/sesiones y Clientes.
 3. Cerrar impresión física `76 x 51 mm` y `102 x 51 mm`.
 4. Completar `PROD-READY-1` antes de promover a `main`.

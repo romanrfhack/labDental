@@ -25,7 +25,7 @@ El check `SEC-PERM-1 candidate validation` ejecuta restore, build y tests .NET, 
 
 Se amplían pruebas de restauración de herencia en sesión existente, rechazo de overrides inválidos/desconocidos/duplicados y `401/403/XSRF` de las nuevas escrituras. Se conserva cobertura de grant/revoke, Allow/Deny, Admin y seed de Repartidor.
 
-Los resultados anteriores no certifican el HEAD consolidado. La evidencia vigente es el check y los artefactos asociados al SHA del PR. QA visual, migración aplicada y aceptación DEV siguen pendientes.
+Los resultados anteriores no certifican el HEAD consolidado. La evidencia vigente es el check y los artefactos asociados al SHA del PR. Migración aplicada y despliegue DEV comprobados en 37555582224; QA autenticado/visual y aceptación final siguen pendientes.
 
 ## Migración Y Operación
 
@@ -42,7 +42,7 @@ El refresco de principal consulta roles/overrides en cada solicitud autenticada:
 | ID | Estado | Acción / criterio de salida |
 | --- | --- | --- |
 | SEC-PERM-1-CI | PASS en 949808f; 164 tests | Todos los checks verdes y evidencia TRX/SQL por SHA |
-| SEC-PERM-1-DEV | PR #10 integrado; migración/health PASS; helper post-QA en corrección | Revisar PR, migración/estado BD, integrar a dev y health correcto |
+| SEC-PERM-1-DEV | PASS: PR #10, migración, deploy 37555582224 y smoke anónimo | Revisar PR, migración/estado BD, integrar a dev y health correcto |
 | SEC-PERM-1-UAT | BLOCKED: acceso autenticado no disponible | QA manual roles, usuario Allow/Deny/Heredado, sesión abierta, Admin y Clientes desktop/móvil |
 | OPS-QA-1-USER | Cerrado documentalmente | Evidencia del 2026-09-07; no repetir como tarea pendiente previa |
 | OPS-QA-1-PRINT | Pendiente hardware | Etiquetas 76 x 51 mm y 102 x 51 mm en impresora real |
@@ -70,6 +70,13 @@ Secuencia: CI/revisión candidata -> integración y UAT DEV -> cierre impresión
 
 ## 2026-10-06 — PR #10 integrado y verificación DEV
 
-Merge `16b22fa4ad84749bed5b0c252e91671637b8b352`; candidata `949808f`, checks 37554298114/37554293279 verdes (164 tests). Deploy 37555301511 aplicó `20260908031302_AddUserPermissionOverrides`; historia contiene las siete migraciones esperadas, tabla presente con UserId/PermissionId/Effect. Health local y público 200. Workflow terminó en failure por UnboundLocalError del import local urllib en helper post-QA; se mueve import al módulo y se valida GET + escritura XSRF con dobles HTTP, sin BD/credenciales. Corrección en DEV y nueva ejecución pendiente. Contraseña SQL se transmite sólo por SQLCMDPASSWORD.
+Merge `16b22fa4ad84749bed5b0c252e91671637b8b352`; candidata `949808f`, checks 37554298114/37554293279 verdes (164 tests). Deploy 37555301511 aplicó `20260908031302_AddUserPermissionOverrides`; historia contiene las siete migraciones esperadas, tabla presente con UserId/PermissionId/Effect. Health local y público 200. Workflow terminó en failure por UnboundLocalError del import local urllib en helper post-QA; se mueve import al módulo y se valida GET + escritura XSRF con dobles HTTP, sin BD/credenciales. Corrección 13662f5 desplegada; nueva ejecución 37555582224 exitosa. Contraseña SQL se transmite sólo por SQLCMDPASSWORD.
 
 QA autenticado BLOCKED: sin credenciales Admin configuradas; formulario seguro cancelado. No se crearon usuarios QA ni cambiaron permisos operativos. QA visual Clientes desktop/móvil y grant/revoke en sesión real siguen abiertos; cobertura automática no los sustituye. Backup COPY_ONLY/CHECKSUM creado antes del merge; VERIFYONLY/restore pendientes. Producción no cambia.
+
+
+## 2026-10-06 — Resultado final DEV SEC-PERM-1
+
+Workflow [37555582224](https://github.com/romanrfhack/labDental/actions/runs/37555582224) exitoso sobre `13662f557c013cf9e3e1c461219907e45bb54731`. 164 tests correctos, builds backend/frontend correctos, SQL idempotente y deploy VPS correctos. Health local/público 200. Consulta real post-deploy: siete migraciones esperadas, incluida `20260908031302_AddUserPermissionOverrides`; tabla presente y columnas UserId/PermissionId/Effect. Smoke anónimo health/catalog 200, auth/me y customers 401. Comprobación adicional roles/dashboard sin sesión 401; navegador Clientes redirige a login.
+
+QA autenticado y visual: **BLOCKED**, no PASS; faltan Admin/usuario no Admin, grant/revoke por rol, Allow/Deny/Heredado con sesión abierta, logout y Clientes desktop/móvil en DEV. Sin credenciales Admin configuradas; solicitud segura de login cancelada. No se alteraron permisos operativos ni se crearon usuarios de prueba. Backup previo COPY_ONLY/CHECKSUM creado; VERIFYONLY y restauración completa pendientes. No se promueve producción. Evidencia documental final no cambia código ni requiere nuevo despliegue.
