@@ -36,6 +36,6 @@ jobs:
           LDT_SQLCMD: ${{ secrets.LDT_SQLCMD }}
         run: |
           set -euo pipefail
-          REMOTE_ENV="$(printf 'LDT_CHECK_preflight=%q LDT_DB_NAME=%q LDT_ENV_FILE=%q LDT_SITE_URL=%q LDT_SQLCMD=%q ' preflight "$LDT_DB_NAME" "$LDT_ENV_FILE" "$LDT_SITE_URL" "$LDT_SQLCMD")"
+          REMOTE_ENV="$(printf 'LDT_CHECK_MODE=%q LDT_DB_NAME=%q LDT_ENV_FILE=%q LDT_SITE_URL=%q LDT_SQLCMD=%q ' preflight "$LDT_DB_NAME" "$LDT_ENV_FILE" "$LDT_SITE_URL" "$LDT_SQLCMD")"
           ssh -i ~/.ssh/labdental_deploy_key -p "$LDT_SSH_PORT" "$LDT_SSH_USER@$LDT_SSH_HOST" \
             "$REMOTE_ENV python3 -" < .github/scripts/sec-perm-1-dev-check.py
