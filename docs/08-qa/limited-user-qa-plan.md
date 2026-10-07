@@ -8,9 +8,9 @@ El repositorio ya tiene un mecanismo seguro para crear un usuario QA limitado lo
 
 Validacion automatizada cubierta: seed directo con SQLite en memoria, login API con usuario limitado, `/api/auth/me` con permisos limitados, `/api/customers` permitido con `customers.view` y `/api/dashboard/summary` rechazado con `403` por falta de `reports.view`.
 
-Validacion local real pendiente: no existen `LT_QA_LIMITED_EMAIL`, `LT_QA_LIMITED_PASSWORD` ni `LT_QA_LIMITED_FULL_NAME` en el proceso de Codex y no hay navegador/headless local disponible sin instalar dependencias.
+Validación manual del usuario limitado real en DEV: **completada el 2026-09-07**, según evidencia registrada en `users-roles-qa.md`: Clientes accesible, Dashboard redirige a `/app/access-denied`, API `200/403/401`, logout correcto y seed temporal retirado. Las restricciones del entorno local descritas originalmente son históricas, no un pendiente vigente de este QA.
 
-Estado DEV Fase 3.0: el baseline UAT inicial en `https://dev.laboratoriodentaltlahuac.com` confirmó login QA y acceso autenticado a `/app/dashboard`, pero ese usuario tiene permisos suficientes para dashboard. Por lo tanto, la validación formal de usuario QA limitado y `/app/access-denied` en DEV sigue pendiente si aún no se prueba con una cuenta limitada real sin `reports.view`.
+Después de integrar SEC-PERM-1 permanece pendiente la regresión de la nueva administración de permisos en DEV. Esta consolidación no repitió login autenticado ni QA visual.
 
 ## Mecanismo Implementado
 

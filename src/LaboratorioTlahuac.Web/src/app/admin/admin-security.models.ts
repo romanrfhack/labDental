@@ -18,6 +18,15 @@ export interface AdminPermission {
   description: string;
 }
 
+export type AdminPermissionOverrideEffect = 'Allow' | 'Deny';
+
+export interface AdminUserPermissionState extends AdminPermission {
+  inherited: boolean;
+  effective: boolean;
+  overrideEffect: AdminPermissionOverrideEffect | null;
+  sourceRoles: string[];
+}
+
 export interface AdminUserListParams {
   search?: string;
   isActive?: boolean;
@@ -37,7 +46,10 @@ export interface AdminUserListItem {
   updatedAtUtc: string;
 }
 
-export interface AdminUserDetail extends AdminUserListItem {}
+export interface AdminUserDetail extends AdminUserListItem {
+  isPermissionOverrideEditingLocked: boolean;
+  permissions: AdminUserPermissionState[];
+}
 
 export interface AdminUserCreateRequest {
   email: string;
@@ -63,11 +75,25 @@ export interface AdminUserTemporaryPasswordRequest {
   temporaryPassword: string;
 }
 
+export interface AdminUserPermissionOverrideRequest {
+  permissionId: string;
+  effect: AdminPermissionOverrideEffect;
+}
+
+export interface AdminUserPermissionsRequest {
+  overrides: AdminUserPermissionOverrideRequest[];
+}
+
+export interface AdminRolePermissionsRequest {
+  permissionIds: string[];
+}
+
 export interface AdminRoleListItem {
   id: string;
   name: string;
   description: string;
   isSystem: boolean;
+  isPermissionEditingLocked: boolean;
   userCount: number;
   permissionCount: number;
   permissions: AdminPermission[];
@@ -75,4 +101,5 @@ export interface AdminRoleListItem {
 
 export interface AdminRoleDetail extends AdminRoleListItem {
   activeUserCount: number;
+  availablePermissions: AdminPermission[];
 }

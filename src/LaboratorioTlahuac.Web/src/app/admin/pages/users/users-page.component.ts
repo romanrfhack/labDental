@@ -1,17 +1,20 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 
-import { AdminSecurityService } from '../../admin-security.service';
 import {
+  AdminPermissionOverrideEffect,
   AdminRoleListItem,
   AdminRoleSummary,
   AdminUserDetail,
-  AdminUserListItem
+  AdminUserListItem,
+  AdminUserPermissionState
 } from '../../admin-security.models';
+import { AdminSecurityService } from '../../admin-security.service';
 
 type ActiveFilter = 'all' | 'active' | 'inactive';
+type PermissionOverrideSelection = 'Inherited' | AdminPermissionOverrideEffect;
 
 interface CreateUserForm {
   email: string;
@@ -27,6 +30,12 @@ interface EditUserForm {
   roleIds: string[];
 }
 
+interface PermissionGroup {
+  key: string;
+  label: string;
+  permissions: AdminUserPermissionState[];
+}
+
 @Component({
   selector: 'app-users-page',
   imports: [FormsModule],
@@ -35,7 +44,7 @@ interface EditUserForm {
       <header class="page-header">
         <div>
           <h1>Usuarios</h1>
-          <p>Alta, estado y roles de acceso para la app privada.</p>
+          <p>Alta, estado, roles y excepciones individuales de acceso para la app privada.</p>
         </div>
         <button class="primary-button" type="button" (click)="toggleCreateForm()">
           {{ showCreateForm() ? 'Cerrar alta' : 'Nuevo usuario' }}
@@ -79,7 +88,7 @@ interface EditUserForm {
         <form class="admin-panel" (ngSubmit)="createUser()">
           <header>
             <h2>Nuevo usuario</h2>
-            <p>La contrasena se guarda cifrada y no se muestra despues de crear el usuario.</p>
+            <p>El usuario hereda automaticamente los permisos de los roles seleccionados.</p>
           </header>
 
           <div class="field-grid">
@@ -105,6 +114,7 @@ interface EditUserForm {
 
           <fieldset class="admin-fieldset">
             <legend>Roles</legend>
+            <p class="permission-guidance">Los permisos se heredan del rol; no se copian al usuario.</p>
             <div class="admin-checkbox-grid">
               @for (role of roles(); track role.id) {
                 <label class="check-field">
@@ -261,7 +271,7 @@ interface EditUserForm {
         <section class="admin-panel">
           <header>
             <h2>Roles asignados</h2>
-            <p>Selecciona al menos un rol existente.</p>
+            <p>Los permisos base del usuario se heredan de estos roles.</p>
           </header>
 
           <div class="admin-checkbox-grid">
@@ -282,6 +292,87 @@ interface EditUserForm {
               Guardar roles
             </button>
           </div>
+        </section>
+
+        <section class="admin-panel user-permission-panel">
+          <header class="permission-editor-header">
+            <div>
+              <h2>Permisos efectivos</h2>
+              <p>Usa excepciones solo cuando este usuario deba apartarse de los permisos normales de su rol.</p>
+            </div>
+            @if (user.isPermissionOverrideEditingLocked) {
+              <span class="permission-lock-badge">Admin protegido</span>
+            } @else {
+              <span class="permission-edit-badge">Excepciones por usuario</span>
+            }
+          </header>
+
+          @if (user.isPermissionOverrideEditingLocked) {
+            <p class="permission-guidance">
+              Este usuario pertenece al rol Admin. Conserva todos los permisos del sistema y no admite excepciones
+              individuales.
+            </p>
+          } @else {
+            <p class="permission-guidance">
+              Heredado mantiene la configuracion del rol. Permitir agrega una excepcion y Denegar prevalece sobre lo
+              heredado. Los cambios se hacen efectivos en la siguiente solicitud autenticada.
+            </p>
+          }
+
+          <div class="permission-groups">
+            @for (group of permissionGroups(user.permissions); track group.key) {
+              <fieldset class="admin-fieldset permission-group">
+                <legend>{{ group.label }}</legend>
+                <div class="user-permission-list">
+                  @for (permission of group.permissions; track permission.id) {
+                    <div class="user-permission-row">
+                      <div class="user-permission-copy">
+                        <div class="permission-title-line">
+                          <strong>{{ permissionLabel(permission.key) }}</strong>
+                          <span
+                            class="status-pill"
+                            [class.active]="permission.effective"
+                            [class.inactive]="!permission.effective"
+                          >
+                            {{ permission.effective ? 'Permitido' : 'Denegado' }}
+                          </span>
+                        </div>
+                        <span>{{ permission.description }}</span>
+                        <small>
+                          {{ permission.inherited ? 'Heredado de: ' + permission.sourceRoles.join(', ') : 'Sin rol de origen' }}
+                          · {{ permission.key }}
+                        </small>
+                      </div>
+
+                      <label class="permission-override-field">
+                        <span>Configuracion</span>
+                        <select
+                          [value]="permissionOverrideSelection(permission.id)"
+                          [disabled]="user.isPermissionOverrideEditingLocked || isSaving()"
+                          (change)="setPermissionOverride(permission.id, $event)"
+                        >
+                          <option value="Inherited">Heredado</option>
+                          <option value="Allow">Permitir</option>
+                          <option value="Deny">Denegar</option>
+                        </select>
+                      </label>
+                    </div>
+                  }
+                </div>
+              </fieldset>
+            }
+          </div>
+
+          @if (!user.isPermissionOverrideEditingLocked) {
+            <div class="page-actions">
+              <button class="primary-button" type="button" [disabled]="isSaving()" (click)="savePermissionOverrides(user)">
+                {{ isSaving() ? 'Guardando...' : 'Guardar excepciones' }}
+              </button>
+              <button class="ghost-button" type="button" [disabled]="isSaving()" (click)="resetPermissionOverrides(user)">
+                Descartar cambios
+              </button>
+            </div>
+          }
         </section>
 
         <form class="admin-panel" (ngSubmit)="setTemporaryPassword(user)">
@@ -330,6 +421,7 @@ export class UsersPageComponent implements OnInit {
   roleId = '';
   createForm: CreateUserForm = this.emptyCreateForm();
   editForm: EditUserForm = this.emptyEditForm();
+  permissionOverrideEdits: Record<string, PermissionOverrideSelection> = {};
 
   constructor(private readonly adminSecurityService: AdminSecurityService) {}
 
@@ -364,7 +456,8 @@ export class UsersPageComponent implements OnInit {
       this.createForm.fullName,
       this.createForm.temporaryPassword,
       this.createForm.roleIds,
-      true);
+      true
+    );
 
     if (validationMessage) {
       this.errorMessage.set(validationMessage);
@@ -385,7 +478,7 @@ export class UsersPageComponent implements OnInit {
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: () => {
-          this.successMessage.set('Usuario creado correctamente.');
+          this.successMessage.set('Usuario creado correctamente con los permisos heredados de sus roles.');
           this.resetCreateForm();
           this.showCreateForm.set(false);
           this.loadUsers();
@@ -407,15 +500,7 @@ export class UsersPageComponent implements OnInit {
       .getUserById(user.id)
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
-        next: (detail) => {
-          this.selectedUser.set(detail);
-          this.editForm = {
-            email: detail.email,
-            fullName: detail.fullName,
-            temporaryPassword: '',
-            roleIds: detail.roles.map((role) => role.id)
-          };
-        },
+        next: (detail) => this.applySelectedUser(detail),
         error: (error: HttpErrorResponse) => this.errorMessage.set(this.toErrorMessage(error))
       });
   }
@@ -426,7 +511,8 @@ export class UsersPageComponent implements OnInit {
       this.editForm.fullName,
       '',
       this.editForm.roleIds,
-      false);
+      false
+    );
 
     if (validationMessage) {
       this.errorMessage.set(validationMessage);
@@ -445,7 +531,7 @@ export class UsersPageComponent implements OnInit {
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: (updated) => {
-          this.selectedUser.set(updated);
+          this.applySelectedUser(updated);
           this.successMessage.set('Usuario actualizado correctamente.');
           this.loadUsers();
         },
@@ -468,13 +554,61 @@ export class UsersPageComponent implements OnInit {
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: (updated) => {
-          this.selectedUser.set(updated);
-          this.editForm.roleIds = updated.roles.map((role) => role.id);
-          this.successMessage.set('Roles actualizados correctamente.');
+          this.applySelectedUser(updated);
+          this.successMessage.set('Roles y permisos heredados actualizados correctamente.');
           this.loadUsers();
         },
         error: (error: HttpErrorResponse) => this.errorMessage.set(this.toErrorMessage(error))
       });
+  }
+
+  savePermissionOverrides(user: AdminUserDetail): void {
+    if (user.isPermissionOverrideEditingLocked) {
+      return;
+    }
+
+    const overrides = user.permissions
+      .map((permission) => ({
+        permissionId: permission.id,
+        effect: this.permissionOverrideSelection(permission.id)
+      }))
+      .filter((item): item is { permissionId: string; effect: AdminPermissionOverrideEffect } =>
+        item.effect === 'Allow' || item.effect === 'Deny'
+      );
+
+    if (!window.confirm(`Guardar ${overrides.length} excepcion(es) de permisos para ${user.fullName}?`)) {
+      return;
+    }
+
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    this.adminSecurityService
+      .updateUserPermissions(user.id, overrides)
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: (updated) => {
+          this.applySelectedUser(updated);
+          this.successMessage.set('Excepciones de permisos actualizadas correctamente.');
+        },
+        error: (error: HttpErrorResponse) => this.errorMessage.set(this.toErrorMessage(error))
+      });
+  }
+
+  resetPermissionOverrides(user: AdminUserDetail): void {
+    this.permissionOverrideEdits = Object.fromEntries(
+      user.permissions.map((permission) => [permission.id, permission.overrideEffect ?? 'Inherited'])
+    );
+  }
+
+  permissionOverrideSelection(permissionId: string): PermissionOverrideSelection {
+    return this.permissionOverrideEdits[permissionId] ?? 'Inherited';
+  }
+
+  setPermissionOverride(permissionId: string, event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as PermissionOverrideSelection;
+    this.permissionOverrideEdits = { ...this.permissionOverrideEdits, [permissionId]: value };
   }
 
   setTemporaryPassword(user: AdminUserDetail): void {
@@ -492,7 +626,7 @@ export class UsersPageComponent implements OnInit {
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: (updated) => {
-          this.selectedUser.set(updated);
+          this.applySelectedUser(updated);
           this.editForm.temporaryPassword = '';
           this.successMessage.set('Contrasena temporal actualizada.');
         },
@@ -517,7 +651,7 @@ export class UsersPageComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           if (this.selectedUser()?.id === updated.id) {
-            this.selectedUser.set(updated);
+            this.applySelectedUser(updated);
           }
 
           this.successMessage.set(nextState ? 'Usuario activado.' : 'Usuario desactivado.');
@@ -530,6 +664,7 @@ export class UsersPageComponent implements OnInit {
   clearSelection(): void {
     this.selectedUser.set(null);
     this.editForm = this.emptyEditForm();
+    this.permissionOverrideEdits = {};
   }
 
   isRoleSelected(roleIds: string[], roleId: string): boolean {
@@ -563,6 +698,72 @@ export class UsersPageComponent implements OnInit {
       dateStyle: 'short',
       timeStyle: 'short'
     }).format(new Date(value));
+  }
+
+  permissionGroups(permissions: AdminUserPermissionState[]): PermissionGroup[] {
+    const groups = new Map<string, AdminUserPermissionState[]>();
+
+    for (const permission of permissions) {
+      const key = permission.key.split('.')[0] || 'other';
+      const group = groups.get(key) ?? [];
+      group.push(permission);
+      groups.set(key, group);
+    }
+
+    return [...groups.entries()]
+      .sort(([left], [right]) => this.groupLabel(left).localeCompare(this.groupLabel(right), 'es'))
+      .map(([key, groupPermissions]) => ({
+        key,
+        label: this.groupLabel(key),
+        permissions: [...groupPermissions].sort((left, right) => left.key.localeCompare(right.key))
+      }));
+  }
+
+  permissionLabel(permissionKey: string): string {
+    const action = permissionKey.split('.')[1] ?? permissionKey;
+    const labels: Record<string, string> = {
+      adjust: 'Ajustar',
+      assign: 'Asignar',
+      cancel: 'Cancelar',
+      changeStatus: 'Cambiar estado',
+      complete: 'Completar',
+      create: 'Crear',
+      delete: 'Eliminar',
+      edit: 'Editar',
+      manage: 'Administrar',
+      update: 'Actualizar',
+      view: 'Ver'
+    };
+
+    return labels[action] ?? action;
+  }
+
+  private groupLabel(key: string): string {
+    const labels: Record<string, string> = {
+      catalog: 'Catalogo',
+      customers: 'Clientes',
+      deliveries: 'Entregas',
+      inventory: 'Inventario',
+      orders: 'Ordenes',
+      payments: 'Pagos',
+      reports: 'Reportes y dashboard',
+      roles: 'Roles',
+      suppliers: 'Proveedores',
+      users: 'Usuarios'
+    };
+
+    return labels[key] ?? key;
+  }
+
+  private applySelectedUser(detail: AdminUserDetail): void {
+    this.selectedUser.set(detail);
+    this.editForm = {
+      email: detail.email,
+      fullName: detail.fullName,
+      temporaryPassword: this.editForm.temporaryPassword,
+      roleIds: detail.roles.map((role) => role.id)
+    };
+    this.resetPermissionOverrides(detail);
   }
 
   private loadUsers(): void {
@@ -613,7 +814,8 @@ export class UsersPageComponent implements OnInit {
     fullName: string,
     temporaryPassword: string,
     roleIds: string[],
-    requirePassword: boolean): string | null {
+    requirePassword: boolean
+  ): string | null {
     if (!fullName.trim()) {
       return 'Captura el nombre completo.';
     }
@@ -643,7 +845,7 @@ export class UsersPageComponent implements OnInit {
     }
 
     if (error.status === 400) {
-      return 'Revisa los datos capturados.';
+      return 'Revisa los datos o permisos seleccionados.';
     }
 
     return 'No fue posible completar la operacion.';
@@ -652,7 +854,6 @@ export class UsersPageComponent implements OnInit {
   private getProblemTitle(error: HttpErrorResponse): string | null {
     if (error.error && typeof error.error === 'object' && 'title' in error.error) {
       const title = (error.error as { title?: unknown }).title;
-
       return typeof title === 'string' ? title : null;
     }
 

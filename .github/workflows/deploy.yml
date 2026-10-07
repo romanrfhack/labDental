@@ -177,3 +177,19 @@ jobs:
             -p "$LDT_SSH_PORT" \
             "$LDT_SSH_USER@$LDT_SSH_HOST" \
             "$REMOTE_ENV bash -s" < .github/scripts/deploy-lab.sh
+
+      - name: SEC-PERM-1 DEV post-deploy QA
+        if: github.ref_name == 'dev'
+        env:
+          LDT_SSH_HOST: ${{ secrets.LDT_SSH_HOST }}
+          LDT_SSH_PORT: ${{ secrets.LDT_SSH_PORT }}
+          LDT_SSH_USER: ${{ secrets.LDT_SSH_USER }}
+          LDT_DB_NAME: ${{ secrets.LDT_DB_NAME }}
+          LDT_ENV_FILE: ${{ secrets.LDT_ENV_FILE }}
+          LDT_SITE_URL: ${{ secrets.LDT_SITE_URL }}
+          LDT_SQLCMD: ${{ secrets.LDT_SQLCMD }}
+        run: |
+          set -euo pipefail
+          REMOTE_ENV="$(printf 'LDT_CHECK_MODE=%q LDT_DB_NAME=%q LDT_ENV_FILE=%q LDT_SITE_URL=%q LDT_SQLCMD=%q ' post "$LDT_DB_NAME" "$LDT_ENV_FILE" "$LDT_SITE_URL" "$LDT_SQLCMD")"
+          ssh -i ~/.ssh/labdental_deploy_key -p "$LDT_SSH_PORT" "$LDT_SSH_USER@$LDT_SSH_HOST" \
+            "$REMOTE_ENV python3 -" < .github/scripts/sec-perm-1-dev-check.py

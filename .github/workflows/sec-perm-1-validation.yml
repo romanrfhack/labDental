@@ -1,0 +1,105 @@
+name: SEC-PERM-1 candidate validation
+
+on:
+  push:
+    branches:
+      - codex/sec-perm-1-consolidated-20261006
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sec-perm-1-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '22.x'
+  EF_VERSION: '10.0.7'
+  CONFIGURATION: Release
+  API_PROJECT: src/LaboratorioTlahuac.Api/LaboratorioTlahuac.Api.csproj
+  INFRA_PROJECT: src/LaboratorioTlahuac.Infrastructure/LaboratorioTlahuac.Infrastructure.csproj
+  WEB_DIR: src/LaboratorioTlahuac.Web
+  DB_CONTEXT: LaboratorioTlahuacDbContext
+  MIGRATIONS_DIR: src/LaboratorioTlahuac.Infrastructure/Persistence/Migrations
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WEB_DIR }}/package-lock.json
+
+      - name: Restore backend
+        run: dotnet restore
+
+      - name: Build backend
+        run: dotnet build --configuration "$CONFIGURATION" --no-restore
+
+      - name: Test backend
+        run: dotnet test --configuration "$CONFIGURATION" --no-build --verbosity normal --logger trx --results-directory "$RUNNER_TEMP/test-results"
+
+      - name: Build frontend
+        run: |
+          npm --prefix "$WEB_DIR" ci
+          npm --prefix "$WEB_DIR" run build
+
+      - name: Install dotnet-ef
+        run: |
+          dotnet tool install --global dotnet-ef --version "$EF_VERSION"
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - name: Verify EF migration
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          DOTNET_ENVIRONMENT: Development
+          SecuritySeed__EnsureBaselineOnStartup: 'false'
+          SecuritySeed__RunOnStartup: 'false'
+          SecuritySeed__LimitedQaUser__RunOnStartup: 'false'
+          CatalogSeed__RunOnStartup: 'false'
+        run: |
+          set -euo pipefail
+          test -n "$(compgen -G "$MIGRATIONS_DIR/*_AddUserPermissionOverrides.cs" || true)" || { echo "Migration missing"; exit 1; }
+          test -n "$(compgen -G "$MIGRATIONS_DIR/*_AddUserPermissionOverrides.Designer.cs" || true)" || { echo "Migration designer missing"; exit 1; }
+          dotnet ef migrations has-pending-model-changes \
+            --context "$DB_CONTEXT" \
+            --project "$INFRA_PROJECT" \
+            --startup-project "$API_PROJECT"
+
+          dotnet ef migrations script --idempotent \
+            --context "$DB_CONTEXT" \
+            --project "$INFRA_PROJECT" \
+            --startup-project "$API_PROJECT" \
+            --output "$RUNNER_TEMP/sec-perm-1-migrations.sql"
+          test -s "$RUNNER_TEMP/sec-perm-1-migrations.sql"
+
+      - name: Validate diff whitespace
+        run: git diff --check origin/dev...HEAD
+
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sec-perm-1-validation-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/test-results/*.trx
+            ${{ runner.temp }}/sec-perm-1-migrations.sql
+          retention-days: 14

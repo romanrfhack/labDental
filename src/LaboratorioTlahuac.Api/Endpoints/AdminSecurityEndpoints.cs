@@ -80,6 +80,17 @@ public static class AdminSecurityEndpoints
             .RequireAuthorization(Permissions.UsersManage)
             .WithName("AdminUsersAssignRoles");
 
+        group.MapPut(
+                "/users/{id:guid}/permissions",
+                async (
+                    Guid id,
+                    AdminUserPermissionsRequest request,
+                    IAdminSecurityService adminSecurityService,
+                    CancellationToken cancellationToken) =>
+                    ToResult(await adminSecurityService.UpdateUserPermissionsAsync(id, request, cancellationToken)))
+            .RequireAuthorization(Permissions.UsersManage)
+            .WithName("AdminUsersUpdatePermissions");
+
         group.MapPost(
                 "/users/{id:guid}/temporary-password",
                 async (
@@ -109,6 +120,17 @@ public static class AdminSecurityEndpoints
                     ToResult(await adminSecurityService.GetRoleByIdAsync(id, cancellationToken)))
             .RequireAuthorization(Permissions.RolesManage)
             .WithName("AdminRolesGetById");
+
+        group.MapPut(
+                "/roles/{id:guid}/permissions",
+                async (
+                    Guid id,
+                    AdminRolePermissionsRequest request,
+                    IAdminSecurityService adminSecurityService,
+                    CancellationToken cancellationToken) =>
+                    ToResult(await adminSecurityService.UpdateRolePermissionsAsync(id, request, cancellationToken)))
+            .RequireAuthorization(Permissions.RolesManage)
+            .WithName("AdminRolesUpdatePermissions");
 
         return endpoints;
     }

@@ -1,10 +1,9 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Antiforgery;
+using LaboratorioTlahuac.Api.Security;
 using LaboratorioTlahuac.Application.Abstractions.Authentication;
 using LaboratorioTlahuac.Application.Authentication;
-using LaboratorioTlahuac.Domain.Security;
 
 namespace LaboratorioTlahuac.Api.Endpoints;
 
@@ -110,10 +109,9 @@ public static class AuthEndpoints
                 : Results.Unauthorized();
         }
 
-        var principal = CreatePrincipal(result.User);
         await httpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
-            principal,
+            AuthPrincipalFactory.Create(result.User),
             new AuthenticationProperties
             {
                 AllowRefresh = true,
@@ -143,27 +141,6 @@ public static class AuthEndpoints
         return currentUser is null
             ? Results.Unauthorized()
             : Results.Ok(AuthUserResponse.FromAuthenticatedUser(currentUser));
-    }
-
-    private static ClaimsPrincipal CreatePrincipal(AuthenticatedUser user)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Name, user.FullName)
-        };
-
-        claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
-        claims.AddRange(user.Permissions.Select(permission => new Claim(PermissionClaimTypes.Permission, permission)));
-
-        var identity = new ClaimsIdentity(
-            claims,
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            ClaimTypes.Name,
-            ClaimTypes.Role);
-
-        return new ClaimsPrincipal(identity);
     }
 }
 

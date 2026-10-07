@@ -4897,3 +4897,60 @@ Dejar reglas permanentes para Codex, documentar el estado real del proyecto y de
 - Confirmar contenido real del cliente: servicios, ubicación, horarios, teléfono, WhatsApp y mensajes comerciales.
 - Definir plataforma de despliegue, DNS, HTTPS y configuración productiva.
 - Validar visualmente el sitio en anchos móviles antes de presentarlo al cliente.
+
+
+## 2026-09-07 — SEC-PERM-1 — Administración De Roles Y Permisos
+
+Estado al registrar: **implementación de rama completada; pendiente integración y QA manual en DEV**.
+
+### Decisión
+
+- Mantener roles como fuente base; no copiar permisos al usuario.
+- Permisos efectivos: roles + `Allow` individuales - `Deny` individuales.
+- Admin protegido con todos los permisos.
+- Cambios efectivos en sesiones existentes mediante revalidación de cookie contra BD.
+
+### Backend / Persistencia
+
+- Nueva entidad `UserPermissionOverride` y enum `UserPermissionOverrideEffect`.
+- Nueva tabla `Security.UserPermissionOverrides` con PK compuesta y `Effect`.
+- Migración EF `AddUserPermissionOverrides` generada con tooling, incluyendo Designer y snapshot.
+- Nuevos endpoints `PUT /api/admin/roles/{id}/permissions` y `PUT /api/admin/users/{id}/permissions`.
+- `AuthSessionService` calcula permisos efectivos con roles + overrides.
+- `OnValidatePrincipal` refresca principal/cookie antes de autorización si la seguridad persistida cambió.
+- Baseline seed deja de sobrescribir un `Repartidor` ya administrado; Admin conserva sincronización total.
+
+### Frontend
+
+- Roles deja de ser sólo lectura para roles no protegidos.
+- Permisos agrupados por módulo y confirmación de usuarios afectados.
+- Usuarios muestra permiso efectivo, origen y triestado `Heredado / Permitir / Denegar`.
+- `permissionGuard` refresca `/api/auth/me` antes de navegación protegida.
+- Corregido markup duplicado que renderizaba una segunda tabla de Clientes en desktop.
+
+### QA Automático
+
+- Build backend Release: correcto.
+- Tests backend: correctos.
+- Build Angular: correcto.
+- `dotnet ef migrations has-pending-model-changes`: correcto.
+- Cobertura nueva: grant/revoke por rol sin relogin, Allow/Deny por usuario sin relogin, Admin protegido y preservación de permisos de Repartidor frente al baseline seed.
+
+### Estado Operativo
+
+- `OPS-QA-1` Limited User real quedó validado previamente el 2026-09-07.
+- Siguen pendientes las pruebas físicas de etiquetas 76x51 y 102x51.
+- `SEC-PERM-1` requiere smoke manual en DEV después de merge/deploy.
+- No se promovió `dev -> main` ni se tocó producción.
+
+## 2026-10-06 — Consolidación SEC-PERM-1
+
+Se comparan ambas implementaciones desde DEV `25e1ec4`. Se selecciona `codex/sec-perm-1` (`31d4541`) por coherencia de contratos, refresco de principal/cookie, guardas administrativas y migración EF con Designer/snapshot. La variante `b26f042` conserva antecedente; su última CI falla en tests y no se mezclan sus contratos/migración.
+
+Candidata única: `codex/sec-perm-1-consolidated-20261006`. Se agregan regresiones de herencia, overrides inválidos y autorización/XSRF; CI sin auto-commits, con TRX/script SQL idempotente. Se reconcilian README, arquitectura, QA limitado y zona horaria. Evidencia y pendientes detallados en `docs/08-qa/sec-perm-1-consolidation.md`. Build/tests del nuevo HEAD: consultar check CI; no declarar QA visual ni aplicación de migración como completados. DEV/main no cambian por esta preparación.
+
+## 2026-10-06 — Preflight e integración DEV SEC-PERM-1
+
+Se agrega preflight DEV por SSH con secrets del environment existente: consulta `__EFMigrationsHistory`, verifica consistencia de tabla/registro y rechaza migración alternativa o estado inesperado. Antes de integrar, crea backup COPY_ONLY con CHECKSUM e intenta RESTORE VERIFYONLY con identidad privilegiada identificable; no restaura ni altera datos de negocio. El preflight 37554079112 pasó con las seis migraciones esperadas y sin tabla de overrides. Backup creado; RESTORE VERIFYONLY bloqueado por identidad SQL privilegiada no disponible. Credenciales Admin ausentes: QA autenticado pendiente de acceso seguro.
+
+Tras deploy DEV se consulta migración aplicada y se ejecuta QA HTTP sin sesión; si las credenciales Admin configuradas están disponibles y son válidas, se valida Clientes, protección Admin, guardado idempotente de Repartidor y overrides de usuario QA aislado por API. Se prueba Allow/Deny/herencia en sesión abierta, logout y limpieza (overrides vacíos + usuario desactivado). No cambia permisos efectivos de usuarios operativos. Falta QA visual de navegador; ausencia/rechazo de credenciales se registra como BLOCKED y no se presenta como PASS. Evidencia de cada ejecución en Actions.

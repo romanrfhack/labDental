@@ -8,10 +8,13 @@ import {
   AdminPagedResponse,
   AdminRoleDetail,
   AdminRoleListItem,
+  AdminRolePermissionsRequest,
   AdminUserCreateRequest,
   AdminUserDetail,
   AdminUserListItem,
   AdminUserListParams,
+  AdminUserPermissionOverrideRequest,
+  AdminUserPermissionsRequest,
   AdminUserRolesRequest,
   AdminUserStatusRequest,
   AdminUserTemporaryPasswordRequest,
@@ -85,6 +88,22 @@ export class AdminSecurityService {
     );
   }
 
+  updateUserPermissions(
+    id: string,
+    overrides: AdminUserPermissionOverrideRequest[]
+  ): Observable<AdminUserDetail> {
+    const request: AdminUserPermissionsRequest = { overrides };
+
+    return this.authService.getCsrfHeaders().pipe(
+      switchMap((headers) =>
+        this.http.put<AdminUserDetail>(this.apiClient.getUrl(`/api/admin/users/${id}/permissions`), request, {
+          headers,
+          withCredentials: true
+        })
+      )
+    );
+  }
+
   setTemporaryPassword(id: string, temporaryPassword: string): Observable<AdminUserDetail> {
     const request: AdminUserTemporaryPasswordRequest = { temporaryPassword };
 
@@ -112,6 +131,19 @@ export class AdminSecurityService {
     return this.http.get<AdminRoleDetail>(this.apiClient.getUrl(`/api/admin/roles/${id}`), {
       withCredentials: true
     });
+  }
+
+  updateRolePermissions(id: string, permissionIds: string[]): Observable<AdminRoleDetail> {
+    const request: AdminRolePermissionsRequest = { permissionIds };
+
+    return this.authService.getCsrfHeaders().pipe(
+      switchMap((headers) =>
+        this.http.put<AdminRoleDetail>(this.apiClient.getUrl(`/api/admin/roles/${id}/permissions`), request, {
+          headers,
+          withCredentials: true
+        })
+      )
+    );
   }
 
   private toUserListParams(params: AdminUserListParams) {

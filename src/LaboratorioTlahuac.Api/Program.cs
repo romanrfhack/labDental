@@ -11,6 +11,7 @@ using LaboratorioTlahuac.Domain.Security;
 using LaboratorioTlahuac.Infrastructure;
 using LaboratorioTlahuac.Infrastructure.Catalog;
 using LaboratorioTlahuac.Infrastructure.Persistence;
+using LaboratorioTlahuac.Infrastructure.Security.Authentication;
 using LaboratorioTlahuac.Infrastructure.Security.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -85,18 +86,29 @@ builder.Services
 
                 var dbContext = context.HttpContext.RequestServices.GetRequiredService<LaboratorioTlahuacDbContext>();
                 var now = DateTimeOffset.UtcNow;
-                var userState = await dbContext.Users
+                var user = await dbContext.Users
+                    .Include(currentUser => currentUser.UserRoles)
+                        .ThenInclude(userRole => userRole.Role)
+                            .ThenInclude(role => role!.RolePermissions)
+                                .ThenInclude(rolePermission => rolePermission.Permission)
+                    .Include(currentUser => currentUser.PermissionOverrides)
+                        .ThenInclude(permissionOverride => permissionOverride.Permission)
                     .AsNoTracking()
-                    .Where(user => user.Id == userId)
-                    .Select(user => new { user.IsActive, user.LockoutEndUtc })
-                    .FirstOrDefaultAsync(context.HttpContext.RequestAborted);
+                    .FirstOrDefaultAsync(currentUser => currentUser.Id == userId, context.HttpContext.RequestAborted);
 
-                if (userState is null
-                    || !userState.IsActive
-                    || (userState.LockoutEndUtc is not null && userState.LockoutEndUtc > now))
+                if (user is null || !user.IsActive || user.IsLockedOut(now))
                 {
                     context.RejectPrincipal();
                     await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    return;
+                }
+
+                var refreshedUser = SecurityIdentityMapper.Map(user);
+
+                if (!AuthPrincipalFactory.Matches(context.Principal, refreshedUser))
+                {
+                    context.ReplacePrincipal(AuthPrincipalFactory.Create(refreshedUser));
+                    context.ShouldRenew = true;
                 }
             }
         };
@@ -178,13 +190,34 @@ app.MapAuthEndpoints();
 app.MapCustomerEndpoints();
 app.MapWorkOrderEndpoints();
 app.MapDeliveryEndpoints();
-app.MapCatalogEndpoints();
 app.MapPaymentEndpoints();
 app.MapDashboardEndpoints();
 app.MapAdminSecurityEndpoints();
+app.MapCatalogEndpoints();
 app.MapSecurityDiagnosticEndpoints(app.Environment);
 
 app.Run();
+
+static bool ShouldRunSecuritySeed(WebApplication app)
+{
+    if (app.Configuration.GetValue<bool>($"{SecuritySeedOptions.SectionName}:EnsureBaselineOnStartup"))
+    {
+        return true;
+    }
+
+    if (app.Configuration.GetValue<bool>($"{SecuritySeedOptions.SectionName}:RunOnStartup"))
+    {
+        return true;
+    }
+
+    return app.Environment.IsDevelopment()
+        && app.Configuration.GetValue<bool>($"{LimitedQaUserSeedOptions.SectionName}:RunOnStartup");
+}
+
+static bool ShouldRunCatalogSeed(WebApplication app)
+{
+    return app.Configuration.GetValue<bool>("CatalogSeed:RunOnStartup");
+}
 
 static bool IsApiRequest(HttpRequest request)
 {
@@ -202,27 +235,6 @@ static bool RequiresAntiforgeryValidation(HttpRequest request)
         && !HttpMethods.IsHead(request.Method)
         && !HttpMethods.IsOptions(request.Method)
         && !HttpMethods.IsTrace(request.Method);
-}
-
-static bool ShouldRunSecuritySeed(WebApplication app)
-{
-    if (app.Configuration.GetValue<bool>("SecuritySeed:EnsureBaselineOnStartup"))
-    {
-        return true;
-    }
-
-    if (app.Configuration.GetValue<bool>("SecuritySeed:RunOnStartup"))
-    {
-        return true;
-    }
-
-    return app.Environment.IsDevelopment()
-        && app.Configuration.GetValue<bool>("SecuritySeed:LimitedQaUser:RunOnStartup");
-}
-
-static bool ShouldRunCatalogSeed(WebApplication app)
-{
-    return app.Configuration.GetValue("CatalogSeed:RunOnStartup", true);
 }
 
 public partial class Program;

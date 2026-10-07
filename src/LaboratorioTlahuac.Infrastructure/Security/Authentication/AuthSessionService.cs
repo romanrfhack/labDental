@@ -66,7 +66,7 @@ public sealed class AuthSessionService(
         user.RecordSuccessfulLogin(now);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return LoginResult.Success(MapToAuthenticatedUser(user));
+        return LoginResult.Success(SecurityIdentityMapper.Map(user));
     }
 
     public async Task<AuthenticatedUser?> GetCurrentUserAsync(
@@ -91,6 +91,8 @@ public sealed class AuthSessionService(
                 .ThenInclude(userRole => userRole.Role)
                     .ThenInclude(role => role!.RolePermissions)
                         .ThenInclude(rolePermission => rolePermission.Permission)
+            .Include(currentUser => currentUser.PermissionOverrides)
+                .ThenInclude(permissionOverride => permissionOverride.Permission)
             .AsNoTracking()
             .FirstOrDefaultAsync(currentUser => currentUser.Id == userId, cancellationToken);
 
@@ -99,7 +101,7 @@ public sealed class AuthSessionService(
             return null;
         }
 
-        return MapToAuthenticatedUser(user);
+        return SecurityIdentityMapper.Map(user);
     }
 
     private Task<User?> FindUserWithSecurityGraphAsync(
@@ -111,30 +113,8 @@ public sealed class AuthSessionService(
                 .ThenInclude(userRole => userRole.Role)
                     .ThenInclude(role => role!.RolePermissions)
                         .ThenInclude(rolePermission => rolePermission.Permission)
+            .Include(user => user.PermissionOverrides)
+                .ThenInclude(permissionOverride => permissionOverride.Permission)
             .FirstOrDefaultAsync(user => user.NormalizedEmail == normalizedEmail, cancellationToken);
-    }
-
-    private static AuthenticatedUser MapToAuthenticatedUser(User user)
-    {
-        var roles = user.UserRoles
-            .Select(userRole => userRole.Role)
-            .Where(role => role is not null)
-            .Select(role => role!.Name)
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(role => role, StringComparer.Ordinal)
-            .ToArray();
-
-        var permissions = user.UserRoles
-            .Select(userRole => userRole.Role)
-            .Where(role => role is not null)
-            .SelectMany(role => role!.RolePermissions)
-            .Select(rolePermission => rolePermission.Permission)
-            .Where(permission => permission is not null)
-            .Select(permission => permission!.Key)
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(permission => permission, StringComparer.Ordinal)
-            .ToArray();
-
-        return new AuthenticatedUser(user.Id, user.Email, user.FullName, roles, permissions);
     }
 }
