@@ -56,25 +56,22 @@ if mode == 'preflight':
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     backup = f'/var/opt/mssql/data/{db}_secperm_{stamp}.bak'
     query = f"BACKUP DATABASE [{db}] TO DISK=N'{backup}' WITH COPY_ONLY, CHECKSUM; RESTORE VERIFYONLY FROM DISK=N'{backup}' WITH CHECKSUM;"
-    if sql("SELECT HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'BACKUP DATABASE');") == '1':
-        sql(query)
-    else:
-        # The application account need not receive backup privileges.
-        ids = subprocess.check_output(['docker', 'ps', '--filter', 'publish=14330', '--format', '{{.ID}}'], text=True).splitlines()
-        if len(ids) != 1:
-            raise SystemExit('Cannot identify the existing DEV SQL container for backup')
-        container = ids[0]
-        container_env = json.loads(subprocess.check_output(['docker', 'inspect', container], text=True))[0]['Config']['Env']
-        container_config = dict(item.split('=', 1) for item in container_env if '=' in item)
-        sa_password = container_config.get('MSSQL_SA_PASSWORD') or container_config.get('SA_PASSWORD')
-        if not sa_password:
-            raise SystemExit('Existing SQL backup credentials unavailable')
-        backup_env = dict(os.environ, SQLCMDPASSWORD=sa_password)
-        command = [os.environ['LDT_SQLCMD'], '-S', '127.0.0.1,14330', '-d', db, '-U', 'sa', '-C', '-b', '-Q', query]
-        result = subprocess.run(command, env=backup_env, capture_output=True, text=True, timeout=180)
-        if result.returncode:
-            codes = re.findall(r'Msg (\d+)', result.stdout + result.stderr)
-            raise RuntimeError('Backup failed; error numbers=' + ','.join(codes))
+    # The application account need not receive backup privileges.
+    ids = subprocess.check_output(['docker', 'ps', '--filter', 'publish=14330', '--format', '{{.ID}}'], text=True).splitlines()
+    if len(ids) != 1:
+        raise SystemExit('Cannot identify the existing DEV SQL container for backup')
+    container = ids[0]
+    container_env = json.loads(subprocess.check_output(['docker', 'inspect', container], text=True))[0]['Config']['Env']
+    container_config = dict(item.split('=', 1) for item in container_env if '=' in item)
+    sa_password = container_config.get('MSSQL_SA_PASSWORD') or container_config.get('SA_PASSWORD')
+    if not sa_password:
+        raise SystemExit('Existing SQL backup credentials unavailable')
+    backup_env = dict(os.environ, SQLCMDPASSWORD=sa_password)
+    command = [os.environ['LDT_SQLCMD'], '-S', '127.0.0.1,14330', '-d', db, '-U', 'sa', '-C', '-b', '-Q', query]
+    result = subprocess.run(command, env=backup_env, capture_output=True, text=True, timeout=180)
+    if result.returncode:
+        codes = re.findall(r'Msg (\d+)', result.stdout + result.stderr)
+        raise RuntimeError('Backup failed; error numbers=' + ','.join(codes))
     print(json.dumps({'preflight': 'PASS', 'copyOnlyBackupVerified': True, 'backupPath': backup}))
     sys.exit(0)
 if migration not in actual:
